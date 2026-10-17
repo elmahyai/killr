@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>killr: Kill CRAN, live dashboard</title>
-<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R. Live exam-style progress dashboard.">
+<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R. Live progress dashboard.">
 <link rel="icon" href="assets/mark.jpg" type="image/jpeg">
 <style>
   :root {
@@ -93,14 +93,8 @@
   .meter { height: 8px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; margin-top: 14px; }
   .meter > span { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--a), var(--b)); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
 
-  .grades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 16px; }
-  .gcell { padding: 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); text-align: center; cursor: pointer; transition: transform .15s, border-color .15s; }
-  .gcell:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.25); }
-  .gcell .g { font-size: 30px; font-weight: 850; }
-  .gcell .c { color: var(--muted); font-size: 13px; }
-  .g-A { color: var(--ok); } .g-B { color: #7ee0b8; } .g-C { color: var(--wait); } .g-D { color: #ff9a6b; } .g-F { color: var(--c); } .g-EX { color: var(--grey); }
 
-  /* ---------- Exam sheet ---------- */
+  /* ---------- Results table ---------- */
   .sheet {
     border-radius: 22px; background: linear-gradient(180deg, #f7f4ee, #efeae0); color: #1c1915;
     box-shadow: 0 40px 90px -40px rgba(124,92,255,.5); overflow: hidden; border: 1px solid #e4ddd2;
@@ -127,10 +121,6 @@
   .pill.complete { background: #daf5e8; color: #17603f; }
   .pill.in_progress { background: #ffecc9; color: #7a4a00; }
   .pill.replaced { background: #e5e7ef; color: #3e4560; }
-  .gbadge { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-weight: 800; background: #1c1915; }
-  .gbadge.g-A, .gbadge.g-B, .gbadge.g-C, .gbadge.g-D, .gbadge.g-F, .gbadge.g-EX { color: #fff; }
-  .gbadge.g-A { background: #17603f; } .gbadge.g-B { background: #2f7f5b; } .gbadge.g-C { background: #a86b00; }
-  .gbadge.g-D { background: #b9552b; } .gbadge.g-F { background: #a4234c; } .gbadge.g-EX { background: #6b7394; }
   .bar { display: inline-block; width: 120px; height: 9px; border-radius: 999px; background: #e3dccf; vertical-align: middle; overflow: hidden; margin-right: 8px; }
   .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #7c5cff, #00a7c9); }
   .empty { padding: 40px; text-align: center; color: #5c564e; }
@@ -190,8 +180,7 @@
     .hero-grid, .rust-grid { grid-template-columns: 1fr; }
     .hero-logo { max-width: 360px; order: -1; }
     .scores { grid-template-columns: repeat(2, 1fr); }
-    .grades { grid-template-columns: repeat(3, 1fr); }
-    .cards { grid-template-columns: repeat(2, 1fr); }
+      .cards { grid-template-columns: repeat(2, 1fr); }
     nav.top ul { display: none; }
   }
   @media (max-width: 620px) {
@@ -213,7 +202,7 @@
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/mark.jpg" alt="">killr</a>
     <ul>
-      <li><a href="#exam">Exam results</a></li>
+      <li><a href="#progress">Progress</a></li>
       <li><a href="#rust">Rust crates</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#next">What is next</a></li>
@@ -230,10 +219,10 @@
       <p class="lead">
         R holds some of the best statistics code in the world, and it is trapped in R.
         killr translates the CRAN catalog into Python and Rust, and every translated function
-        is checked against the original R output. This page is the live progress exam.
+        is checked against the original R output. This page shows the live progress.
       </p>
       <div class="cta">
-        <a class="btn primary" href="#exam">Read the exam results</a>
+        <a class="btn primary" href="#progress">See progress by package</a>
         <a class="btn" href="strategy.md">How the agents work</a>
       </div>
     </div>
@@ -271,15 +260,14 @@
         <div class="note" id="s-spd-note"></div>
       </div>
     </div>
-    <div class="grades" id="grades" aria-label="Grade distribution"></div>
   </div>
 </section>
 
-<section id="exam">
+<section id="progress">
   <div class="wrap">
-    <div class="kicker">Exam results</div>
-    <h2>Translation exam, one row per package</h2>
-    <p class="sub">Score is the share of functions translated. Grade A means every function is translated and every proof check matches R. Click a row for the functions, the checks and the open work.</p>
+    <div class="kicker">Progress by package</div>
+    <h2>Every package, one row each</h2>
+    <p class="sub">Score is the share of functions translated. A package is complete when every function is translated and every proof check matches R. Click a row for the functions, the checks and the open work.</p>
 
     <div class="sheet">
       <div class="sheet-head">
@@ -292,15 +280,15 @@
         <button class="chip" data-filter="complete" aria-pressed="false">Complete</button>
         <button class="chip" data-filter="in_progress" aria-pressed="false">In progress</button>
         <button class="chip" data-filter="replaced" aria-pressed="false">Replaced</button>
-        <button class="chip" data-filter="attention" aria-pressed="false">Needs work (C, D, F)</button>
+        <button class="chip" data-filter="failing" aria-pressed="false">Failing checks</button>
         <button class="chip" data-filter="rust" aria-pressed="false">Uses Rust</button>
         <select id="sort" aria-label="Sort">
           <option value="name">Sort: name</option>
+          <option value="status">Sort: status</option>
           <option value="score">Sort: score</option>
           <option value="functions">Sort: functions</option>
           <option value="checks">Sort: proof checks</option>
           <option value="speed">Sort: speedup</option>
-          <option value="grade">Sort: grade</option>
         </select>
         <span class="count" id="count"></span>
       </div>
@@ -310,7 +298,6 @@
             <tr>
               <th data-sort="name">Package<span class="arr"></span></th>
               <th data-sort="status">Status<span class="arr"></span></th>
-              <th data-sort="grade">Grade<span class="arr"></span></th>
               <th data-sort="score">Score<span class="arr"></span></th>
               <th data-sort="functions">Functions<span class="arr"></span></th>
               <th data-sort="checks">Proof checks<span class="arr"></span></th>
@@ -321,7 +308,7 @@
         </table>
         <div class="empty" id="empty" hidden>No package matches this filter.</div>
       </div>
-      <div class="sheet-foot">Grades: A all translated and matching, B at least 75%, C at least 50%, D below 50%, F nothing translated, EX replaced by a stand-in.</div>
+      <div class="sheet-foot">A package with a stand-in library is marked Replaced and is not counted in the scoreboard totals for functions and packages.</div>
     </div>
   </div>
 </section>
@@ -402,7 +389,7 @@
     <img src="assets/mark.jpg" alt="killr logo">
     <p>killr, Kill CRAN. Data generated from the registry in this repository.</p>
     <nav class="sp">
-      <a href="#exam">Exam</a>
+      <a href="#progress">Progress</a>
       <a href="strategy.md">Strategy</a>
       <a href="roadmap.md">Roadmap</a>
       <a href="https://github.com/elmahyai/killr">GitHub</a>
@@ -441,7 +428,7 @@
   const pkgShare = graded ? T.complete / graded : 0;
   $('#s-fn').textContent = fmt(T.functions_done);
   $('#s-fn-of').textContent = 'of ' + fmt(T.functions_total);
-  $('#s-fn-note').textContent = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '% of functions in the graded packages';
+  $('#s-fn-note').textContent = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '% of functions in packages that are not replaced';
   $('#s-chk').textContent = fmt(T.checks_passed);
   $('#s-chk-of').textContent = 'of ' + fmt(T.checks_total);
   $('#s-spd').textContent = T.median_speedup ? T.median_speedup + 'x' : '-';
@@ -452,45 +439,23 @@
     $('#m-chk').style.width = pct(T.checks_total ? T.checks_passed / T.checks_total : 0) + '%';
   });
 
-  // Grade cells double as filters.
-  const gradeOrder = ['A', 'B', 'C', 'D', 'F', 'EX'];
-  const gradeCounts = Object.assign({}, T.grades);
-  gradeCounts.EX = T.replaced;
-  const gradeWrap = $('#grades');
-  gradeOrder.forEach((g) => {
-    const cell = el('div', 'gcell');
-    cell.tabIndex = 0;
-    cell.setAttribute('role', 'button');
-    cell.setAttribute('aria-label', 'Show grade ' + g);
-    cell.appendChild(el('div', 'g g-' + g, g));
-    const n = gradeCounts[g] || 0;
-    cell.appendChild(el('div', 'c', n + (n === 1 ? ' package' : ' packages')));
-    const go = () => { state.grade = g; state.filter = 'grade'; syncChips(); render(); $('#exam').scrollIntoView(); };
-    cell.addEventListener('click', go);
-    cell.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-    gradeWrap.appendChild(cell);
-  });
-
-  // ---------- Exam table ----------
-  const state = { filter: 'all', grade: null, q: '', sort: 'name', dir: 1 };
+  // ---------- Results table ----------
+  const state = { filter: 'all', q: '', sort: 'name', dir: 1 };
   const score = (p) => (p.total ? p.translated / p.total : 0);
   const speed = (p) => (p.checks.median_speedup || 0);
-  const GRADE_RANK = { A: 6, B: 5, C: 4, D: 3, F: 2, EX: 1 };
 
   const predicates = {
     all: () => true,
     complete: (p) => p.status === 'complete',
     in_progress: (p) => p.status === 'in_progress',
     replaced: (p) => p.status === 'replaced',
-    attention: (p) => p.status !== 'replaced' && ['C', 'D', 'F'].includes(p.grade),
+    failing: (p) => p.checks.total > p.checks.passed,
     rust: (p) => p.rust,
-    grade: (p) => p.grade === state.grade,
   };
 
   const sorters = {
     name: (a, b) => a.name.localeCompare(b.name),
     status: (a, b) => a.status.localeCompare(b.status),
-    grade: (a, b) => GRADE_RANK[a.grade] - GRADE_RANK[b.grade],
     score: (a, b) => score(a) - score(b),
     functions: (a, b) => a.translated - b.translated,
     checks: (a, b) => a.checks.passed - b.checks.passed,
@@ -520,9 +485,6 @@
       const st = el('td');
       st.appendChild(el('span', 'pill ' + p.status, LABEL[p.status] || p.status));
       tr.appendChild(st);
-      const gd = el('td');
-      gd.appendChild(el('span', 'gbadge g-' + p.grade, p.grade));
-      tr.appendChild(gd);
       const sc = el('td');
       const bar = el('span', 'bar');
       const fill = el('span');
@@ -554,7 +516,7 @@
   }
 
   document.querySelectorAll('[data-filter]').forEach((b) => {
-    b.addEventListener('click', () => { state.filter = b.dataset.filter; state.grade = null; syncChips(); render(); });
+    b.addEventListener('click', () => { state.filter = b.dataset.filter; syncChips(); render(); });
   });
   $('#q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
   $('#sort').addEventListener('change', (e) => { state.sort = e.target.value; state.dir = 1; render(); });
@@ -562,7 +524,7 @@
     th.addEventListener('click', () => {
       const key = th.dataset.sort;
       if (state.sort === key) state.dir = -state.dir; else { state.sort = key; state.dir = 1; }
-      if (['name', 'grade', 'score', 'functions', 'checks', 'speed'].includes(key)) $('#sort').value = key;
+      if (['name', 'status', 'score', 'functions', 'checks', 'speed'].includes(key)) $('#sort').value = key;
       render();
     });
   });
@@ -574,7 +536,7 @@
     if (!p) return;
     $('#d-title').textContent = p.name + (p.version ? '  ' + p.version : '');
     const meta = LABEL[p.status] || p.status;
-    $('#d-meta').textContent = meta + ' · grade ' + p.grade + ' · ' + p.translated + ' of ' + p.total + ' functions · ' + p.checks.passed + ' of ' + p.checks.total + ' proof checks';
+    $('#d-meta').textContent = meta + ' · ' + p.translated + ' of ' + p.total + ' functions · ' + p.checks.passed + ' of ' + p.checks.total + ' proof checks';
     const body = $('#d-body');
     body.textContent = '';
 
