@@ -1,8 +1,12 @@
+<p align="center">
+  <img src="docs/assets/logo.jpg" width="420" alt="killr: Rust and Python, the AI-powered R replacement">
+</p>
+
 # killr
 
 **Kill CRAN.** killr is an agent system that translates the R package catalog (CRAN) into Python and Rust, and proves every translated function against R.
 
-- Pitch page with the live dashboard: [docs/index.html](docs/index.html) (published on GitHub Pages once enabled)
+- Front page with the live dashboard: [docs/index.html](docs/index.html) (published on GitHub Pages once enabled)
 - How the system works, with a graph: [docs/strategy.md](docs/strategy.md)
 - What is still open: [docs/roadmap.md](docs/roadmap.md)
 
@@ -18,7 +22,7 @@
 | `killplot/` | The shared plotting helpers |
 | `registry.json` | The generated record of every package, crate, and native library |
 | `dashboard/` | The build script and the dashboard pages |
-| `docs/` | The pitch page, strategy and roadmap documents |
+| `docs/` | The front page, logo, strategy and roadmap documents |
 
 ## Rebuild the registry and dashboard
 

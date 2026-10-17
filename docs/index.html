@@ -5,257 +5,451 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>killr: Kill CRAN</title>
 <meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R.">
+<link rel="icon" href="assets/mark.jpg" type="image/jpeg">
 <style>
   :root {
-    --bg: #0b0d17;
-    --panel: rgba(255,255,255,0.05);
-    --line: rgba(255,255,255,0.12);
-    --text: #e8ebf7;
+    --bg: #080a14;
+    --bg2: #0d1024;
+    --panel: rgba(255,255,255,0.045);
+    --panel-hi: rgba(255,255,255,0.08);
+    --line: rgba(255,255,255,0.1);
+    --text: #eef0fb;
     --muted: #9aa3c7;
     --a: #7c5cff;
     --b: #00d4ff;
     --c: #ff5c8a;
     --ok: #3ddc97;
+    --wait: #ffb85c;
+    --radius: 20px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
   body {
-    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.6;
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden;
   }
-  a { color: var(--b); }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--b); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 
-  /* Hero */
+  /* ---------- Navigation ---------- */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    background: rgba(8,10,20,0.72); border-bottom: 1px solid var(--line);
+  }
+  nav.top .wrap { display: flex; align-items: center; gap: 28px; height: 68px; }
+  .brand { display: flex; align-items: center; gap: 12px; color: var(--text); font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  .brand:hover { text-decoration: none; }
+  .brand img { height: 40px; width: auto; display: block; border-radius: 10px; background: #fff; padding: 3px; }
+  nav.top ul { display: flex; gap: 22px; list-style: none; margin: 0 0 0 auto; padding: 0; }
+  nav.top ul a { color: var(--muted); font-size: 15px; }
+  nav.top ul a:hover { color: var(--text); text-decoration: none; }
+  .nav-cta {
+    padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; color: #05070f;
+    background: linear-gradient(90deg, var(--a), var(--b));
+  }
+  .nav-cta:hover { text-decoration: none; filter: brightness(1.08); }
+
+  /* ---------- Hero ---------- */
   header.hero {
-    position: relative; overflow: hidden; padding: 96px 0 72px;
+    position: relative; overflow: hidden; padding: 84px 0 96px;
     background:
-      radial-gradient(900px 500px at 15% -10%, rgba(124,92,255,0.35), transparent 60%),
-      radial-gradient(800px 500px at 95% 0%, rgba(0,212,255,0.22), transparent 60%),
-      radial-gradient(700px 400px at 50% 120%, rgba(255,92,138,0.18), transparent 60%),
+      radial-gradient(900px 560px at 12% -8%, rgba(124,92,255,0.34), transparent 60%),
+      radial-gradient(820px 520px at 96% 4%, rgba(0,212,255,0.22), transparent 60%),
+      radial-gradient(700px 420px at 50% 118%, rgba(255,92,138,0.16), transparent 60%),
       var(--bg);
   }
-  .eyebrow {
-    display: inline-block; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px;
-    color: var(--muted); font-size: 14px; background: var(--panel);
+  header.hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
   }
+  .hero-grid { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--line);
+    border-radius: 999px; color: var(--muted); font-size: 14px; background: var(--panel);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(61,220,151,0.6); animation: ping 2s infinite; }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(61,220,151,0.6);} 70% { box-shadow: 0 0 0 10px rgba(61,220,151,0);} 100% { box-shadow: 0 0 0 0 rgba(61,220,151,0);} }
   h1 {
-    font-size: clamp(56px, 10vw, 128px); line-height: 0.95; margin: 22px 0 12px; letter-spacing: -0.04em;
-    background: linear-gradient(90deg, #fff 0%, var(--b) 45%, var(--a) 80%, var(--c) 100%);
+    font-size: clamp(60px, 9.5vw, 124px); line-height: 0.95; margin: 22px 0 14px; letter-spacing: -0.045em; font-weight: 850;
+    background: linear-gradient(90deg, #ffffff 0%, var(--b) 42%, var(--a) 78%, var(--c) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .lead { font-size: clamp(18px, 2.2vw, 24px); max-width: 760px; color: #cfd5f0; margin: 0 0 32px; }
+  .lead { font-size: clamp(18px, 2.1vw, 22px); max-width: 620px; color: #cdd3ef; margin: 0 0 30px; }
   .cta { display: flex; gap: 14px; flex-wrap: wrap; }
   .btn {
-    display: inline-block; padding: 14px 22px; border-radius: 12px; text-decoration: none; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 12px; font-weight: 650;
     border: 1px solid var(--line); color: var(--text); background: var(--panel);
+    transition: transform .15s ease, background .15s ease;
   }
-  .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; }
-  .btn:hover { transform: translateY(-2px); }
-  .btn { transition: transform .15s ease; }
+  .btn:hover { transform: translateY(-2px); background: var(--panel-hi); text-decoration: none; }
+  .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; box-shadow: 0 10px 30px -10px rgba(0,212,255,0.55); }
+  .btn.primary:hover { background: linear-gradient(90deg, var(--a), var(--b)); filter: brightness(1.07); }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .chip { padding: 8px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: #cdd3ef; font-size: 14px; }
+  .chip b { color: var(--text); }
 
-  section { padding: 72px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 12px; letter-spacing: -0.02em; }
-  .sub { color: var(--muted); margin: 0 0 36px; max-width: 760px; }
+  /* Hero logo */
+  .hero-logo { position: relative; width: min(560px, 100%); margin: 0 auto; }
+  .hero-logo .halo {
+    position: absolute; inset: -8%; border-radius: 40px;
+    background: radial-gradient(circle, rgba(124,92,255,0.5), rgba(0,212,255,0.14) 55%, transparent 72%);
+    filter: blur(22px);
+  }
+  .hero-logo img {
+    position: relative; width: 100%; height: auto; display: block; border-radius: 28px;
+    box-shadow: 0 30px 80px -20px rgba(124,92,255,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-  /* Stats */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
+  /* ---------- Sections ---------- */
+  section { padding: 96px 0; border-top: 1px solid var(--line); position: relative; }
+  .kicker { color: var(--b); font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  h2 { font-size: clamp(30px, 4.2vw, 46px); margin: 10px 0 12px; letter-spacing: -0.03em; line-height: 1.1; }
+  .sub { color: var(--muted); margin: 0 0 40px; max-width: 760px; font-size: 17px; }
+
+  /* ---------- Stats ---------- */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .stat {
-    padding: 26px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
-    position: relative; overflow: hidden;
+    padding: 26px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
+    position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease;
   }
+  .stat:hover { transform: translateY(-3px); border-color: rgba(0,212,255,0.35); }
   .stat::before {
     content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
     background: linear-gradient(90deg, var(--a), var(--b));
   }
-  .num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; }
-  .label { color: var(--muted); font-size: 15px; margin-top: 4px; }
-  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .label { color: var(--text); font-size: 15px; margin-top: 4px; font-weight: 600; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 8px; }
 
-  /* Cards */
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-  .card { padding: 26px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
-  .card h3 { margin: 0 0 8px; font-size: 20px; }
-  .card p { margin: 0; color: var(--muted); }
-  .tag { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--b); }
-
-  /* Pipeline */
-  .pipeline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .step {
-    padding: 14px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line);
-    font-weight: 600;
+  /* Progress donut */
+  .progress { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; margin-top: 40px; }
+  .donut {
+    width: 260px; height: 260px; border-radius: 50%; position: relative; margin: 0 auto;
+    /* 133 complete = 258.9deg, 14 in progress = 27.2deg, 38 replaced = 73.9deg (of 185) */
+    background: conic-gradient(var(--ok) 0deg 258.9deg, var(--wait) 258.9deg 286.1deg, var(--c) 286.1deg 360deg);
+    box-shadow: 0 0 60px -10px rgba(0,212,255,0.35);
   }
-  .arrow { color: var(--a); font-size: 22px; }
+  .donut::after {
+    content: ""; position: absolute; inset: 26px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--line);
+  }
+  .donut .mid { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; text-align: center; }
+  .donut .mid b { font-size: 48px; letter-spacing: -0.03em; }
+  .donut .mid span { color: var(--muted); font-size: 14px; }
+  .legend { display: grid; gap: 14px; }
+  .legend .row { display: grid; grid-template-columns: 18px 1fr auto; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; }
+  .legend .row strong { font-size: 17px; }
+  .legend .row small { display: block; color: var(--muted); font-size: 13px; }
+  .legend .row em { font-style: normal; font-size: 22px; font-weight: 800; }
 
-  /* Todo */
-  .todo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
-  .todo .card h3 span { color: var(--c); font-size: 13px; font-weight: 600; margin-left: 6px; }
-  ul.tick { list-style: none; padding: 0; margin: 0; }
-  ul.tick li { padding: 6px 0 6px 28px; position: relative; color: #cfd5f0; }
-  ul.tick li::before { content: "\25A2"; position: absolute; left: 0; color: var(--b); }
-
-  /* Dashboard */
+  /* ---------- Dashboard ---------- */
+  #dashboard { background: radial-gradient(900px 400px at 50% 0%, rgba(124,92,255,0.14), transparent 70%), var(--bg); }
+  .dash-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 28px; }
+  .dash-head .sub { margin: 0; }
   .frame {
-    border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #fff;
+    border-radius: 22px; overflow: hidden; border: 1px solid var(--line); background: #f7f4ee;
+    box-shadow: 0 30px 80px -30px rgba(124,92,255,0.45);
   }
-  iframe { width: 100%; height: 1100px; border: 0; display: block; }
+  .frame-bar {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #14172b; border-bottom: 1px solid var(--line);
+    color: var(--muted); font-size: 13px;
+  }
+  .frame-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .frame-bar .url { margin-left: 12px; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); flex: 1; max-width: 460px; }
+  .frame-bar a { margin-left: auto; color: var(--b); font-weight: 600; }
+  iframe { width: 100%; height: 1000px; border: 0; display: block; background: #f7f4ee; }
 
-  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+  /* ---------- Cards and steps ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+  .card {
+    padding: 28px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(124,92,255,0.45); background: var(--panel-hi); }
+  .card .ico {
+    width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 18px;
+    background: linear-gradient(135deg, rgba(124,92,255,0.35), rgba(0,212,255,0.25)); border: 1px solid var(--line);
+    font-weight: 800; font-size: 18px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--muted); }
 
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin: 8px 0 44px; }
+  .flow .node { position: relative; text-align: center; padding: 0 8px; }
+  .flow .node .bubble {
+    width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--panel); border: 1px solid rgba(0,212,255,0.4); font-weight: 800; color: var(--b);
+    box-shadow: 0 0 24px -6px rgba(0,212,255,0.5);
+  }
+  .flow .node b { display: block; font-size: 15px; }
+  .flow .node span { color: var(--muted); font-size: 13px; }
+  .flow .node:not(:last-child)::after {
+    content: ""; position: absolute; top: 32px; left: calc(50% + 40px); right: calc(-50% + 40px); height: 2px;
+    background: linear-gradient(90deg, var(--a), var(--b)); opacity: 0.6;
+  }
+
+  /* ---------- Rust ---------- */
+  .rust-band { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .rust-band p { color: var(--muted); font-size: 17px; }
+  .bars { display: grid; gap: 18px; }
+  .bar .top { display: flex; justify-content: space-between; font-size: 14px; color: #cdd3ef; margin-bottom: 8px; }
+  .bar .track { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; border: 1px solid var(--line); }
+  .bar .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--a), var(--b)); width: 0; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+
+  /* ---------- Roadmap ---------- */
+  .todo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .todo .card h3 { display: flex; align-items: center; justify-content: space-between; }
+  .tag { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,92,138,0.14); color: var(--c); border: 1px solid rgba(255,92,138,0.35); }
+  ul.tick { list-style: none; padding: 0; margin: 14px 0 0; }
+  ul.tick li { padding: 7px 0 7px 28px; position: relative; color: #cdd3ef; }
+  ul.tick li::before {
+    content: ""; position: absolute; left: 2px; top: 13px; width: 12px; height: 12px; border-radius: 4px;
+    border: 1.5px solid var(--b);
+  }
+  .more { margin-top: 32px; }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 56px 0 64px; border-top: 1px solid var(--line); background: var(--bg2); }
+  .foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .foot img { height: 44px; width: auto; border-radius: 10px; background: #fff; padding: 3px; }
+  .foot p { margin: 0; color: var(--muted); }
+  .foot nav a { color: var(--muted); margin-left: 18px; font-size: 15px; }
+  .foot .sp { margin-left: auto; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px) {
+    .hero-grid, .progress, .rust-band { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .hero-logo { max-width: 520px; margin-top: 12px; }
+    .flow { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
+    .flow .node::after { display: none !important; }
+    nav.top ul { display: none; }
+    iframe { height: 760px; }
+  }
+  @media (max-width: 560px) {
+    .stats { grid-template-columns: 1fr; }
+    iframe { height: 620px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<header class="hero">
+<nav class="top">
   <div class="wrap">
-    <span class="eyebrow">Proof of concept · An agent system for R to Python and Rust</span>
-    <h1>killr</h1>
-    <p class="lead">
-      R has the best statistics packages in the world, and they are trapped in R.
-      killr is an agent system that translates the CRAN catalog into Python and Rust,
-      and proves every translated function against the original R output.
-    </p>
-    <div class="cta">
-      <a class="btn primary" href="#dashboard">See the live dashboard</a>
-      <a class="btn" href="strategy.md">How the agents work</a>
-      <a class="btn" href="roadmap.md">What is next</a>
+    <a class="brand" href="#top"><img src="assets/mark.jpg" alt="">killr</a>
+    <ul>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#progress">Progress</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#rust">Rust</a></li>
+      <li><a href="#next">What is next</a></li>
+    </ul>
+    <a class="nav-cta" href="#dashboard">Open dashboard</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot"></span> Proof of concept &middot; live</span>
+      <h1>Kill CRAN.</h1>
+      <p class="lead">
+        R holds some of the best statistics code in the world, and it is trapped in R.
+        killr is an agent system that translates the CRAN catalog into Python and Rust,
+        and proves every translated function against the original R output.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="#dashboard">See the live dashboard</a>
+        <a class="btn" href="strategy.md">How the agents work</a>
+      </div>
+      <div class="chips">
+        <span class="chip"><b>6,097</b> functions translated</span>
+        <span class="chip"><b>5,999</b> of 6,006 checks match R</span>
+        <span class="chip"><b>1.96x</b> median speedup</span>
+      </div>
+    </div>
+    <div class="hero-logo">
+      <div class="halo"></div>
+      <img src="assets/logo.jpg" alt="killr: Rust and Python, the AI-powered R replacement">
     </div>
   </div>
 </header>
 
-<section>
+<section id="progress">
   <div class="wrap">
-    <h2>Where we are</h2>
-    <p class="sub">Numbers from the translation registry at the time of this snapshot. They refresh on each dashboard build.</p>
+    <div class="kicker">Where we are</div>
+    <h2>Progress across the catalog</h2>
+    <p class="sub">Numbers from the translation registry, as of this snapshot. They refresh each time the dashboard is built.</p>
     <div class="stats">
-      <div class="stat"><div class="num" data-count="185">0</div><div class="label">CRAN packages in scope</div><div class="note">133 complete, 14 in progress</div></div>
-      <div class="stat"><div class="num" data-count="133">0</div><div class="label">packages fully translated</div><div class="note">38 more are replaced by a mature library</div></div>
-      <div class="stat"><div class="num" data-count="6097">0</div><div class="label">functions translated</div><div class="note">Python first, Rust where it computes</div></div>
-      <div class="stat"><div class="num" data-count="5999">0</div><div class="label">proof checks match R</div><div class="note">of 6,006 recorded checks</div></div>
-      <div class="stat"><div class="num">1.96x</div><div class="label">median speedup over R</div><div class="note">63% of checks are faster than R</div></div>
-      <div class="stat"><div class="num" data-count="132">0</div><div class="label">Rust kernel crates</div><div class="note">about 96,000 lines of Rust</div></div>
+      <div class="stat"><div class="num" data-count="185">185</div><div class="label">CRAN packages in scope</div><div class="note">133 complete, 14 in progress</div></div>
+      <div class="stat"><div class="num" data-count="133">133</div><div class="label">packages fully translated</div><div class="note">38 more are replaced by a mature library</div></div>
+      <div class="stat"><div class="num" data-count="6097">6,097</div><div class="label">functions translated</div><div class="note">Python first, Rust where it computes</div></div>
+      <div class="stat"><div class="num" data-count="5999">5,999</div><div class="label">proof checks match R</div><div class="note">of 6,006 recorded checks</div></div>
+      <div class="stat"><div class="num">1.96x</div><div class="label">median speedup over R</div><div class="note">63% of checks run faster than R</div></div>
+      <div class="stat"><div class="num" data-count="132">132</div><div class="label">Rust kernel crates</div><div class="note">about 96,000 lines of Rust</div></div>
     </div>
-  </div>
-</section>
 
-<section>
-  <div class="wrap">
-    <h2>The problem</h2>
-    <p class="sub">Statistics runs on R, but production runs on Python and Rust. Porting by hand is slow, and every port drifts from the original.</p>
-    <div class="cards">
-      <div class="card"><div class="tag">01</div><h3>Locked in R</h3><p>Core algorithms live in R and C and Fortran code that most teams cannot maintain or ship in their own stack.</p></div>
-      <div class="card"><div class="tag">02</div><h3>Slow to port</h3><p>Thousands of functions across hundreds of packages. A manual port takes years and is never finished.</p></div>
-      <div class="card"><div class="tag">03</div><h3>Silent drift</h3><p>A port that looks right can still give different numbers. Without a check against R, nobody knows.</p></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>The approach</h2>
-    <p class="sub">An orchestrator hands each package to translation agents. Each agent works under a written constitution and a strategy that matches the package size. Every function must match R before it counts as done.</p>
-    <div class="pipeline">
-      <div class="step">CRAN catalog</div><span class="arrow">→</span>
-      <div class="step">Orchestrator</div><span class="arrow">→</span>
-      <div class="step">Translation agents</div><span class="arrow">→</span>
-      <div class="step">Proof vs R (1e-8)</div><span class="arrow">→</span>
-      <div class="step">Registry</div><span class="arrow">→</span>
-      <div class="step">Dashboard</div>
-    </div>
-    <div class="cards" style="margin-top:28px">
-      <div class="card"><div class="tag">Orchestrator</div><h3>Decides what runs</h3><p>Picks the next package by dependencies and download rank, and caps how many run at once.</p></div>
-      <div class="card"><div class="tag">Constitution</div><h3>Sets the law</h3><p>One document of rules: the order, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
-      <div class="card"><div class="tag">Strategies</div><h3>Fits the size</h3><p>Small, medium, large, and huge packages each get their own plan. Packages with compiled code get a -low variant.</p></div>
-      <div class="card"><div class="tag">Experience</div><h3>Learns from mistakes</h3><p>Each pitfall an agent hits becomes a lesson that later agents read before they start.</p></div>
-    </div>
-    <p class="sub" style="margin-top:28px">The full flow, with a graph, is in <a href="strategy.md">the strategy document</a>.</p>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>Rust coverage</h2>
-    <p class="sub">Python carries the translation. Rust takes the compiled kernels, the Fortran and C that do the computing, and it is where we grow next.</p>
-    <div class="stats">
-      <div class="stat"><div class="num" data-count="132">0</div><div class="label">Rust crates</div><div class="note">each holds one Fortran or C kernel</div></div>
-      <div class="stat"><div class="num" data-count="32">0</div><div class="label">packages with Rust dependencies</div><div class="note">the Rust layer is already in use</div></div>
-      <div class="stat"><div class="num" data-count="63">0</div><div class="label">native libraries agreed</div><div class="note">NumPy, Matplotlib, Polars and others</div></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>What is next</h2>
-    <p class="sub">This is a proof of concept. The agents are fast, not finished. The work ahead is review, coverage, and quality.</p>
-    <div class="todo">
-      <div class="card">
-        <h3>More review rounds <span>open</span></h3>
-        <p>Every translated package gets another review pass, so the first translation is not the last word.</p>
-        <ul class="tick" style="margin-top:12px">
-          <li>Review the 133 complete packages again</li>
-          <li>Check the 7 proof checks that do not match yet</li>
-          <li>Finish the 14 packages in progress</li>
-        </ul>
+    <div class="progress">
+      <div class="donut" aria-label="133 complete, 14 in progress, 38 replaced, of 185 packages">
+        <div class="mid"><b>185</b><span>packages in scope</span></div>
       </div>
-      <div class="card">
-        <h3>Raise Rust coverage <span>open</span></h3>
-        <p>More of the compiled code moves into Rust, so the heavy numerics run without a C or Fortran toolchain.</p>
-        <ul class="tick" style="margin-top:12px">
-          <li>Turn more Fortran and C kernels into crates</li>
-          <li>Measure Rust coverage on the dashboard</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>Decisions still open <span>open</span></h3>
-        <p>Some choices need agreement before the work can go on.</p>
-        <ul class="tick" style="margin-top:12px">
-          <li>Which big libraries stand in for R frameworks</li>
-          <li>Which of the 38 replaced packages need a second look</li>
-        </ul>
+      <div class="legend">
+        <div class="row"><span class="swatch" style="background:var(--ok)"></span><div><strong>Complete</strong><small>Translated and proven against R</small></div><em>133</em></div>
+        <div class="row"><span class="swatch" style="background:var(--wait)"></span><div><strong>In progress</strong><small>Agents are working on these now</small></div><em>14</em></div>
+        <div class="row"><span class="swatch" style="background:var(--c)"></span><div><strong>Replaced</strong><small>Covered by a mature library instead of a port</small></div><em>38</em></div>
       </div>
     </div>
-    <p class="sub" style="margin-top:28px">The full list is in <a href="roadmap.md">the roadmap</a>.</p>
   </div>
 </section>
 
 <section id="dashboard">
   <div class="wrap">
-    <h2>The live dashboard</h2>
-    <p class="sub">Every package, crate, and proof, built from the registry. Use it to browse the work directly.</p>
+    <div class="dash-head">
+      <div>
+        <div class="kicker">Live</div>
+        <h2>The dashboard</h2>
+      </div>
+      <p class="sub">Every package, crate, and proof, built from the registry. Browse it right here, or open it full screen.</p>
+    </div>
     <div class="frame">
+      <div class="frame-bar">
+        <i style="background:#ff5c8a"></i><i style="background:#ffb85c"></i><i style="background:#3ddc97"></i>
+        <span class="url">dashboard/index.html</span>
+        <a href="dashboard/index.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
+      </div>
       <iframe src="dashboard/index.html" title="killr dashboard" loading="lazy"></iframe>
     </div>
   </div>
 </section>
 
-<footer>
+<section id="how">
   <div class="wrap">
-    killr · proof of concept · built on the translation registry in this repository.
+    <div class="kicker">How it works</div>
+    <h2>One pipeline, from R to Python and Rust</h2>
+    <p class="sub">An orchestrator hands each package to translation agents. Each agent follows a written constitution and a plan sized to the package. Nothing counts as done until it matches R.</p>
+    <div class="flow">
+      <div class="node"><div class="bubble">1</div><b>CRAN catalog</b><span>The source of truth</span></div>
+      <div class="node"><div class="bubble">2</div><b>Orchestrator</b><span>Picks what runs next</span></div>
+      <div class="node"><div class="bubble">3</div><b>Agents</b><span>Translate under the rules</span></div>
+      <div class="node"><div class="bubble">4</div><b>Proof vs R</b><span>Match within 1e-8</span></div>
+      <div class="node"><div class="bubble">5</div><b>Registry</b><span>One generated record</span></div>
+      <div class="node"><div class="bubble">6</div><b>Dashboard</b><span>What you saw above</span></div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico">O</div><h3>Orchestrator</h3><p>Orders packages by dependencies and download rank, and caps how many run at once.</p></div>
+      <div class="card"><div class="ico">C</div><h3>Constitution</h3><p>One set of rules: the order of work, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
+      <div class="card"><div class="ico">S</div><h3>Strategies</h3><p>Small, medium, large, and huge packages each get a plan that fits. Compiled code gets a -low variant.</p></div>
+      <div class="card"><div class="ico">E</div><h3>Experience</h3><p>Every pitfall becomes a lesson that later agents read before they start, so it is made once.</p></div>
+    </div>
+    <p class="sub more">The full flow with the graph is in <a href="strategy.md">the strategy document</a>.</p>
+  </div>
+</section>
+
+<section id="rust">
+  <div class="wrap rust-band">
+    <div>
+      <div class="kicker">Rust coverage</div>
+      <h2>Compiled code moves into Rust</h2>
+      <p>Python carries the translation. Rust takes the Fortran and C kernels that do the heavy computing, and it is the next area to grow.</p>
+      <div class="stats" style="margin-top:28px; grid-template-columns: repeat(3, 1fr)">
+        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="132">132</div><div class="label" style="font-size:13px">Rust crates</div></div>
+        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="32">32</div><div class="label" style="font-size:13px">packages use Rust</div></div>
+        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="63">63</div><div class="label" style="font-size:13px">native libraries</div></div>
+      </div>
+    </div>
+    <div class="bars">
+      <div class="bar"><div class="top"><span>Packages fully translated</span><span>133 of 185</span></div><div class="track"><div class="fill" data-w="72"></div></div></div>
+      <div class="bar"><div class="top"><span>Packages with a Rust layer</span><span>32 of 185</span></div><div class="track"><div class="fill" data-w="17"></div></div></div>
+      <div class="bar"><div class="top"><span>Proof checks matching R</span><span>5,999 of 6,006</span></div><div class="track"><div class="fill" data-w="99.9"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="wrap">
+    <div class="kicker">What is next</div>
+    <h2>Still early, and getting better</h2>
+    <p class="sub">The agents are fast, but a first translation is not the last word. The work ahead is review, coverage, and quality.</p>
+    <div class="todo">
+      <div class="card">
+        <h3>More review rounds <span class="tag">open</span></h3>
+        <p>Every complete package gets another review pass, so the first translation is not the final one.</p>
+        <ul class="tick">
+          <li>Review the 133 complete packages again</li>
+          <li>Resolve the 7 proof checks that do not match yet</li>
+          <li>Finish the 14 packages in progress</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Raise Rust coverage <span class="tag">open</span></h3>
+        <p>More of the compiled numerics move into Rust, so they run without a C or Fortran toolchain.</p>
+        <ul class="tick">
+          <li>Turn more Fortran and C kernels into crates</li>
+          <li>Show Rust coverage on the dashboard</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Decisions still open <span class="tag">open</span></h3>
+        <p>Some choices need agreement before the work can go on.</p>
+        <ul class="tick">
+          <li>Which big libraries stand in for R frameworks</li>
+          <li>Whether the 38 replaced packages need a second look</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub more">The full list is in <a href="roadmap.md">the roadmap</a>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <img src="assets/mark.jpg" alt="killr logo">
+    <p>killr &middot; Kill CRAN &middot; built on the translation registry in this repository.</p>
+    <nav class="sp">
+      <a href="#dashboard">Dashboard</a>
+      <a href="strategy.md">Strategy</a>
+      <a href="roadmap.md">Roadmap</a>
+    </nav>
   </div>
 </footer>
 
 <script>
-  // Count up the big numbers when they scroll into view.
-  const counters = document.querySelectorAll('[data-count]');
+  // Count the big numbers up when they scroll into view.
   const io = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       if (!e.isIntersecting) return;
       const el = e.target;
-      const target = Number(el.dataset.count);
-      const start = performance.now();
-      const dur = 1200;
-      const tick = (now) => {
-        const t = Math.min(1, (now - start) / dur);
-        el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3))).toLocaleString('en-US');
-        if (t < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
+      if (el.dataset.count) {
+        const target = Number(el.dataset.count);
+        el.textContent = '0';
+        const start = performance.now();
+        const tick = (now) => {
+          const t = Math.min(1, (now - start) / 1200);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3))).toLocaleString('en-US');
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      } else if (el.dataset.w) {
+        el.style.width = el.dataset.w + '%';
+      }
       io.unobserve(el);
     });
   }, { threshold: 0.4 });
-  counters.forEach((el) => io.observe(el));
+  document.querySelectorAll('[data-count], [data-w]').forEach((el) => io.observe(el));
 </script>
 </body>
 </html>
