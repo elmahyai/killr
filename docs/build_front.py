@@ -32,22 +32,6 @@ END = "<!-- progress:end -->"
 NOT_DONE_LIMIT = 220
 
 
-def _grade(status: str, coverage: float, checks: list) -> str:
-    """Exam grade. Replaced packages are exempt and get no grade."""
-    if status == "replaced":
-        return "EX"
-    if coverage <= 0:
-        return "F"
-    failing = any(not c.get("matches") for c in checks)
-    if coverage >= 1 and checks and not failing:
-        return "A"
-    if coverage >= 0.75:
-        return "B"
-    if coverage >= 0.5:
-        return "C"
-    return "D"
-
-
 def _load_translation(name: str) -> dict:
     path = PACKAGES / name / "translation.json"
     if not path.is_file():
@@ -92,7 +76,6 @@ def _package_rows(registry: dict) -> list[dict]:
                 "version": record.get("cran_version") or "",
                 "status": status,
                 "coverage": round(coverage, 4),
-                "grade": _grade(status, coverage, checks),
                 "total": total,
                 "translated": translated,
                 "checks": {
@@ -150,9 +133,6 @@ def _totals(packages: list[dict], crates: list[dict]) -> dict:
         for c in p["checks_detail"]
         if c["s"] is not None and c["ok"]
     ]
-    grades = {}
-    for p in graded:
-        grades[p["grade"]] = grades.get(p["grade"], 0) + 1
     return {
         "packages": len(packages),
         "graded": len(graded),
@@ -166,7 +146,6 @@ def _totals(packages: list[dict], crates: list[dict]) -> dict:
         "median_speedup": round(statistics.median(speeds), 2) if speeds else None,
         "crates": len(crates),
         "crates_assigned": sum(1 for c in crates if c["state"] == "assigned"),
-        "grades": grades,
     }
 
 
@@ -223,15 +202,15 @@ def _readme_block(totals: dict, packages: list[dict], generated: str) -> str:
         f"| Replaced by a stand-in | {totals['replaced']} |",
         "",
         "<details>",
-        f"<summary>All {len(packages)} packages (grade A to F; EX is exempt)</summary>",
+        f"<summary>All {len(packages)} packages</summary>",
         "",
-        "| Package | Status | Grade | Functions | Proof checks | Median speedup |",
-        "| --- | --- | :---: | ---: | ---: | ---: |",
+        "| Package | Status | Functions | Proof checks | Median speedup |",
+        "| --- | --- | ---: | ---: | ---: |",
     ]
     for p in packages:
         speed = f"{p['checks']['median_speedup']}x" if p["checks"]["median_speedup"] else "-"
         lines.append(
-            f"| {p['name']} | {p['status'].replace('_', ' ')} | {p['grade']} | "
+            f"| {p['name']} | {p['status'].replace('_', ' ')} | "
             f"{p['translated']} / {p['total']} | "
             f"{p['checks']['passed']} / {p['checks']['total']} | {speed} |"
         )
