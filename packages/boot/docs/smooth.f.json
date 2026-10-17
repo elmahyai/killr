@@ -1,0 +1,64 @@
+{
+  "name": "smooth.f",
+  "title": "Frequency smoothing",
+  "origin": {
+    "description": "A distribution on the sample points whose statistic is near a required value, varying smoothly with that value.",
+    "usage": "smooth.f(theta, boot.out, index = 1, t = boot.out$t[, index], width = 0.5)",
+    "arguments": [
+      {
+        "name": "theta",
+        "text": "Required value of the statistic. A vector produces one distribution per element."
+      },
+      {
+        "name": "boot.out",
+        "text": "A bootstrap object. The frequency array is rebuilt from its saved random seed."
+      },
+      {
+        "name": "index",
+        "text": "1-based column of boot.out$t. Ignored when t is supplied. Only the first element is used, with a warning if several are given."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates, in the same order as the resamples. The default is the index column of boot.out$t. A matrix uses the first column, with a warning."
+      },
+      {
+        "name": "width",
+        "text": "Bandwidth in units of the bootstrap standard error. Values from 0.2 to 1 keep the distribution from flattening toward uniform."
+      }
+    ],
+    "details": "A normal kernel of width width times the importance-weighted standard error is placed on the finite replicates and weighted by the bootstrap frequencies. Within each stratum those weights are scaled to sum to 1. The resulting probabilities sit near theta; they are not solved to hit it exactly. Non-finite replicates are dropped before the moments and the frequency array are used.",
+    "value": "A probability vector of the same length as the data when theta has length 1. Otherwise a matrix with one row per theta.",
+    "example": "set.seed(11)\nx <- c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9)\nb <- boot(x, function(d, i) mean(d[i]), R = 40)\nprint(smooth.f(c(2.5, 3.1), b))",
+    "output": "output/smooth.f-r.txt"
+  },
+  "translation": {
+    "description": "A distribution on the sample points whose statistic is near a required value, varying smoothly with that value.",
+    "usage": "smooth_f(theta, boot_out, index=1, width=0.5)",
+    "arguments": [
+      {
+        "name": "theta",
+        "text": "Required value of the statistic. A vector produces one distribution per element."
+      },
+      {
+        "name": "boot_out",
+        "text": "An object with t0, t, R, data, and the seed, strata, weights, sim, and stype that rebuild the frequency array. A hand-built object is enough; this does not call boot()."
+      },
+      {
+        "name": "index",
+        "text": "1-based column of boot_out.t. Ignored when t is supplied. Only the first element is used, with a warning if several are given."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates, in the same order as the resamples. Omit it to use the index column of boot_out.t. A matrix uses the first column, with a warning."
+      },
+      {
+        "name": "width",
+        "text": "Bandwidth in units of the bootstrap standard error. Values from 0.2 to 1 keep the distribution from flattening toward uniform."
+      }
+    ],
+    "details": "A normal kernel of width width times the importance-weighted standard error is placed on the finite replicates and weighted by the bootstrap frequencies. The frequencies are rebuilt from the saved seed: kind, position, and 624 state words, or the in-process pair of position and state. The index matrix is filled down columns. Within each stratum the weights are scaled to sum to 1. Non-finite replicates are dropped before the moments and the frequency array are used.",
+    "value": "A probability vector of the same length as the data when theta has length 1. Otherwise a matrix with one row per theta.",
+    "example": "import numpy as np\nfrom boot.resample import boot\nfrom boot.rng import set_seed\nfrom boot.tilt import smooth_f\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    return float(values.mean())\n\nx = np.array([2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9])\nset_seed(11)\nresult = boot(x, statistic, R=40)\nprint(smooth_f([2.5, 3.1], result))",
+    "output": "output/smooth.f-python.txt"
+  }
+}

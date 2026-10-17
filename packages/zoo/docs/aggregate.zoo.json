@@ -1,0 +1,80 @@
+{
+  "name": "aggregate.zoo",
+  "title": "Compute Summary Statistics of zoo Objects",
+  "origin": {
+    "description": "Split a zoo series into groups and return one summary per group.",
+    "usage": "aggregate(x, by, FUN = sum, ..., regular = NULL, frequency = NULL, coredata = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A zoo series."
+      },
+      {
+        "name": "by",
+        "text": "A vector of the same length as the index, defining the groups and the new index, or a function applied to the index."
+      },
+      {
+        "name": "FUN",
+        "text": "Summary applied to each group. It must return a fixed length. The default is sum."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to FUN, such as na.rm."
+      },
+      {
+        "name": "regular",
+        "text": "Whether the result is a regular zooreg series. The default follows the class of x."
+      },
+      {
+        "name": "frequency",
+        "text": "Frequency of a regular result. Supplying it forces regular to TRUE."
+      },
+      {
+        "name": "coredata",
+        "text": "If TRUE, FUN sees the values in the group. If FALSE, FUN sees the zoo series for the group."
+      }
+    ],
+    "details": "Groups follow the first occurrence of each value of by, and the result is stored in index order. The default summary is the sum. For values 1, NA, 3 grouped by 1, 1, 2, sum with na.rm TRUE returns 1 and 3 at indexes 1 and 2.",
+    "value": "A zoo series, or a zooreg series when regular is TRUE.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(zoo))\noptions(digits = 7)\nshow <- function(v) {\n  if (is.logical(v) && length(v) == 1) {\n    cat(if (isTRUE(v)) \"TRUE\\n\" else \"FALSE\\n\")\n  } else if (is.zoo(v)) {\n    show(coredata(v))\n    show(index(v))\n  } else {\n    cat(paste(vapply(as.numeric(v), function(a) if (is.na(a)) \"NA\" else sprintf(\"%.16g\", a), \"\"), collapse = \" \"), \"\\n\", sep = \"\")\n  }\n}\nshow(aggregate(zoo(c(1, NA, 3), c(1, 2, 3)), c(1, 1, 2), sum, na.rm = TRUE))\n",
+    "output": "output/aggregate.zoo-r.txt"
+  },
+  "translation": {
+    "description": "Split a zoo series into groups and return one summary per group.",
+    "usage": "aggregate_zoo(x, by, fun=None, regular=None, frequency=None, coredata=True, **kwargs)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A zoo series."
+      },
+      {
+        "name": "by",
+        "text": "A vector of the same length as the index, defining the groups and the new index, or a function applied to the index."
+      },
+      {
+        "name": "fun",
+        "text": "Summary applied to each group. The default is the sum, which returns missing when a group contains a missing value unless na_rm is true."
+      },
+      {
+        "name": "regular",
+        "text": "Whether the result is regular. The default follows the series."
+      },
+      {
+        "name": "frequency",
+        "text": "Frequency of a regular result. Supplying it forces regular to true."
+      },
+      {
+        "name": "coredata",
+        "text": "If True, fun sees the values in the group. If False, fun sees the zoo series for the group."
+      },
+      {
+        "name": "na_rm",
+        "text": "Passed to the summary. For the default sum, true drops missing values before adding."
+      }
+    ],
+    "details": "Groups follow the first occurrence of each value of by, and the result is stored in index order. For values 1, NA, 3 grouped by 1, 1, 2, the sum with na_rm true returns 1 and 3 at indexes 1 and 2.",
+    "value": "A Zoo series, marked regular when regular is true.",
+    "example": "import math\nimport sys\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/zoo\")\nfrom zoo.zoo_class import aggregate_zoo, ifelse_zoo, is_zoo, median_zoo, quantile_zoo, rev_zoo, xtfrm_zoo, zoo\n\n\ndef show(value):\n    if isinstance(value, (bool, np.bool_)):\n        print(\"TRUE\" if value else \"FALSE\")\n        return\n    if is_zoo(value):\n        show(value.data)\n        show(value.index)\n        return\n    array = np.asarray(value, dtype=float).ravel(order=\"F\")\n    print(\" \".join(\"NA\" if math.isnan(float(item)) else format(float(item), \".16g\") for item in array))\n\nshow(aggregate_zoo(zoo([1, float('nan'), 3], [1, 2, 3]), [1, 1, 2], na_rm=True))\n",
+    "output": "output/aggregate.zoo-python.txt"
+  }
+}

@@ -1,0 +1,2417 @@
+{
+  "name": "tools",
+  "cran_version": "4.5.0",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked analyze_license, bibstyle, base_aliases_db, and checkTnF. tools 4.5.0 is the standard package shipped with R 4.5.0. 64 exports are translated. hashlib, signal, gzip, and subprocess are recorded as native. Rd conversion, the CRAN checkers, and the vignette builders are not started.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "gzip",
+      "hashlib",
+      "signal",
+      "subprocess"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": ".print.via.format",
+      "translated": true,
+      "python": "tools.options.print_via_format",
+      "loads": [],
+      "uses": [],
+      "done": "Writes each formatted element on its own line and returns the value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.8159875869750977,
+        "translated_ms": 0.009517000762571115,
+        "speedup": 85.73999386279867,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  capture.output(.print.via.format(c(\"a\", \"b\")))\n  paste0(paste(capture.output(.print.via.format(c(\"a\", \"b\"))), collapse=\"\\n\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import contextlib, io\n    from tools.options import print_via_format\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        print_via_format([\"a\", \"b\"])\n    return buf.getvalue()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "c(\"a\", \"b\")"
+      }
+    },
+    {
+      "name": "add_datalist",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Adobe_glyphs",
+      "translated": true,
+      "python": "tools.data.adobe_glyphs",
+      "loads": [],
+      "uses": [],
+      "done": "The Adobe glyph names and Unicode code points, in the same order as tools.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "length, MD5 of every glyph, and the first and last entries",
+        "r_ms": 2.2286176681518555,
+        "translated_ms": 3.8162575010574074,
+        "speedup": 0.5839798985090369,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  g <- Adobe_glyphs\n  raw <- charToRaw(paste(g$adobe, g$unicode, sep=\"=\", collapse=\"|\"))\n  paste0(\"GLYPH \", length(g$adobe), \" \", md5sum(bytes=raw), \" \", g$adobe[1], \" \", g$unicode[1], \" \", g$adobe[length(g$adobe)], \" \", g$unicode[length(g$unicode)], \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import hashlib\n    from tools.data import adobe_glyphs\n    g = adobe_glyphs()\n    blob = \"|\".join(f\"{a}={u}\" for a, u in zip(g[\"adobe\"], g[\"unicode\"]))\n    digest = hashlib.md5(blob.encode()).hexdigest()\n    return f\"GLYPH {len(g['adobe'])} {digest} {g['adobe'][0]} {g['unicode'][0]} {g['adobe'][-1]} {g['unicode'][-1]}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "analyze_license",
+      "translated": true,
+      "python": "tools.license.analyze_license",
+      "loads": [],
+      "uses": [],
+      "done": "Parses and expands DESCRIPTION license specs using the bundled R 4.5.0 license database.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Five Writing R Extensions license examples, GPL-2 through Artistic and AGPL with file LICENSE",
+        "r_ms": 27.263402938842773,
+        "translated_ms": 0.5384440009947866,
+        "speedup": 50.633683147129624,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\nsummarize <- function(r) {\n  fc <- function(v) {\n    if (is.null(v)) return(\"NULL\")\n    if (length(v) == 1L && is.na(v)) return(\"NA\")\n    if (is.logical(v)) return(if (v) \"T\" else \"F\")\n    if (is.character(v)) return(paste(v, collapse = \"\\1\"))\n    if (is.data.frame(v)) {\n      return(paste(vapply(seq_len(nrow(v)), function(i) {\n        paste0(v$components[i], \",\", if (isTRUE(v$extensible[i])) \"T\" else \"F\")\n      }, \"\"), collapse = \"\\3\"))\n    }\n    if (is.list(v)) return(paste(vapply(v, fc, \"\"), collapse = \"\\2\"))\n    \"?\"\n  }\n  paste(vapply(r, fc, \"\"), collapse = \"|\")\n}\n\none <- function() {\n  specs <- c(\n    \"GPL-2\",\n    \"LGPL (>= 2.0, < 3) | Mozilla Public License\",\n    \"GPL-2 | file LICENCE\",\n    \"GPL (>= 2) | BSD_3_clause + file LICENSE\",\n    \"Artistic-2.0 | AGPL-3 + file LICENSE\"\n  )\n  paste0(paste(vapply(specs, function(x) summarize(analyze_license(x)), \"\"), collapse = \"\\n\"), \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\n\n\ndef _fc(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, float) and math.isnan(value):\n        return \"NA\"\n    if isinstance(value, bool):\n        return \"T\" if value else \"F\"\n    if isinstance(value, str):\n        return value\n    if isinstance(value, list):\n        if value and isinstance(value[0], dict):\n            return \"\\3\".join(\n                f\"{row['components']},{'T' if row['extensible'] else 'F'}\" for row in value\n            )\n        if value and isinstance(value[0], str):\n            return \"\\1\".join(value)\n        return \"\\2\".join(_fc(item) for item in value)\n    return \"?\"\n\n\ndef summarize(result):\n    keys = [\n        \"is_empty\",\n        \"is_canonical\",\n        \"bad_components\",\n        \"is_standardizable\",\n        \"is_verified\",\n        \"standardization\",\n        \"components\",\n        \"expansions\",\n        \"extensions\",\n        \"pointers\",\n        \"is_FOSS\",\n        \"restricts_use\",\n    ]\n    return \"|\".join(_fc(result[key]) for key in keys)\n\n\ndef one():\n    from tools.license import analyze_license\n\n    specs = [\n        \"GPL-2\",\n        \"LGPL (>= 2.0, < 3) | Mozilla Public License\",\n        \"GPL-2 | file LICENCE\",\n        \"GPL (>= 2) | BSD_3_clause + file LICENSE\",\n        \"Artistic-2.0 | AGPL-3 + file LICENSE\",\n    ]\n    return \"\\n\".join(summarize(analyze_license(spec)) for spec in specs) + \"\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "as.Rconcordance",
+      "translated": true,
+      "python": "tools.concordance.as_rconcordance",
+      "loads": [],
+      "uses": [],
+      "done": "Parses concordance:target:source:values strings, including an ofs field.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a number, a plain concordance, and one with an offset",
+        "r_ms": 0.484466552734375,
+        "translated_ms": 0.08773599984124303,
+        "speedup": 5.521867347622526,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  a <- as.Rconcordance(1)\n  b <- as.Rconcordance(\"concordance:foo.tex:bar.Rnw:5 1 1\")\n  c <- as.Rconcordance(\"stuff concordance:foo.tex:bar.Rnw:ofs 2:10 1 2 3 4\")\n  paste0(\n    \"A \", is.null(a), \"\\n\",\n    \"B \", b$offset, \" \", b$srcFile, \" \", paste(b$srcLine, collapse=\",\"), \"\\n\",\n    \"C \", c$offset, \" \", c$srcFile, \" \", paste(c$srcLine, collapse=\",\"), \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.concordance import as_rconcordance\n    a = as_rconcordance(1)\n    b = as_rconcordance(\"concordance:foo.tex:bar.Rnw:5 1 1\")\n    c = as_rconcordance(\"stuff concordance:foo.tex:bar.Rnw:ofs 2:10 1 2 3 4\")\n    return (\n        f\"A {'TRUE' if a is None else 'FALSE'}\\n\"\n        f\"B {b['offset']} {b['srcFile']} {','.join(str(v) for v in b['srcLine'])}\\n\"\n        f\"C {c['offset']} {c['srcFile']} {','.join(str(v) for v in c['srcLine'])}\\n\"\n    )\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "assertCondition",
+      "translated": true,
+      "python": "tools.conditions.assert_condition",
+      "loads": [],
+      "uses": [],
+      "done": "Runs an action and requires one of the named condition classes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a missing condition, a caught error, and the verbose message",
+        "r_ms": 1.0173320770263672,
+        "translated_ms": 0.050331999773334246,
+        "speedup": 20.212431089720916,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  fail <- tryCatch(assertCondition(1 + 1, \"error\"), error = function(e) conditionMessage(e))\n  ok <- assertCondition(stop(\"boom\"), \"error\")\n  msg <- capture.output(assertCondition(stop(\"e\"), \"error\", verbose = TRUE), type = \"message\")\n  paste0(fail, \"\\n\", ok[[1]]$message, \"\\n\", msg, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import io\n    import contextlib\n    from tools.conditions import assert_condition\n    try:\n        assert_condition(lambda: None, \"error\", expr_string=\"1 + 1\")\n        fail = \"\"\n    except ValueError as exc:\n        fail = str(exc)\n    ok = assert_condition(lambda: (_ for _ in ()).throw(RuntimeError(\"boom\")), \"error\", expr_string='stop(\"boom\")')\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        assert_condition(lambda: (_ for _ in ()).throw(RuntimeError(\"e\")), \"error\", expr_string='stop(\"e\")', verbose=True)\n    return fail + \"\\n\" + ok[0][\"message\"] + \"\\n\" + buf.getvalue()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "assertError",
+      "translated": true,
+      "python": "tools.conditions.assert_error",
+      "loads": [],
+      "uses": [
+        "assertCondition"
+      ],
+      "done": "Requires an error. Any other outcome is reported as a missed error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an expression that does not fail, and stop()",
+        "r_ms": 0.6320476531982422,
+        "translated_ms": 0.02583599962235894,
+        "speedup": 24.463835827403276,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  fail <- tryCatch(assertError(1 + 1), error = function(e) conditionMessage(e))\n  ok <- assertError(stop(\"boom\"))\n  paste0(fail, \"\\n\", ok[[1]]$message, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.conditions import assert_error\n    try:\n        assert_error(lambda: None, expr_string=\"1 + 1\")\n        fail = \"\"\n    except ValueError as exc:\n        fail = str(exc)\n    ok = assert_error(lambda: (_ for _ in ()).throw(RuntimeError(\"boom\")), expr_string='stop(\"boom\")')\n    return fail + \"\\n\" + ok[0][\"message\"] + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "assertWarning",
+      "translated": true,
+      "python": "tools.conditions.assert_warning",
+      "loads": [],
+      "uses": [
+        "assertCondition"
+      ],
+      "done": "Requires a warning. An error alone is reported by assertCondition. Both is a separate failure.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a warning, an error, and a warning followed by an error",
+        "r_ms": 0.8490085601806641,
+        "translated_ms": 0.06465900059993146,
+        "speedup": 13.130554946770458,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  w <- assertWarning(warning(\"w\"))\n  err <- tryCatch(assertWarning(stop(\"x\")), error = function(e) conditionMessage(e))\n  both <- tryCatch(assertWarning({warning(\"w\"); stop(\"e\")}), error = function(e) conditionMessage(e))\n  paste0(w[[1]]$message, \"\\n\", err, \"\\n\", both, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import warnings\n    from tools.conditions import assert_warning\n    w = assert_warning(lambda: warnings.warn(\"w\"), expr_string='warning(\"w\")')\n    try:\n        assert_warning(lambda: (_ for _ in ()).throw(RuntimeError(\"x\")), expr_string='stop(\"x\")')\n        err = \"\"\n    except ValueError as exc:\n        err = str(exc)\n\n    def both():\n        warnings.warn(\"w\")\n        raise RuntimeError(\"e\")\n\n    try:\n        assert_warning(both, expr_string='{warning(\"w\"); stop(\"e\")}')\n        both_msg = \"\"\n    except ValueError as exc:\n        both_msg = str(exc)\n    return w[0][\"message\"] + \"\\n\" + err + \"\\n\" + both_msg + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "base_aliases_db",
+      "translated": true,
+      "python": "tools.base_aliases_db.base_aliases_db",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the alias metadata database from the installed help files.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Alias database of the 14 standard packages: package, Rd, and alias counts plus the full fingerprint",
+        "r_ms": 4124.933958053589,
+        "translated_ms": 13806.005303999882,
+        "speedup": 0.29877823941285253,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\nsummarize <- function(x) {\n  paste(vapply(names(x), function(pkg) {\n    inner <- x[[pkg]]\n    paste(vapply(names(inner), function(rd) paste(inner[[rd]], collapse = \"\\1\"), \"\"), collapse = \"\\2\")\n  }, \"\"), collapse = \"\\3\")\n}\n\none <- function() {\n  db <- base_aliases_db(verbose = FALSE, Ncpus = 1L)\n  n_pkgs <- length(db)\n  n_rd <- sum(vapply(db, length, 0L))\n  n_alias <- sum(vapply(db, function(inner) sum(vapply(inner, length, 0L)), 0L))\n  paste0(\n    n_pkgs, \"\\n\", n_rd, \"\\n\", n_alias, \"\\n\",\n    nchar(summarize(db)), \"\\n\",\n    summarize(db), \"\\n\"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\n\ndef summarize(db):\n    parts = []\n    for pkg in db:\n        inner = db[pkg]\n        rd_parts = []\n        for rd in inner:\n            rd_parts.append(\"\\1\".join(inner[rd]))\n        parts.append(\"\\2\".join(rd_parts))\n    return \"\\3\".join(parts)\n\n\ndef one():\n    from tools.base_aliases_db import base_aliases_db\n\n    db = base_aliases_db(verbose=False, ncpus=1)\n    n_pkgs = len(db)\n    n_rd = sum(len(inner) for inner in db.values())\n    n_alias = sum(len(aliases) for inner in db.values() for aliases in inner.values())\n    body = summarize(db)\n    return f\"{n_pkgs}\\n{n_rd}\\n{n_alias}\\n{len(body)}\\n{body}\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "base_rdxrefs_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "bibstyle",
+      "translated": true,
+      "python": "tools.bibstyle.bibstyle",
+      "loads": [],
+      "uses": [],
+      "done": "Registers and returns a bibliography style environment, including JSS and named overrides.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "JSS environment names, a custom unsorted sortKeys, fmtPrefix with index 3, and the default style name",
+        "r_ms": 0.24187564849853516,
+        "translated_ms": 0.040528999306843616,
+        "speedup": 5.96796497903398,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  parts <- character()\n  jss <- bibstyle()\n  parts <- c(parts, paste(sort(ls(envir = jss)), collapse = \",\"))\n  bibstyle(\n    \"unsorted\",\n    sortKeys = function(refs) seq_along(refs),\n    fmtPrefix = function(paper) paste0(\"[\", paper$.index, \"]\"),\n    .init = TRUE,\n    .default = FALSE\n  )\n  uns <- bibstyle(\"unsorted\", .default = FALSE)\n  sk <- uns$sortKeys(list(list(), list()))\n  parts <- c(parts, paste(sk, collapse = \",\"))\n  parts <- c(parts, uns$fmtPrefix(list(.index = 3)))\n  parts <- c(parts, getBibstyle())\n  paste0(paste(parts, collapse = \"\\n\"), \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\n\ndef one():\n    from tools.bibstyle import bibstyle, get_bibstyle\n\n    parts = []\n    jss = bibstyle()\n    parts.append(\",\".join(sorted(jss.keys(), key=str.lower)))\n    bibstyle(\n        \"unsorted\",\n        sortKeys=lambda refs: list(range(1, len(refs) + 1)),\n        fmtPrefix=lambda paper: f\"[{paper['.index']}]\",\n        _init=True,\n        _default=False,\n    )\n    uns = bibstyle(\"unsorted\", _default=False)\n    sk = uns[\"sortKeys\"]([{}, {}])\n    parts.append(\",\".join(str(x) for x in sk))\n    parts.append(uns[\"fmtPrefix\"]({\".index\": 3}))\n    parts.append(get_bibstyle())\n    return \"\\n\".join(parts) + \"\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "buildVignette",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "buildVignettes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "charset_to_Unicode",
+      "translated": true,
+      "python": "tools.data.charset_to_unicode",
+      "loads": [],
+      "uses": [],
+      "done": "The 256 by 14 character-set table, column for column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dimensions, column names, and an MD5 of every code point",
+        "r_ms": 5.498647689819336,
+        "translated_ms": 3.0662049994134577,
+        "speedup": 1.7933072612141676,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  ch <- charset_to_Unicode\n  s <- apply(ch, 1, function(row) paste(row, collapse=\",\"))\n  paste0(\"CHAR \", nrow(ch), \" \", ncol(ch), \" \", paste(colnames(ch), collapse=\",\"), \" \", md5sum(bytes=charToRaw(paste(s, collapse=\"\\n\"))), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import hashlib\n    from tools.data import charset_to_unicode\n    ch = charset_to_unicode()\n    rows = \"\\n\".join(\",\".join(str(v) for v in row) for row in ch[\"values\"])\n    digest = hashlib.md5(rows.encode()).hexdigest()\n    return f\"CHAR {len(ch['values'])} {len(ch['columns'])} {','.join(ch['columns'])} {digest}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "check_package_dois",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "check_package_urls",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "check_packages_in_dir",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "check_packages_in_dir_changes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "check_packages_in_dir_details",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkDocFiles",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkDocStyle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkFF",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkMD5sums",
+      "translated": true,
+      "python": "tools.checkmd5.check_md5sums",
+      "loads": [],
+      "uses": [
+        "md5sum"
+      ],
+      "done": "Compares an MD5 file with hashlib digests of the files. A listed file that is absent is reported missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.7164478302001953,
+        "translated_ms": 0.33848799921543105,
+        "speedup": 2.1166122044528124,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  dir <- tempfile()\n  dir.create(dir)\n  writeBin(charToRaw(\"hello\\n\"), file.path(dir, \"a.txt\"))\n  hash <- unname(md5sum(file.path(dir, \"a.txt\")))\n  writeLines(c(paste0(hash, \"  a.txt\"), \"abc  missing.txt\"), file.path(dir, \"MD5\"))\n  msg <- capture.output(res <- checkMD5sums(dir=dir))\n  paste0(res, \" || \", paste(msg, collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import contextlib, hashlib, io, os, tempfile\n    from tools.checkmd5 import check_md5sums\n    directory = tempfile.mkdtemp()\n    target = os.path.join(directory, \"a.txt\")\n    with open(target, \"wb\") as handle:\n        handle.write(b\"hello\\n\")\n    digest = hashlib.md5(b\"hello\\n\").hexdigest()\n    with open(os.path.join(directory, \"MD5\"), \"w\", encoding=\"utf-8\") as handle:\n        handle.write(digest + \"  a.txt\\nabc  missing.txt\\n\")\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        res = check_md5sums(directory=directory)\n    shown = \"NA\" if res is None else (\"TRUE\" if res else \"FALSE\")\n    return shown + \" || \" + buf.getvalue().strip().replace(\"\\n\", \"|\") + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "a matching a.txt and a missing missing.txt"
+      }
+    },
+    {
+      "name": "checkPoFile",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkPoFiles",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkRd",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkRdaFiles",
+      "translated": true,
+      "python": "tools.rda.check_rda_files",
+      "loads": [],
+      "uses": [],
+      "done": "Reads the five-byte header and reports gzip, bzip2, xz, or none.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a gzip rda written by R 4.5 and a missing path",
+        "r_ms": 1.9453763961791992,
+        "translated_ms": 0.1473970005463343,
+        "speedup": 13.198208843928743,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  path <- \"/home/ahmed/killr_projects/killr/packages/tools/proof/tiny.rda\"\n  res <- checkRdaFiles(c(path, \"/tmp/no-such-tools-file.rda\"))\n  show <- function(x) ifelse(is.na(x), \"NA\", as.character(x))\n  paste0(\n    show(res$size[1]), \" \", show(res$ASCII[1]), \" \", show(res$compress[1]), \" \", show(res$version[1]), \"\\n\",\n    show(res$size[2]), \" \", show(res$ASCII[2]), \" \", show(res$compress[2]), \" \", show(res$version[2]), \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.rda import check_rda_files\n    rows = check_rda_files([\n        \"/home/ahmed/killr_projects/killr/packages/tools/proof/tiny.rda\",\n        \"/tmp/no-such-tools-file.rda\",\n    ])\n\n    def show(row):\n        def cell(value):\n            if value is None:\n                return \"NA\"\n            if value is True:\n                return \"TRUE\"\n            if value is False:\n                return \"FALSE\"\n            return str(value)\n        return \" \".join(cell(row[name]) for name in (\"size\", \"ASCII\", \"compress\", \"version\"))\n\n    return show(rows[0]) + \"\\n\" + show(rows[1]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "checkRdContents",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkReplaceFuns",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkS3methods",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkTnF",
+      "translated": true,
+      "python": "tools.check_tnf.check_tnf",
+      "loads": [],
+      "uses": [
+        "file_path_as_absolute",
+        "list_files_with_exts",
+        "list_files_with_type"
+      ],
+      "done": "checkTnF scans package, source-tree, or single-file inputs and returns expressions that still use bare T or F.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dir= on a proof package with R/code.R (x == T) and man/dummy.Rd examples (if(T) 1, x <- F).",
+        "r_ms": 5.390048027038574,
+        "translated_ms": 1602.2074775000874,
+        "speedup": 0.0033641386042266054,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\nPKG <- \"/home/ahmed/killr_projects/killr/packages/tools/proof/checkTnF_pkg\"\n\none <- function() {\n  res <- checkTnF(dir = PKG)\n  lines <- character()\n  for (path in names(res)) {\n    lines <- c(lines, path)\n    for (i in seq_along(res[[path]])) {\n      lines <- c(lines, paste(deparse(res[[path]][[i]], width.cutoff = 500), collapse = \"\"))\n    }\n  }\n  paste0(paste(lines, collapse = \"\\n\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nPKG = \"/home/ahmed/killr_projects/killr/packages/tools/proof/checkTnF_pkg\"\n\n\ndef one():\n    from tools.check_tnf import check_tnf\n\n    res = check_tnf(dir=PKG)\n    lines = []\n    for path in res:\n        lines.append(path)\n        lines.extend(res[path])\n    return \"\\n\".join(lines) + \"\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "checkVignettes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "codoc",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "codocClasses",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "codocData",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "compactPDF",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_aliases_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_archive_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_authors_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_check_details",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_check_issues",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_check_results",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_current_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_package_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "CRAN_rdxrefs_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "delimMatch",
+      "translated": true,
+      "python": "tools.delim.delim_match",
+      "loads": [],
+      "uses": [],
+      "done": "1-based position of the first Rd-balanced opening delimiter. % comments to the newline, and a backslash escapes the next character.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.0438690185546875,
+        "translated_ms": 0.026484499358048197,
+        "speedup": 1.656403542374549,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  x <- c(\"a{bc}d\", \"a{b{c}d}\", \"no\", \"{a%}\", \"a\\\\%{b}\", \"x[y[z]w]\")\n  paste0(paste(delimMatch(x), collapse=\" \"), \" \", delimMatch(\"x[y[z]w]\", c(\"[\", \"]\")), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.delim import delim_match\n    x = [\"a{bc}d\", \"a{b{c}d}\", \"no\", \"{a%}\", \"a\\\\%{b}\", \"x[y[z]w]\"]\n    return \" \".join(str(item) for item in delim_match(x)) + \" \" + str(delim_match(\"x[y[z]w]\", [\"[\", \"]\"])) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "braces, a comment, an escaped brace, an unmatched string, and square brackets"
+      }
+    },
+    {
+      "name": "deparseLatex",
+      "translated": true,
+      "python": "tools.latex.deparse_latex",
+      "loads": [],
+      "uses": [],
+      "done": "Walks latex tags. A macro that takes an argument keeps the braces.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a macro, a braced argument, and math",
+        "r_ms": 0.20229816436767578,
+        "translated_ms": 0.011322499631205574,
+        "speedup": 17.86691728477768,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  x <- list(\n    structure(\"\\\\emph\", latex_tag = \"MACRO\"),\n    structure(list(structure(\"x\", latex_tag = \"TEXT\")), latex_tag = \"BLOCK\"),\n    structure(list(structure(\"y\", latex_tag = \"TEXT\")), latex_tag = \"MATH\")\n  )\n  paste0(deparseLatex(x), \"\\n\", deparseLatex(x, dropBraces = TRUE), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.latex import deparse_latex\n    nodes = [\n        {\"tag\": \"MACRO\", \"text\": \"\\\\emph\"},\n        {\"tag\": \"BLOCK\", \"body\": [{\"tag\": \"TEXT\", \"text\": \"x\"}]},\n        {\"tag\": \"MATH\", \"body\": [{\"tag\": \"TEXT\", \"text\": \"y\"}]},\n    ]\n    return deparse_latex(nodes) + \"\\n\" + deparse_latex(nodes, drop_braces=True) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "dependsOnPkgs",
+      "translated": true,
+      "python": "tools.deps.depends_on_pkgs",
+      "loads": [],
+      "uses": [],
+      "done": "Finds packages that use the named ones. strong is Depends, Imports, and LinkingTo. R is not a package name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "strong, most, all, and a non-recursive lookup on a four-package table",
+        "r_ms": 1.7461776733398438,
+        "translated_ms": 0.30575600067095365,
+        "speedup": 5.711016854969374,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  m <- matrix(c(\n    \"a\", \"b, R (>= 4.0)\", NA, NA, \"c\", NA,\n    \"b\", NA, \"c\", NA, NA, NA,\n    \"c\", NA, NA, NA, NA, NA,\n    \"d\", \"a\", NA, NA, NA, NA\n  ), nrow = 4, byrow = TRUE)\n  colnames(m) <- c(\"Package\", \"Depends\", \"Imports\", \"LinkingTo\", \"Suggests\", \"Enhances\")\n  paste0(\n    paste(dependsOnPkgs(\"c\", installed = m), collapse = \",\"), \"\\n\",\n    paste(dependsOnPkgs(\"c\", dependencies = \"most\", installed = m), collapse = \",\"), \"\\n\",\n    paste(dependsOnPkgs(\"c\", dependencies = \"all\", recursive = FALSE, installed = m), collapse = \",\"), \"\\n\",\n    paste(dependsOnPkgs(\"b\", recursive = FALSE, installed = m), collapse = \",\"), \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.deps import depends_on_pkgs\n    rows = [\n        {\"Package\": \"a\", \"Depends\": \"b, R (>= 4.0)\", \"Imports\": None, \"LinkingTo\": None, \"Suggests\": \"c\", \"Enhances\": None},\n        {\"Package\": \"b\", \"Depends\": None, \"Imports\": \"c\", \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"c\", \"Depends\": None, \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"d\", \"Depends\": \"a\", \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n    ]\n    def show(value):\n        return \",\".join(value)\n    return \"\\n\".join([\n        show(depends_on_pkgs(\"c\", installed=rows)),\n        show(depends_on_pkgs(\"c\", dependencies=\"most\", installed=rows)),\n        show(depends_on_pkgs(\"c\", dependencies=\"all\", recursive=False, installed=rows)),\n        show(depends_on_pkgs(\"b\", recursive=False, installed=rows)),\n    ]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "encoded_text_to_latex",
+      "translated": true,
+      "python": "tools.latex.encoded_text_to_latex",
+      "loads": [],
+      "uses": [],
+      "done": "Uses the latin1, latin2, latin9, and utf8 tables shipped with tools.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "UTF-8 café and a latin1 A",
+        "r_ms": 0.3218650817871094,
+        "translated_ms": 0.014840000403637532,
+        "speedup": 21.689021093841404,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(encoded_text_to_latex(\"A caf\\u00e9\", \"UTF-8\"), \"\\n\", encoded_text_to_latex(\"A\", \"latin1\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.latex import encoded_text_to_latex\n    return encoded_text_to_latex(\"A caf\\u00e9\", \"UTF-8\") + \"\\n\" + encoded_text_to_latex(\"A\", \"latin1\") + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "file_ext",
+      "translated": true,
+      "python": "tools.file_ext.file_ext",
+      "loads": [],
+      "uses": [],
+      "done": "The trailing alphanumeric run after a dot, or an empty string. NA stays NA. NULL and character(0) return logical(0). The character class is libc iswalnum, which matches R's [[:alnum:]].",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paths including .hidden, file.c++, a.é, x.Y_z, NA, 1.5, and NULL",
+        "r_ms": 0.240325927734375,
+        "translated_ms": 0.051159000122424914,
+        "speedup": 4.697627536880478,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "show <- function(v) ifelse(is.na(v), \"NA\", ifelse(!nzchar(v), \"<empty>\", v))\none <- function() {\n  x <- c(\"a.txt\", \"a.tar.gz\", \".hidden\", \"file.\", \"file.c++\", \"a.é\", \"x.Y_z\", \"foo/bar.txt.bak\", NA)\n  c(show(tools::file_ext(x)), show(tools::file_ext(1.5)), show(tools::file_ext(1)), if (identical(tools::file_ext(NULL), logical(0))) \"<logical0>\" else \"BAD\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(value, collapse = \" \"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom tools.file_ext import NA_character_, file_ext\n\ndef show(value):\n    if value.__class__.__name__ == \"NA\":\n        return \"NA\"\n    if value == \"\":\n        return \"<empty>\"\n    return value\n\ndef one():\n    values = file_ext([\"a.txt\", \"a.tar.gz\", \".hidden\", \"file.\", \"file.c++\", \"a.é\", \"x.Y_z\", \"foo/bar.txt.bak\", NA_character_])\n    return [show(item) for item in values] + [show(file_ext(1.5)), show(file_ext(1)), \"<logical0>\" if file_ext(None) == [] else \"BAD\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "file_path_as_absolute",
+      "translated": true,
+      "python": "tools.paths.file_path_as_absolute",
+      "loads": [],
+      "uses": [],
+      "done": "Expands ~ and normalizes one existing path with / separators.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "/tmp, a missing path, and a vector of length two",
+        "r_ms": 0.17261505126953125,
+        "translated_ms": 0.01492100000177743,
+        "speedup": 11.568598032904557,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  ok <- file_path_as_absolute(\"/tmp\")\n  bad <- tryCatch(file_path_as_absolute(\"no-such-assertthat-path\"), error=function(e) conditionMessage(e))\n  two <- tryCatch(file_path_as_absolute(c(\"a\", \"b\")), error=function(e) conditionMessage(e))\n  paste0(ok, \"\\n\", bad, \"\\n\", two, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.paths import file_path_as_absolute\n    ok = file_path_as_absolute(\"/tmp\")\n    try:\n        file_path_as_absolute(\"no-such-assertthat-path\")\n        bad = \"NOERROR\"\n    except ValueError as error:\n        bad = str(error)\n    try:\n        file_path_as_absolute([\"a\", \"b\"])\n        two = \"NOERROR\"\n    except ValueError as error:\n        two = str(error)\n    return ok + \"\\n\" + bad + \"\\n\" + two + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "file_path_sans_ext",
+      "translated": true,
+      "python": "tools.paths.file_path_sans_ext",
+      "loads": [],
+      "uses": [],
+      "done": "Drops a trailing alphanumeric extension. compression also drops .gz, .bz2, or .xz. The character class is libc iswalnum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "file.tar.gz, .hidden, file.c++, a.é, a..txt, and NA, with and without compression",
+        "r_ms": 0.24259090423583984,
+        "translated_ms": 0.07466799979738425,
+        "speedup": 3.2489273168442128,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  show <- function(v) paste(ifelse(is.na(v), \"NA\", v), collapse=\"|\")\n  x <- c(\"file.zip\", \"file.tar.gz\", \".hidden\", \"file.\", \"file.c++\", \"a.é\", \"a..txt\", \"foo/bar.txt.bak\", NA)\n  paste0(show(file_path_sans_ext(x)), \"\\n\", show(file_path_sans_ext(x, TRUE)), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.file_ext import NA_character_\n    from tools.paths import file_path_sans_ext\n    def show(value):\n        return \"|\".join(\"NA\" if item.__class__.__name__ == \"NA\" else item for item in value)\n    x = [\"file.zip\", \"file.tar.gz\", \".hidden\", \"file.\", \"file.c++\", \"a.é\", \"a..txt\", \"foo/bar.txt.bak\", NA_character_]\n    return show(file_path_sans_ext(x)) + \"\\n\" + show(file_path_sans_ext(x, True)) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "find_gs_cmd",
+      "translated": true,
+      "python": "tools.session.find_gs_cmd",
+      "loads": [],
+      "uses": [],
+      "done": "Looks up Ghostscript with shutil.which, which matches Sys.which.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the default gs and a name that is not installed",
+        "r_ms": 5.530953407287598,
+        "translated_ms": 0.06834650048404001,
+        "speedup": 80.92518809473154,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  bad <- find_gs_cmd(\"no-such-gs-xyz\")\n  paste0(find_gs_cmd(), \"\\n\", if (!nzchar(bad)) \"<none>\" else bad, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.session import find_gs_cmd\n    bad = find_gs_cmd(\"no-such-gs-xyz\")\n    return find_gs_cmd() + \"\\n\" + (\"<none>\" if bad == \"\" else bad) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "findHTMLlinks",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "followConcordance",
+      "translated": true,
+      "python": "tools.concordance.follow_concordance",
+      "loads": [],
+      "uses": [],
+      "done": "Composes two concordance maps. A missing previous line keeps the current file and line.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.08881092071533203,
+        "translated_ms": 0.008801000149105676,
+        "speedup": 10.091003205397817,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  con <- list(offset=0L, srcFile=\"a.Rnw\", srcLine=c(1L,2L,4L))\n  prev <- list(offset=0L, srcFile=\"a.R\", srcLine=c(10L, NA, 30L, 40L))\n  f <- followConcordance(con, prev)\n  paste0(paste(f$srcFile, collapse=\",\"), \" \", paste(f$srcLine, collapse=\",\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.concordance import follow_concordance\n    con = {\"offset\": 0, \"srcFile\": \"a.Rnw\", \"srcLine\": [1, 2, 4]}\n    prev = {\"offset\": 0, \"srcFile\": \"a.R\", \"srcLine\": [10, None, 30, 40]}\n    got = follow_concordance(con, prev)\n    return \",\".join(got[\"srcFile\"]) + \" \" + \",\".join(str(v) for v in got[\"srcLine\"]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "current lines 1, 2, 4 against a previous map that is missing line 2"
+      }
+    },
+    {
+      "name": "getBibstyle",
+      "translated": true,
+      "python": "tools.options.get_bibstyle",
+      "loads": [],
+      "uses": [],
+      "done": "The default bibliography style name. With all=TRUE, every registered name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.024318695068359375,
+        "translated_ms": 0.00122050096251769,
+        "speedup": 19.925174838202473,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(getBibstyle(), \" \", paste(getBibstyle(TRUE), collapse=\",\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.options import get_bibstyle\n    return get_bibstyle() + \" \" + \",\".join(get_bibstyle(True)) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "the default and the full list"
+      }
+    },
+    {
+      "name": "getDepList",
+      "translated": true,
+      "python": "tools.defunct.get_dep_list",
+      "loads": [],
+      "uses": [],
+      "done": "Defunct. The error names dependsOnPkgs() or package_dependencies().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.15735626220703125,
+        "translated_ms": 0.002150999534933362,
+        "speedup": 73.15494943233735,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msg <- tryCatch(getDepList(), error=function(e) conditionMessage(e))\n  paste0(msg, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.defunct import get_dep_list as fn\n    try:\n        fn()\n        msg = \"NOERROR\"\n    except RuntimeError as error:\n        msg = str(error)\n    return msg + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "the defunct error"
+      }
+    },
+    {
+      "name": "getVignetteInfo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "HTMLheader",
+      "translated": true,
+      "python": "tools.htmlheader.html_header",
+      "loads": [],
+      "uses": [],
+      "done": "The HTML help header. An empty Rhome still produces a leading slash, matching file.path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.2529621124267578,
+        "translated_ms": 0.005222000254434533,
+        "speedup": 48.441612428483104,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(paste(HTMLheader(\"Hello\", logo=FALSE, up=NULL, top=NULL, Rhome=\"\"), collapse=\"\\n\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.htmlheader import html_header\n    return \"\\n\".join(html_header(\"Hello\", logo=False, up=None, top=None, rhome=\"\")) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "title Hello, no logo, no up link, and no top link"
+      }
+    },
+    {
+      "name": "installFoundDepends",
+      "translated": true,
+      "python": "tools.defunct.install_found_depends",
+      "loads": [],
+      "uses": [],
+      "done": "Removed. The message names the function and points at help(Defunct).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the defunct error",
+        "r_ms": 0.1958608627319336,
+        "translated_ms": 0.003064000338781625,
+        "speedup": 63.923251003887316,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(tryCatch(installFoundDepends(\"x\"), error = function(e) conditionMessage(e)), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.defunct import install_found_depends\n    try:\n        install_found_depends(\"x\")\n        return \"\\n\"\n    except RuntimeError as exc:\n        return str(exc) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "langElts",
+      "translated": true,
+      "python": "tools.session.lang_elts",
+      "loads": [],
+      "uses": [],
+      "done": "The operators and control-flow names R treats as language elements.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the whole vector",
+        "r_ms": 0.016570091247558594,
+        "translated_ms": 0.0013059998309472576,
+        "speedup": 12.68766722239168,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(paste(langElts, collapse=\",\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.session import lang_elts\n    return \",\".join(lang_elts()) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "latexToUtf8",
+      "translated": true,
+      "python": "tools.latex.latex_to_utf8",
+      "loads": [],
+      "uses": [
+        "deparseLatex"
+      ],
+      "done": "Known macros are replaced from the tools latex table. Braces and spaces are consumed the same way.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an accent, a leading space, a zero-argument macro, and a braced argument",
+        "r_ms": 0.4838705062866211,
+        "translated_ms": 0.017998501789406873,
+        "speedup": 26.88393244883338,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  acc <- function(text) list(structure(paste0(\"\\\\\", \"'\"), latex_tag = \"MACRO\"), structure(text, latex_tag = \"TEXT\"))\n  block <- list(structure(paste0(\"\\\\\", \"'\"), latex_tag = \"MACRO\"), structure(list(structure(\"e\", latex_tag = \"TEXT\")), latex_tag = \"BLOCK\"))\n  aa <- list(structure(paste0(\"\\\\\", \"aa\"), latex_tag = \"MACRO\"))\n  paste0(\n    deparseLatex(latexToUtf8(acc(\"e\"))), \"\\n\",\n    deparseLatex(latexToUtf8(acc(\" e\"))), \"\\n\",\n    deparseLatex(latexToUtf8(aa)), \"\\n\",\n    deparseLatex(latexToUtf8(block)), \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.latex import deparse_latex, latex_to_utf8\n    def show(nodes):\n        return deparse_latex(latex_to_utf8(nodes))\n    return \"\\n\".join([\n        show([{\"tag\": \"MACRO\", \"text\": \"\\\\'\"}, {\"tag\": \"TEXT\", \"text\": \"e\"}]),\n        show([{\"tag\": \"MACRO\", \"text\": \"\\\\'\"}, {\"tag\": \"TEXT\", \"text\": \" e\"}]),\n        show([{\"tag\": \"MACRO\", \"text\": \"\\\\aa\"}]),\n        show([{\"tag\": \"MACRO\", \"text\": \"\\\\'\"}, {\"tag\": \"BLOCK\", \"body\": [{\"tag\": \"TEXT\", \"text\": \"e\"}]}]),\n    ]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "list_files_with_exts",
+      "translated": true,
+      "python": "tools.paths.list_files_with_exts",
+      "loads": [],
+      "uses": [],
+      "done": "Lists names in a directory whose extension matches. Dots inside an extension are not escaped.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "R files, hidden R files, and txt files in a temp directory",
+        "r_ms": 0.5105733871459961,
+        "translated_ms": 0.34924550072901184,
+        "speedup": 1.4619326121030334,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  dir <- tempfile()\n  dir.create(dir)\n  writeLines(\"z\", file.path(dir, \"a.R\"))\n  writeLines(\"y\", file.path(dir, \"b.r\"))\n  writeLines(\"n\", file.path(dir, \"notes.txt\"))\n  writeLines(\"h\", file.path(dir, \".hidden.R\"))\n  writeLines(\"d\", file.path(dir, \"1demo.R\"))\n  dir.create(file.path(dir, \"unix\"))\n  writeLines(\"o\", file.path(dir, \"unix\", \"os.R\"))\n  paste0(paste(list_files_with_exts(dir, \"R\", full.names=FALSE), collapse=\"|\"), \"\\n\",\n         paste(list_files_with_exts(dir, c(\"R\",\"r\"), all.files=TRUE, full.names=FALSE), collapse=\"|\"), \"\\n\",\n         paste(list_files_with_exts(dir, \"txt\", full.names=FALSE), collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import os, tempfile\n    directory = tempfile.mkdtemp()\n    def put(name, text):\n        path = os.path.join(directory, name)\n        os.makedirs(os.path.dirname(path), exist_ok=True)\n        with open(path, \"w\", encoding=\"utf-8\") as handle:\n            handle.write(text)\n    put(\"a.R\", \"z\\n\")\n    put(\"b.r\", \"y\\n\")\n    put(\"notes.txt\", \"n\\n\")\n    put(\".hidden.R\", \"h\\n\")\n    put(\"1demo.R\", \"d\\n\")\n    put(\"unix/os.R\", \"o\\n\")\n    from tools.paths import list_files_with_exts\n    a = \"|\".join(list_files_with_exts(directory, \"R\", full_names=False))\n    b = \"|\".join(list_files_with_exts(directory, [\"R\", \"r\"], all_files=True, full_names=False))\n    c = \"|\".join(list_files_with_exts(directory, \"txt\", full_names=False))\n    return a + \"\\n\" + b + \"\\n\" + c + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "list_files_with_type",
+      "translated": true,
+      "python": "tools.paths.list_files_with_type",
+      "loads": [],
+      "uses": [
+        "list_files_with_exts"
+      ],
+      "done": "Lists files of one R type. code and docs also read an OS subdirectory, then keep names that start with a letter or digit.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "code and demo names, including a unix/ subdirectory",
+        "r_ms": 0.81634521484375,
+        "translated_ms": 0.39447749895771267,
+        "speedup": 2.0694341679834594,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  dir <- tempfile()\n  dir.create(dir)\n  writeLines(\"z\", file.path(dir, \"a.R\"))\n  writeLines(\"y\", file.path(dir, \"b.r\"))\n  writeLines(\"n\", file.path(dir, \"notes.txt\"))\n  writeLines(\"h\", file.path(dir, \".hidden.R\"))\n  writeLines(\"d\", file.path(dir, \"1demo.R\"))\n  dir.create(file.path(dir, \"unix\"))\n  writeLines(\"o\", file.path(dir, \"unix\", \"os.R\"))\n  paste0(paste(basename(list_files_with_type(dir, \"code\")), collapse=\"|\"), \"\\n\",\n         paste(basename(list_files_with_type(dir, \"demo\", full.names=FALSE)), collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import os, tempfile\n    directory = tempfile.mkdtemp()\n    def put(name, text):\n        path = os.path.join(directory, name)\n        os.makedirs(os.path.dirname(path), exist_ok=True)\n        with open(path, \"w\", encoding=\"utf-8\") as handle:\n            handle.write(text)\n    put(\"a.R\", \"z\\n\")\n    put(\"b.r\", \"y\\n\")\n    put(\"notes.txt\", \"n\\n\")\n    put(\".hidden.R\", \"h\\n\")\n    put(\"1demo.R\", \"d\\n\")\n    put(\"unix/os.R\", \"o\\n\")\n    import os\n    from tools.paths import list_files_with_type\n    code = \"|\".join(os.path.basename(path) for path in list_files_with_type(directory, \"code\"))\n    demo = \"|\".join(os.path.basename(path) for path in list_files_with_type(directory, \"demo\", full_names=False))\n    return code + \"\\n\" + demo + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "loadPkgRdMacros",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "loadRdMacros",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "make_translations_pkg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "makevars_site",
+      "translated": true,
+      "python": "tools.session.makevars_site",
+      "loads": [],
+      "uses": [],
+      "done": "The site Makevars path. R_MAKEVARS_SITE wins when that file exists.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an existing site file set through R_MAKEVARS_SITE",
+        "r_ms": 0.09703636169433594,
+        "translated_ms": 0.057725499573280104,
+        "speedup": 1.680996481826066,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeLines(\"X=1\", f)\n  Sys.setenv(R_MAKEVARS_SITE=f)\n  hit <- makevars_site()\n  paste0(if (identical(hit, f)) \"HIT\" else hit, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import os, tempfile\n    from tools.session import makevars_site\n    path = tempfile.mktemp()\n    with open(path, \"w\", encoding=\"utf-8\") as handle:\n        handle.write(\"X=1\\n\")\n    os.environ[\"R_MAKEVARS_SITE\"] = path\n    hit = makevars_site()\n    return (\"HIT\" if hit == path else hit) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "makevars_user",
+      "translated": true,
+      "python": "tools.session.makevars_user",
+      "loads": [],
+      "uses": [],
+      "done": "The user Makevars path. R_MAKEVARS_USER wins when that file exists.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an existing Makevars and a missing R_MAKEVARS_USER path",
+        "r_ms": 0.13077259063720703,
+        "translated_ms": 0.09221799973602174,
+        "speedup": 1.4180809713022358,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeLines(\"X=1\", f)\n  Sys.setenv(R_MAKEVARS_USER=f)\n  hit <- makevars_user()\n  Sys.setenv(R_MAKEVARS_USER=tempfile())\n  miss <- if (length(makevars_user()) == 0) \"<none>\" else \"BAD\"\n  paste0(if (identical(hit, f)) \"HIT\" else hit, \"\\n\", miss, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import os, tempfile\n    from tools.session import makevars_user\n    path = tempfile.mktemp()\n    with open(path, \"w\", encoding=\"utf-8\") as handle:\n        handle.write(\"X=1\\n\")\n    os.environ[\"R_MAKEVARS_USER\"] = path\n    hit = makevars_user()\n    os.environ[\"R_MAKEVARS_USER\"] = tempfile.mktemp()\n    miss = \"<none>\" if makevars_user() == \"\" else \"BAD\"\n    shown = \"HIT\" if hit == path else hit\n    return shown + \"\\n\" + miss + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "matchConcordance",
+      "translated": true,
+      "python": "tools.concordance.match_concordance",
+      "loads": [],
+      "uses": [],
+      "done": "Maps an output line number through offset, srcLine, and srcFile.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.09906291961669922,
+        "translated_ms": 0.00989500040304847,
+        "speedup": 10.011411377626597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  con <- list(offset=0L, srcFile=\"a.Rnw\", srcLine=c(1L,2L,4L))\n  m <- matchConcordance(c(1,2,3), con)\n  paste0(paste(m[,1], m[,2], sep=\":\", collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.concordance import match_concordance\n    con = {\"offset\": 0, \"srcFile\": \"a.Rnw\", \"srcLine\": [1, 2, 4]}\n    rows = match_concordance([1, 2, 3], con)\n    return \"|\".join(f\"{a}:{b}\" for a, b in rows) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "lines 1, 2, and 3 of a concordance with offset 0"
+      }
+    },
+    {
+      "name": "md5sum",
+      "translated": true,
+      "python": "tools.checksum.md5sum",
+      "loads": [],
+      "uses": [],
+      "done": "Hex MD5 from hashlib. A missing file is NA. files and bytes cannot both be supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bytes \"abc\", a file containing z and a newline, a missing file, and the two errors",
+        "r_ms": 0.3948211669921875,
+        "translated_ms": 0.1966975005416316,
+        "speedup": 2.007250554302913,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeBin(charToRaw(\"z\\n\"), f)\n  miss <- tempfile()\n  both <- tryCatch(md5sum(files=f, bytes=charToRaw(\"abc\")), error=function(e) conditionMessage(e))\n  rawerr <- tryCatch(md5sum(bytes=\"abc\"), error=function(e) conditionMessage(e))\n  paste0(md5sum(bytes=charToRaw(\"abc\")), \"\\n\", unname(md5sum(f)), \"\\n\", unname(md5sum(miss)), \"\\n\", both, \"\\n\", rawerr, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import os, tempfile\n    from tools.checksum import md5sum\n    from tools.file_ext import NA\n    path = tempfile.mktemp()\n    with open(path, \"wb\") as handle:\n        handle.write(b\"z\\n\")\n    miss = tempfile.mktemp()\n    try:\n        md5sum(files=path, bytes=b\"abc\")\n        both = \"NOERROR\"\n    except ValueError as error:\n        both = str(error)\n    try:\n        md5sum(bytes=\"abc\")\n        rawerr = \"NOERROR\"\n    except ValueError as error:\n        rawerr = str(error)\n    digest = next(iter(md5sum(path).values()))\n    missing = next(iter(md5sum(miss).values()))\n    missing = \"NA\" if isinstance(missing, NA) else missing\n    return md5sum(bytes=b\"abc\") + \"\\n\" + digest + \"\\n\" + missing + \"\\n\" + both + \"\\n\" + rawerr + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "nonS3methods",
+      "translated": true,
+      "python": "tools.nons3.non_s3_methods",
+      "loads": [],
+      "uses": [],
+      "done": "The 4.5.0 stop-list of names that look like S3 methods and are not.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "stats, an unknown package, and NULL",
+        "r_ms": 0.10800361633300781,
+        "translated_ms": 0.012406500900397077,
+        "speedup": 8.705405109796196,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(paste(nonS3methods(\"stats\"), collapse=\"|\"), \"\\n\",\n         if (length(nonS3methods(\"nope\")) == 0) \"<none>\" else \"BAD\", \"\\n\",\n         length(nonS3methods(NULL)), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.nons3 import non_s3_methods\n    known = \"|\".join(non_s3_methods(\"stats\"))\n    missing = \"<none>\" if non_s3_methods(\"nope\") == [] else \"BAD\"\n    return known + \"\\n\" + missing + \"\\n\" + str(len(non_s3_methods(None))) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "package_dependencies",
+      "translated": true,
+      "python": "tools.deps.package_dependencies",
+      "loads": [],
+      "uses": [],
+      "done": "Reads Depends, Imports, and LinkingTo. Recursive follows the graph, including a cycle back to the start.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "direct dependencies, the recursive closure, and reverse dependencies",
+        "r_ms": 6.610870361328125,
+        "translated_ms": 0.17451700114179403,
+        "speedup": 37.880953248542426,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  db <- matrix(c(\n    \"a\", \"b, c\", \"d\", NA, NA, NA,\n    \"b\", NA, \"a\", NA, NA, NA,\n    \"c\", NA, NA, NA, NA, NA\n  ), nrow = 3, byrow = TRUE)\n  colnames(db) <- c(\"Package\", \"Depends\", \"Imports\", \"LinkingTo\", \"Suggests\", \"Enhances\")\n  db2 <- matrix(c(\n    \"a\", \"b\", NA, NA, NA, NA,\n    \"b\", \"c\", NA, NA, NA, NA,\n    \"c\", NA, NA, NA, NA, NA\n  ), nrow = 3, byrow = TRUE)\n  colnames(db2) <- colnames(db)\n  fmt <- function(x) paste(paste(names(x), vapply(x, function(v) paste(v, collapse=\",\"), \"\"), sep=\":\"), collapse=\" \")\n  paste0(\n    fmt(package_dependencies(c(\"a\", \"b\"), db = db)), \"\\n\",\n    fmt(package_dependencies(\"a\", db = db, recursive = TRUE)), \"\\n\",\n    fmt(package_dependencies(\"a\", db = db, reverse = TRUE)), \"\\n\",\n    fmt(package_dependencies(\"a\", db = db2, recursive = TRUE)), \"\\n\",\n    fmt(package_dependencies(\"c\", db = db2, reverse = TRUE, recursive = TRUE)), \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.deps import package_dependencies\n    db = [\n        {\"Package\": \"a\", \"Depends\": \"b, c\", \"Imports\": \"d\", \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"b\", \"Depends\": None, \"Imports\": \"a\", \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"c\", \"Depends\": None, \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n    ]\n    db2 = [\n        {\"Package\": \"a\", \"Depends\": \"b\", \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"b\", \"Depends\": \"c\", \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n        {\"Package\": \"c\", \"Depends\": None, \"Imports\": None, \"LinkingTo\": None, \"Suggests\": None, \"Enhances\": None},\n    ]\n    def fmt(value):\n        return \" \".join(f\"{key}:{','.join(names)}\" for key, names in value.items())\n    return \"\\n\".join([\n        fmt(package_dependencies([\"a\", \"b\"], db=db)),\n        fmt(package_dependencies(\"a\", db=db, recursive=True)),\n        fmt(package_dependencies(\"a\", db=db, reverse=True)),\n        fmt(package_dependencies(\"a\", db=db2, recursive=True)),\n        fmt(package_dependencies(\"c\", db=db2, reverse=True, recursive=True)),\n    ]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "package_native_routine_registration_skeleton",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "package.dependencies",
+      "translated": true,
+      "python": "tools.defunct.package_dependencies",
+      "loads": [],
+      "uses": [],
+      "done": "Defunct. The error points at package_dependencies.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the defunct error",
+        "r_ms": 0.1633167266845703,
+        "translated_ms": 0.0027939995561609976,
+        "speedup": 58.4526673686986,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msg <- tryCatch(package.dependencies(), error=function(e) conditionMessage(e))\n  paste0(msg, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.defunct import package_dependencies\n    try:\n        package_dependencies()\n        msg = \"NOERROR\"\n    except RuntimeError as error:\n        msg = str(error)\n    return msg + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "parse_Rd",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "parse_URI_reference",
+      "translated": true,
+      "python": "tools.textutil.parse_uri_reference",
+      "loads": [],
+      "uses": [],
+      "done": "Splits a URI reference into scheme, authority, path, query, and fragment.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an https URI, a bare path, and an empty string",
+        "r_ms": 0.2671480178833008,
+        "translated_ms": 0.0139974999910919,
+        "speedup": 19.08540939834367,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  uri <- parse_URI_reference(c(\"https://example.com/a?q=1#f\", \"file\", \"\"))\n  paste0(paste(unlist(uri), collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.textutil import parse_uri_reference\n    uri = parse_uri_reference([\"https://example.com/a?q=1#f\", \"file\", \"\"])\n    flat = []\n    for key in (\"scheme\", \"authority\", \"path\", \"query\", \"fragment\"):\n        flat.extend(row[key] for row in uri)\n    return \"|\".join(flat) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "parseLatex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pkg2HTML",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pkgDepends",
+      "translated": true,
+      "python": "tools.defunct.pkg_depends",
+      "loads": [],
+      "uses": [],
+      "done": "Defunct. The error names package_dependencies().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.24700164794921875,
+        "translated_ms": 0.0021334999473765492,
+        "speedup": 115.77298056788962,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msg <- tryCatch(pkgDepends(), error=function(e) conditionMessage(e))\n  paste0(msg, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.defunct import pkg_depends as fn\n    try:\n        fn()\n        msg = \"NOERROR\"\n    except RuntimeError as error:\n        msg = str(error)\n    return msg + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "the defunct error"
+      }
+    },
+    {
+      "name": "pkgVignettes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pskill",
+      "translated": true,
+      "python": "tools.process.pskill",
+      "loads": [],
+      "uses": [],
+      "done": "os.kill. A pid that is not positive, or a process that is gone, is FALSE.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a sleep this process started, then the same pid, -1, and a missing pid",
+        "r_ms": 202.58831977844238,
+        "translated_ms": 1.678964500570146,
+        "speedup": 120.66265826921716,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  pid <- as.integer(system(\"sleep 30 >/dev/null 2>&1 & echo $!\", intern=TRUE))\n  ok <- pskill(pid)\n  Sys.sleep(0.2)\n  gone <- pskill(pid)\n  paste0(ok, \" \", gone, \" \", pskill(-1), \" \", pskill(10^9), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import subprocess, time\n    from tools.process import pskill\n    proc = subprocess.Popen([\"sleep\", \"30\"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n    ok = pskill(proc.pid)\n    proc.wait(timeout=2)\n    gone = pskill(proc.pid)\n    return f\"{str(ok).upper()} {str(gone).upper()} {str(pskill(-1)).upper()} {str(pskill(10**9)).upper()}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "psnice",
+      "translated": true,
+      "python": "tools.process.psnice",
+      "loads": [],
+      "uses": [],
+      "done": "Reads the nice value. Setting it returns the value from before the call.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the current nice value, then one step lower priority",
+        "r_ms": 0.036716461181640625,
+        "translated_ms": 0.006592500540136825,
+        "speedup": 5.569428619398883,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  old <- psnice()\n  new <- psnice(value = old + 1L)\n  paste0(old, \" \", new, \" \", psnice(), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import psnice\n    old = psnice()\n    new = psnice(value=old + 1)\n    return f\"{old} {new} {psnice()}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "R",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "R_user_dir",
+      "translated": true,
+      "python": "tools.session.R_user_dir",
+      "loads": [],
+      "uses": [],
+      "done": "The per-user data, config, or cache directory. Honors R_USER_*_DIR and XDG_*_HOME.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "data, config, and cache for package tools",
+        "r_ms": 0.5246400833129883,
+        "translated_ms": 0.059270499150443356,
+        "speedup": 8.851622490664715,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(R_user_dir(\"tools\", \"data\"), \"|\", R_user_dir(\"tools\", \"config\"), \"|\", R_user_dir(\"tools\", \"cache\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.session import R_user_dir\n    return R_user_dir(\"tools\", \"data\") + \"|\" + R_user_dir(\"tools\", \"config\") + \"|\" + R_user_dir(\"tools\", \"cache\") + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Rcmd",
+      "translated": true,
+      "python": "tools.rcmd.rcmd",
+      "loads": [],
+      "uses": [],
+      "done": "Runs R CMD through the same R binary and returns the status code.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "R CMD config CC, and an unknown variable",
+        "r_ms": 135.6189250946045,
+        "translated_ms": 129.63622300048883,
+        "speedup": 1.0461499259670124,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  s1 <- Rcmd(c(\"config\", \"CC\"))\n  s2 <- Rcmd(c(\"config\", \"NOT_A_VAR\"))\n  paste0(\"S \", s1, \" \", s2, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.rcmd import rcmd\n    s1 = rcmd([\"config\", \"CC\"])\n    s2 = rcmd([\"config\", \"NOT_A_VAR\"])\n    return f\"S {s1} {s2}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Rd_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rd2ex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rd2HTML",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rd2latex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rd2txt",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rd2txt_options",
+      "translated": true,
+      "python": "tools.options.rd2txt_options",
+      "loads": [],
+      "uses": [],
+      "done": "The default Rd-to-text options: width 80, the bullet, and the enumerator.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.05745887756347656,
+        "translated_ms": 0.006282499271037523,
+        "speedup": 9.145862989330283,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  o <- Rd2txt_options()\n  paste0(o$width, \" \", o$minIndent, \" \", o$extraIndent, \" \", o$sectionIndent, \" \", o$sectionExtra, \" \",\n         o$showURLs, \" \", o$code_quote, \" \", o$underline_titles, \" \", o$itemBullet, o$enumFormat(3), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.options import rd2txt_options\n    o = rd2txt_options()\n    flags = \" \".join(str(o[name]).upper() if isinstance(o[name], bool) else str(o[name]) for name in (\"width\", \"minIndent\", \"extraIndent\", \"sectionIndent\", \"sectionExtra\", \"showURLs\", \"code_quote\", \"underline_titles\"))\n    return flags + \" \" + o[\"itemBullet\"] + o[\"enumFormat\"](3) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "the numeric options, the flags, the bullet, and enumFormat(3)"
+      }
+    },
+    {
+      "name": "Rdiff",
+      "translated": true,
+      "python": "tools.rdiff.rdiff",
+      "loads": [],
+      "uses": [],
+      "done": "Text comparison after the R-output cleanup. Equal files are 0, changed lines are 1, a different length is 2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "equal after trailing space, one changed line, a different length, and pointer cleanup",
+        "r_ms": 4.994988441467285,
+        "translated_ms": 1.8155084999307292,
+        "speedup": 2.7512889318104925,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  dir <- tempfile(\"rdiff\")\n  dir.create(dir)\n  a <- file.path(dir, \"a.txt\")\n  b <- file.path(dir, \"b.txt\")\n  c <- file.path(dir, \"c.txt\")\n  d <- file.path(dir, \"d.txt\")\n  e <- file.path(dir, \"e.txt\")\n  f <- file.path(dir, \"f.txt\")\n  writeLines(c(\"alpha\", \"beta  \", \"gamma\"), a)\n  writeLines(c(\"alpha\", \"beta\", \"gamma\"), b)\n  writeLines(c(\"alpha\", \"BETA\", \"gamma\"), c)\n  writeLines(\"only\", d)\n  writeLines(c(\"see <environment: 0xabc> and <hashtable 1>\", \"\\u2018q\\u2019\"), e)\n  writeLines(c(\"see <environment: 0> and <hashtable output>\", \"'q'\"), f)\n  same <- Rdiff(a, b)\n  diff_lines <- capture.output(diff_status <- Rdiff(a, c))\n  len_msg <- capture.output(len_status <- Rdiff(a, d), type = \"message\")\n  ptr <- Rdiff(e, f)\n  paste0(\n    \"SAME \", same, \"\\n\",\n    \"DIFF\\n\", paste(diff_lines, collapse=\"\\n\"), \"\\n\", diff_status, \"\\n\",\n    \"LEN \", paste(len_msg, collapse=\" \"), \" \", len_status, \"\\n\",\n    \"PTR \", ptr, \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import contextlib\n    import io\n    import tempfile\n    from pathlib import Path\n    from tools.rdiff import rdiff\n    directory = Path(tempfile.mkdtemp(prefix=\"rdiff\"))\n    a = directory / \"a.txt\"\n    b = directory / \"b.txt\"\n    c = directory / \"c.txt\"\n    d = directory / \"d.txt\"\n    e = directory / \"e.txt\"\n    f = directory / \"f.txt\"\n    a.write_text(\"alpha\\nbeta  \\ngamma\\n\")\n    b.write_text(\"alpha\\nbeta\\ngamma\\n\")\n    c.write_text(\"alpha\\nBETA\\ngamma\\n\")\n    d.write_text(\"only\\n\")\n    e.write_text(\"see <environment: 0xabc> and <hashtable 1>\\n\\u2018q\\u2019\\n\")\n    f.write_text(\"see <environment: 0> and <hashtable output>\\n'q'\\n\")\n    same = rdiff(a, b)\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        diff_status = rdiff(a, c)\n    diff_lines = buf.getvalue().splitlines()\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        len_status = rdiff(a, d)\n    len_msg = buf.getvalue().strip()\n    ptr = rdiff(e, f)\n    return (\n        f\"SAME {same}\\n\"\n        f\"DIFF\\n\" + \"\\n\".join(diff_lines) + f\"\\n{diff_status}\\n\"\n        f\"LEN {len_msg} {len_status}\\n\"\n        f\"PTR {ptr}\\n\"\n    )\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Rdindex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RdTextFilter",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.00Index",
+      "translated": true,
+      "python": "tools.index.read_00index",
+      "loads": [],
+      "uses": [],
+      "done": "Parses a package 00Index into item and description rows. Continuation lines join with a space.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.4843473434448242,
+        "translated_ms": 0.14632850070483983,
+        "speedup": 3.3100000417676965,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeLines(c(\"foo     A description\", \"        continued\", \"\", \"bar\\tThe bar\"), f)\n  idx <- read.00Index(f)\n  paste0(paste(idx[,1], idx[,2], sep=\"=\", collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import tempfile\n    from tools.index import read_00index\n    path = tempfile.mktemp()\n    with open(path, \"w\", encoding=\"utf-8\") as handle:\n        handle.write(\"foo     A description\\n        continued\\n\\nbar\\tThe bar\\n\")\n    rows = read_00index(path)\n    return \"|\".join(f\"{a}={b}\" for a, b in rows) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "a two-item index with a wrapped description"
+      }
+    },
+    {
+      "name": "resaveRdaFiles",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "sha256sum",
+      "translated": true,
+      "python": "tools.checksum.sha256sum",
+      "loads": [],
+      "uses": [],
+      "done": "Hex SHA-256 from hashlib. A missing file is NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bytes \"abc\" and a file containing z and a newline",
+        "r_ms": 0.17642974853515625,
+        "translated_ms": 0.06856349955342012,
+        "speedup": 2.5732313794410966,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeBin(charToRaw(\"z\\n\"), f)\n  paste0(sha256sum(bytes=charToRaw(\"abc\")), \"\\n\", unname(sha256sum(f)), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import tempfile\n    from tools.checksum import sha256sum\n    path = tempfile.mktemp()\n    with open(path, \"wb\") as handle:\n        handle.write(b\"z\\n\")\n    digest = next(iter(sha256sum(path).values()))\n    return sha256sum(bytes=b\"abc\") + \"\\n\" + digest + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "showNonASCII",
+      "translated": true,
+      "python": "tools.textutil.show_non_ascii",
+      "loads": [],
+      "uses": [],
+      "done": "Prints 1-based lines that contain a non-ASCII character, with those bytes as <hex>, and returns the lines.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "c(\"plain\", \"café\", \"ok\")",
+        "r_ms": 0.3114938735961914,
+        "translated_ms": 0.011434500265750103,
+        "speedup": 27.24158173568921,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msg <- capture.output(res <- showNonASCII(c(\"plain\", \"café\", \"ok\")), type=\"message\")\n  paste0(paste(msg, collapse=\"|\"), \" || \", paste(res, collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import contextlib, io\n    from tools.textutil import show_non_ascii\n    err = io.StringIO()\n    with contextlib.redirect_stderr(err):\n        res = show_non_ascii([\"plain\", \"café\", \"ok\"])\n    return err.getvalue().strip().replace(\"\\n\", \"|\") + \" || \" + \"|\".join(res) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "showNonASCIIfile",
+      "translated": true,
+      "python": "tools.textutil.show_non_ascii_file",
+      "loads": [],
+      "uses": [
+        "showNonASCII"
+      ],
+      "done": "Reads a file with warnings off and passes the lines to showNonASCII.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a file whose first line is café",
+        "r_ms": 0.6538629531860352,
+        "translated_ms": 0.10493649915588321,
+        "speedup": 6.231034563243067,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile()\n  writeLines(c(\"café\", \"plain\"), f)\n  msg <- capture.output(res <- showNonASCIIfile(f), type=\"message\")\n  paste0(paste(msg, collapse=\"|\"), \" || \", paste(res, collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import contextlib, io, tempfile\n    from tools.textutil import show_non_ascii_file\n    path = tempfile.mktemp()\n    with open(path, \"w\", encoding=\"utf-8\") as handle:\n        handle.write(\"café\\nplain\\n\")\n    err = io.StringIO()\n    with contextlib.redirect_stderr(err):\n        res = show_non_ascii_file(path)\n    return err.getvalue().strip().replace(\"\\n\", \"|\") + \" || \" + \"|\".join(res) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGCHLD",
+      "translated": true,
+      "python": "tools.process.SIGCHLD",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.013470649719238281,
+        "translated_ms": 0.0008589995559304953,
+        "speedup": 15.681788920887684,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGCHLD, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGCHLD\n    return str(SIGCHLD) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGCONT",
+      "translated": true,
+      "python": "tools.process.SIGCONT",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.0133514404296875,
+        "translated_ms": 0.0008119995982269756,
+        "speedup": 16.442668763433815,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGCONT, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGCONT\n    return str(SIGCONT) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGHUP",
+      "translated": true,
+      "python": "tools.process.SIGHUP",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.014066696166992188,
+        "translated_ms": 0.0009534996934235096,
+        "speedup": 14.752701300286917,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGHUP, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGHUP\n    return str(SIGHUP) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGINT",
+      "translated": true,
+      "python": "tools.process.SIGINT",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.012278556823730469,
+        "translated_ms": 0.0015450004866579548,
+        "speedup": 7.9472834667454695,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGINT, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGINT\n    return str(SIGINT) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGKILL",
+      "translated": true,
+      "python": "tools.process.SIGKILL",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.013470649719238281,
+        "translated_ms": 0.0009235000106855296,
+        "speedup": 14.586518206143595,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGKILL, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGKILL\n    return str(SIGKILL) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGQUIT",
+      "translated": true,
+      "python": "tools.process.SIGQUIT",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.018477439880371094,
+        "translated_ms": 0.000872999407874886,
+        "speedup": 21.165466681529743,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGQUIT, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGQUIT\n    return str(SIGQUIT) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGSTOP",
+      "translated": true,
+      "python": "tools.process.SIGSTOP",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.02086162567138672,
+        "translated_ms": 0.0008419992809649557,
+        "speedup": 24.776298677450992,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGSTOP, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGSTOP\n    return str(SIGSTOP) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGTERM",
+      "translated": true,
+      "python": "tools.process.SIGTERM",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.013470649719238281,
+        "translated_ms": 0.0009069999578059651,
+        "speedup": 14.851874692280926,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGTERM, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGTERM\n    return str(SIGTERM) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGTSTP",
+      "translated": true,
+      "python": "tools.process.SIGTSTP",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.011324882507324219,
+        "translated_ms": 0.000867499693413265,
+        "speedup": 13.054624218673007,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGTSTP, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGTSTP\n    return str(SIGTSTP) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGUSR1",
+      "translated": true,
+      "python": "tools.process.SIGUSR1",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.014185905456542969,
+        "translated_ms": 0.0009385003068018705,
+        "speedup": 15.115504335725056,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGUSR1, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGUSR1\n    return str(SIGUSR1) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SIGUSR2",
+      "translated": true,
+      "python": "tools.process.SIGUSR2",
+      "loads": [],
+      "uses": [],
+      "done": "The host POSIX signal number from the Python signal module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the numeric value",
+        "r_ms": 0.013470649719238281,
+        "translated_ms": 0.0009739997040014714,
+        "speedup": 13.830240054382944,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(SIGUSR2, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.process import SIGUSR2\n    return str(SIGUSR2) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "standard_package_names",
+      "translated": true,
+      "python": "tools.session.standard_package_names",
+      "loads": [],
+      "uses": [],
+      "done": "The base and recommended package names shipped with R 4.5.0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the base vector and the recommended vector",
+        "r_ms": 0.03063678741455078,
+        "translated_ms": 0.002101000973198097,
+        "speedup": 14.581995822646451,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  std <- standard_package_names()\n  paste0(paste(std$base, collapse=\",\"), \" || \", paste(std$recommended, collapse=\",\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.session import standard_package_names\n    std = standard_package_names()\n    return \",\".join(std[\"base\"]) + \" || \" + \",\".join(std[\"recommended\"]) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "startDynamicHelp",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "summarize_check_packages_in_dir_depends",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "summarize_check_packages_in_dir_results",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "summarize_check_packages_in_dir_timings",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "summarize_CRAN_check_status",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "SweaveTeXFilter",
+      "translated": true,
+      "python": "tools.sweave.sweave_tex_filter",
+      "loads": [],
+      "uses": [],
+      "done": "Blanks noweb code chunks and leaves the documentation lines.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a noweb file with one code chunk",
+        "r_ms": 21.306157112121582,
+        "translated_ms": 0.21170099989831215,
+        "speedup": 100.64268530784324,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  f <- tempfile(fileext = \".Rnw\")\n  writeLines(c(\"Some text\", \"<<>>=\", \"code line\", \"@\", \"more text\"), f)\n  paste0(paste(SweaveTeXFilter(f), collapse=\"|\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import tempfile\n    from pathlib import Path\n    from tools.sweave import sweave_tex_filter\n    path = Path(tempfile.mkdtemp()) / \"demo.Rnw\"\n    path.write_text(\"Some text\\n<<>>=\\ncode line\\n@\\nmore text\\n\")\n    return \"|\".join(sweave_tex_filter(path)) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "testInstalledBasic",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "testInstalledPackage",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "testInstalledPackages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "texi2dvi",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "texi2pdf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "toHTML",
+      "translated": true,
+      "python": "tools.convert.to_html",
+      "loads": [],
+      "uses": [],
+      "done": "There is no toHTML method for base types, so the UseMethod error is reproduced.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a number, a string, a logical, and NULL",
+        "r_ms": 0.20551681518554688,
+        "translated_ms": 0.005482500455400441,
+        "speedup": 37.485964088357925,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msgs <- c(\n    tryCatch(toHTML(1), error = function(e) conditionMessage(e)),\n    tryCatch(toHTML(\"a\"), error = function(e) conditionMessage(e)),\n    tryCatch(toHTML(TRUE), error = function(e) conditionMessage(e)),\n    tryCatch(toHTML(NULL), error = function(e) conditionMessage(e))\n  )\n  paste0(paste(msgs, collapse=\"\\n\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.convert import to_html\n    msgs = []\n    for value in (1.0, \"a\", True, None):\n        try:\n            to_html(value)\n            msgs.append(\"\")\n        except ValueError as exc:\n            msgs.append(str(exc))\n    return \"\\n\".join(msgs) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "toRd",
+      "translated": true,
+      "python": "tools.convert.to_rd",
+      "loads": [],
+      "uses": [],
+      "done": "Escapes backslash, braces, and percent for Rd.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "braces, a backslash, and a percent sign",
+        "r_ms": 0.04982948303222656,
+        "translated_ms": 0.0025039998945430852,
+        "speedup": 19.899954125724573,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  paste0(toRd(\"a{b}\\\\c%\"), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.convert import to_rd\n    return to_rd(\"a{b}\\\\c%\") + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "toTitleCase",
+      "translated": true,
+      "python": "tools.textutil.to_title_case",
+      "loads": [],
+      "uses": [],
+      "done": "Title-cases words, leaving small words, internal capitals, and the alone-list unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "small words, HTML and LaTeX, a hyphen, a colon, and quotes",
+        "r_ms": 2.1456480026245117,
+        "translated_ms": 0.14788649878028082,
+        "speedup": 14.508748400436216,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  show <- function(v) paste(ifelse(is.na(v), \"NA\", v), collapse=\"|\")\n  x <- c(\"the quick brown fox\", \"a tale of two cities\", \"HTML and LaTeX\", NA, \"john's book\", \"foo-bar: baz\", \"\\\"hello\\\" world\")\n  paste0(show(toTitleCase(x)), \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.file_ext import NA_character_\n    from tools.textutil import to_title_case\n    x = [\"the quick brown fox\", \"a tale of two cities\", \"HTML and LaTeX\", NA_character_, \"john's book\", \"foo-bar: baz\", '\"hello\" world']\n    parts = [\"NA\" if item.__class__.__name__ == \"NA\" else item for item in to_title_case(x)]\n    return \"|\".join(parts) + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "undoc",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "update_PACKAGES",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "update_pkg_po",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vignetteDepends",
+      "translated": true,
+      "python": "tools.defunct.vignette_depends",
+      "loads": [],
+      "uses": [],
+      "done": "Defunct. The error names vignetteInfo()$depends or package_dependencies().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "r_ms": 0.17178058624267578,
+        "translated_ms": 0.0035930006561102346,
+        "speedup": 47.80978426779488,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  msg <- tryCatch(vignetteDepends(), error=function(e) conditionMessage(e))\n  paste0(msg, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.defunct import vignette_depends as fn\n    try:\n        fn()\n        msg = \"NOERROR\"\n    except RuntimeError as error:\n        msg = str(error)\n    return msg + \"\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        },
+        "case": "the defunct error"
+      }
+    },
+    {
+      "name": "vignetteEngine",
+      "translated": true,
+      "python": "tools.vignette.vignette_engine",
+      "loads": [],
+      "uses": [],
+      "done": "Sweave is the utils engine. A new engine can be registered under an installed package.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Sweave, a missing package, the locked Sweave name, and a registered tools engine",
+        "r_ms": 0.6172657012939453,
+        "translated_ms": 0.4521175014815526,
+        "speedup": 1.3652771663808974,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  e <- vignetteEngine(\"Sweave\")\n  miss <- tryCatch(vignetteEngine(\"nope\"), error = function(err) conditionMessage(err))\n  locked <- tryCatch(vignetteEngine(\"Sweave\", weave = function(...) 1, tangle = function(...) 2, package = \"tools\"), error = function(err) conditionMessage(err))\n  vignetteEngine(\"demo\", weave = function(...) 1, tangle = function(...) 2, package = \"tools\")\n  got <- vignetteEngine(\"tools::demo\")\n  paste0(e$name, \" \", e$package, \" \", e$pattern, \"\\n\", miss, \"\\n\", locked, \"\\n\", got$name, \" \", got$package, \" \", got$pattern, \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    from tools.vignette import vignette_engine\n    e = vignette_engine(\"Sweave\")\n    try:\n        vignette_engine(\"nope\")\n        miss = \"\"\n    except ValueError as exc:\n        miss = str(exc)\n    try:\n        vignette_engine(\"Sweave\", weave=lambda: 1, tangle=lambda: 2, package=\"tools\")\n        locked = \"\"\n    except ValueError as exc:\n        locked = str(exc)\n    vignette_engine(\"demo\", weave=lambda: 1, tangle=lambda: 2, package=\"tools\")\n    got = vignette_engine(\"tools::demo\")\n    return f\"{e['name']} {e['package']} {e['pattern']}\\n{miss}\\n{locked}\\n{got['name']} {got['package']} {got['pattern']}\\n\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "vignetteInfo",
+      "translated": true,
+      "python": "tools.vignette.vignette_info",
+      "loads": [],
+      "uses": [],
+      "done": "Index entry, Depends, Keyword or Keywords, and the engine. A missing engine is utils::Sweave.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a vignette with metadata and a vignette with none",
+        "r_ms": 2.786397933959961,
+        "translated_ms": 0.5379160002121353,
+        "speedup": 5.179987085085967,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tools))\n\none <- function() {\n  dir <- tempfile(\"vig\")\n  dir.create(dir)\n  writeLines(c(\n    \"% \\\\VignetteIndexEntry{A Title}\",\n    \"% \\\\VignetteDepends{foo, bar}\",\n    \"% \\\\VignetteKeywords{one, two}\",\n    \"% \\\\VignetteEngine{knitr::knitr}\"\n  ), file.path(dir, \"demo.Rnw\"))\n  writeLines(\"nothing\", file.path(dir, \"empty.Rnw\"))\n  a <- vignetteInfo(file.path(dir, \"demo.Rnw\"))\n  b <- vignetteInfo(file.path(dir, \"empty.Rnw\"))\n  paste0(\n    \"VIG \", a$file, \" \", a$title, \" \", paste(a$depends, collapse=\",\"), \" \",\n    paste(a$keywords, collapse=\",\"), \" \", a$engine, \"\\n\",\n    \"VIG0 \", b$title, \" \", paste(b$depends, collapse=\",\"), \" \",\n    paste(b$keywords, collapse=\",\"), \" \", b$engine, \"\\n\"\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\ndef one():\n    import tempfile\n    from pathlib import Path\n    from tools.vignette import vignette_info\n    directory = Path(tempfile.mkdtemp(prefix=\"vig\"))\n    (directory / \"demo.Rnw\").write_text(\n        \"% \\\\VignetteIndexEntry{A Title}\\n\"\n        \"% \\\\VignetteDepends{foo, bar}\\n\"\n        \"% \\\\VignetteKeywords{one, two}\\n\"\n        \"% \\\\VignetteEngine{knitr::knitr}\\n\"\n    )\n    (directory / \"empty.Rnw\").write_text(\"nothing\\n\")\n    a = vignette_info(directory / \"demo.Rnw\")\n    b = vignette_info(directory / \"empty.Rnw\")\n    return (\n        f\"VIG {a['file']} {a['title']} {','.join(a['depends'])} {','.join(a['keywords'])} {a['engine']}\\n\"\n        f\"VIG0 {b['title']} {','.join(b['depends'])} {','.join(b['keywords'])} {b['engine']}\\n\"\n    )\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "write_PACKAGES",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xgettext",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xgettext2pot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xngettext",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

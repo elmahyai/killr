@@ -1,0 +1,34 @@
+import statistics
+import sys
+import time
+
+import numpy as np
+
+sys.path.insert(0, "/home/ahmed/killr_projects/killr/packages/statmod")
+from statmod.unitdeviance_digamma import unitdeviance_digamma
+
+
+def one():
+    mus = np.exp(np.linspace(np.log(0.01), np.log(1000), 50))
+    ratios = np.resize(np.array([0.5, 0.8, 1.0, 1.05, 1.1, 2.0], dtype=float), 50)
+    y = mus * ratios
+    return np.concatenate(
+        [
+            unitdeviance_digamma(y, mus),
+            unitdeviance_digamma(
+                np.array([0.25, 1.5, 7.5], dtype=float),
+                np.array([0.3, 1.4, 8.0], dtype=float),
+            ),
+        ]
+    )
+
+
+value = one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+print(",".join("%.17g" % float(v) for v in np.asarray(value, dtype=float)))
+print("MS")
+print("%.17g" % statistics.median(elapsed))

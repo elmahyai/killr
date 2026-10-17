@@ -1,0 +1,44 @@
+import json
+import statistics
+import time
+
+from jsonlite import (
+    NA,
+    DataFrame,
+    as_gzjson_b64,
+    as_gzjson_raw,
+    base64_dec,
+    base64_enc,
+    base64url_dec,
+    base64url_enc,
+    flatten,
+    fromJSON,
+    minify,
+    parse_gzjson_b64,
+    parse_gzjson_raw,
+    parse_json,
+    prettify,
+    rbind_pages,
+    read_json,
+    serializeJSON,
+    stream_in,
+    stream_out,
+    toJSON,
+    unbox,
+    unserializeJSON,
+    validate,
+    write_json,
+)
+def one():
+    vehicle = DataFrame({"model": ["Piranha Prowler", "Royal Racer"]})
+    vehicle.columns["stats"] = DataFrame({"speed": [55, 34], "weight": [67, 24]})
+    frame = DataFrame({"driver": ["Bowser", "Peach"], "occupation": ["Koopa", "Princess"], "vehicle": vehicle})
+    return " ".join(flatten(frame).columns)
+
+value = one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+print(json.dumps({"value": value, "median_ms": statistics.median(elapsed)}, ensure_ascii=False))

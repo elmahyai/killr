@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gower · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>gower</h1>
+<p class="note">CRAN 1.0.2</p>
+<p>Crate crates/gower built and matched (800 distances, top-n max diff 0). Python wrapper package not written. Finding: gower 1.0.2 gower_topn overwrites the caller character column and compares to &quot;&quot; (replicated in the port, not fixed).</p>
+<p class="note">2 of 2 functions · 100.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#gower_dist">gower_dist</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Wrapper now encodes NA logical columns as lgl and NA integer columns as int with INT_MIN (fix in _common.py). Proof inputs now use boolean and Int64 with NA.</td></tr>
+<tr><td><a href="#gower_topn">gower_topn</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Same wrapper fix as gower_dist. Zero index mismatches.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<table>
+<thead><tr><th>Crate</th><th>Fortran origin</th><th>Blocked</th></tr></thead>
+<tbody>
+<tr><td>gower</td><td>gower 1.0.2 compiled source (src/)</td><td>—</td></tr>
+</tbody>
+</table></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>gower_dist</td><td>wrapper fixed inputs</td><td>76.4</td><td>34.7</td><td><button type="button" class="proof-toggle" data-name="gower_dist"><span class='yes'>+120%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:45.4%'></span></div></td></tr>
+<tr><td>gower_topn</td><td>wrapper fixed inputs</td><td>168</td><td>89.8</td><td><button type="button" class="proof-toggle" data-name="gower_topn"><span class='yes'>+87%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:53.5%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "gower_dist", "r": "# Wrapper-level proof, R side: the public gower_dist() and gower_topn() of\n# gower 1.0.2 on the fixed inputs written by make_inputs.py.\n#\n# Run from the repository root:\n#   GOWER_R_LIB=/tmp/gower_rlib Rscript packages/gower/proof/wrapper_proof_r.R\n# where /tmp/gower_rlib holds gower 1.0.2\n# (R CMD INSTALL -l /tmp/gower_rlib cran/contrib/gower_1.0.2.tar.gz).\n#\n# Writes the values to packages/gower/proof/data/wrapper_r_*.txt. The Python\n# side (wrapper_proof_py.py) reads them and compares.\n#\n# Timing: Sys.time(), one untimed call, then the median of 20 timed calls.\n# gower_topn overwrites the character column of the argument it is given\n# (gower 1.0.2), so every topn call gets its own pre-built copy of x, made\n# outside the timer.\n\nlib_loc \u003c- Sys.getenv(\"GOWER_R_LIB\", unset = \"\")\nif (nzchar(lib_loc)) {\n  suppressPackageStartupMessages(library(gower, lib.loc = lib_loc))\n} else {\n  suppressPackageStartupMessages(library(gower))\n}\nstopifnot(as.character(packageVersion(\"gower\")) == \"1.0.2\")\n\ndata_dir \u003c- \"packages/gower/proof/data\"\n\nx_classes \u003c- c(\"numeric\", \"integer\", \"logical\", \"character\",\n               \"character\", \"numeric\", \"integer\", \"numeric\")\ny_classes \u003c- c(\"numeric\", \"integer\", \"logical\", \"character\",\n               \"character\", \"numeric\", \"integer\")\nlevels_4 \u003c- c(\"a\", \"b\", \"c\", \"d\")\n\nread_frame \u003c- function(path, classes) {\n  read.csv(path, colClasses = classes, na.strings = \"NA\",\n           stringsAsFactors = FALSE)\n}\nx0 \u003c- read_frame(file.path(data_dir, \"x.csv\"), x_classes)\ny0 \u003c- read_frame(file.path(data_dir, \"y.csv\"), y_classes)\nx0$x4 \u003c- factor(x0$x4, levels = levels_4)\ny0$y4 \u003c- factor(y0$y4, levels = levels_4)\n\n# Same pairing as the Python side: pair_x 1:8, pair_y 2 1 3 4 5 6 7 0\n# (a 0 skips the column), explicit weights, eps 1e-8, n = 5.\npair_x \u003c- 1:8\npair_y \u003c- c(2, 1, 3, 4, 5, 6, 7, 0)\nweights \u003c- c(1, 2, 0.5, 1.5, 1, 3, 0.25, 1)\neps \u003c- 1e-8\nn_top \u003c- 5L\nn_reps \u003c- 20L\n\nrun_dist \u003c- function(x) {\n  gower_dist(x, y0, pair_x = pair_x, pair_y = pair_y, eps = eps,\n             weights = weights, nthread = 1L)\n}\nrun_topn \u003c- function(x) {\n  gower_topn(x, y0, pair_x = pair_x, pair_y = pair_y, n = n_top, eps = eps,\n             weights = weights, nthread = 1L)\n}\n\n# args: n_reps + 1 pre-built arguments. The first is the untimed call.\ntime_median \u003c- function(fun, args) {\n  fun(args[[1]])\n  secs \u003c- numeric(n_reps)\n  for (k in seq_len(n_reps)) {\n    arg \u003c- args[[k + 1]]\n    t0 \u003c- Sys.time()\n    fun(arg)\n    t1 \u003c- Sys.time()\n    secs[k] \u003c- as.numeric(difftime(t1, t0, units = \"secs\"))\n  }\n  list(median = median(secs), all = secs)\n}\n\nx_copy \u003c- function() {\n  z \u003c- x0\n  z$x5 \u003c- x0$x5[seq_along(x0$x5)]\n  z\n}\n\n# Copies: [1] value call, [2] untimed call, [3..22] the 20 timed calls.\ntopn_copies \u003c- lapply(seq_len(n_reps + 2), function(k) x_copy())\nx5_before \u003c- x0$x5\n\ndist_val \u003c- run_dist(x0)\ntopn_val \u003c- run_topn(topn_copies[[1]])\nstopifnot(identical(x0$x5, x5_before))  # the caller's data is not touched\n\nt_dist \u003c- time_median(run_dist, rep(list(x0), n_reps + 1))\nt_topn \u003c- time_median(run_topn, topn_copies[-1])\n\nfmt \u003c- function(v) sprintf(\"%.17g\", v)\nwriteLines(fmt(as.vector(dist_val)), file.path(data_dir, \"wrapper_r_dist.txt\"))\nwriteLines(apply(topn_val$index, 1, function(r) paste(r, collapse = \" \")),\n           file.path(data_dir, \"wrapper_r_topn_index.txt\"))\nwriteLines(apply(topn_val$distance, 1, function(r) paste(fmt(r), collapse = \" \")),\n           file.path(data_dir, \"wrapper_r_topn_distance.txt\"))\nwriteLines(c(sprintf(\"gower_dist %.17g\", t_dist$median),\n             sprintf(\"gower_topn %.17g\", t_topn$median)),\n           file.path(data_dir, \"wrapper_r_timings.txt\"))\n\ncat(\"gower version:\", as.character(packageVersion(\"gower\")), \"\\n\")\ncat(\"R version:\", R.version.string, \"\\n\")\ncat(sprintf(\"R gower_dist: %d values, median of %d timed calls = %.6f s\\n\",\n            length(dist_val), n_reps, t_dist$median))\ncat(sprintf(\"R gower_topn: %d x %d, median of %d timed calls = %.6f s\\n\",\n            nrow(topn_val$index), ncol(topn_val$index), n_reps, t_topn$median))\ncat(\"topn overwrote x5 in its argument (copy 1):\",\n    !identical(topn_copies[[1]]$x5, x5_before), \"\\n\")\n", "python": "\"\"\"Wrapper-level proof, Python side: the public gower_dist and gower_topn\nwrappers in packages/gower/gower against gower 1.0.2 in R, on the fixed\ninputs written by make_inputs.py.\n\nRun from the repository root, after wrapper_proof_r.R:\n\n    .venv/bin/python packages/gower/proof/wrapper_proof_py.py\n\nThe extension must be built first:\n    .venv/bin/maturin develop --release --manifest-path crates/gower/Cargo.toml\n\nInputs are passed as a pandas DataFrame, the way a user would call the\nwrappers:\n  - dbl columns: float64 with NaN for NA\n  - factor column: pandas Categorical with levels a, b, c, d\n  - character column: object column with None for NA\n  - integer column: pandas Int64 with pd.NA for NA\n  - logical column: pandas boolean with pd.NA for NA\n  The wrapper keeps these as integer and logical storage, so R's gower_int\n  and gower_logi run on them as they do in R.\n\nWrites the Python values to packages/gower/proof/data/wrapper_py_*.txt and\nthe comparison to packages/gower/docs/output/wrapper_proof.txt.\nTiming: time.perf_counter(), one untimed call, then the median of 20 timed\ncalls. The timed call is the whole public wrapper, including the column\nconversion, the same as the R call.\n\"\"\"\n\nimport csv\nimport math\nimport os\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\nimport pandas as pd\n\nHERE = os.path.dirname(os.path.abspath(__file__))\nPKG = os.path.dirname(HERE)  # packages/gower, which holds the gower/ package\nsys.path.insert(0, PKG)\n\nfrom gower.gower_dist import gower_dist  # noqa: E402\nfrom gower.gower_topn import gower_topn  # noqa: E402\n\nDATA = os.path.join(HERE, \"data\")\nOUT = os.path.join(os.path.dirname(HERE), \"docs\", \"output\")\n\nLEVELS = [\"a\", \"b\", \"c\", \"d\"]\nX_NAMES = [f\"x{k}\" for k in range(1, 9)]\nY_NAMES = [f\"y{k}\" for k in range(1, 8)]\nX_KINDS = [\"dbl\", \"int\", \"lgl\", \"fct\", \"str\", \"dbl\", \"int\", \"dbl\"]\nY_KINDS = [\"dbl\", \"int\", \"lgl\", \"fct\", \"str\", \"dbl\", \"int\"]\nPAIR_X = list(range(1, 9))\nPAIR_Y = [2, 1, 3, 4, 5, 6, 7, 0]\nWEIGHTS = np.array([1, 2, 0.5, 1.5, 1, 3, 0.25, 1], dtype=np.float64)\nEPS = 1e-8\nN_TOP = 5\nN_REPS = 20\nTOL = 1e-8\n\n\ndef load_frame(path, names, kinds):\n    with open(path, newline=\"\") as fh:\n        reader = csv.reader(fh)\n        next(reader)\n        rows = list(reader)\n    cols = {}\n    for c, (name, kind) in enumerate(zip(names, kinds)):\n        text = [r[c] for r in rows]\n        if kind == \"dbl\":\n            cols[name] = np.array(\n                [math.nan if t == \"NA\" else float(t) for t in text], dtype=np.float64\n            )\n        elif kind == \"int\":\n            cols[name] = pd.array(\n                [None if t == \"NA\" else int(t) for t in text], dtype=\"Int64\"\n            )\n        elif kind == \"lgl\":\n            cols[name] = pd.array(\n                [None if t == \"NA\" else (t == \"TRUE\") for t in text], dtype=\"boolean\"\n            )\n        elif kind == \"fct\":\n            cols[name] = pd.Categorical(\n                [None if t == \"NA\" else t for t in text], categories=LEVELS\n            )\n        elif kind == \"str\":\n            cols[name] = pd.Series(\n                [None if t == \"NA\" else t for t in text], dtype=object\n            )\n        else:\n            raise ValueError(kind)\n    return pd.DataFrame(cols, columns=names)\n\n\ndef run_dist(x, y):\n    return gower_dist(\n        x, y, pair_x=PAIR_X, pair_y=PAIR_Y, eps=EPS, weights=WEIGHTS, nthread=1\n    )\n\n\ndef run_topn(x, y):\n    return gower_topn(\n        x, y, n=N_TOP, pair_x=PAIR_X, pair_y=PAIR_Y, eps=EPS,\n        weights=WEIGHTS, nthread=1,\n    )\n\n\ndef time_median(fn):\n    fn()  # one untimed call\n    secs = []\n    for _ in range(N_REPS):\n        t0 = time.perf_counter()\n        fn()\n        secs.append(time.perf_counter() - t0)\n    return statistics.median(secs), secs\n\n\ndef fmt(v):\n    return repr(float(v))\n\n\ndef write_floats(path, values):\n    with open(path, \"w\") as fh:\n        for v in np.asarray(values, dtype=np.float64).ravel():\n            fh.write(fmt(v) + \"\\n\")\n\n\ndef write_rows(path, matrix, kind):\n    with open(path, \"w\") as fh:\n        for row in np.asarray(matrix):\n            if kind == \"int\":\n                fh.write(\" \".join(str(int(v)) for v in row) + \"\\n\")\n            else:\n                fh.write(\" \".join(fmt(v) for v in row) + \"\\n\")\n\n\ndef read_floats(path):\n    out = []\n    with open(path) as fh:\n        for line in fh:\n            for tok in line.split():\n                out.append(math.nan if tok in (\"NaN\", \"NA\") else float(tok))\n    return np.array(out, dtype=np.float64)\n\n\ndef read_matrix(path, kind):\n    with open(path) as fh:\n        rows = [line.split() for line in fh if line.strip()]\n    if kind == \"int\":\n        return np.array([[int(t) for t in r] for r in rows], dtype=np.int64)\n    return np.array([[float(t) for t in r] for r in rows], dtype=np.float64)\n\n\ndef max_abs_diff(a, b):\n    a = np.asarray(a, dtype=np.float64).ravel()\n    b = np.asarray(b, dtype=np.float64).ravel()\n    if a.shape != b.shape:\n        return math.inf\n    nan_a, nan_b = np.isnan(a), np.isnan(b)\n    if np.any(nan_a != nan_b):\n        return math.inf\n    diff = np.abs(a - b)\n    diff[nan_a & nan_b] = 0.0\n    return float(diff.max()) if diff.size else 0.0\n\n\ndef read_r_timings(path):\n    times = {}\n    with open(path) as fh:\n        for line in fh:\n            name, value = line.split()\n            times[name] = float(value)\n    return times\n\n\ndef main():\n    x = load_frame(os.path.join(DATA, \"x.csv\"), X_NAMES, X_KINDS)\n    y = load_frame(os.path.join(DATA, \"y.csv\"), Y_NAMES, Y_KINDS)\n    x5_before = x[\"x5\"].tolist()\n\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        dist = run_dist(x, y)\n        topn_index, topn_dist = run_topn(x, y)\n    n_warn = len(caught)\n    topn_index = np.asarray(topn_index)\n    topn_dist = np.asarray(topn_dist)\n    x5_unchanged = x[\"x5\"].tolist() == x5_before\n\n    write_floats(os.path.join(DATA, \"wrapper_py_dist.txt\"), dist)\n    write_rows(os.path.join(DATA, \"wrapper_py_topn_index.txt\"), topn_index, \"int\")\n    write_rows(os.path.join(DATA, \"wrapper_py_topn_distance.txt\"), topn_dist, \"dbl\")\n\n    # Compare the two sides through the text files they wrote.\n    r_dist = read_floats(os.path.join(DATA, \"wrapper_r_dist.txt\"))\n    py_dist = read_floats(os.path.join(DATA, \"wrapper_py_dist.txt\"))\n    r_index = read_matrix(os.path.join(DATA, \"wrapper_r_topn_index.txt\"), \"int\")\n    py_index = read_matrix(os.path.join(DATA, \"wrapper_py_topn_index.txt\"), \"int\")\n    r_tdist = read_matrix(os.path.join(DATA, \"wrapper_r_topn_distance.txt\"), \"dbl\")\n    py_tdist = read_matrix(os.path.join(DATA, \"wrapper_py_topn_distance.txt\"), \"dbl\")\n\n    dist_diff = max_abs_diff(py_dist, r_dist)\n    if r_index.shape == py_index.shape:\n        index_mismatch = int(np.sum(r_index != py_index))\n    else:\n        index_mismatch = -1\n    topn_diff = max_abs_diff(py_tdist, r_tdist)\n\n    r_times = read_r_timings(os.path.join(DATA, \"wrapper_r_timings.txt\"))\n    py_dist_median, _ = time_median(lambda: run_dist(x, y))\n    py_topn_median, _ = time_median(lambda: run_topn(x, y))\n    x5_unchanged = x5_unchanged and x[\"x5\"].tolist() == x5_before\n\n    r_dist_ms = r_times[\"gower_dist\"] * 1000\n    r_topn_ms = r_times[\"gower_topn\"] * 1000\n    py_dist_ms = py_dist_median * 1000\n    py_topn_ms = py_topn_median * 1000\n\n    ok = (dist_diff \u003c= TOL and topn_diff \u003c= TOL and index_mismatch == 0\n          and x5_unchanged)\n    lines = [\n        \"gower public wrappers (Python) vs gower 1.0.2 (R), same fixed inputs\",\n        f\"inputs: x {len(x)} rows x {x.shape[1]} cols, y {len(y)} rows x {y.shape[1]} cols, \"\n        f\"pair_x {PAIR_X}, pair_y {PAIR_Y} (0 = skipped), eps {EPS:g}, \"\n        f\"weights {WEIGHTS.tolist()}, n {N_TOP}, nthread 1\",\n        f\"gower_dist: {dist.shape} values R {r_dist.size}, Python {py_dist.size}, \"\n        f\"max abs diff {dist_diff:.3e}\",\n        f\"gower_topn: index {py_index.shape} (R {r_index.shape}), \"\n        f\"max abs diff in distance {topn_diff:.3e}, index mismatches {index_mismatch}\",\n        f\"python warnings during the untimed call: {n_warn}\",\n        f\"caller's x unchanged by the wrappers: {x5_unchanged}\",\n        f\"timings (median of {N_REPS} calls after 1 untimed):\",\n        f\"  gower_dist  r_ms {r_dist_ms:.3f}  translated_ms {py_dist_ms:.3f}  \"\n        f\"speedup {r_dist_ms / py_dist_ms:.2f}\",\n        f\"  gower_topn  r_ms {r_topn_ms:.3f}  translated_ms {py_topn_ms:.3f}  \"\n        f\"speedup {r_topn_ms / py_topn_ms:.2f}\",\n        f\"tolerance {TOL:g}: {'PASS' if ok else 'FAIL'}\",\n    ]\n    os.makedirs(OUT, exist_ok=True)\n    with open(os.path.join(OUT, \"wrapper_proof.txt\"), \"w\") as fh:\n        fh.write(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"}, {"name": "gower_topn", "r": "# Wrapper-level proof, R side: the public gower_dist() and gower_topn() of\n# gower 1.0.2 on the fixed inputs written by make_inputs.py.\n#\n# Run from the repository root:\n#   GOWER_R_LIB=/tmp/gower_rlib Rscript packages/gower/proof/wrapper_proof_r.R\n# where /tmp/gower_rlib holds gower 1.0.2\n# (R CMD INSTALL -l /tmp/gower_rlib cran/contrib/gower_1.0.2.tar.gz).\n#\n# Writes the values to packages/gower/proof/data/wrapper_r_*.txt. The Python\n# side (wrapper_proof_py.py) reads them and compares.\n#\n# Timing: Sys.time(), one untimed call, then the median of 20 timed calls.\n# gower_topn overwrites the character column of the argument it is given\n# (gower 1.0.2), so every topn call gets its own pre-built copy of x, made\n# outside the timer.\n\nlib_loc \u003c- Sys.getenv(\"GOWER_R_LIB\", unset = \"\")\nif (nzchar(lib_loc)) {\n  suppressPackageStartupMessages(library(gower, lib.loc = lib_loc))\n} else {\n  suppressPackageStartupMessages(library(gower))\n}\nstopifnot(as.character(packageVersion(\"gower\")) == \"1.0.2\")\n\ndata_dir \u003c- \"packages/gower/proof/data\"\n\nx_classes \u003c- c(\"numeric\", \"integer\", \"logical\", \"character\",\n               \"character\", \"numeric\", \"integer\", \"numeric\")\ny_classes \u003c- c(\"numeric\", \"integer\", \"logical\", \"character\",\n               \"character\", \"numeric\", \"integer\")\nlevels_4 \u003c- c(\"a\", \"b\", \"c\", \"d\")\n\nread_frame \u003c- function(path, classes) {\n  read.csv(path, colClasses = classes, na.strings = \"NA\",\n           stringsAsFactors = FALSE)\n}\nx0 \u003c- read_frame(file.path(data_dir, \"x.csv\"), x_classes)\ny0 \u003c- read_frame(file.path(data_dir, \"y.csv\"), y_classes)\nx0$x4 \u003c- factor(x0$x4, levels = levels_4)\ny0$y4 \u003c- factor(y0$y4, levels = levels_4)\n\n# Same pairing as the Python side: pair_x 1:8, pair_y 2 1 3 4 5 6 7 0\n# (a 0 skips the column), explicit weights, eps 1e-8, n = 5.\npair_x \u003c- 1:8\npair_y \u003c- c(2, 1, 3, 4, 5, 6, 7, 0)\nweights \u003c- c(1, 2, 0.5, 1.5, 1, 3, 0.25, 1)\neps \u003c- 1e-8\nn_top \u003c- 5L\nn_reps \u003c- 20L\n\nrun_dist \u003c- function(x) {\n  gower_dist(x, y0, pair_x = pair_x, pair_y = pair_y, eps = eps,\n             weights = weights, nthread = 1L)\n}\nrun_topn \u003c- function(x) {\n  gower_topn(x, y0, pair_x = pair_x, pair_y = pair_y, n = n_top, eps = eps,\n             weights = weights, nthread = 1L)\n}\n\n# args: n_reps + 1 pre-built arguments. The first is the untimed call.\ntime_median \u003c- function(fun, args) {\n  fun(args[[1]])\n  secs \u003c- numeric(n_reps)\n  for (k in seq_len(n_reps)) {\n    arg \u003c- args[[k + 1]]\n    t0 \u003c- Sys.time()\n    fun(arg)\n    t1 \u003c- Sys.time()\n    secs[k] \u003c- as.numeric(difftime(t1, t0, units = \"secs\"))\n  }\n  list(median = median(secs), all = secs)\n}\n\nx_copy \u003c- function() {\n  z \u003c- x0\n  z$x5 \u003c- x0$x5[seq_along(x0$x5)]\n  z\n}\n\n# Copies: [1] value call, [2] untimed call, [3..22] the 20 timed calls.\ntopn_copies \u003c- lapply(seq_len(n_reps + 2), function(k) x_copy())\nx5_before \u003c- x0$x5\n\ndist_val \u003c- run_dist(x0)\ntopn_val \u003c- run_topn(topn_copies[[1]])\nstopifnot(identical(x0$x5, x5_before))  # the caller's data is not touched\n\nt_dist \u003c- time_median(run_dist, rep(list(x0), n_reps + 1))\nt_topn \u003c- time_median(run_topn, topn_copies[-1])\n\nfmt \u003c- function(v) sprintf(\"%.17g\", v)\nwriteLines(fmt(as.vector(dist_val)), file.path(data_dir, \"wrapper_r_dist.txt\"))\nwriteLines(apply(topn_val$index, 1, function(r) paste(r, collapse = \" \")),\n           file.path(data_dir, \"wrapper_r_topn_index.txt\"))\nwriteLines(apply(topn_val$distance, 1, function(r) paste(fmt(r), collapse = \" \")),\n           file.path(data_dir, \"wrapper_r_topn_distance.txt\"))\nwriteLines(c(sprintf(\"gower_dist %.17g\", t_dist$median),\n             sprintf(\"gower_topn %.17g\", t_topn$median)),\n           file.path(data_dir, \"wrapper_r_timings.txt\"))\n\ncat(\"gower version:\", as.character(packageVersion(\"gower\")), \"\\n\")\ncat(\"R version:\", R.version.string, \"\\n\")\ncat(sprintf(\"R gower_dist: %d values, median of %d timed calls = %.6f s\\n\",\n            length(dist_val), n_reps, t_dist$median))\ncat(sprintf(\"R gower_topn: %d x %d, median of %d timed calls = %.6f s\\n\",\n            nrow(topn_val$index), ncol(topn_val$index), n_reps, t_topn$median))\ncat(\"topn overwrote x5 in its argument (copy 1):\",\n    !identical(topn_copies[[1]]$x5, x5_before), \"\\n\")\n", "python": "\"\"\"Wrapper-level proof, Python side: the public gower_dist and gower_topn\nwrappers in packages/gower/gower against gower 1.0.2 in R, on the fixed\ninputs written by make_inputs.py.\n\nRun from the repository root, after wrapper_proof_r.R:\n\n    .venv/bin/python packages/gower/proof/wrapper_proof_py.py\n\nThe extension must be built first:\n    .venv/bin/maturin develop --release --manifest-path crates/gower/Cargo.toml\n\nInputs are passed as a pandas DataFrame, the way a user would call the\nwrappers:\n  - dbl columns: float64 with NaN for NA\n  - factor column: pandas Categorical with levels a, b, c, d\n  - character column: object column with None for NA\n  - integer column: pandas Int64 with pd.NA for NA\n  - logical column: pandas boolean with pd.NA for NA\n  The wrapper keeps these as integer and logical storage, so R's gower_int\n  and gower_logi run on them as they do in R.\n\nWrites the Python values to packages/gower/proof/data/wrapper_py_*.txt and\nthe comparison to packages/gower/docs/output/wrapper_proof.txt.\nTiming: time.perf_counter(), one untimed call, then the median of 20 timed\ncalls. The timed call is the whole public wrapper, including the column\nconversion, the same as the R call.\n\"\"\"\n\nimport csv\nimport math\nimport os\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\nimport pandas as pd\n\nHERE = os.path.dirname(os.path.abspath(__file__))\nPKG = os.path.dirname(HERE)  # packages/gower, which holds the gower/ package\nsys.path.insert(0, PKG)\n\nfrom gower.gower_dist import gower_dist  # noqa: E402\nfrom gower.gower_topn import gower_topn  # noqa: E402\n\nDATA = os.path.join(HERE, \"data\")\nOUT = os.path.join(os.path.dirname(HERE), \"docs\", \"output\")\n\nLEVELS = [\"a\", \"b\", \"c\", \"d\"]\nX_NAMES = [f\"x{k}\" for k in range(1, 9)]\nY_NAMES = [f\"y{k}\" for k in range(1, 8)]\nX_KINDS = [\"dbl\", \"int\", \"lgl\", \"fct\", \"str\", \"dbl\", \"int\", \"dbl\"]\nY_KINDS = [\"dbl\", \"int\", \"lgl\", \"fct\", \"str\", \"dbl\", \"int\"]\nPAIR_X = list(range(1, 9))\nPAIR_Y = [2, 1, 3, 4, 5, 6, 7, 0]\nWEIGHTS = np.array([1, 2, 0.5, 1.5, 1, 3, 0.25, 1], dtype=np.float64)\nEPS = 1e-8\nN_TOP = 5\nN_REPS = 20\nTOL = 1e-8\n\n\ndef load_frame(path, names, kinds):\n    with open(path, newline=\"\") as fh:\n        reader = csv.reader(fh)\n        next(reader)\n        rows = list(reader)\n    cols = {}\n    for c, (name, kind) in enumerate(zip(names, kinds)):\n        text = [r[c] for r in rows]\n        if kind == \"dbl\":\n            cols[name] = np.array(\n                [math.nan if t == \"NA\" else float(t) for t in text], dtype=np.float64\n            )\n        elif kind == \"int\":\n            cols[name] = pd.array(\n                [None if t == \"NA\" else int(t) for t in text], dtype=\"Int64\"\n            )\n        elif kind == \"lgl\":\n            cols[name] = pd.array(\n                [None if t == \"NA\" else (t == \"TRUE\") for t in text], dtype=\"boolean\"\n            )\n        elif kind == \"fct\":\n            cols[name] = pd.Categorical(\n                [None if t == \"NA\" else t for t in text], categories=LEVELS\n            )\n        elif kind == \"str\":\n            cols[name] = pd.Series(\n                [None if t == \"NA\" else t for t in text], dtype=object\n            )\n        else:\n            raise ValueError(kind)\n    return pd.DataFrame(cols, columns=names)\n\n\ndef run_dist(x, y):\n    return gower_dist(\n        x, y, pair_x=PAIR_X, pair_y=PAIR_Y, eps=EPS, weights=WEIGHTS, nthread=1\n    )\n\n\ndef run_topn(x, y):\n    return gower_topn(\n        x, y, n=N_TOP, pair_x=PAIR_X, pair_y=PAIR_Y, eps=EPS,\n        weights=WEIGHTS, nthread=1,\n    )\n\n\ndef time_median(fn):\n    fn()  # one untimed call\n    secs = []\n    for _ in range(N_REPS):\n        t0 = time.perf_counter()\n        fn()\n        secs.append(time.perf_counter() - t0)\n    return statistics.median(secs), secs\n\n\ndef fmt(v):\n    return repr(float(v))\n\n\ndef write_floats(path, values):\n    with open(path, \"w\") as fh:\n        for v in np.asarray(values, dtype=np.float64).ravel():\n            fh.write(fmt(v) + \"\\n\")\n\n\ndef write_rows(path, matrix, kind):\n    with open(path, \"w\") as fh:\n        for row in np.asarray(matrix):\n            if kind == \"int\":\n                fh.write(\" \".join(str(int(v)) for v in row) + \"\\n\")\n            else:\n                fh.write(\" \".join(fmt(v) for v in row) + \"\\n\")\n\n\ndef read_floats(path):\n    out = []\n    with open(path) as fh:\n        for line in fh:\n            for tok in line.split():\n                out.append(math.nan if tok in (\"NaN\", \"NA\") else float(tok))\n    return np.array(out, dtype=np.float64)\n\n\ndef read_matrix(path, kind):\n    with open(path) as fh:\n        rows = [line.split() for line in fh if line.strip()]\n    if kind == \"int\":\n        return np.array([[int(t) for t in r] for r in rows], dtype=np.int64)\n    return np.array([[float(t) for t in r] for r in rows], dtype=np.float64)\n\n\ndef max_abs_diff(a, b):\n    a = np.asarray(a, dtype=np.float64).ravel()\n    b = np.asarray(b, dtype=np.float64).ravel()\n    if a.shape != b.shape:\n        return math.inf\n    nan_a, nan_b = np.isnan(a), np.isnan(b)\n    if np.any(nan_a != nan_b):\n        return math.inf\n    diff = np.abs(a - b)\n    diff[nan_a & nan_b] = 0.0\n    return float(diff.max()) if diff.size else 0.0\n\n\ndef read_r_timings(path):\n    times = {}\n    with open(path) as fh:\n        for line in fh:\n            name, value = line.split()\n            times[name] = float(value)\n    return times\n\n\ndef main():\n    x = load_frame(os.path.join(DATA, \"x.csv\"), X_NAMES, X_KINDS)\n    y = load_frame(os.path.join(DATA, \"y.csv\"), Y_NAMES, Y_KINDS)\n    x5_before = x[\"x5\"].tolist()\n\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        dist = run_dist(x, y)\n        topn_index, topn_dist = run_topn(x, y)\n    n_warn = len(caught)\n    topn_index = np.asarray(topn_index)\n    topn_dist = np.asarray(topn_dist)\n    x5_unchanged = x[\"x5\"].tolist() == x5_before\n\n    write_floats(os.path.join(DATA, \"wrapper_py_dist.txt\"), dist)\n    write_rows(os.path.join(DATA, \"wrapper_py_topn_index.txt\"), topn_index, \"int\")\n    write_rows(os.path.join(DATA, \"wrapper_py_topn_distance.txt\"), topn_dist, \"dbl\")\n\n    # Compare the two sides through the text files they wrote.\n    r_dist = read_floats(os.path.join(DATA, \"wrapper_r_dist.txt\"))\n    py_dist = read_floats(os.path.join(DATA, \"wrapper_py_dist.txt\"))\n    r_index = read_matrix(os.path.join(DATA, \"wrapper_r_topn_index.txt\"), \"int\")\n    py_index = read_matrix(os.path.join(DATA, \"wrapper_py_topn_index.txt\"), \"int\")\n    r_tdist = read_matrix(os.path.join(DATA, \"wrapper_r_topn_distance.txt\"), \"dbl\")\n    py_tdist = read_matrix(os.path.join(DATA, \"wrapper_py_topn_distance.txt\"), \"dbl\")\n\n    dist_diff = max_abs_diff(py_dist, r_dist)\n    if r_index.shape == py_index.shape:\n        index_mismatch = int(np.sum(r_index != py_index))\n    else:\n        index_mismatch = -1\n    topn_diff = max_abs_diff(py_tdist, r_tdist)\n\n    r_times = read_r_timings(os.path.join(DATA, \"wrapper_r_timings.txt\"))\n    py_dist_median, _ = time_median(lambda: run_dist(x, y))\n    py_topn_median, _ = time_median(lambda: run_topn(x, y))\n    x5_unchanged = x5_unchanged and x[\"x5\"].tolist() == x5_before\n\n    r_dist_ms = r_times[\"gower_dist\"] * 1000\n    r_topn_ms = r_times[\"gower_topn\"] * 1000\n    py_dist_ms = py_dist_median * 1000\n    py_topn_ms = py_topn_median * 1000\n\n    ok = (dist_diff \u003c= TOL and topn_diff \u003c= TOL and index_mismatch == 0\n          and x5_unchanged)\n    lines = [\n        \"gower public wrappers (Python) vs gower 1.0.2 (R), same fixed inputs\",\n        f\"inputs: x {len(x)} rows x {x.shape[1]} cols, y {len(y)} rows x {y.shape[1]} cols, \"\n        f\"pair_x {PAIR_X}, pair_y {PAIR_Y} (0 = skipped), eps {EPS:g}, \"\n        f\"weights {WEIGHTS.tolist()}, n {N_TOP}, nthread 1\",\n        f\"gower_dist: {dist.shape} values R {r_dist.size}, Python {py_dist.size}, \"\n        f\"max abs diff {dist_diff:.3e}\",\n        f\"gower_topn: index {py_index.shape} (R {r_index.shape}), \"\n        f\"max abs diff in distance {topn_diff:.3e}, index mismatches {index_mismatch}\",\n        f\"python warnings during the untimed call: {n_warn}\",\n        f\"caller's x unchanged by the wrappers: {x5_unchanged}\",\n        f\"timings (median of {N_REPS} calls after 1 untimed):\",\n        f\"  gower_dist  r_ms {r_dist_ms:.3f}  translated_ms {py_dist_ms:.3f}  \"\n        f\"speedup {r_dist_ms / py_dist_ms:.2f}\",\n        f\"  gower_topn  r_ms {r_topn_ms:.3f}  translated_ms {py_topn_ms:.3f}  \"\n        f\"speedup {r_topn_ms / py_topn_ms:.2f}\",\n        f\"tolerance {TOL:g}: {'PASS' if ok else 'FAIL'}\",\n    ]\n    os.makedirs(OUT, exist_ok=True)\n    with open(os.path.join(OUT, \"wrapper_proof.txt\"), \"w\") as fh:\n        fh.write(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><p class="note">None.</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>numpy</p><h3>Crates</h3><p>gower</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "gower_dist", "translated": true, "not_done": "", "title": "gower_dist", "origin": null, "translation": {"description": "Wrapper now encodes NA logical columns as lgl and NA integer columns as int with INT_MIN (fix in _common.py). Proof inputs now use boolean and Int64 with NA.", "usage": "gower.gower_dist.gower_dist", "output_blocks": []}}, {"name": "gower_topn", "translated": true, "not_done": "", "title": "gower_topn", "origin": null, "translation": {"description": "Same wrapper fix as gower_dist. Zero index mismatches.", "usage": "gower.gower_topn.gower_topn", "output_blocks": []}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

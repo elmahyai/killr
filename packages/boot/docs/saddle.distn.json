@@ -1,0 +1,50 @@
+{
+  "name": "saddle.distn",
+  "title": "Saddlepoint Distribution Approximations for Bootstrap Statistics",
+  "origin": {
+    "description": "Approximate a whole univariate distribution by saddlepoint methods and return quantiles. The simple case is a linear combination of W. The conditional case is one linear combination given the others. W is multinomial, Poisson, or binary.",
+    "usage": "saddle.distn(A, u = NULL, alpha = NULL, wdist = \"m\",\n             type = \"simp\", npts = 20, t = NULL, t0 = NULL,\n             init = rep(0.1, d), mu = rep(0.5, n), LR = FALSE,\n             strata = NULL, ...)",
+    "arguments": [
+      {"name": "A", "text": "A coefficient matrix, or a function of t that returns one. A function is used when the statistic solves a linear estimating equation."},
+      {"name": "u", "text": "If A is a function, u is a function returning a vector of the same length as the columns of A. If A is a matrix with several columns, u holds the conditioning values and has length one less than ncol(A)."},
+      {"name": "alpha", "text": "Quantile levels. The default runs from 0.001 to 0.999."},
+      {"name": "wdist", "text": "\"m\", \"p\", or \"b\"."},
+      {"name": "type", "text": "\"simp\" or \"cond\"."},
+      {"name": "npts", "text": "Number of saddlepoint evaluations used to build the spline. Ignored when t is supplied."},
+      {"name": "t", "text": "Points at which to evaluate the approximation. One of t or t0 is required."},
+      {"name": "t0", "text": "A length-2 vector. The first entry is the centre and the second is a step used to search for the range."},
+      {"name": "init", "text": "Start for the saddlepoint equation. The default is rep(0.1, d), fixed after d is known."},
+      {"name": "mu", "text": "Parameters of W. The default is rep(0.5, n)."},
+      {"name": "LR", "text": "If TRUE, distribution values use the Lugannani-Rice approximation."},
+      {"name": "strata", "text": "Strata. Used only when wdist is \"m\"."},
+      {"name": "...", "text": "Further arguments passed to A and u when those are functions."}
+    ],
+    "details": "The lower endpoint is found by stepping t0[1] - 2*t0[2], t0[1] - 4*t0[2], and so on, until the cdf is below min(alpha)/10, then by bisection into (min(alpha)/1000, min(alpha)/10). The same search runs above t0[1]. Points very close to the centre are dropped. A smoothing spline is fit to the probit of the remaining cdf values and the quantiles are predicted from it. The function can stop with \"unable to find range\" when the distribution is too discrete or t0[2] is too small.",
+    "value": "An object of class \"saddle.distn\" with the quantiles, the points used in the fit, the spline, the call, and LR.",
+    "example": "air.t0 <- c(mean(aircondit$hours), sqrt(var(aircondit$hours)/12))\nsaddle.distn(A = cbind(aircondit$hours/12, 1), u = 12, wdist = \"p\",\n             type = \"cond\", t0 = air.t0)\nratio <- function(d, w) sum(d$x * w)/sum(d$u * w)\ncity.v <- var.linear(empinf(data = city, statistic = ratio))\nbigcity.t0 <- c(mean(bigcity$x)/mean(bigcity$u), sqrt(city.v))\nAfn <- function(t, data) cbind(data$x - t*data$u, 1)\nufn <- function(t, data) c(0, 10)\nsaddle.distn(A = Afn, u = ufn, wdist = \"b\", type = \"cond\",\n             t0 = bigcity.t0, data = bigcity)\nAfn <- function(t, data) cbind(data$x - t*data$u, data$u, 1)\nufn <- function(t, data) c(0, sum(data$u), 10)\ncity.t0 <- c(mean(city$x)/mean(city$u), sqrt(city.v))\nsaddle.distn(A = Afn, u = ufn, wdist = \"p\", type = \"cond\",\n             t0 = city.t0, data = city)",
+    "output": "output/saddle.distn-r.txt"
+  },
+  "translation": {
+    "description": "Approximate a whole univariate distribution by saddlepoint methods and return quantiles.",
+    "usage": "saddle_distn(A, u=None, alpha=None, wdist=\"m\", type=\"simp\", npts=20, t=None, t0=None, init=None, mu=None, LR=False, strata=None, **kwargs)",
+    "arguments": [
+      {"name": "A", "text": "A coefficient matrix, or a function of t that returns one."},
+      {"name": "u", "text": "Conditioning values, or a function of t when A is a function."},
+      {"name": "alpha", "text": "Quantile levels. None uses 0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, and 0.999."},
+      {"name": "wdist", "text": "\"m\", \"p\", or \"b\"."},
+      {"name": "type", "text": "\"simp\" or \"cond\"."},
+      {"name": "npts", "text": "Number of evaluations used to build the spline."},
+      {"name": "t", "text": "Evaluation points. One of t or t0 is required."},
+      {"name": "t0", "text": "Length-2 centre and step."},
+      {"name": "init", "text": "Start for the saddlepoint equation. None becomes a vector of 0.1."},
+      {"name": "mu", "text": "Parameters of W. None becomes a vector of 0.5."},
+      {"name": "LR", "text": "If true, distribution values use the Lugannani-Rice approximation."},
+      {"name": "strata", "text": "Strata. Used only when wdist is \"m\"."},
+      {"name": "kwargs", "text": "Passed to A and u when those are functions. The ratio examples pass data this way."}
+    ],
+    "details": "The range search, the two different failure tests for a matrix A and a function A, and the backwards colon sequences follow the R source. Points with abs(zeta[1]) <= 1e-6 or a cdf within 1e-10 of 0 or 1 are dropped. The spline is fit on the probit scale. On the city ratio the alpha = 0.001 quantile sits about 5e-8 from R because that spline is rank-deficient. The dontrun multinomial example stops in R with \"unable to find range\" and is not run here.",
+    "value": "A dict with quantiles, points, distn, call, and LR.",
+    "example": "import numpy as np\nfrom boot.data_sets import aircondit, bigcity, city\nfrom boot.saddle import print_saddle_distn, saddle_distn\n\nhours = aircondit()[1][:, 0]\nair_t0 = np.array([hours.mean(), np.sqrt(np.var(hours, ddof=1) / 12)])\nair = saddle_distn(\n    A=np.column_stack([hours / 12, np.ones(len(hours))]),\n    u=12,\n    wdist=\"p\",\n    type=\"cond\",\n    t0=air_t0,\n)\nprint_saddle_distn(air)\ncu = city()[1]\nbu = bigcity()[1]\ncity_v = 0.032487013940940376\nbig = saddle_distn(\n    A=lambda t, data: np.column_stack([data[:, 1] - t * data[:, 0], np.ones(len(data))]),\n    u=lambda t, data: np.array([0.0, 10.0]),\n    wdist=\"b\",\n    type=\"cond\",\n    t0=np.array([bu[:, 1].mean() / bu[:, 0].mean(), np.sqrt(city_v)]),\n    data=bu,\n)\nprint_saddle_distn(big)\nct = saddle_distn(\n    A=lambda t, data: np.column_stack([data[:, 1] - t * data[:, 0], data[:, 0], np.ones(len(data))]),\n    u=lambda t, data: np.array([0.0, float(np.sum(data[:, 0])), 10.0]),\n    wdist=\"p\",\n    type=\"cond\",\n    t0=np.array([cu[:, 1].mean() / cu[:, 0].mean(), np.sqrt(city_v)]),\n    data=cu,\n)\nprint_saddle_distn(ct)",
+    "output": "output/saddle.distn-python.txt"
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "exactextractr",
+  "cran_version": "0.10.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "geos",
+      "numpy"
+    ],
+    "rust": []
+  },
+  "resume": "Four exports match installed exactextractr 0.10.1. A grid is an extent and a resolution. A polygon is WKT. GEOS 3.13.1 is called through ctypes. quantile, frac, and weights='area' are not implemented. raster, sf, and terra are not opened. The compiled code is C++, so there is no crate.",
+  "functions": [
+    {
+      "name": "coverage_fraction",
+      "translated": true,
+      "python": "exactextractr.coverage_fraction",
+      "loads": [
+        "geos",
+        "numpy"
+      ],
+      "uses": [],
+      "done": "Fraction of each cell covered by a polygon. Outside cells are 0 unless crop is true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "3 by 3 grid and an axis-aligned square from 0.5 to 2.5",
+        "r_ms": 9.788990020751953,
+        "translated_ms": 0.4130635006731609,
+        "speedup": 23.69851125746778,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages({ library(raster); library(sf); library(exactextractr) })\none <- function() {\n  rast <- raster::raster(xmn=0, xmx=3, ymn=0, ymx=3, nrows=3, ncols=3, crs=NA)\n  square <- sf::st_sfc(sf::st_polygon(list(matrix(c(0.5,0.5, 2.5,0.5, 2.5,2.5, 0.5,2.5, 0.5,0.5), ncol=2, byrow=TRUE))))\n  as.matrix(coverage_fraction(rast, square)[[1]])\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nrows <- apply(value, 1, function(row) paste(sprintf(\"%.17g\", row), collapse=\" \"))\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', paste0(\"[\", paste(sprintf('\"%s\"', rows), collapse=\",\"), \"]\"), median(elapsed)*1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom exactextractr.coverage_fraction import coverage_fraction\n\ndef one():\n    grid = {\"xmin\": 0, \"xmax\": 3, \"ymin\": 0, \"ymax\": 3, \"nrows\": 3, \"ncols\": 3}\n    square = \"POLYGON ((0.5 0.5, 2.5 0.5, 2.5 2.5, 0.5 2.5, 0.5 0.5))\"\n    return coverage_fraction(grid, square)[0][\"values\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = [\" \".join(format(item, \".17g\") for item in row) for row in value]\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "exact_extract",
+      "translated": true,
+      "python": "exactextractr.exact_extract",
+      "loads": [
+        "geos",
+        "numpy"
+      ],
+      "uses": [],
+      "done": "Summarizes cell values by coverage. quantile, frac, and weights='area' are not implemented.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mean of cells 1:100 under the man-page triangle",
+        "r_ms": 13.444185256958008,
+        "translated_ms": 1.1717610013874946,
+        "speedup": 11.473487546554805,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages({ library(raster); library(sf); library(exactextractr) })\none <- function() {\n  rast <- raster::raster(matrix(1:100, ncol=10), xmn=0, ymn=0, xmx=10, ymx=10)\n  poly <- sf::st_as_sfc(\"POLYGON ((2 2, 7 6, 4 9, 2 2))\")\n  exact_extract(rast, poly, \"mean\", progress=FALSE)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%.17g,\"median_ms\":%.17g}\\n', value, median(elapsed)*1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom exactextractr.exact_extract import exact_extract\n\ndef one():\n    values = [[1 + r + c * 10 for c in range(10)] for r in range(10)]\n    grid = {\"values\": values, \"xmin\": 0, \"xmax\": 10, \"ymin\": 0, \"ymax\": 10}\n    return exact_extract(grid, \"POLYGON ((2 2, 7 6, 4 9, 2 2))\", \"mean\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value[0], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "exact_resample",
+      "translated": true,
+      "python": "exactextractr.exact_resample",
+      "loads": [
+        "geos",
+        "numpy"
+      ],
+      "uses": [],
+      "done": "Resamples one grid onto another by cell coverage.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mean of a 4 by 4 grid of 1:16 onto a 2 by 2 grid",
+        "r_ms": 91.67921543121338,
+        "translated_ms": 0.6982955001149094,
+        "speedup": 131.2899988846082,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages({ library(raster); library(sf); library(exactextractr) })\none <- function() {\n  src <- raster::raster(matrix(1:16, ncol=4), xmn=0, xmx=4, ymn=0, ymx=4)\n  dst <- raster::raster(xmn=0, xmx=4, ymn=0, ymx=4, nrows=2, ncols=2)\n  suppressWarnings(as.matrix(exact_resample(src, dst, \"mean\")))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nrows <- apply(value, 1, function(row) paste(sprintf(\"%.17g\", row), collapse=\" \"))\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', paste0(\"[\", paste(sprintf('\"%s\"', rows), collapse=\",\"), \"]\"), median(elapsed)*1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom exactextractr.exact_resample import exact_resample\n\ndef one():\n    src = {\"values\": [[1 + r + c * 4 for c in range(4)] for r in range(4)], \"xmin\": 0, \"xmax\": 4, \"ymin\": 0, \"ymax\": 4}\n    dst = {\"xmin\": 0, \"xmax\": 4, \"ymin\": 0, \"ymax\": 4, \"nrows\": 2, \"ncols\": 2}\n    return exact_resample(src, dst, \"mean\")[\"values\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = [\" \".join(format(item, \".17g\") for item in row) for row in value]\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rasterize_polygons",
+      "translated": true,
+      "python": "exactextractr.rasterize_polygons",
+      "loads": [
+        "geos",
+        "numpy"
+      ],
+      "uses": [],
+      "done": "Writes the 1-based index of the polygon with the greatest coverage. A tie keeps the lower index.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two overlapping squares on a 3 by 3 grid",
+        "r_ms": 16.78168773651123,
+        "translated_ms": 0.592518499615835,
+        "speedup": 28.322639288717223,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages({ library(raster); library(sf); library(exactextractr) })\none <- function() {\n  g <- sf::st_sf(geometry=sf::st_sfc(\n    sf::st_polygon(list(matrix(c(0,0, 2,0, 2,2, 0,2, 0,0), ncol=2, byrow=TRUE))),\n    sf::st_polygon(list(matrix(c(1,1, 3,1, 3,3, 1,3, 1,1), ncol=2, byrow=TRUE)))\n  ))\n  y <- raster::raster(xmn=0, xmx=3, ymn=0, ymx=3, nrows=3, ncols=3)\n  as.matrix(rasterize_polygons(g, y))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- apply(value, 1, function(row) paste(ifelse(is.na(row), \"NA\", as.character(row)), collapse=\" \"))\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', paste0(\"[\", paste(sprintf('\"%s\"', shown), collapse=\",\"), \"]\"), median(elapsed)*1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom exactextractr.rasterize_polygons import rasterize_polygons\n\ndef one():\n    polys = [\"POLYGON ((0 0, 2 0, 2 2, 0 2, 0 0))\", \"POLYGON ((1 1, 3 1, 3 3, 1 3, 1 1))\"]\n    grid = {\"xmin\": 0, \"xmax\": 3, \"ymin\": 0, \"ymax\": 3, \"nrows\": 3, \"ncols\": 3}\n    return rasterize_polygons(polys, grid)[\"values\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = [\" \".join(\"NA\" if item is None else str(int(item)) for item in row) for row in value]\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

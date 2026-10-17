@@ -1,0 +1,128 @@
+{
+  "name": "tilt.boot",
+  "title": "Tilted bootstrap",
+  "origin": {
+    "description": "An ordinary or balanced bootstrap, then importance resampling from exponentially tilted or frequency-smoothed weights.",
+    "usage": "tilt.boot(data, statistic, R, sim = \"ordinary\", stype = \"i\",\n          strata = rep(1, n), L = NULL, theta = NULL,\n          alpha = c(0.025, 0.975), tilt = TRUE, width = 0.5,\n          index = 1, ...)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A vector, matrix, or data frame. Each row of a matrix or data frame is one observation."
+      },
+      {
+        "name": "statistic",
+        "text": "Function of the data and a second argument of indices, weights, or frequencies. Further arguments are passed through unchanged."
+      },
+      {
+        "name": "R",
+        "text": "Replicate counts. The first is the uniform bootstrap; 0 skips it. Each later count is the number of draws from one tilted distribution. The length is one more than the length of theta."
+      },
+      {
+        "name": "sim",
+        "text": "\"ordinary\" or \"balanced\". Any other value is an error."
+      },
+      {
+        "name": "stype",
+        "text": "\"i\" for indices, \"w\" for weights, or \"f\" for frequencies."
+      },
+      {
+        "name": "strata",
+        "text": "Stratum labels, one per observation. The default is a single sample, and it is evaluated after the sample size is known."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values, used only when tilt is TRUE. If omitted they are estimated."
+      },
+      {
+        "name": "theta",
+        "text": "Means for the tilted distributions. Required when the first replicate count is 0. Otherwise the alpha quantiles of the uniform bootstrap are used."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantile levels used to choose theta from the uniform bootstrap. Ignored when theta is supplied. A warning is given when the first count is 0, and another when a level is so extreme that fewer than about five uniform replicates fall beyond it."
+      },
+      {
+        "name": "tilt",
+        "text": "TRUE uses exponential tilting. FALSE uses frequency smoothing, which requires a positive first replicate count."
+      },
+      {
+        "name": "width",
+        "text": "Bandwidth passed to smooth.f when tilt is FALSE."
+      },
+      {
+        "name": "index",
+        "text": "1-based component of the statistic used to tilt. Only the first element is used."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to statistic on every call."
+      }
+    ],
+    "details": "The first stage, when requested, is an ordinary or balanced bootstrap with equal weights. Tilting then recentres the linear approximation at theta, or frequency smoothing builds a nearby distribution on the sample. A second bootstrap draws from those weights. The returned replicates stack the uniform stage in front of the tilted stages. Random numbers are the package generator, the same sequence as set.seed.",
+    "value": "A bootstrap object. Extra components are the weight matrix, one row per distribution, and theta. The first weight row is uniform when the first replicate count is positive.",
+    "example": "set.seed(2)\nx <- c(1.2, 3.4, 2.2, 5.0, 4.1, 0.7)\ntb <- tilt.boot(x, function(d, i) mean(d[i]), R = c(20, 15), theta = 3.5)\nprint(tb$t0)\nprint(tb$R)\nprint(tb$theta)\nprint(c(tb$t))",
+    "output": "output/tilt.boot-r.txt"
+  },
+  "translation": {
+    "description": "An ordinary or balanced bootstrap, then importance resampling from exponentially tilted or frequency-smoothed weights.",
+    "usage": "tilt_boot(data, statistic, R, sim=\"ordinary\", stype=\"i\", strata=None, L=None, theta=None, alpha=None, tilt=True, width=0.5, index=1, **kwargs)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A vector, a two-dimensional array with one row per observation, or a dict of columns."
+      },
+      {
+        "name": "statistic",
+        "text": "Function of the data and a second argument of 1-based indices, weights, or frequencies. Further keyword arguments are passed through unchanged."
+      },
+      {
+        "name": "R",
+        "text": "Replicate counts. The first is the uniform bootstrap; 0 skips it. Each later count is the number of draws from one tilted distribution. The length is one more than the length of theta."
+      },
+      {
+        "name": "sim",
+        "text": "\"ordinary\" or \"balanced\". Any other value is an error."
+      },
+      {
+        "name": "stype",
+        "text": "\"i\" for 1-based indices, \"w\" for weights, or \"f\" for frequencies."
+      },
+      {
+        "name": "strata",
+        "text": "Stratum labels, one per observation. None is a single sample, filled in after the sample size is known."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values, used only when tilt is True. If omitted they are estimated."
+      },
+      {
+        "name": "theta",
+        "text": "Means for the tilted distributions. Required when the first replicate count is 0. Otherwise the alpha quantiles of the uniform bootstrap are used."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantile levels used to choose theta from the uniform bootstrap. The default is 0.025 and 0.975. Ignored when theta is supplied. A warning is given when the first count is 0, and another when a level is so extreme that fewer than about five uniform replicates fall beyond it."
+      },
+      {
+        "name": "tilt",
+        "text": "True uses exponential tilting. False uses frequency smoothing, which requires a positive first replicate count."
+      },
+      {
+        "name": "width",
+        "text": "Bandwidth passed to smooth_f when tilt is False."
+      },
+      {
+        "name": "index",
+        "text": "1-based component of the statistic used to tilt. Only the first element is used."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Further arguments passed to statistic on every call."
+      }
+    ],
+    "details": "The uniform stage and the tilted stage are boot.resample.boot. Tilting recentres the linear approximation at theta; frequency smoothing builds a nearby distribution on the sample. Replicates stack the uniform stage in front of the tilted stages. Draws use boot.rng, the same sequence as set_seed and R set.seed.",
+    "value": "The bootstrap object from the uniform stage, or a stand-in when that stage is skipped. t stacks every stage, weights has one row per distribution, R is the input counts, and theta is the tilted means.",
+    "example": "import numpy as np\nfrom boot.rng import set_seed\nfrom boot.tilt import tilt_boot\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    return float(values.mean())\n\nset_seed(2)\nresult = tilt_boot(\n    [1.2, 3.4, 2.2, 5.0, 4.1, 0.7],\n    statistic,\n    R=[20, 15],\n    theta=3.5,\n)\nprint(float(np.asarray(result.t0).reshape(-1)[0]))\nprint(np.asarray(result.R))\nprint(np.asarray(result.theta))\nprint(np.asarray(result.t).reshape(-1))",
+    "output": "output/tilt.boot-python.txt"
+  }
+}

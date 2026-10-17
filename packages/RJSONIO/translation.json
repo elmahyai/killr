@@ -1,0 +1,601 @@
+{
+  "name": "RJSONIO",
+  "cran_version": "2.0.5",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "toJSON, fromJSON, isValidJSON, asJSVars, basicJSONHandler, emptyNamedList, and the Strict and JSON_T constants match RJSONIO 2.0.5. json parses the tokens. readJSONStream stays untranslated because it reads an R connection. Checked readJSONStream. All exports translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "json"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "toJSON",
+      "translated": true,
+      "python": "rjsonio.toJSON",
+      "loads": [],
+      "uses": [
+        "json"
+      ],
+      "done": "Serializes ordinary R values, including the formatC width and the fast integer path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Integers, named lists, numbers with NA and Inf, a data frame, a matrix, a factor, pretty, hex, and an array.",
+        "r_ms": 5.615353584289551,
+        "translated_ms": 0.519497501954902,
+        "speedup": 10.809202283280708,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\none <- function() {\n  TJ <- RJSONIO::toJSON\n  parts <- c(\n    TJ(1:10),\n    TJ(c(a = 1L, b = 2L)),\n    TJ(c(TRUE, FALSE, NA)),\n    TJ(c(\"a\", NA, \"b\\\"c\")),\n    TJ(character()),\n    TJ(NULL),\n    suppressWarnings(TJ(c(1.5, 2, NA, Inf, -Inf))),\n    TJ(list(a = 1L, b = list(c = \"x\"))),\n    TJ(list()),\n    TJ(emptyNamedList),\n    TJ(data.frame(a = 1:2, b = c(\"x\", \"y\"), stringsAsFactors = FALSE)),\n    TJ(data.frame(a = 1:2, b = c(\"x\", \"y\"), stringsAsFactors = FALSE), byrow = TRUE),\n    TJ(matrix(1:4, 2)),\n    TJ(factor(c(\"a\", \"b\", NA))),\n    TJ(list(a = I(1L))),\n    TJ(list(a = 1:2), pretty = TRUE),\n    TJ(list(a = 1L), asIs = FALSE),\n    TJ(\"a\\nb\\tc\", .escapeEscapes = FALSE),\n    TJ(as.hexmode(c(10, 255))),\n    TJ(pi),\n    TJ(list2env(list(a = 1L), parent = emptyenv())),\n    TJ(array(1:8, c(2, 2, 2))),\n    suppressWarnings(TJ(mean)),\n    TJ(data.frame(a = 1, b = \"z\", stringsAsFactors = FALSE))\n  )\n  paste(parts, collapse = \"\\n---\\n\")\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef one():\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        parts = [\n            toJSON(Atomic(\"integer\", list(range(1, 11)))),\n            toJSON(Atomic(\"integer\", [1, 2], [\"a\", \"b\"])),\n            toJSON(Atomic(\"logical\", [True, False, None])),\n            toJSON(Atomic(\"character\", [\"a\", None, 'b\"c'])),\n            toJSON(Atomic(\"character\", [])),\n            toJSON(None),\n            toJSON(Atomic(\"numeric\", [1.5, 2.0, None, math.inf, -math.inf])),\n            toJSON(RList([Atomic(\"integer\", [1]), RList([Atomic(\"character\", [\"x\"])], [\"c\"])], [\"a\", \"b\"])),\n            toJSON(RList([])),\n            toJSON(emptyNamedList),\n            toJSON(DataFrame({\"a\": Atomic(\"integer\", [1, 2]), \"b\": Atomic(\"character\", [\"x\", \"y\"])})),\n            toJSON(DataFrame({\"a\": [1, 2], \"b\": [\"x\", \"y\"]}), byrow=True),\n            toJSON(Matrix([1, 2, 3, 4], 2, 2, \"integer\")),\n            toJSON(Factor([\"a\", \"b\", None])),\n            toJSON(RList([AsIs(Atomic(\"integer\", [1]))], [\"a\"])),\n            toJSON(RList([Atomic(\"integer\", [1, 2])], [\"a\"]), pretty=True),\n            toJSON(RList([Atomic(\"integer\", [1])], [\"a\"]), as_is=False),\n            toJSON(Atomic(\"character\", [\"a\\nb\\tc\"]), escape_escapes=False),\n            toJSON(HexMode([10, 255])),\n            toJSON(Atomic(\"numeric\", [math.pi])),\n            toJSON(Environment({\"a\": Atomic(\"integer\", [1])})),\n            toJSON(Array([1, 2, 3, 4, 5, 6, 7, 8], (2, 2, 2), \"integer\")),\n            toJSON(lambda: None),\n            toJSON(DataFrame({\"a\": Atomic(\"numeric\", [1.0]), \"b\": Atomic(\"character\", [\"z\"])})),\n        ]\n    return \"\\n---\\n\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "fromJSON",
+      "translated": true,
+      "python": "rjsonio.fromJSON",
+      "loads": [],
+      "uses": [
+        "json"
+      ],
+      "done": "Reads JSON text or a file the way libjson does, including comments and empty slots.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Vectors, objects, empty containers, comments, trailing nulls, simplify, a file, and two errors.",
+        "r_ms": 3.858208656311035,
+        "translated_ms": 0.9719580011733342,
+        "speedup": 3.969521987219056,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\nshow <- function(x) {\n  if (is.null(x)) return(\"NULL\")\n  if (is.matrix(x)) {\n    vals <- as.vector(x)\n    text <- ifelse(is.na(vals), \"NA\", as.character(vals))\n    return(paste0(\"matrix/\", typeof(x), \"[\", nrow(x), \"x\", ncol(x), \":\", paste(text, collapse = \",\"), \"]\"))\n  }\n  if (is.atomic(x)) {\n    if (is.logical(x)) {\n      vals <- ifelse(is.na(x), \"NA\", ifelse(x, \"TRUE\", \"FALSE\"))\n    } else {\n      vals <- ifelse(is.na(x), \"NA\", as.character(x))\n    }\n    nm <- if (is.null(names(x))) \"\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n    return(paste0(paste(class(x), collapse = \"+\"), \"/\", typeof(x), \"[\", paste(vals, collapse = \",\"), \"]\", nm))\n  }\n  inner <- if (length(x) == 0) \"\" else paste(vapply(seq_along(x), function(j) show(x[[j]]), \"\"), collapse = \" | \")\n  nm <- if (is.null(names(x))) \" nonames\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n  paste0(\"LIST{\", inner, \"}\", nm, \" class=\", paste(class(x), collapse = \"+\"))\n}\ngrab <- function(expr) {\n  tryCatch(show(eval(expr)), error = function(e) paste(\"ERR\", conditionMessage(e)))\n}\n\none <- function() {\n  path <- tempfile(fileext = \".json\")\n  writeLines(\"[1, 2]\", path)\n  parts <- c(\n    grab(quote(fromJSON(\"[1, 2, 3]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[true, false]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[\\\"a\\\", \\\"b\\\"]\", asText = TRUE))),\n    grab(quote(fromJSON(\"{\\\"a\\\": 1, \\\"b\\\": 2}\", asText = TRUE))),\n    grab(quote(fromJSON(\"{\\\"a\\\": 1, \\\"b\\\": [true, null]}\", asText = TRUE))),\n    grab(quote(fromJSON(\"[]\", asText = TRUE))),\n    grab(quote(fromJSON(\"{}\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1, null]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1, /*c*/ 2]\", asText = TRUE, allowComments = FALSE))),\n    grab(quote(fromJSON(\"[[1,2],[3,4]]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[{\\\"a\\\":1},{\\\"a\\\":2}]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1, \\\"a\\\"]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1,]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[,1]\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1,,2]\", asText = TRUE))),\n    grab(quote(fromJSON(\"{\\\"a\\\":1,\\\"b\\\":}\", asText = TRUE))),\n    grab(quote(fromJSON(\"[1, 2]\", asText = TRUE, simplify = FALSE))),\n    grab(quote(fromJSON(\"[1, null]\", asText = TRUE, nullValue = NA))),\n    grab(quote(fromJSON(\"{\\\"a\\\":1,\\\"b\\\":2}\", asText = TRUE, simplifyWithNames = FALSE))),\n    grab(quote(fromJSON(\"[1,2]\", asText = TRUE, simplify = StrictCharacter))),\n    tryCatch(show(fromJSON(path)), error = function(e) paste(\"ERR\", conditionMessage(e))),\n    grab(quote(fromJSON(\"null\", asText = TRUE))),\n    grab(quote(fromJSON(\"{\\\"a\\\":1,}\", asText = TRUE)))\n  )\n  paste(parts, collapse = \"\\n\")\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef _piece(kind, values, names):\n    label = {\n        \"integer\": \"integer/integer\",\n        \"numeric\": \"numeric/double\",\n        \"logical\": \"logical/logical\",\n        \"character\": \"character/character\",\n    }[kind]\n    parts = []\n    for value in values:\n        if value is None or (isinstance(value, float) and math.isnan(value)):\n            parts.append(\"NA\")\n        elif isinstance(value, bool):\n            parts.append(\"TRUE\" if value else \"FALSE\")\n        elif isinstance(value, float) and value.is_integer():\n            parts.append(str(int(value)))\n        else:\n            parts.append(str(value))\n    names_text = \"\" if names is None else \" names=\" + \",\".join(names)\n    return f\"{label}[{','.join(parts)}]{names_text}\"\n\ndef show(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, AsIs):\n        shown = show(value.value)\n        if shown.endswith(\" class=list\"):\n            return shown[: -len(\" class=list\")] + \" class=AsIs\"\n        return shown + \" class=AsIs\"\n    if isinstance(value, Matrix):\n        kind = {\"integer\": \"integer\", \"numeric\": \"double\", \"logical\": \"logical\", \"character\": \"character\"}[value.kind]\n        parts = []\n        for item in value.data:\n            if item is None or (isinstance(item, float) and math.isnan(item)):\n                parts.append(\"NA\")\n            elif isinstance(item, bool):\n                parts.append(\"TRUE\" if item else \"FALSE\")\n            elif isinstance(item, float) and item.is_integer():\n                parts.append(str(int(item)))\n            else:\n                parts.append(str(item))\n        return f\"matrix/{kind}[{value.nrow}x{value.ncol}:{','.join(parts)}]\"\n    if isinstance(value, Atomic):\n        return _piece(value.kind, value.values, value.names)\n    if isinstance(value, RList):\n        inner = \" | \".join(show(item) for item in value.values)\n        if value.names is None:\n            names_text = \" nonames\"\n        else:\n            names_text = \" names=\" + \",\".join(value.names)\n        return f\"LIST{{{inner}}}{names_text} class=list\"\n    if isinstance(value, list):\n        inner = \" | \".join(show(item) for item in value)\n        return f\"LIST{{{inner}}} nonames class=list\"\n    if isinstance(value, bool):\n        return f\"logical/logical[{'TRUE' if value else 'FALSE'}]\"\n    if isinstance(value, int):\n        return f\"integer/integer[{value}]\"\n    if isinstance(value, float):\n        text = str(int(value)) if value.is_integer() else str(value)\n        return f\"numeric/double[{text}]\"\n    if isinstance(value, str):\n        return f\"character/character[{value}]\"\n    return repr(value)\n\ndef grab(fn):\n    try:\n        return show(fn())\n    except RJSONIOError as exc:\n        return \"ERR \" + str(exc)\n\ndef one():\n    fd, path = tempfile.mkstemp(suffix=\".json\")\n    os.write(fd, b\"[1, 2]\\n\")\n    os.close(fd)\n    parts = [\n        grab(lambda: fromJSON(\"[1, 2, 3]\", as_text=True)),\n        grab(lambda: fromJSON(\"[true, false]\", as_text=True)),\n        grab(lambda: fromJSON('[\"a\", \"b\"]', as_text=True)),\n        grab(lambda: fromJSON('{\"a\": 1, \"b\": 2}', as_text=True)),\n        grab(lambda: fromJSON('{\"a\": 1, \"b\": [true, null]}', as_text=True)),\n        grab(lambda: fromJSON(\"[]\", as_text=True)),\n        grab(lambda: fromJSON(\"{}\", as_text=True)),\n        grab(lambda: fromJSON(\"[1, null]\", as_text=True)),\n        grab(lambda: fromJSON(\"[1, /*c*/ 2]\", as_text=True, allow_comments=False)),\n        grab(lambda: fromJSON(\"[[1,2],[3,4]]\", as_text=True)),\n        grab(lambda: fromJSON('[{\"a\":1},{\"a\":2}]', as_text=True)),\n        grab(lambda: fromJSON('[1, \"a\"]', as_text=True)),\n        grab(lambda: fromJSON(\"[1,]\", as_text=True)),\n        grab(lambda: fromJSON(\"[,1]\", as_text=True)),\n        grab(lambda: fromJSON(\"[1,,2]\", as_text=True)),\n        grab(lambda: fromJSON('{\"a\":1,\"b\":}', as_text=True)),\n        grab(lambda: fromJSON(\"[1, 2]\", as_text=True, simplify=False)),\n        grab(lambda: fromJSON(\"[1, null]\", as_text=True, null_value=NA)),\n        grab(lambda: fromJSON('{\"a\":1,\"b\":2}', as_text=True, simplify_with_names=False)),\n        grab(lambda: fromJSON(\"[1,2]\", as_text=True, simplify=StrictCharacter)),\n        grab(lambda: fromJSON(path)),\n        grab(lambda: fromJSON(\"null\", as_text=True)),\n        grab(lambda: fromJSON('{\"a\":1,}', as_text=True)),\n    ]\n    return \"\\n\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "isValidJSON",
+      "translated": true,
+      "python": "rjsonio.isValidJSON",
+      "loads": [],
+      "uses": [
+        "json"
+      ],
+      "done": "Reports whether libjson accepts the text or the file.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Arrays, a trailing comma, a root scalar, an unquoted key, and a file.",
+        "r_ms": 0.35381317138671875,
+        "translated_ms": 0.21314949844963849,
+        "speedup": 1.6599296454376378,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\none <- function() {\n  path <- tempfile(fileext = \".json\")\n  writeLines(\"[1, 2]\", path)\n  flags <- c(\n    isValidJSON(\"[1, 2, 3]\", asText = TRUE),\n    isValidJSON(\"[1,]\", asText = TRUE),\n    isValidJSON(\"{\", asText = TRUE),\n    isValidJSON(\"null\", asText = TRUE),\n    isValidJSON(\"{a:1}\", asText = TRUE),\n    isValidJSON(\"{\\\"a\\\":1,}\", asText = TRUE),\n    isValidJSON(\"{\\\"a\\\":1,\\\"b\\\":}\", asText = TRUE),\n    isValidJSON(\"[1, /*c*/ 2]\", asText = TRUE),\n    isValidJSON(path)\n  )\n  paste(ifelse(flags, \"TRUE\", \"FALSE\"), collapse = \"\\n\")\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef one():\n    fd, path = tempfile.mkstemp(suffix=\".json\")\n    os.write(fd, b\"[1, 2]\\n\")\n    os.close(fd)\n    flags = [\n        isValidJSON(\"[1, 2, 3]\", as_text=True),\n        isValidJSON(\"[1,]\", as_text=True),\n        isValidJSON(\"{\", as_text=True),\n        isValidJSON(\"null\", as_text=True),\n        isValidJSON(\"{a:1}\", as_text=True),\n        isValidJSON('{\"a\":1,}', as_text=True),\n        isValidJSON('{\"a\":1,\"b\":}', as_text=True),\n        isValidJSON(\"[1, /*c*/ 2]\", as_text=True),\n        isValidJSON(path),\n    ]\n    return \"\\n\".join(\"TRUE\" if flag else \"FALSE\" for flag in flags)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "asJSVars",
+      "translated": true,
+      "python": "rjsonio.asJSVars",
+      "loads": [],
+      "uses": [],
+      "done": "Writes ActionScript variable declarations from toJSON.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two variables, a typed integer and matrix, and a qualifier.",
+        "r_ms": 0.6725788116455078,
+        "translated_ms": 0.04572749821818434,
+        "speedup": 14.70841042814901,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\none <- function() {\n  paste(\n    asJSVars(a = 1:2, b = \"x\"),\n    asJSVars(a = 1L, b = matrix(1:4, 2), types = TRUE),\n    asJSVars(a = 1:2, qualifier = \"var\"),\n    sep = \"\\n---\\n\"\n  )\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef one():\n    return \"\\n---\\n\".join([\n        asJSVars(a=Atomic(\"integer\", [1, 2]), b=Atomic(\"character\", [\"x\"])),\n        asJSVars(a=Atomic(\"integer\", [1]), b=Matrix([1, 2, 3, 4], 2, 2, \"integer\"), types=True),\n        asJSVars(a=Atomic(\"integer\", [1, 2]), qualifier=\"var\"),\n    ])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "basicJSONHandler",
+      "translated": true,
+      "python": "rjsonio.basicJSONHandler",
+      "loads": [],
+      "uses": [],
+      "done": "Collects parser events. Whole numbers stay integers, and simplify can build a matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An integer beside a named logical, and a condensed integer matrix.",
+        "r_ms": 0.7933378219604492,
+        "translated_ms": 0.17117949937528465,
+        "speedup": 4.6345375752103255,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\nshow <- function(x) {\n  if (is.null(x)) return(\"NULL\")\n  if (is.matrix(x)) {\n    vals <- as.vector(x)\n    text <- ifelse(is.na(vals), \"NA\", as.character(vals))\n    return(paste0(\"matrix/\", typeof(x), \"[\", nrow(x), \"x\", ncol(x), \":\", paste(text, collapse = \",\"), \"]\"))\n  }\n  if (is.atomic(x)) {\n    if (is.logical(x)) {\n      vals <- ifelse(is.na(x), \"NA\", ifelse(x, \"TRUE\", \"FALSE\"))\n    } else {\n      vals <- ifelse(is.na(x), \"NA\", as.character(x))\n    }\n    nm <- if (is.null(names(x))) \"\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n    return(paste0(paste(class(x), collapse = \"+\"), \"/\", typeof(x), \"[\", paste(vals, collapse = \",\"), \"]\", nm))\n  }\n  inner <- if (length(x) == 0) \"\" else paste(vapply(seq_along(x), function(j) show(x[[j]]), \"\"), collapse = \" | \")\n  nm <- if (is.null(names(x))) \" nonames\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n  paste0(\"LIST{\", inner, \"}\", nm, \" class=\", paste(class(x), collapse = \"+\"))\n}\ngrab <- function(expr) {\n  tryCatch(show(eval(expr)), error = function(e) paste(\"ERR\", conditionMessage(e)))\n}\n\none <- function() {\n  handler <- basicJSONHandler()\n  plain <- show(fromJSON(\"[1, {\\\"a\\\": true}]\", handler = handler, asText = TRUE))\n  condensed <- basicJSONHandler(simplify = TRUE)\n  matrix_text <- show(fromJSON(\"[[1,2],[3,4]]\", handler = condensed, asText = TRUE))\n  paste(plain, matrix_text, sep = \"\\n\")\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef _piece(kind, values, names):\n    label = {\n        \"integer\": \"integer/integer\",\n        \"numeric\": \"numeric/double\",\n        \"logical\": \"logical/logical\",\n        \"character\": \"character/character\",\n    }[kind]\n    parts = []\n    for value in values:\n        if value is None or (isinstance(value, float) and math.isnan(value)):\n            parts.append(\"NA\")\n        elif isinstance(value, bool):\n            parts.append(\"TRUE\" if value else \"FALSE\")\n        elif isinstance(value, float) and value.is_integer():\n            parts.append(str(int(value)))\n        else:\n            parts.append(str(value))\n    names_text = \"\" if names is None else \" names=\" + \",\".join(names)\n    return f\"{label}[{','.join(parts)}]{names_text}\"\n\ndef show(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, AsIs):\n        shown = show(value.value)\n        if shown.endswith(\" class=list\"):\n            return shown[: -len(\" class=list\")] + \" class=AsIs\"\n        return shown + \" class=AsIs\"\n    if isinstance(value, Matrix):\n        kind = {\"integer\": \"integer\", \"numeric\": \"double\", \"logical\": \"logical\", \"character\": \"character\"}[value.kind]\n        parts = []\n        for item in value.data:\n            if item is None or (isinstance(item, float) and math.isnan(item)):\n                parts.append(\"NA\")\n            elif isinstance(item, bool):\n                parts.append(\"TRUE\" if item else \"FALSE\")\n            elif isinstance(item, float) and item.is_integer():\n                parts.append(str(int(item)))\n            else:\n                parts.append(str(item))\n        return f\"matrix/{kind}[{value.nrow}x{value.ncol}:{','.join(parts)}]\"\n    if isinstance(value, Atomic):\n        return _piece(value.kind, value.values, value.names)\n    if isinstance(value, RList):\n        inner = \" | \".join(show(item) for item in value.values)\n        if value.names is None:\n            names_text = \" nonames\"\n        else:\n            names_text = \" names=\" + \",\".join(value.names)\n        return f\"LIST{{{inner}}}{names_text} class=list\"\n    if isinstance(value, list):\n        inner = \" | \".join(show(item) for item in value)\n        return f\"LIST{{{inner}}} nonames class=list\"\n    if isinstance(value, bool):\n        return f\"logical/logical[{'TRUE' if value else 'FALSE'}]\"\n    if isinstance(value, int):\n        return f\"integer/integer[{value}]\"\n    if isinstance(value, float):\n        text = str(int(value)) if value.is_integer() else str(value)\n        return f\"numeric/double[{text}]\"\n    if isinstance(value, str):\n        return f\"character/character[{value}]\"\n    return repr(value)\n\ndef grab(fn):\n    try:\n        return show(fn())\n    except RJSONIOError as exc:\n        return \"ERR \" + str(exc)\n\ndef one():\n    handler = basicJSONHandler()\n    plain = show(fromJSON('[1, {\"a\": true}]', handler=handler, as_text=True))\n    condensed = basicJSONHandler(simplify=True)\n    matrix_text = show(fromJSON(\"[[1,2],[3,4]]\", handler=condensed, as_text=True))\n    return plain + \"\\n\" + matrix_text\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "emptyNamedList",
+      "translated": true,
+      "python": "rjsonio.emptyNamedList",
+      "loads": [],
+      "uses": [],
+      "done": "The empty object {}, a list whose names are character(0).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "toJSON of the empty named list, and the length of its names.",
+        "r_ms": 0.023126602172851562,
+        "translated_ms": 0.0028950016712769866,
+        "speedup": 7.988459005845896,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\n\none <- function() {\n  paste(RJSONIO::toJSON(emptyNamedList), length(names(emptyNamedList)), sep = \"\\n\")\n}\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\n\ndef one():\n    return toJSON(emptyNamedList) + \"\\n\" + str(len(emptyNamedList.names))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_NONE",
+      "translated": true,
+      "python": "rjsonio.JSON_T_NONE",
+      "loads": [],
+      "uses": [],
+      "done": "No token.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_NONE.",
+        "r_ms": 0.005245208740234375,
+        "translated_ms": 0.0002545002644183114,
+        "speedup": 20.609836112441304,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_NONE\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_NONE\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_ARRAY_BEGIN",
+      "translated": true,
+      "python": "rjsonio.JSON_T_ARRAY_BEGIN",
+      "loads": [],
+      "uses": [],
+      "done": "Start of a JSON array.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_ARRAY_BEGIN.",
+        "r_ms": 0.0050067901611328125,
+        "translated_ms": 0.00023250140657182783,
+        "speedup": 21.53445105970161,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_ARRAY_BEGIN\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_ARRAY_BEGIN\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_ARRAY_END",
+      "translated": true,
+      "python": "rjsonio.JSON_T_ARRAY_END",
+      "loads": [],
+      "uses": [],
+      "done": "End of a JSON array.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_ARRAY_END.",
+        "r_ms": 0.005245208740234375,
+        "translated_ms": 0.00024400105758104473,
+        "speedup": 21.496663958073967,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_ARRAY_END\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_ARRAY_END\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_OBJECT_BEGIN",
+      "translated": true,
+      "python": "rjsonio.JSON_T_OBJECT_BEGIN",
+      "loads": [],
+      "uses": [],
+      "done": "Start of a JSON object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_OBJECT_BEGIN.",
+        "r_ms": 0.0050067901611328125,
+        "translated_ms": 0.0002545002644183114,
+        "speedup": 19.673025380057606,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_OBJECT_BEGIN\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_OBJECT_BEGIN\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_OBJECT_END",
+      "translated": true,
+      "python": "rjsonio.JSON_T_OBJECT_END",
+      "loads": [],
+      "uses": [],
+      "done": "End of a JSON object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_OBJECT_END.",
+        "r_ms": 0.0054836273193359375,
+        "translated_ms": 0.00024249857233371586,
+        "speedup": 22.613029291527585,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_OBJECT_END\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_OBJECT_END\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_INTEGER",
+      "translated": true,
+      "python": "rjsonio.JSON_T_INTEGER",
+      "loads": [],
+      "uses": [],
+      "done": "A whole number, seen by the handler parser.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_INTEGER.",
+        "r_ms": 0.005245208740234375,
+        "translated_ms": 0.0002400010998826474,
+        "speedup": 21.854936259871764,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_INTEGER\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_INTEGER\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_FLOAT",
+      "translated": true,
+      "python": "rjsonio.JSON_T_FLOAT",
+      "loads": [],
+      "uses": [],
+      "done": "A number with a fraction or an exponent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_FLOAT.",
+        "r_ms": 0.005125999450683594,
+        "translated_ms": 0.0002559991116868332,
+        "speedup": 20.023504835260095,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_FLOAT\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_FLOAT\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_NULL",
+      "translated": true,
+      "python": "rjsonio.JSON_T_NULL",
+      "loads": [],
+      "uses": [],
+      "done": "JSON null.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_NULL.",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.00025550070859026164,
+        "speedup": 22.395420858161938,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_NULL\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_NULL\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_TRUE",
+      "translated": true,
+      "python": "rjsonio.JSON_T_TRUE",
+      "loads": [],
+      "uses": [],
+      "done": "JSON true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_TRUE.",
+        "r_ms": 0.005245208740234375,
+        "translated_ms": 0.00025749977794475853,
+        "speedup": 20.369760246393806,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_TRUE\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_TRUE\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_FALSE",
+      "translated": true,
+      "python": "rjsonio.JSON_T_FALSE",
+      "loads": [],
+      "uses": [],
+      "done": "JSON false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_FALSE.",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.00026099951355718076,
+        "speedup": 21.923588364021576,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_FALSE\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_FALSE\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_STRING",
+      "translated": true,
+      "python": "rjsonio.JSON_T_STRING",
+      "loads": [],
+      "uses": [],
+      "done": "A JSON string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_STRING.",
+        "r_ms": 0.006198883056640625,
+        "translated_ms": 0.0002920005499618128,
+        "speedup": 21.229011580462096,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_STRING\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_STRING\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_KEY",
+      "translated": true,
+      "python": "rjsonio.JSON_T_KEY",
+      "loads": [],
+      "uses": [],
+      "done": "An object key.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_KEY.",
+        "r_ms": 0.005125999450683594,
+        "translated_ms": 0.00026800080377142876,
+        "speedup": 19.12680625784776,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_KEY\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_KEY\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "JSON_T_MAX",
+      "translated": true,
+      "python": "rjsonio.JSON_T_MAX",
+      "loads": [],
+      "uses": [],
+      "done": "One past the last token code.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in JSON_T_MAX.",
+        "r_ms": 0.006318092346191406,
+        "translated_ms": 0.000288498995359987,
+        "speedup": 21.899876421780032,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() JSON_T_MAX\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return JSON_T_MAX\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "StrictLogical",
+      "translated": true,
+      "python": "rjsonio.StrictLogical",
+      "loads": [],
+      "uses": [],
+      "done": "Collapse a node only when every element is logical.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in StrictLogical.",
+        "r_ms": 0.005245208740234375,
+        "translated_ms": 0.00026600173441693187,
+        "speedup": 19.718701277387236,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() StrictLogical\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return StrictLogical\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "StrictNumeric",
+      "translated": true,
+      "python": "rjsonio.StrictNumeric",
+      "loads": [],
+      "uses": [],
+      "done": "Collapse a node only when every element is numeric.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in StrictNumeric.",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.00026600173441693187,
+        "speedup": 21.51131048442244,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() StrictNumeric\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return StrictNumeric\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "StrictCharacter",
+      "translated": true,
+      "python": "rjsonio.StrictCharacter",
+      "loads": [],
+      "uses": [],
+      "done": "Collapse a node only when every element is character.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in StrictCharacter.",
+        "r_ms": 0.0059604644775390625,
+        "translated_ms": 0.0002679989847820252,
+        "speedup": 22.240623345595722,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() StrictCharacter\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return StrictCharacter\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "Strict",
+      "translated": true,
+      "python": "rjsonio.Strict",
+      "loads": [],
+      "uses": [],
+      "done": "StrictLogical, StrictNumeric, and StrictCharacter together.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The integer stored in Strict.",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.00026099951355718076,
+        "speedup": 21.923588364021576,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\none <- function() Strict\n\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json, math, os, statistics, tempfile, time, warnings\nfrom rjsonio import *\nfrom rjsonio.values import Matrix\ndef one():\n    return Strict\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "readJSONStream",
+      "translated": true,
+      "python": "rjsonio.parse.readJSONStream",
+      "loads": [],
+      "uses": [],
+      "done": "Reads JSON from a file path or a readable stream in 1024-byte chunks and returns the last top-level value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A file stream read in 1024-byte chunks: an array, a trailing object, and a callback return",
+        "r_ms": 0.9862184524536133,
+        "translated_ms": 0.917431000743818,
+        "speedup": 1.0749783380483382,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\nsuppressPackageStartupMessages(library(RJSONIO))\n\nshow <- function(x) {\n  if (is.null(x)) return(\"NULL\")\n  if (is.matrix(x)) {\n    vals <- as.vector(x)\n    text <- ifelse(is.na(vals), \"NA\", as.character(vals))\n    return(paste0(\"matrix/\", typeof(x), \"[\", nrow(x), \"x\", ncol(x), \":\", paste(text, collapse = \",\"), \"]\"))\n  }\n  if (is.atomic(x)) {\n    if (is.logical(x)) {\n      vals <- ifelse(is.na(x), \"NA\", ifelse(x, \"TRUE\", \"FALSE\"))\n    } else {\n      vals <- ifelse(is.na(x), \"NA\", as.character(x))\n    }\n    nm <- if (is.null(names(x))) \"\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n    return(paste0(paste(class(x), collapse = \"+\"), \"/\", typeof(x), \"[\", paste(vals, collapse = \",\"), \"]\", nm))\n  }\n  inner <- if (length(x) == 0) \"\" else paste(vapply(seq_along(x), function(j) show(x[[j]]), \"\"), collapse = \" | \")\n  nm <- if (is.null(names(x))) \" nonames\" else paste0(\" names=\", paste(names(x), collapse = \",\"))\n  paste0(\"LIST{\", inner, \"}\", nm, \" class=\", paste(class(x), collapse = \"+\"))\n}\n\nstream_file <- function(text) {\n  path <- tempfile()\n  cat(text, file = path)\n  con <- file(path, open = \"rb\")\n  on.exit({\n    close(con)\n    unlink(path)\n  }, add = TRUE)\n  readJSONStream(con)\n}\n\nstream_cb <- function(text) {\n  path <- tempfile()\n  cat(text, file = path)\n  con <- file(path, open = \"rb\")\n  on.exit({\n    close(con)\n    unlink(path)\n  }, add = TRUE)\n  readJSONStream(con, function(x) length(x))\n}\n\none <- function() {\n  parts <- c(\n    show(stream_file(\"[1, 2, 3]\")),\n    show(stream_file(\"[1,2,3]{\\\"a\\\":[true,false]}\")),\n    show(stream_cb(\"[1,2,3]{\\\"a\\\":[true,false]}\"))\n  )\n  paste(parts, collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', jsonlite::toJSON(value, auto_unbox = TRUE), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom rjsonio import readJSONStream\nfrom rjsonio.values import Atomic, AsIs, Matrix, RList\n\n\ndef _piece(kind, values, names):\n    label = {\n        \"integer\": \"integer/integer\",\n        \"numeric\": \"numeric/double\",\n        \"logical\": \"logical/logical\",\n        \"character\": \"character/character\",\n    }[kind]\n    parts = []\n    for value in values:\n        if value is None or (isinstance(value, float) and math.isnan(value)):\n            parts.append(\"NA\")\n        elif isinstance(value, bool):\n            parts.append(\"TRUE\" if value else \"FALSE\")\n        elif isinstance(value, float) and value.is_integer():\n            parts.append(str(int(value)))\n        else:\n            parts.append(str(value))\n    names_text = \"\" if names is None else \" names=\" + \",\".join(names)\n    return f\"{label}[{','.join(parts)}]{names_text}\"\n\n\ndef show(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, AsIs):\n        shown = show(value.value)\n        if shown.endswith(\" class=list\"):\n            return shown[: -len(\" class=list\")] + \" class=AsIs\"\n        return shown + \" class=AsIs\"\n    if isinstance(value, Matrix):\n        kind = {\n            \"integer\": \"integer\",\n            \"numeric\": \"double\",\n            \"logical\": \"logical\",\n            \"character\": \"character\",\n        }[value.kind]\n        parts = []\n        for item in value.data:\n            if item is None or (isinstance(item, float) and math.isnan(item)):\n                parts.append(\"NA\")\n            elif isinstance(item, bool):\n                parts.append(\"TRUE\" if item else \"FALSE\")\n            elif isinstance(item, float) and item.is_integer():\n                parts.append(str(int(item)))\n            else:\n                parts.append(str(item))\n        return f\"matrix/{kind}[{value.nrow}x{value.ncol}:{','.join(parts)}]\"\n    if isinstance(value, Atomic):\n        return _piece(value.kind, value.values, value.names)\n    if isinstance(value, RList):\n        inner = \" | \".join(show(item) for item in value.values)\n        if value.names is None:\n            names_text = \" nonames\"\n        else:\n            names_text = \" names=\" + \",\".join(value.names)\n        return f\"LIST{{{inner}}}{names_text} class=list\"\n    if isinstance(value, list):\n        inner = \" | \".join(show(item) for item in value)\n        return f\"LIST{{{inner}}} nonames class=list\"\n    if isinstance(value, bool):\n        return f\"logical/logical[{'TRUE' if value else 'FALSE'}]\"\n    if isinstance(value, int):\n        return f\"integer/integer[{value}]\"\n    if isinstance(value, float):\n        text = str(int(value)) if value.is_integer() else str(value)\n        return f\"numeric/double[{text}]\"\n    if isinstance(value, str):\n        return f\"character/character[{value}]\"\n    return repr(value)\n\n\ndef stream_file(text: str):\n    with tempfile.NamedTemporaryFile(\"wb\", delete=False) as handle:\n        handle.write(text.encode(\"utf-8\"))\n        path = handle.name\n    try:\n        return readJSONStream(path)\n    finally:\n        os.unlink(path)\n\n\ndef one():\n    parts = [\n        show(stream_file(\"[1, 2, 3]\")),\n        show(stream_file('[1,2,3]{\"a\":[true,false]}')),\n    ]\n    with tempfile.NamedTemporaryFile(\"wb\", delete=False) as handle:\n        handle.write(b'[1,2,3]{\"a\":[true,false]}')\n        path = handle.name\n    try:\n        parts.append(show(readJSONStream(path, cb=lambda x: len(x))))\n    finally:\n        os.unlink(path)\n    return \"\\n\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

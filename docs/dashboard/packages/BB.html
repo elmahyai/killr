@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BB · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>BB</h1>
+<p class="note">CRAN 2026.1.0</p>
+<p>All seven exports match BB 2026.1.0 on the spectral-gradient paths. spg can check an analytic gradient with numDeriv. projectLinear calls quadprog solve.QP. BBsolve starts small systems with the same Nelder-Mead simplex as stats::optim. control BFGS=TRUE is the L-BFGS-B fallback in stats::optim and is not translated. There is no crate.</p>
+<p class="note">7 of 7 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#spg">spg</a></td><td><span class='yes'>translated</span></td><td>—</td><td>numDeriv solved</td><td>Birgin, Martinez, and Raydan spectral projected gradient, including the nonmonotone line search. Uses numpy.</td></tr>
+<tr><td><a href="#dfsane">dfsane</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>DF-SANE with the two-sided nonmonotone line search. NM and BFGS stay off unless control asks for them. Uses numpy.</td></tr>
+<tr><td><a href="#sane">sane</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>SANE line search along the residual, with the safeguarded quadratic step. Uses numpy.</td></tr>
+<tr><td><a href="#BBoptim">BBoptim</a></td><td><span class='yes'>translated</span></td><td>—</td><td>numDeriv solved</td><td>The grid is method within M, the same order as expand.grid. The first convergence stops the search. Uses numpy.</td></tr>
+<tr><td><a href="#BBsolve">BBsolve</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The default small system starts with Nelder-Mead, using the same simplex as stats::optim. Uses numpy.</td></tr>
+<tr><td><a href="#projectLinear">projectLinear</a></td><td><span class='yes'>translated</span></td><td>—</td><td>quadprog solved</td><td>The step is the solution of a least-distance quadratic program. D is the identity, passed already factorized. Uses numpy.</td></tr>
+<tr><td><a href="#multiStart">multiStart</a></td><td><span class='yes'>translated</span></td><td>—</td><td>numDeriv solved</td><td>A vector start becomes one row. Converged is true when the solver reports convergence 0. Uses numpy.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>spg</td><td>Spectral projected gradient. A box constraint is the default projection. An analytic gradient is checked with numDeriv only when checkGrad asks for it.</td><td>0.504</td><td>0.551</td><td><button type="button" class="proof-toggle" data-name="spg"><span class='slower'>-9%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:91.4%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>dfsane</td><td>Derivative-free spectral residual method. Nelder-Mead and L-BFGS-B are optional and off by default.</td><td>0.404</td><td>0.193</td><td><button type="button" class="proof-toggle" data-name="dfsane"><span class='yes'>+110%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:47.7%'></span></div></td></tr>
+<tr><td>sane</td><td>The earlier spectral residual solver. The directional derivative uses a step of 1e-7.</td><td>0.468</td><td>0.271</td><td><button type="button" class="proof-toggle" data-name="sane"><span class='yes'>+72%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:58.0%'></span></div></td></tr>
+<tr><td>BBoptim</td><td>Expands method and M, calls spg, and keeps the first successful run.</td><td>1.13</td><td>0.456</td><td><button type="button" class="proof-toggle" data-name="BBoptim"><span class='yes'>+148%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:40.4%'></span></div></td></tr>
+<tr><td>BBsolve</td><td>Expands method, M, and Nelder-Mead. For two to twenty parameters the default tries Nelder-Mead first.</td><td>1.1</td><td>0.596</td><td><button type="button" class="proof-toggle" data-name="BBsolve"><span class='yes'>+84%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:54.3%'></span></div></td></tr>
+<tr><td>projectLinear</td><td>Project onto linear equalities and inequalities with solve.QP. The feasible set is A x &gt;= b.</td><td>0.133</td><td>0.325</td><td><button type="button" class="proof-toggle" data-name="projectLinear"><span class='slower'>-59%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:41.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>multiStart</td><td>Each row of par is a start. action solve calls BBsolve. action optimize calls BBoptim.</td><td>2.67</td><td>0.451</td><td><button type="button" class="proof-toggle" data-name="multiStart"><span class='yes'>+491%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:16.9%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "spg", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nfn \u003c- function(x) sum((x - c(1, 2, 3))^2)\ngr \u003c- function(x) 2 * (x - c(1, 2, 3))\none \u003c- function() {\n  res \u003c- spg(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import spg\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = spg([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "dfsane", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- dfsane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import dfsane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = dfsane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "sane", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- sane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import sane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = sane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "BBoptim", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nfn \u003c- function(x) sum((x - c(1, 2, 3))^2)\ngr \u003c- function(x) 2 * (x - c(1, 2, 3))\none \u003c- function() {\n  res \u003c- BBoptim(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence, res$cpar)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import bb_optim\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = bb_optim([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]], res[\"cpar\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "BBsolve", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- BBsolve(c(0, 0), sys, control=list(trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence, res$cpar)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import bb_solve\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = bb_solve([0.0, 0.0], sys, control={\"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]], res[\"cpar\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "projectLinear", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nA \u003c- rbind(c(1, 1), c(1, 0))\nb \u003c- c(3, 0)\none \u003c- function() projectLinear(c(0.2, 0.2), A, b, meq=0)\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import project_linear\nA = np.array([[1.0, 1.0], [1.0, 0.0]])\nb = np.array([3.0, 0.0])\ndef one():\n    return project_linear([0.2, 0.2], A, b, 0)\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "multiStart", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- multiStart(rbind(c(0, 0), c(4, -1)), sys, action=\"solve\", control=list(trace=FALSE, NM=FALSE), quiet=TRUE)\n  c(as.vector(res$par), res$fvalue, as.numeric(res$converged))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n", "python": "import numpy as np\nfrom BB import multi_start\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = multi_start(np.array([[0.0, 0.0], [4.0, -1.0]]), sys, action=\"solve\", control={\"trace\": False, \"NM\": False}, quiet=True)\n    par = np.ravel(res[\"par\"], order=\"F\")\n    return np.concatenate([par, res[\"fvalue\"], res[\"converged\"].astype(float)])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>stats</p><p><a href="quadprog.html">quadprog</a> <span class="note">finished</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Packages</h3><p><a href="numDeriv.html">numDeriv</a> <span class="note">finished</span></p><p><a href="quadprog.html">quadprog</a> <span class="note">finished</span></p><h3>Native</h3><p>numpy</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "spg", "translated": true, "not_done": "", "title": "Large-Scale Optimization", "origin": {"description": "Spectral projected gradient. A box constraint is the default projection. An analytic gradient is checked with numDeriv only when checkGrad asks for it.", "usage": "spg(par, fn, gr=NULL, method=3, lower=-Inf, upper=Inf, project=NULL, projectArgs=NULL, control=list(), quiet=FALSE, alertConvergence=TRUE, ...)", "arguments": [{"name": "par", "text": "Starting values."}, {"name": "fn", "text": "Scalar objective."}, {"name": "gr", "text": "Analytic gradient. Missing means a one-sided difference with control eps."}, {"name": "control", "text": "M, maxit, ftol, gtol, maxfeval, maximize, trace, triter, eps, checkGrad, and checkGrad.tol."}], "details": "Birgin, Martinez, and Raydan spectral projected gradient, including the nonmonotone line search.", "value": "The same list the R function returns for this case.", "example": "fn \u003c- function(x) sum((x - c(1, 2, 3))^2)\ngr \u003c- function(x) 2 * (x - c(1, 2, 3))\none \u003c- function() {\n  res \u003c- spg(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence)\n}\nprint(one())\n", "output": "output/spg-r.txt", "output_blocks": [{"text": "[1]  1  2  3  0  0 14  2  3  0"}]}, "translation": {"description": "Spectral projected gradient. A box constraint is the default projection. An analytic gradient is checked with numDeriv only when checkGrad asks for it.", "usage": "spg(par, fn, gr=None, method=3, lower=-inf, upper=inf, project=None, projectArgs=None, control=None, quiet=False, alertConvergence=True, **kwargs)", "arguments": [{"name": "par", "text": "Starting values."}, {"name": "fn", "text": "Scalar objective."}, {"name": "gr", "text": "Analytic gradient. Missing means a one-sided difference with control eps."}, {"name": "control", "text": "M, maxit, ftol, gtol, maxfeval, maximize, trace, triter, eps, checkGrad, and checkGrad.tol."}], "details": "Birgin, Martinez, and Raydan spectral projected gradient, including the nonmonotone line search.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import spg\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = spg([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]]])\nprint(one())\n", "output": "output/spg-python.txt", "output_blocks": [{"text": "[ 1.  2.  3.  0.  0. 14.  2.  3.  0.]"}]}}, {"name": "dfsane", "translated": true, "not_done": "", "title": "Solving Large-Scale Nonlinear System of Equations", "origin": {"description": "Derivative-free spectral residual method. Nelder-Mead and L-BFGS-B are optional and off by default.", "usage": "dfsane(par, fn, method=2, control=list(), quiet=FALSE, alertConvergence=TRUE, ...)", "arguments": [{"name": "fn", "text": "Function returning a residual vector of the same length as par."}, {"name": "method", "text": "1, 2, or 3. The three Barzilai-Borwein steplengths."}, {"name": "control", "text": "maxit, M, tol, trace, triter, noimp, NM, and BFGS."}], "details": "DF-SANE with the two-sided nonmonotone line search. NM and BFGS stay off unless control asks for them.", "value": "The same list the R function returns for this case.", "example": "sys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- dfsane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nprint(one())\n", "output": "output/dfsane-r.txt", "output_blocks": [{"text": "[1] 1.000000e+00 2.000000e+00 3.510833e-16 2.236068e+00 3.000000e+00\n[6] 2.000000e+00 0.000000e+00"}]}, "translation": {"description": "Derivative-free spectral residual method. Nelder-Mead and L-BFGS-B are optional and off by default.", "usage": "dfsane(par, fn, method=2, control=None, quiet=False, alertConvergence=True, **kwargs)", "arguments": [{"name": "fn", "text": "Function returning a residual vector of the same length as par."}, {"name": "method", "text": "1, 2, or 3. The three Barzilai-Borwein steplengths."}, {"name": "control", "text": "maxit, M, tol, trace, triter, noimp, NM, and BFGS."}], "details": "DF-SANE with the two-sided nonmonotone line search. NM and BFGS stay off unless control asks for them.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import dfsane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = dfsane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nprint(one())\n", "output": "output/dfsane-python.txt", "output_blocks": [{"text": "[1.00000000e+00 2.00000000e+00 3.51083347e-16 2.23606798e+00\n 3.00000000e+00 2.00000000e+00 0.00000000e+00]"}]}}, {"name": "sane", "translated": true, "not_done": "", "title": "Solving Large-Scale Nonlinear System of Equations", "origin": {"description": "The earlier spectral residual solver. The directional derivative uses a step of 1e-7.", "usage": "sane(par, fn, method=2, control=list(), quiet=FALSE, alertConvergence=TRUE, ...)", "arguments": [{"name": "fn", "text": "Residual function."}, {"name": "method", "text": "Barzilai-Borwein steplength, 1, 2, or 3."}], "details": "SANE line search along the residual, with the safeguarded quadratic step.", "value": "The same list the R function returns for this case.", "example": "sys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- sane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nprint(one())\n", "output": "output/sane-r.txt", "output_blocks": [{"text": "[1] 1.000000e+00 2.000000e+00 3.510833e-16 2.236068e+00 5.000000e+00\n[6] 2.000000e+00 0.000000e+00"}]}, "translation": {"description": "The earlier spectral residual solver. The directional derivative uses a step of 1e-7.", "usage": "sane(par, fn, method=2, control=None, quiet=False, alertConvergence=True, **kwargs)", "arguments": [{"name": "fn", "text": "Residual function."}, {"name": "method", "text": "Barzilai-Borwein steplength, 1, 2, or 3."}], "details": "SANE line search along the residual, with the safeguarded quadratic step.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import sane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = sane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nprint(one())\n", "output": "output/sane-python.txt", "output_blocks": [{"text": "[1.00000000e+00 2.00000000e+00 3.51083347e-16 2.23606798e+00\n 5.00000000e+00 2.00000000e+00 0.00000000e+00]"}]}}, {"name": "BBoptim", "translated": true, "not_done": "", "title": "Large-Scale Nonlinear Optimization - A Wrapper for spg()", "origin": {"description": "Expands method and M, calls spg, and keeps the first successful run.", "usage": "BBoptim(par, fn, gr=NULL, method=c(2, 3, 1), lower=-Inf, upper=Inf, project=NULL, projectArgs=NULL, control=list(), quiet=FALSE, ...)", "arguments": [{"name": "method", "text": "Spectral steplengths to try. The default is 2, then 3, then 1."}, {"name": "control", "text": "M is a vector. The default memory lengths are 50 and 10."}], "details": "The grid is method within M, the same order as expand.grid. The first convergence stops the search.", "value": "The same list the R function returns for this case.", "example": "fn \u003c- function(x) sum((x - c(1, 2, 3))^2)\ngr \u003c- function(x) 2 * (x - c(1, 2, 3))\none \u003c- function() {\n  res \u003c- BBoptim(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence, res$cpar)\n}\nprint(one())\n", "output": "output/BBoptim-r.txt", "output_blocks": [{"text": "                                                               method      M \n     1      2      3      0      0     14      2      3      0      2     50 "}]}, "translation": {"description": "Expands method and M, calls spg, and keeps the first successful run.", "usage": "bb_optim(par, fn, gr=None, method=(2, 3, 1), lower=-inf, upper=inf, project=None, projectArgs=None, control=None, quiet=False, **kwargs)", "arguments": [{"name": "method", "text": "Spectral steplengths to try. The default is 2, then 3, then 1."}, {"name": "control", "text": "M is a vector. The default memory lengths are 50 and 10."}], "details": "The grid is method within M, the same order as expand.grid. The first convergence stops the search.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import bb_optim\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = bb_optim([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]], res[\"cpar\"]])\nprint(one())\n", "output": "output/BBoptim-python.txt", "output_blocks": [{"text": "[ 1.  2.  3.  0.  0. 14.  2.  3.  0.  2. 50.]"}]}}, {"name": "BBsolve", "translated": true, "not_done": "", "title": "Solving Nonlinear System of Equations - A Wrapper for dfsane()", "origin": {"description": "Expands method, M, and Nelder-Mead. For two to twenty parameters the default tries Nelder-Mead first.", "usage": "BBsolve(par, fn, method=c(2, 3, 1), control=list(), quiet=FALSE, ...)", "arguments": [{"name": "control", "text": "NM defaults to c(TRUE, FALSE) when the length of par is from 2 to 20, and to FALSE otherwise."}], "details": "The default small system starts with Nelder-Mead, using the same simplex as stats::optim.", "value": "The same list the R function returns for this case.", "example": "sys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- BBsolve(c(0, 0), sys, control=list(trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence, res$cpar)\n}\nprint(one())\n", "output": "output/BBsolve-r.txt", "output_blocks": [{"text": "                                                                              \n1.000000e+00 2.000000e+00 0.000000e+00 1.759311e-04 6.300000e+01 1.000000e+00 \n                   method            M           NM \n0.000000e+00 2.000000e+00 5.000000e+01 1.000000e+00 "}]}, "translation": {"description": "Expands method, M, and Nelder-Mead. For two to twenty parameters the default tries Nelder-Mead first.", "usage": "bb_solve(par, fn, method=(2, 3, 1), control=None, quiet=False, **kwargs)", "arguments": [{"name": "control", "text": "NM defaults to c(TRUE, FALSE) when the length of par is from 2 to 20, and to FALSE otherwise."}], "details": "The default small system starts with Nelder-Mead, using the same simplex as stats::optim.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import bb_solve\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = bb_solve([0.0, 0.0], sys, control={\"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]], res[\"cpar\"]])\nprint(one())\n", "output": "output/BBsolve-python.txt", "output_blocks": [{"text": "[1.00000000e+00 2.00000000e+00 0.00000000e+00 1.75931123e-04\n 6.30000000e+01 1.00000000e+00 0.00000000e+00 2.00000000e+00\n 5.00000000e+01 1.00000000e+00]"}]}}, {"name": "projectLinear", "translated": true, "not_done": "", "title": "spg Projection Functions", "origin": {"description": "Project onto linear equalities and inequalities with solve.QP. The feasible set is A x >= b.", "usage": "projectLinear(par, A, b, meq)", "arguments": [{"name": "A", "text": "Constraint matrix, one row per constraint."}, {"name": "b", "text": "Constraint bounds."}, {"name": "meq", "text": "Number of leading rows that are equalities."}], "details": "The step is the solution of a least-distance quadratic program. D is the identity, passed already factorized.", "value": "The same list the R function returns for this case.", "example": "A \u003c- rbind(c(1, 1), c(1, 0))\nb \u003c- c(3, 0)\none \u003c- function() projectLinear(c(0.2, 0.2), A, b, meq=0)\nprint(one())\n", "output": "output/projectLinear-r.txt", "output_blocks": [{"text": "[1] 1.5 1.5"}]}, "translation": {"description": "Project onto linear equalities and inequalities with solve.QP. The feasible set is A x >= b.", "usage": "project_linear(par, A, b, meq)", "arguments": [{"name": "A", "text": "Constraint matrix, one row per constraint."}, {"name": "b", "text": "Constraint bounds."}, {"name": "meq", "text": "Number of leading rows that are equalities."}], "details": "The step is the solution of a least-distance quadratic program. D is the identity, passed already factorized.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import project_linear\nA = np.array([[1.0, 1.0], [1.0, 0.0]])\nb = np.array([3.0, 0.0])\ndef one():\n    return project_linear([0.2, 0.2], A, b, 0)\nprint(one())\n", "output": "output/projectLinear-python.txt", "output_blocks": [{"text": "[1.5 1.5]"}]}}, {"name": "multiStart", "translated": true, "not_done": "", "title": "Nonlinear Optimization or Root-Finding with Multiple Starting Values", "origin": {"description": "Each row of par is a start. action solve calls BBsolve. action optimize calls BBoptim.", "usage": "multiStart(par, fn, gr=NULL, action=c(\"solve\", \"optimize\"), method=c(2, 3, 1), lower=-Inf, upper=Inf, project=NULL, projectArgs=NULL, control=list(), quiet=FALSE, details=FALSE, ...)", "arguments": [{"name": "par", "text": "A vector, or a matrix with one start per row."}, {"name": "action", "text": "solve or optimize. A prefix that matches one of them is enough."}], "details": "A vector start becomes one row. Converged is true when the solver reports convergence 0.", "value": "The same list the R function returns for this case.", "example": "sys \u003c- function(x) c(x[1] - 1, x[2] - 2)\none \u003c- function() {\n  res \u003c- multiStart(rbind(c(0, 0), c(4, -1)), sys, action=\"solve\", control=list(trace=FALSE, NM=FALSE), quiet=TRUE)\n  c(as.vector(res$par), res$fvalue, as.numeric(res$converged))\n}\nprint(one())\n", "output": "output/multiStart-r.txt", "output_blocks": [{"text": "[1] 1.000000e+00 1.000000e+00 2.000000e+00 2.000000e+00 3.510833e-16\n[6] 4.440892e-16 1.000000e+00 1.000000e+00"}]}, "translation": {"description": "Each row of par is a start. action solve calls BBsolve. action optimize calls BBoptim.", "usage": "multi_start(par, fn, gr=None, action=(\"solve\", \"optimize\"), method=(2, 3, 1), lower=-inf, upper=inf, project=None, projectArgs=None, control=None, quiet=False, details=False, **kwargs)", "arguments": [{"name": "par", "text": "A vector, or a matrix with one start per row."}, {"name": "action", "text": "solve or optimize. A prefix that matches one of them is enough."}], "details": "A vector start becomes one row. Converged is true when the solver reports convergence 0.", "value": "A dictionary with the same fields.", "example": "import numpy as np\nfrom BB import multi_start\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = multi_start(np.array([[0.0, 0.0], [4.0, -1.0]]), sys, action=\"solve\", control={\"trace\": False, \"NM\": False}, quiet=True)\n    par = np.ravel(res[\"par\"], order=\"F\")\n    return np.concatenate([par, res[\"fvalue\"], res[\"converged\"].astype(float)])\nprint(one())\n", "output": "output/multiStart-python.txt", "output_blocks": [{"text": "[1.00000000e+00 1.00000000e+00 2.00000000e+00 2.00000000e+00\n 3.51083347e-16 4.44089210e-16 1.00000000e+00 1.00000000e+00]"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "name": "remote_metadata",
+  "title": "Metadata recorded for a remote",
+  "origin": {
+    "description": "S3 generic for the DESCRIPTION fields that record where a package came from.",
+    "usage": "remote_metadata(x, bundle = NULL, source = NULL, sha = NULL)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A remote object."
+      },
+      {
+        "name": "bundle",
+        "text": "Path to a downloaded archive. Default NULL. The GitHub method reads the commit SHA from the archive when this is set."
+      },
+      {
+        "name": "source",
+        "text": "Unpacked source directory. Default NULL. The local and GitHub methods do not read it."
+      },
+      {
+        "name": "sha",
+        "text": "SHA to store when bundle is NULL. Default NULL. A length-1 NA becomes NULL."
+      }
+    ],
+    "details": "A local remote returns RemoteType local, RemoteUrl equal to the normalized path, and RemoteSubdir. A GitHub remote returns the Remote* fields and the backward-compatible Github* fields from install-github.R. An explicit sha is stored on RemoteSha and GithubSHA1.",
+    "value": "A named list of DESCRIPTION fields. Missing fields are NULL.",
+    "example": "path <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\nmeta <- remotes:::remote_metadata(remotes:::local_remote(path))\nstopifnot(identical(meta$RemoteType, \"local\"), identical(meta$RemoteUrl, normalizePath(path)))\ncat(\"remote_metadata on a local directory returns RemoteType local and RemoteUrl equal to normalizePath.\\n\")",
+    "output": "output/remote_metadata-r.txt"
+  },
+  "translation": {
+    "description": "S3 generic for the DESCRIPTION fields that record where a package came from.",
+    "usage": "remote_metadata(x, bundle=None, source=None, sha=None)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A local_remote or github_remote."
+      },
+      {
+        "name": "bundle",
+        "text": "Path to a downloaded archive. Default None. The GitHub method reads the pax comment SHA when this is set."
+      },
+      {
+        "name": "source",
+        "text": "Unpacked source directory. Default None. It is not read."
+      },
+      {
+        "name": "sha",
+        "text": "SHA to store when bundle is None. Default None. None is the NA_character_ that the GitHub method stores as NULL."
+      }
+    ],
+    "details": "A local remote returns RemoteType local, RemoteUrl equal to normalizePath of the path passed to local_remote, and RemoteSubdir. A GitHub remote with an explicit sha returns RemoteType, RemoteHost, RemotePackage, RemoteRepo, RemoteUsername, RemoteRef, RemoteSha, RemoteSubdir, GithubRepo, GithubUsername, GithubRef, GithubSHA1, and GithubSubdir. RemoteSha and GithubSHA1 are that sha.",
+    "value": "A dict of DESCRIPTION fields. Missing fields are None.",
+    "example": "import os\nimport tempfile\nfrom remotes.remote import local_remote, remote_metadata\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\nmeta = remote_metadata(local_remote(path))\nassert meta[\"RemoteType\"] == \"local\" and meta[\"RemoteUrl\"] == os.path.realpath(path)\nprint(\"remote_metadata on a local directory returns RemoteType local and RemoteUrl equal to normalizePath.\")",
+    "output": "output/remote_metadata-python.txt"
+  }
+}

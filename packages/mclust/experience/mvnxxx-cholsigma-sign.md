@@ -1,0 +1,3 @@
+R's `mvnXXX` returns `cholSigma` exactly as the Fortran `mvnxxx` routine builds it. The Givens rotations do not force a positive diagonal, so R's `cholSigma` can have mixed signs on its diagonal. The Python `mvnXXX` in `packages/mclust/mclust/mvn.py` returns the kernel output unchanged, and it matches R exactly (max abs diff 0 on three fixed cases, `mvnXXX` and `meXXX`).
+
+The old bug was a sign flip of the whole matrix, `-cholesky(sigma).T`. That flip gives a difference of about twice the largest entry, which is the 1.54 seen in `meXXX`. Do not negate, transpose, or re-factor `cholSigma` in `mvnXXX`; a proof that compares `cholSigma` catches any such change.

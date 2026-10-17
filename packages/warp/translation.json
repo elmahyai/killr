@@ -1,0 +1,100 @@
+{
+  "name": "warp",
+  "cran_version": "0.2.3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All three exports are done. Distances, change points, and boundaries match warp, including a zoned POSIXct. NumPy holds the columns. zoneinfo supplies the civil date.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "zoneinfo"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "warp_distance",
+      "translated": true,
+      "python": "warp.warp_distance",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Distances from an origin, counted in period groups.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Month, yday, mweek, clock hour, UTC milliseconds, and a New York year.",
+        "r_ms": 0.4571676254272461,
+        "translated_ms": 7.056319000184885,
+        "speedup": 0.06478840106509749,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(warp))\nsuppressPackageStartupMessages(library(jsonlite))\nx <- as.Date(\"2016-01-01\") + 0:400\nx[10] <- NA\norigin <- as.Date(\"2016-03-01\")\npx <- as.POSIXct(c(0, 3600.5, 86400, 1.3e9), origin = \"1970-01-01\", tz = \"UTC\")\nny <- as.POSIXct(c(0, 18000, 86400), origin = \"1970-01-01\", tz = \"America/New_York\")\njson_val <- function(value) {\n  toJSON(as.numeric(value), auto_unbox = FALSE, digits = 17, na = \"null\")\n}\n\none <- function() {\n  \nc(\n  warp_distance(x, \"month\", every = 2L, origin = origin),\n  warp_distance(x, \"yday\", every = 7L),\n  warp_distance(x, \"mweek\"),\n  warp_distance(x, \"hour\", every = 5L),\n  warp_distance(px, \"millisecond\", every = 10L),\n  warp_distance(ny, \"year\")\n)\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json, statistics, time\n\nimport math\nfrom datetime import date, timedelta\nimport numpy as np\nfrom warp import Date, POSIXct, warp_distance\ndays = [date(2016, 1, 1) + timedelta(days=i) for i in range(401)]\ndays[9] = None\nx = Date(days)\norigin = Date(\"2016-03-01\")\npx = POSIXct([0, 3600.5, 86400, 1.3e9], \"UTC\")\nny = POSIXct([0, 18000, 86400], \"America/New_York\")\n\ndef one():\n    parts = [\n        warp_distance(x, \"month\", every=2, origin=origin),\n        warp_distance(x, \"yday\", every=7),\n        warp_distance(x, \"mweek\"),\n        warp_distance(x, \"hour\", every=5),\n        warp_distance(px, \"millisecond\", every=10),\n        warp_distance(ny, \"year\"),\n    ]\n    out = []\n    for part in parts:\n        for value in np.asarray(part).tolist():\n            if isinstance(value, float) and math.isnan(value):\n                out.append(None)\n            else:\n                out.append(value)\n    return out\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "warp_change",
+      "translated": true,
+      "python": "warp.warp_change",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Locations where the period distance changes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Month stops, and yday starts with the endpoint kept.",
+        "r_ms": 0.14591217041015625,
+        "translated_ms": 3.069402000619448,
+        "speedup": 0.04753765403837919,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(warp))\nsuppressPackageStartupMessages(library(jsonlite))\nx <- as.Date(\"2016-01-01\") + 0:400\nx[10] <- NA\norigin <- as.Date(\"2016-03-01\")\npx <- as.POSIXct(c(0, 3600.5, 86400, 1.3e9), origin = \"1970-01-01\", tz = \"UTC\")\nny <- as.POSIXct(c(0, 18000, 86400), origin = \"1970-01-01\", tz = \"America/New_York\")\njson_val <- function(value) {\n  toJSON(as.numeric(value), auto_unbox = FALSE, digits = 17, na = \"null\")\n}\n\none <- function() {\n  \nc(\n  warp_change(x, \"month\"),\n  warp_change(x, \"yday\", every = 10L, last = FALSE, endpoint = TRUE)\n)\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json, statistics, time\n\nimport math\nfrom datetime import date, timedelta\nimport numpy as np\nfrom warp import Date, warp_change\ndays = [date(2016, 1, 1) + timedelta(days=i) for i in range(401)]\ndays[9] = None\nx = Date(days)\n\ndef one():\n    parts = [\n        warp_change(x, \"month\"),\n        warp_change(x, \"yday\", every=10, last=False, endpoint=True),\n    ]\n    out = []\n    for part in parts:\n        out.extend(np.asarray(part).tolist())\n    return out\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "warp_boundary",
+      "translated": true,
+      "python": "warp.warp_boundary",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Start and stop of each period group.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Every fifth day from 1 March 2016, as start and stop.",
+        "r_ms": 0.03731250762939453,
+        "translated_ms": 0.6356249996315455,
+        "speedup": 0.05870207693376374,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(warp))\nsuppressPackageStartupMessages(library(jsonlite))\nx <- as.Date(\"2016-01-01\") + 0:400\nx[10] <- NA\norigin <- as.Date(\"2016-03-01\")\npx <- as.POSIXct(c(0, 3600.5, 86400, 1.3e9), origin = \"1970-01-01\", tz = \"UTC\")\nny <- as.POSIXct(c(0, 18000, 86400), origin = \"1970-01-01\", tz = \"America/New_York\")\njson_val <- function(value) {\n  toJSON(as.numeric(value), auto_unbox = FALSE, digits = 17, na = \"null\")\n}\n\none <- function() {\n  \nboundary <- warp_boundary(x, \"day\", every = 5L, origin = origin)\nc(boundary$start, boundary$stop)\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (step_i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[step_i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json, statistics, time\n\nimport math\nfrom datetime import date, timedelta\nimport numpy as np\nfrom warp import Date, warp_boundary\ndays = [date(2016, 1, 1) + timedelta(days=i) for i in range(401)]\ndays[9] = None\nx = Date(days)\norigin = Date(\"2016-03-01\")\n\ndef one():\n    boundary = warp_boundary(x, \"day\", every=5, origin=origin)\n    return np.asarray(boundary.start).tolist() + np.asarray(boundary.stop).tolist()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

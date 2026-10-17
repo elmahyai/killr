@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>knitr · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>knitr</h1>
+<p class="note">CRAN 1.52</p>
+<p>Checked all_labels, combine_words, current_input, all_patterns, asis_output, fig_chunk. The knit engine is left unfinished. A notebook exporter does not weave it.</p>
+<p class="note">6 of 133 functions · 4.5% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:4.5%"></div></div><strong>4.5%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#Sweave2knitr">Sweave2knitr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#all_labels">all_labels</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns chunk labels whose local options satisfy every condition.</td></tr>
+<tr><td><a href="#all_patterns">all_patterns</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Named list of the nine built-in document syntax patterns.</td></tr>
+<tr><td><a href="#all_rcpp_labels">all_rcpp_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#asis_output">asis_output</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Marks an object with class knit_asis so knitr writes it as is.</td></tr>
+<tr><td><a href="#cache_engines">cache_engines</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#clean_cache">clean_cache</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#combine_words">combine_words</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Combines words into one string with a separator and a conjunction.</td></tr>
+<tr><td><a href="#convert_chunk_header">convert_chunk_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#current_input">current_input</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns the name of the input file passed to knit().</td></tr>
+<tr><td><a href="#dep_auto">dep_auto</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#dep_prev">dep_prev</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#download_image">download_image</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#engine_output">engine_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#extract_raw_output">extract_raw_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#fig_chunk">fig_chunk</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns the figure filenames for a chunk label, extension, and figure numbers.</td></tr>
+<tr><td><a href="#fig_path">fig_path</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_ffmpeg_html">hook_ffmpeg_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_gifski">hook_gifski</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_mogrify">hook_mogrify</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_movecode">hook_movecode</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_optipng">hook_optipng</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_pdfcrop">hook_pdfcrop</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_asciidoc">hook_plot_asciidoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_custom">hook_plot_custom</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_html">hook_plot_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_md">hook_plot_md</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_rst">hook_plot_rst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_tex">hook_plot_tex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_textile">hook_plot_textile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_plot_typst">hook_plot_typst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_pngquant">hook_pngquant</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_purl">hook_purl</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_r2swf">hook_r2swf</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hook_scianimator">hook_scianimator</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_asciidoc">hooks_asciidoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_html">hooks_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_jekyll">hooks_jekyll</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_latex">hooks_latex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_listings">hooks_listings</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_markdown">hooks_markdown</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_rst">hooks_rst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_sweave">hooks_sweave</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_textile">hooks_textile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hooks_typst">hooks_typst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#image_uri">image_uri</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#imgur_upload">imgur_upload</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#include_app">include_app</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#include_graphics">include_graphics</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#include_url">include_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inline_expr">inline_expr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_html_output">is_html_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_latex_output">is_latex_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_low_change">is_low_change</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#kable">kable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#kables">kables</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit">knit</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit2html">knit2html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit2pandoc">knit2pandoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit2pdf">knit2pdf</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit2wp">knit2wp</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_child">knit_child</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_code">knit_code</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_engines">knit_engines</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_exit">knit_exit</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_expand">knit_expand</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_filter">knit_filter</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_global">knit_global</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_hooks">knit_hooks</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_meta">knit_meta</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_meta_add">knit_meta_add</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_params">knit_params</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_params_yaml">knit_params_yaml</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_patterns">knit_patterns</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_print">knit_print</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_rd">knit_rd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_rd_all">knit_rd_all</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_theme">knit_theme</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#knit_watch">knit_watch</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#load_cache">load_cache</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#normal_print">normal_print</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#opts_chunk">opts_chunk</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#opts_current">opts_current</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#opts_hooks">opts_hooks</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#opts_knit">opts_knit</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#opts_template">opts_template</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pandoc">pandoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pandoc_from">pandoc_from</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pandoc_to">pandoc_to</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#partition_chunk">partition_chunk</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_asciidoc">pat_asciidoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_brew">pat_brew</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_html">pat_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_md">pat_md</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_rnw">pat_rnw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_rst">pat_rst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_tex">pat_tex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_textile">pat_textile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pat_typst">pat_typst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#plot_crop">plot_crop</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#purl">purl</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rand_seed">rand_seed</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#raw_block">raw_block</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#raw_html">raw_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#raw_latex">raw_latex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#raw_output">raw_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#read_chunk">read_chunk</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#read_demo">read_demo</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_asciidoc">render_asciidoc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_html">render_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_jekyll">render_jekyll</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_latex">render_latex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_listings">render_listings</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_markdown">render_markdown</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_rst">render_rst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_sweave">render_sweave</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_textile">render_textile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#render_typst">render_typst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#restore_raw_output">restore_raw_output</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rnw2pdf">rnw2pdf</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rocco">rocco</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rst2pdf">rst2pdf</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_alias">set_alias</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_header">set_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_parent">set_parent</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#sew">sew</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#spin">spin</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#spin_child">spin_child</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stitch">stitch</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stitch_rhtml">stitch_rhtml</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stitch_rmd">stitch_rmd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#wrap_rmd">wrap_rmd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#write_bib">write_bib</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>all_labels</td><td>all_labels(echo == FALSE, results != &quot;hide&quot;) after chunks a, b, and c</td><td>0.159</td><td>0.0498</td><td><button type="button" class="proof-toggle" data-name="all_labels"><span class='yes'>+220%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:31.3%'></span></div></td></tr>
+<tr><td>all_patterns</td><td>all_patterns$rnw; all_patterns$html; str(all_patterns)</td><td>0.00501</td><td>0.000264</td><td><button type="button" class="proof-toggle" data-name="all_patterns"><span class='yes'>+1797%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:5.3%'></span></div></td></tr>
+<tr><td>asis_output</td><td>asis_output(&quot;hello&quot;, meta = list(id = &quot;fig1&quot;), cacheable = FALSE)</td><td>0.0173</td><td>0.00425</td><td><button type="button" class="proof-toggle" data-name="asis_output"><span class='yes'>+307%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:24.6%'></span></div></td></tr>
+<tr><td>combine_words</td><td>combine_words(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;), before = &quot;`&quot;)</td><td>0.0675</td><td>0.0134</td><td><button type="button" class="proof-toggle" data-name="combine_words"><span class='yes'>+402%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:19.9%'></span></div></td></tr>
+<tr><td>current_input</td><td>current_input(dir = TRUE) with infile notes/report.Rmd and output.dir /work/out</td><td>0.0319</td><td>0.00127</td><td><button type="button" class="proof-toggle" data-name="current_input"><span class='yes'>+2411%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.0%'></span></div></td></tr>
+<tr><td>fig_chunk</td><td>fig_chunk(&quot;foo&quot;, &quot;png&quot;, 1:5)</td><td>0.0592</td><td>0.0237</td><td><button type="button" class="proof-toggle" data-name="fig_chunk"><span class='yes'>+150%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:40.1%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "all_labels", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_vec \u003c- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (length(x) == 0L) return(\"[]\")\n  parts \u003c- character(length(x))\n  for (i in seq_along(x)) {\n    if (is.na(x[[i]])) parts[[i]] \u003c- \"null\" else parts[[i]] \u003c- json_str(x[[i]])\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\nknit_code$restore()\nknit_code$set(\n  a = structure(\"x\", chunk_opts = list(engine = \"R\", echo = TRUE, results = \"markup\")),\n  b = structure(\"y\", chunk_opts = list(engine = \"Rcpp\", echo = FALSE, results = \"markup\")),\n  c = structure(\"z\", chunk_opts = list(engine = \"R\", echo = FALSE, results = \"hide\"))\n)\none \u003c- function() all_labels(echo == FALSE, results != \"hide\")\nvalue \u003c- one()\nwriteLines(\n  paste0(\n    \"all_labels(echo == FALSE, results != \\\"hide\\\") returns \",\n    paste(value, collapse = \", \"),\n    \".\"\n  ),\n  \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/all_labels-r.txt\"\n)\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_vec(value), median(elapsed) * 1000))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.all_labels import all_labels, chunk, knit_code\n\nknit_code.restore()\nknit_code.enclosure.clear()\nknit_code.set(\n    a=chunk(\"x\", engine=\"R\", echo=True, results=\"markup\"),\n    b=chunk(\"y\", engine=\"Rcpp\", echo=False, results=\"markup\"),\n    c=chunk(\"z\", engine=\"R\", echo=False, results=\"hide\"),\n)\n\n\ndef one():\n    return all_labels(\"echo == FALSE\", 'results != \"hide\"')\n\n\nvalue = one()\ntext = (\n    'all_labels(echo == FALSE, results != \"hide\") returns '\n    + \", \".join(value)\n    + \".\\n\"\n)\nwith open(\n    \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/all_labels-python.txt\",\n    \"w\",\n    encoding=\"utf-8\",\n) as handle:\n    handle.write(text)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "all_patterns", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_rows \u003c- function(x) {\n  rows \u003c- character()\n  for (lang in names(x)) {\n    comps \u003c- x[[lang]]\n    for (nm in names(comps)) {\n      rows \u003c- c(rows, paste0(\"[\", json_str(lang), \", \", json_str(nm), \", \", json_str(comps[[nm]]), \"]\"))\n    }\n  }\n  paste0(\"[\", paste(rows, collapse = \", \"), \"]\")\n}\none \u003c- function() all_patterns\nvalue \u003c- one()\nwriteLines(\n  paste0(\n    \"all_patterns$rnw chunk.begin is \", value$rnw$chunk.begin,\n    \" and all_patterns$html header.begin is \", value$html$header.begin,\n    \"; str(all_patterns) is a list of \", length(value), \".\"\n  ),\n  \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/all_patterns-r.txt\"\n)\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_rows(value), median(elapsed) * 1000))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.all_patterns import all_patterns\n\n\ndef one():\n    return all_patterns\n\n\ndef rows(value):\n    return [\n        [lang, name, pattern]\n        for lang, comps in value.items()\n        for name, pattern in comps.items()\n    ]\n\n\nvalue = one()\ntext = (\n    \"all_patterns$rnw chunk.begin is \"\n    + value[\"rnw\"][\"chunk.begin\"]\n    + \" and all_patterns$html header.begin is \"\n    + value[\"html\"][\"header.begin\"]\n    + \"; str(all_patterns) is a list of \"\n    + str(len(value))\n    + \".\\n\"\n)\nwith open(\n    \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/all_patterns-python.txt\",\n    \"w\",\n    encoding=\"utf-8\",\n) as handle:\n    handle.write(text)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": rows(value), \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "asis_output", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (length(s) != 1 || is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_vec \u003c- function(x) {\n  if (length(x) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(x, json_str, character(1)), collapse = \",\"), \"]\")\n}\none \u003c- function() asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE)\nvalue \u003c- one()\ncls \u003c- attr(value, \"class\", exact = TRUE)\nmeta \u003c- attr(value, \"knit_meta\", exact = TRUE)\ncache \u003c- attr(value, \"knit_cacheable\", exact = TRUE)\ncache_word \u003c- if (isTRUE(cache)) \"TRUE\" else if (identical(cache, FALSE)) \"FALSE\" else \"NA\"\nmeta_parts \u003c- character(length(meta))\nfor (i in seq_along(meta)) {\n  meta_parts[[i]] \u003c- paste0(json_str(names(meta)[[i]]), \":\", json_str(as.character(meta[[i]])))\n}\ncache_json \u003c- if (identical(cache, FALSE)) \"false\" else if (isTRUE(cache)) \"true\" else \"null\"\nwriteLines(\n  paste0(\n    \"asis_output(\\\"hello\\\", meta = list(id = \\\"fig1\\\"), cacheable = FALSE) returns \",\n    as.vector(value),\n    \" with class \",\n    paste(cls, collapse = \" \"),\n    \", meta id \",\n    meta[[\"id\"]],\n    \", and cacheable \",\n    cache_word,\n    \".\"\n  ),\n  \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/asis_output-r.txt\"\n)\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":{\"typeof\":%s,\"value\":%s,\"attributes\":%s,\"class\":%s,\"knit_meta\":{%s},\"knit_cacheable\":%s},\"median_ms\":%.17g}\\n',\n  json_str(typeof(value)),\n  json_str(as.vector(value)),\n  json_vec(names(attributes(value))),\n  json_vec(cls),\n  paste(meta_parts, collapse = \",\"),\n  cache_json,\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.asis_output import asis_output\n\n\ndef one():\n    return asis_output(\"hello\", meta={\"id\": \"fig1\"}, cacheable=False)\n\n\nvalue = one()\ncache = value.attr(\"knit_cacheable\")\nif cache is True:\n    cache_word = \"TRUE\"\n    cache_json = True\nelif cache is False:\n    cache_word = \"FALSE\"\n    cache_json = False\nelse:\n    cache_word = \"NA\"\n    cache_json = None\ncls = value.attr(\"class\")\nclass_list = [cls] if isinstance(cls, str) else list(cls)\ntext = (\n    'asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE) returns '\n    + value.value\n    + \" with class \"\n    + \" \".join(class_list)\n    + \", meta id \"\n    + value.attr(\"knit_meta\")[\"id\"]\n    + \", and cacheable \"\n    + cache_word\n    + \".\\n\"\n)\nwith open(\n    \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/asis_output-python.txt\",\n    \"w\",\n    encoding=\"utf-8\",\n) as handle:\n    handle.write(text)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\npayload = {\n    \"typeof\": \"character\" if isinstance(value.value, str) else type(value.value).__name__,\n    \"value\": value.value,\n    \"attributes\": [name for name, _ in value.attrs],\n    \"class\": class_list,\n    \"knit_meta\": value.attr(\"knit_meta\"),\n    \"knit_cacheable\": cache_json,\n}\nprint(json.dumps({\"value\": payload, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "combine_words", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\none \u003c- function() combine_words(c(\"a\", \"b\", \"c\"), before = \"`\")\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.combine_words import combine_words\n\n\ndef one():\n    return combine_words([\"a\", \"b\", \"c\"], before=\"`\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "current_input", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (is.null(s) || length(s) == 0 || is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\nkc \u003c- getFromNamespace(\"knit_concord\", \"knitr\")\nkc$restore()\nopts_knit$restore()\nkc$set(infile = \"notes/report.Rmd\")\nopts_knit$set(output.dir = \"/work/out\")\none \u003c- function() current_input(dir = TRUE)\nvalue \u003c- one()\nwriteLines(\n  paste0(\n    \"current_input(dir = TRUE) returns \",\n    value,\n    \".\"\n  ),\n  \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/current_input-r.txt\"\n)\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.current_input import current_input, knit_concord, opts_knit\n\nknit_concord.restore()\nopts_knit.restore()\nknit_concord.set(infile=\"notes/report.Rmd\")\nopts_knit.set(**{\"output.dir\": \"/work/out\"})\n\n\ndef one():\n    return current_input(dir=True)\n\n\nvalue = one()\ntext = \"current_input(dir = TRUE) returns \" + value + \".\\n\"\nwith open(\n    \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/current_input-python.txt\",\n    \"w\",\n    encoding=\"utf-8\",\n) as handle:\n    handle.write(text)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "fig_chunk", "r": "suppressPackageStartupMessages(library(knitr))\nstopifnot(as.character(packageVersion(\"knitr\")) == \"1.52\")\njson_str \u003c- function(s) {\n  if (is.na(s)) return(\"null\")\n  chars \u003c- strsplit(enc2utf8(s), \"\", fixed = TRUE)[[1]]\n  parts \u003c- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp \u003c- utf8ToInt(chars[[i]])\n    parts[[i]] \u003c- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp \u003c 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_vec \u003c- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (length(x) == 0L) return(\"[]\")\n  parts \u003c- character(length(x))\n  for (i in seq_along(x)) {\n    if (is.na(x[[i]])) parts[[i]] \u003c- \"null\" else parts[[i]] \u003c- json_str(x[[i]])\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\nopts_chunk$restore()\nopts_knit$restore()\noptions(knitr.sanitize.paths = NULL)\none \u003c- function() fig_chunk(\"foo\", \"png\", 1:5)\nvalue \u003c- one()\nwriteLines(\n  paste0(\n    \"fig_chunk(\\\"foo\\\", \\\"png\\\", 1:5) returns \",\n    paste(value, collapse = \", \"),\n    \".\"\n  ),\n  \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/fig_chunk-r.txt\"\n)\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_vec(value), median(elapsed) * 1000))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/knitr\")\nfrom knitr.fig_chunk import fig_chunk, knitr_options, opts_chunk, opts_knit\n\nopts_chunk.restore()\nopts_knit.restore()\nknitr_options.pop(\"knitr.sanitize.paths\", None)\n\n\ndef one():\n    return fig_chunk(\"foo\", \"png\", [1, 2, 3, 4, 5])\n\n\nvalue = one()\ntext = (\n    'fig_chunk(\"foo\", \"png\", 1:5) returns '\n    + \", \".join(value)\n    + \".\\n\"\n)\nwith open(\n    \"/home/ahmed/killr_projects/killr/packages/knitr/docs/output/fig_chunk-python.txt\",\n    \"w\",\n    encoding=\"utf-8\",\n) as handle:\n    handle.write(text)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="evaluate.html">evaluate</a> <span class="note">>= 0.15 · finished</span></p><p>highr <span class="note">>= 0.11 · replaced</span></p><p>methods</p><p><a href="tools.html">tools</a></p><p>xfun <span class="note">>= 0.52 · not started</span></p><p><a href="yaml.html">yaml</a> <span class="note">>= 2.1.19 · replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "Sweave2knitr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Sweave2knitr", "origin": null, "translation": null}, {"name": "all_labels", "translated": true, "not_done": "", "title": "all_labels", "origin": {"description": "Returns chunk labels whose local options satisfy every condition.", "example": "all_labels(echo == FALSE, results != \"hide\") after chunks a, b, and c", "output": "output/all_labels-r.txt", "output_blocks": [{"text": "all_labels(echo == FALSE, results != \"hide\") returns b."}]}, "translation": {"description": "Returns chunk labels whose local options satisfy every condition.", "usage": "knitr.all_labels.all_labels", "example": "all_labels(echo == FALSE, results != \"hide\") after chunks a, b, and c", "output": "output/all_labels-python.txt", "output_blocks": [{"text": "all_labels(echo == FALSE, results != \"hide\") returns b."}]}}, {"name": "all_patterns", "translated": true, "not_done": "", "title": "all_patterns", "origin": {"description": "Named list of the nine built-in document syntax patterns.", "example": "all_patterns$rnw; all_patterns$html; str(all_patterns)", "output": "output/all_patterns-r.txt", "output_blocks": [{"text": "all_patterns$rnw chunk.begin is ^\\s*\u003c\u003c(.*)>>=.*$ and all_patterns$html header.begin is \\s*\u003chead>; str(all_patterns) is a list of 9."}]}, "translation": {"description": "Named list of the nine built-in document syntax patterns.", "usage": "knitr.all_patterns.all_patterns", "example": "all_patterns$rnw; all_patterns$html; str(all_patterns)", "output": "output/all_patterns-python.txt", "output_blocks": [{"text": "all_patterns$rnw chunk.begin is ^\\s*\u003c\u003c(.*)>>=.*$ and all_patterns$html header.begin is \\s*\u003chead>; str(all_patterns) is a list of 9."}]}}, {"name": "all_rcpp_labels", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "all_rcpp_labels", "origin": null, "translation": null}, {"name": "asis_output", "translated": true, "not_done": "", "title": "asis_output", "origin": {"description": "Marks an object with class knit_asis so knitr writes it as is.", "example": "asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE)", "output": "output/asis_output-r.txt", "output_blocks": [{"text": "asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE) returns hello with class knit_asis, meta id fig1, and cacheable FALSE."}]}, "translation": {"description": "Marks an object with class knit_asis so knitr writes it as is.", "usage": "knitr.asis_output.asis_output", "example": "asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE)", "output": "output/asis_output-python.txt", "output_blocks": [{"text": "asis_output(\"hello\", meta = list(id = \"fig1\"), cacheable = FALSE) returns hello with class knit_asis, meta id fig1, and cacheable FALSE."}]}}, {"name": "cache_engines", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "cache_engines", "origin": null, "translation": null}, {"name": "clean_cache", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "clean_cache", "origin": null, "translation": null}, {"name": "combine_words", "translated": true, "not_done": "", "title": "combine_words", "origin": {"description": "Combines words into one string with a separator and a conjunction.", "example": "combine_words(c(\"a\", \"b\", \"c\"), before = \"`\")", "output": "output/combine_words-r.txt", "output_blocks": [{"text": "`a`, `b`, and `c`"}]}, "translation": {"description": "Combines words into one string with a separator and a conjunction.", "usage": "knitr.combine_words.combine_words", "example": "combine_words(c(\"a\", \"b\", \"c\"), before = \"`\")", "output": "output/combine_words-python.txt", "output_blocks": [{"text": "`a`, `b`, and `c`"}]}}, {"name": "convert_chunk_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "convert_chunk_header", "origin": null, "translation": null}, {"name": "current_input", "translated": true, "not_done": "", "title": "current_input", "origin": {"description": "Returns the name of the input file passed to knit().", "example": "current_input(dir = TRUE) with infile notes/report.Rmd and output.dir /work/out", "output": "output/current_input-r.txt", "output_blocks": [{"text": "current_input(dir = TRUE) returns /work/out/notes/report.Rmd."}]}, "translation": {"description": "Returns the name of the input file passed to knit().", "usage": "knitr.current_input.current_input", "example": "current_input(dir = TRUE) with infile notes/report.Rmd and output.dir /work/out", "output": "output/current_input-python.txt", "output_blocks": [{"text": "current_input(dir = TRUE) returns /work/out/notes/report.Rmd."}]}}, {"name": "dep_auto", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "dep_auto", "origin": null, "translation": null}, {"name": "dep_prev", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "dep_prev", "origin": null, "translation": null}, {"name": "download_image", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "download_image", "origin": null, "translation": null}, {"name": "engine_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "engine_output", "origin": null, "translation": null}, {"name": "extract_raw_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "extract_raw_output", "origin": null, "translation": null}, {"name": "fig_chunk", "translated": true, "not_done": "", "title": "fig_chunk", "origin": {"description": "Returns the figure filenames for a chunk label, extension, and figure numbers.", "example": "fig_chunk(\"foo\", \"png\", 1:5)", "output": "output/fig_chunk-r.txt", "output_blocks": [{"text": "fig_chunk(\"foo\", \"png\", 1:5) returns figure/foo-1.png, figure/foo-2.png, figure/foo-3.png, figure/foo-4.png, figure/foo-5.png."}]}, "translation": {"description": "Returns the figure filenames for a chunk label, extension, and figure numbers.", "usage": "knitr.fig_chunk.fig_chunk", "example": "fig_chunk(\"foo\", \"png\", 1:5)", "output": "output/fig_chunk-python.txt", "output_blocks": [{"text": "fig_chunk(\"foo\", \"png\", 1:5) returns figure/foo-1.png, figure/foo-2.png, figure/foo-3.png, figure/foo-4.png, figure/foo-5.png."}]}}, {"name": "fig_path", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "fig_path", "origin": null, "translation": null}, {"name": "hook_ffmpeg_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_ffmpeg_html", "origin": null, "translation": null}, {"name": "hook_gifski", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_gifski", "origin": null, "translation": null}, {"name": "hook_mogrify", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_mogrify", "origin": null, "translation": null}, {"name": "hook_movecode", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_movecode", "origin": null, "translation": null}, {"name": "hook_optipng", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_optipng", "origin": null, "translation": null}, {"name": "hook_pdfcrop", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_pdfcrop", "origin": null, "translation": null}, {"name": "hook_plot_asciidoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_asciidoc", "origin": null, "translation": null}, {"name": "hook_plot_custom", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_custom", "origin": null, "translation": null}, {"name": "hook_plot_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_html", "origin": null, "translation": null}, {"name": "hook_plot_md", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_md", "origin": null, "translation": null}, {"name": "hook_plot_rst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_rst", "origin": null, "translation": null}, {"name": "hook_plot_tex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_tex", "origin": null, "translation": null}, {"name": "hook_plot_textile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_textile", "origin": null, "translation": null}, {"name": "hook_plot_typst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_plot_typst", "origin": null, "translation": null}, {"name": "hook_pngquant", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_pngquant", "origin": null, "translation": null}, {"name": "hook_purl", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_purl", "origin": null, "translation": null}, {"name": "hook_r2swf", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_r2swf", "origin": null, "translation": null}, {"name": "hook_scianimator", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hook_scianimator", "origin": null, "translation": null}, {"name": "hooks_asciidoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_asciidoc", "origin": null, "translation": null}, {"name": "hooks_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_html", "origin": null, "translation": null}, {"name": "hooks_jekyll", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_jekyll", "origin": null, "translation": null}, {"name": "hooks_latex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_latex", "origin": null, "translation": null}, {"name": "hooks_listings", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_listings", "origin": null, "translation": null}, {"name": "hooks_markdown", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_markdown", "origin": null, "translation": null}, {"name": "hooks_rst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_rst", "origin": null, "translation": null}, {"name": "hooks_sweave", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_sweave", "origin": null, "translation": null}, {"name": "hooks_textile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_textile", "origin": null, "translation": null}, {"name": "hooks_typst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hooks_typst", "origin": null, "translation": null}, {"name": "image_uri", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "image_uri", "origin": null, "translation": null}, {"name": "imgur_upload", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "imgur_upload", "origin": null, "translation": null}, {"name": "include_app", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "include_app", "origin": null, "translation": null}, {"name": "include_graphics", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "include_graphics", "origin": null, "translation": null}, {"name": "include_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "include_url", "origin": null, "translation": null}, {"name": "inline_expr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inline_expr", "origin": null, "translation": null}, {"name": "is_html_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_html_output", "origin": null, "translation": null}, {"name": "is_latex_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_latex_output", "origin": null, "translation": null}, {"name": "is_low_change", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_low_change", "origin": null, "translation": null}, {"name": "kable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "kable", "origin": null, "translation": null}, {"name": "kables", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "kables", "origin": null, "translation": null}, {"name": "knit", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit", "origin": null, "translation": null}, {"name": "knit2html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit2html", "origin": null, "translation": null}, {"name": "knit2pandoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit2pandoc", "origin": null, "translation": null}, {"name": "knit2pdf", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit2pdf", "origin": null, "translation": null}, {"name": "knit2wp", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit2wp", "origin": null, "translation": null}, {"name": "knit_child", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_child", "origin": null, "translation": null}, {"name": "knit_code", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_code", "origin": null, "translation": null}, {"name": "knit_engines", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_engines", "origin": null, "translation": null}, {"name": "knit_exit", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_exit", "origin": null, "translation": null}, {"name": "knit_expand", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_expand", "origin": null, "translation": null}, {"name": "knit_filter", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_filter", "origin": null, "translation": null}, {"name": "knit_global", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_global", "origin": null, "translation": null}, {"name": "knit_hooks", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_hooks", "origin": null, "translation": null}, {"name": "knit_meta", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_meta", "origin": null, "translation": null}, {"name": "knit_meta_add", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_meta_add", "origin": null, "translation": null}, {"name": "knit_params", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_params", "origin": null, "translation": null}, {"name": "knit_params_yaml", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_params_yaml", "origin": null, "translation": null}, {"name": "knit_patterns", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_patterns", "origin": null, "translation": null}, {"name": "knit_print", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_print", "origin": null, "translation": null}, {"name": "knit_rd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_rd", "origin": null, "translation": null}, {"name": "knit_rd_all", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_rd_all", "origin": null, "translation": null}, {"name": "knit_theme", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_theme", "origin": null, "translation": null}, {"name": "knit_watch", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "knit_watch", "origin": null, "translation": null}, {"name": "load_cache", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "load_cache", "origin": null, "translation": null}, {"name": "normal_print", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "normal_print", "origin": null, "translation": null}, {"name": "opts_chunk", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "opts_chunk", "origin": null, "translation": null}, {"name": "opts_current", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "opts_current", "origin": null, "translation": null}, {"name": "opts_hooks", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "opts_hooks", "origin": null, "translation": null}, {"name": "opts_knit", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "opts_knit", "origin": null, "translation": null}, {"name": "opts_template", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "opts_template", "origin": null, "translation": null}, {"name": "pandoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pandoc", "origin": null, "translation": null}, {"name": "pandoc_from", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pandoc_from", "origin": null, "translation": null}, {"name": "pandoc_to", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pandoc_to", "origin": null, "translation": null}, {"name": "partition_chunk", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "partition_chunk", "origin": null, "translation": null}, {"name": "pat_asciidoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_asciidoc", "origin": null, "translation": null}, {"name": "pat_brew", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_brew", "origin": null, "translation": null}, {"name": "pat_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_html", "origin": null, "translation": null}, {"name": "pat_md", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_md", "origin": null, "translation": null}, {"name": "pat_rnw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_rnw", "origin": null, "translation": null}, {"name": "pat_rst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_rst", "origin": null, "translation": null}, {"name": "pat_tex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_tex", "origin": null, "translation": null}, {"name": "pat_textile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_textile", "origin": null, "translation": null}, {"name": "pat_typst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pat_typst", "origin": null, "translation": null}, {"name": "plot_crop", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "plot_crop", "origin": null, "translation": null}, {"name": "purl", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "purl", "origin": null, "translation": null}, {"name": "rand_seed", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rand_seed", "origin": null, "translation": null}, {"name": "raw_block", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "raw_block", "origin": null, "translation": null}, {"name": "raw_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "raw_html", "origin": null, "translation": null}, {"name": "raw_latex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "raw_latex", "origin": null, "translation": null}, {"name": "raw_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "raw_output", "origin": null, "translation": null}, {"name": "read_chunk", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "read_chunk", "origin": null, "translation": null}, {"name": "read_demo", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "read_demo", "origin": null, "translation": null}, {"name": "render_asciidoc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_asciidoc", "origin": null, "translation": null}, {"name": "render_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_html", "origin": null, "translation": null}, {"name": "render_jekyll", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_jekyll", "origin": null, "translation": null}, {"name": "render_latex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_latex", "origin": null, "translation": null}, {"name": "render_listings", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_listings", "origin": null, "translation": null}, {"name": "render_markdown", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_markdown", "origin": null, "translation": null}, {"name": "render_rst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_rst", "origin": null, "translation": null}, {"name": "render_sweave", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_sweave", "origin": null, "translation": null}, {"name": "render_textile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_textile", "origin": null, "translation": null}, {"name": "render_typst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "render_typst", "origin": null, "translation": null}, {"name": "restore_raw_output", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "restore_raw_output", "origin": null, "translation": null}, {"name": "rnw2pdf", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rnw2pdf", "origin": null, "translation": null}, {"name": "rocco", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rocco", "origin": null, "translation": null}, {"name": "rst2pdf", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rst2pdf", "origin": null, "translation": null}, {"name": "set_alias", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_alias", "origin": null, "translation": null}, {"name": "set_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_header", "origin": null, "translation": null}, {"name": "set_parent", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_parent", "origin": null, "translation": null}, {"name": "sew", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "sew", "origin": null, "translation": null}, {"name": "spin", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "spin", "origin": null, "translation": null}, {"name": "spin_child", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "spin_child", "origin": null, "translation": null}, {"name": "stitch", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stitch", "origin": null, "translation": null}, {"name": "stitch_rhtml", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stitch_rhtml", "origin": null, "translation": null}, {"name": "stitch_rmd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stitch_rmd", "origin": null, "translation": null}, {"name": "wrap_rmd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "wrap_rmd", "origin": null, "translation": null}, {"name": "write_bib", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "write_bib", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

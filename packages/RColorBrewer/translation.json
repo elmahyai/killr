@@ -1,0 +1,120 @@
+{
+  "name": "RColorBrewer",
+  "cran_version": "1.1-3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked brewer.pal, brewer.pal.info, display.brewer.pal, and display.brewer.all.",
+  "functions": [
+    {
+      "name": "brewer.pal",
+      "translated": true,
+      "python": "RColorBrewer.brewer.brewer_pal",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the ColorBrewer hex colors for a palette name and a count, warning when the count is below 3 or above that palette's maximum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "brewer.pal(7, \"Greens\"), every palette from 3 through its maximum and one past that maximum, plus counts below 3, non-integers, and invalid names",
+        "r_ms": 0.03159046173095703,
+        "translated_ms": 0.0020950001271557994,
+        "speedup": 15.078978431301897,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(RColorBrewer))\nstopifnot(packageDescription(\"RColorBrewer\")$Version == \"1.1-3\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\njson_str <- function(s) {\n  if (length(s) != 1) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() brewer.pal(7, \"Greens\")\nvalue <- one()\nwriteLines(\n  paste0('brewer.pal(7, \"Greens\") returns ', paste(value, collapse = \" \"), \".\"),\n  file.path(out_dir, \"brewer.pal-r.txt\")\n)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nrun <- function(label, n, name) {\n  warns <- character()\n  result <- tryCatch(\n    withCallingHandlers(\n      brewer.pal(n, name),\n      warning = function(w) {\n        warns <<- c(warns, conditionMessage(w))\n        invokeRestart(\"muffleWarning\")\n      }\n    ),\n    error = function(e) structure(conditionMessage(e), class = \"bp_error\")\n  )\n  warn <- if (length(warns) == 0) NULL else paste(warns, collapse = \"\")\n  if (inherits(result, \"bp_error\")) {\n    list(label = label, colors = NULL, warning = warn, error = as.character(result)[[1]])\n  } else {\n    list(label = label, colors = as.character(result), warning = warn, error = NULL)\n  }\n}\n\ncase_json <- function(item) {\n  colors <- if (is.null(item$colors)) {\n    \"null\"\n  } else {\n    paste0(\"[\", paste(vapply(item$colors, json_str, \"\"), collapse = \",\"), \"]\")\n  }\n  warning <- if (is.null(item$warning)) \"null\" else json_str(item$warning)\n  error <- if (is.null(item$error)) \"null\" else json_str(item$error)\n  paste0(\n    '{\"label\":', json_str(item$label),\n    ',\"colors\":', colors,\n    ',\"warning\":', warning,\n    ',\"error\":', error, \"}\"\n  )\n}\n\ncases <- list()\npush <- function(label, n, name) {\n  cases[[length(cases) + 1]] <<- run(label, n, name)\n}\n\ninfo <- brewer.pal.info\nfor (name in rownames(info)) {\n  limit <- info[name, \"maxcolors\"]\n  for (n in 3:limit) push(paste0(name, \":\", n), n, name)\n  push(paste0(name, \":max+1\"), limit + 1L, name)\n}\npush(\"min:1:Blues\", 1, \"Blues\")\npush(\"min:2:Blues\", 2, \"Blues\")\npush(\"min:0:Blues\", 0, \"Blues\")\npush(\"min:-1:Set1\", -1, \"Set1\")\npush(\"min:-Inf:Blues\", -Inf, \"Blues\")\npush(\"min:2.999:Greens\", 2.999, \"Greens\")\npush(\"max:100:Blues\", 100, \"Blues\")\npush(\"max:Inf:Blues\", Inf, \"Blues\")\npush(\"max:1e20:Set3\", 1e20, \"Set3\")\npush(\"trunc:3.9:Greens\", 3.9, \"Greens\")\npush(\"trunc:8.2:Blues\", 8.2, \"Blues\")\npush(\"trunc:8.999:Blues\", 8.999, \"Blues\")\npush(\"int:Greens\", 7L, \"Greens\")\npush(\"vec:Greens\", c(7), \"Greens\")\npush(\"namevec:Greens\", 7, c(\"Greens\"))\npush(\"true:Blues\", TRUE, \"Blues\")\npush(\"false:Reds\", FALSE, \"Reds\")\npush(\"bad:nope\", 5, \"nope\")\npush(\"bad:Blue\", 4, \"Blue\")\npush(\"bad:blues\", 4, \"blues\")\npush(\"bad:empty\", 4, \"\")\npush(\"bad:NA\", 5, NA_character_)\npush(\"null:name\", 5, NULL)\npush(\"null:n\", NULL, \"Blues\")\npush(\"char:n\", \"7\", \"Greens\")\npush(\"len:n\", c(4, 5), \"Blues\")\npush(\"len:name\", 4, c(\"Blues\", \"Reds\"))\npush(\"na:n\", NA_real_, \"Blues\")\npush(\"nan:n\", NaN, \"Set1\")\n\nvalue_json <- paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\ncases_json <- paste0(\"[\", paste(vapply(cases, case_json, \"\"), collapse = \",\"), \"]\")\ncat(sprintf(\n  '{\"value\":%s,\"cases\":%s,\"median_ms\":%.17g}\\n',\n  value_json,\n  cases_json,\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom RColorBrewer.brewer import BrewerPalError, brewer_pal\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\nORDER = (\n    \"BrBG\", \"PiYG\", \"PRGn\", \"PuOr\", \"RdBu\", \"RdGy\", \"RdYlBu\", \"RdYlGn\", \"Spectral\",\n    \"Accent\", \"Dark2\", \"Paired\", \"Pastel1\", \"Pastel2\", \"Set1\", \"Set2\", \"Set3\",\n    \"Blues\", \"BuGn\", \"BuPu\", \"GnBu\", \"Greens\", \"Greys\", \"Oranges\", \"OrRd\",\n    \"PuBu\", \"PuBuGn\", \"PuRd\", \"Purples\", \"RdPu\", \"Reds\", \"YlGn\", \"YlGnBu\", \"YlOrBr\", \"YlOrRd\",\n)\nMAX = {\n    \"BrBG\": 11, \"PiYG\": 11, \"PRGn\": 11, \"PuOr\": 11, \"RdBu\": 11, \"RdGy\": 11,\n    \"RdYlBu\": 11, \"RdYlGn\": 11, \"Spectral\": 11, \"Accent\": 8, \"Dark2\": 8,\n    \"Paired\": 12, \"Pastel1\": 9, \"Pastel2\": 8, \"Set1\": 9, \"Set2\": 8, \"Set3\": 12,\n    \"Blues\": 9, \"BuGn\": 9, \"BuPu\": 9, \"GnBu\": 9, \"Greens\": 9, \"Greys\": 9,\n    \"Oranges\": 9, \"OrRd\": 9, \"PuBu\": 9, \"PuBuGn\": 9, \"PuRd\": 9, \"Purples\": 9,\n    \"RdPu\": 9, \"Reds\": 9, \"YlGn\": 9, \"YlGnBu\": 9, \"YlOrBr\": 9, \"YlOrRd\": 9,\n}\n\n\ndef one():\n    return brewer_pal(7, \"Greens\")\n\n\ndef run(label, n, name):\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        try:\n            colors = brewer_pal(n, name)\n        except BrewerPalError as exc:\n            warn = \"\".join(str(item.message) for item in caught) or None\n            return {\"label\": label, \"colors\": None, \"warning\": warn, \"error\": str(exc)}\n    warn = \"\".join(str(item.message) for item in caught) or None\n    return {\"label\": label, \"colors\": colors, \"warning\": warn, \"error\": None}\n\n\nvalue = one()\n(OUT / \"brewer.pal-python.txt\").write_text(\n    'brewer.pal(7, \"Greens\") returns ' + \" \".join(value) + \".\\n\"\n)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\ncases = []\nfor name in ORDER:\n    limit = MAX[name]\n    for n in range(3, limit + 1):\n        cases.append(run(f\"{name}:{n}\", n, name))\n    cases.append(run(f\"{name}:max+1\", limit + 1, name))\n\ncases.extend(\n    [\n        run(\"min:1:Blues\", 1, \"Blues\"),\n        run(\"min:2:Blues\", 2, \"Blues\"),\n        run(\"min:0:Blues\", 0, \"Blues\"),\n        run(\"min:-1:Set1\", -1, \"Set1\"),\n        run(\"min:-Inf:Blues\", -math.inf, \"Blues\"),\n        run(\"min:2.999:Greens\", 2.999, \"Greens\"),\n        run(\"max:100:Blues\", 100, \"Blues\"),\n        run(\"max:Inf:Blues\", math.inf, \"Blues\"),\n        run(\"max:1e20:Set3\", 1e20, \"Set3\"),\n        run(\"trunc:3.9:Greens\", 3.9, \"Greens\"),\n        run(\"trunc:8.2:Blues\", 8.2, \"Blues\"),\n        run(\"trunc:8.999:Blues\", 8.999, \"Blues\"),\n        run(\"int:Greens\", 7, \"Greens\"),\n        run(\"vec:Greens\", [7], \"Greens\"),\n        run(\"namevec:Greens\", 7, [\"Greens\"]),\n        run(\"true:Blues\", True, \"Blues\"),\n        run(\"false:Reds\", False, \"Reds\"),\n        run(\"bad:nope\", 5, \"nope\"),\n        run(\"bad:Blue\", 4, \"Blue\"),\n        run(\"bad:blues\", 4, \"blues\"),\n        run(\"bad:empty\", 4, \"\"),\n        run(\"bad:NA\", 5, \"NA\"),\n        run(\"null:name\", 5, None),\n        run(\"null:n\", None, \"Blues\"),\n        run(\"char:n\", \"7\", \"Greens\"),\n        run(\"len:n\", [4, 5], \"Blues\"),\n        run(\"len:name\", 4, [\"Blues\", \"Reds\"]),\n        run(\"na:n\", float(\"nan\"), \"Blues\"),\n        run(\"nan:n\", float(\"nan\"), \"Set1\"),\n    ]\n)\n\nprint(json.dumps({\"value\": value, \"cases\": cases, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "display.brewer.pal",
+      "translated": true,
+      "python": "RColorBrewer.brewer.display_brewer_pal",
+      "loads": [],
+      "uses": [],
+      "done": "Draws the ColorBrewer strip with Matplotlib. The axis limits match R image usr.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "display.brewer.pal(7, \"Greens\"), sRGB channels 0-1 plus par(\"usr\")",
+        "r_ms": 1.1990070343017578,
+        "translated_ms": 12.205146499582042,
+        "speedup": 0.09823782404765212,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(RColorBrewer))\nstopifnot(packageDescription(\"RColorBrewer\")$Version == \"1.1-3\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() {\n  pdf(NULL)\n  display.brewer.pal(7, \"Greens\")\n  usr <- par(\"usr\")\n  dev.off()\n  cols <- brewer.pal(7, \"Greens\")\n  c(as.numeric(col2rgb(cols)) / 255, usr)\n}\n\ninvisible(capture.output({\n  svg(file.path(out_dir, \"display.brewer.pal-r.svg\"), width = 7, height = 2)\n  par(mar = c(2, 0, 0, 0))\n  display.brewer.pal(7, \"Greens\")\n  dev.off()\n}))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nfrom RColorBrewer.brewer import display_brewer_pal\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    drawn = display_brewer_pal(7, \"Greens\", draw=True)\n    plt.close(drawn[\"figure\"])\n    return drawn[\"rgb\"] + drawn[\"usr\"]\n\n\ndrawn = display_brewer_pal(7, \"Greens\", draw=True)\ndrawn[\"figure\"].savefig(OUT / \"display.brewer.pal-python.svg\", format=\"svg\")\nplt.close(drawn[\"figure\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/display.brewer.pal-r.svg"
+      },
+      "translation": {
+        "output": "output/display.brewer.pal-python.svg"
+      }
+    },
+    {
+      "name": "display.brewer.all",
+      "translated": true,
+      "python": "RColorBrewer.brewer.display_brewer_all",
+      "loads": [],
+      "uses": [],
+      "done": "Draws every ColorBrewer palette. The axis limits match R image usr.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "display.brewer.all() default \u2014 all palette sRGB channels 0\u20131 plus par(\"usr\")",
+        "r_ms": 7.373929023742676,
+        "translated_ms": 279.9222594994717,
+        "speedup": 0.026342774729412304,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(RColorBrewer))\nstopifnot(packageDescription(\"RColorBrewer\")$Version == \"1.1-3\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nbrewer_all_rgb <- function(n = NULL, type = \"all\", select = NULL, exact.n = TRUE,\n                           colorblindFriendly = FALSE) {\n  gaplist <- \"\"\n  totallist <- c(RColorBrewer:::divlist, gaplist, RColorBrewer:::quallist, gaplist,\n                 RColorBrewer:::seqlist)\n  gapnum <- max(c(RColorBrewer:::divnum, RColorBrewer:::qualnum, RColorBrewer:::seqnum))\n  totnum <- c(RColorBrewer:::divnum, gapnum, RColorBrewer:::qualnum, gapnum,\n              RColorBrewer:::seqnum)\n  names(totnum) <- names(totallist)\n  colorlist <- switch(type,\n    div = RColorBrewer:::divlist,\n    qual = RColorBrewer:::quallist,\n    seq = RColorBrewer:::seqlist,\n    all = totallist\n  )\n  maxnum <- switch(type,\n    div = RColorBrewer:::divnum,\n    qual = RColorBrewer:::qualnum,\n    seq = RColorBrewer:::seqnum,\n    all = totnum\n  )\n  if (!is.null(select)) {\n    colorlist <- colorlist[select]\n    maxnum <- maxnum[select]\n  }\n  if (colorblindFriendly) {\n    keep <- names(colorlist) %in% c(RColorBrewer:::colorblindlist, \"gap1\", \"gap2\")\n    colorlist <- colorlist[keep]\n    maxnum <- maxnum[keep]\n  }\n  if (is.null(n)) n <- maxnum\n  if (length(n) == 1) n <- rep(n, length(colorlist))\n  if (exact.n) {\n    keep <- n <= maxnum\n    colorlist <- colorlist[keep]\n    n <- n[keep]\n    maxnum <- maxnum[keep]\n  }\n  n[n < 3] <- 3\n  n[n > maxnum] <- maxnum[n > maxnum]\n  rgb <- numeric()\n  for (i in seq_along(colorlist)) {\n    if (colorlist[[i]] == \"\") next\n    cols <- brewer.pal(n[[i]], colorlist[[i]])\n    rgb <- c(rgb, as.numeric(col2rgb(cols)) / 255)\n  }\n  rgb\n}\n\none <- function() {\n  pdf(NULL)\n  display.brewer.all()\n  usr <- par(\"usr\")\n  dev.off()\n  c(brewer_all_rgb(), usr)\n}\n\ninvisible(capture.output({\n  svg(file.path(out_dir, \"display.brewer.all-r.svg\"), width = 12, height = 10)\n  par(mar = c(1, 4, 1, 1))\n  display.brewer.all()\n  dev.off()\n}))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nfrom RColorBrewer.brewer import display_brewer_all\n\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    drawn = display_brewer_all(draw=True)\n    plt.close(drawn[\"figure\"])\n    return drawn[\"rgb\"] + drawn[\"usr\"]\n\n\ndrawn = display_brewer_all(draw=True)\ndrawn[\"figure\"].savefig(OUT / \"display.brewer.all-python.svg\", format=\"svg\")\nplt.close(drawn[\"figure\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/display.brewer.all-r.svg"
+      },
+      "translation": {
+        "output": "output/display.brewer.all-python.svg"
+      }
+    },
+    {
+      "name": "brewer.pal.info",
+      "translated": true,
+      "python": "RColorBrewer.brewer.brewer_pal_info",
+      "loads": [],
+      "uses": [],
+      "done": "Exposes the ColorBrewer palette metadata table with maxcolors, category, and colorblind in R row order, including NA fields for unknown names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "brewer.pal.info, the Blues row, Blues maxcolors, and the missing row nope",
+        "r_ms": 0.11074542999267578,
+        "translated_ms": 0.010120499609911349,
+        "speedup": 10.94268408292996,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(RColorBrewer))\nstopifnot(packageDescription(\"RColorBrewer\")$Version == \"1.1-3\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\njson_str <- function(s) {\n  if (length(s) != 1) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\ncapture_example <- function() {\n  out <- capture.output({\n    print(brewer.pal.info)\n    print(brewer.pal.info[\"Blues\",])\n    print(brewer.pal.info[\"Blues\",]$maxcolors)\n  })\n  paste(out, collapse = \"\\n\")\n}\n\none <- function() {\n  info <- brewer.pal.info\n  c(\n    as.integer(info$maxcolors),\n    as.integer(info$colorblind),\n    as.integer(brewer.pal.info[\"Blues\",]$maxcolors)\n  )\n}\n\nwriteLines(capture_example(), file.path(out_dir, \"brewer.pal.info-r.txt\"))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nrow_json <- function(name) {\n  row <- brewer.pal.info[name, ]\n  paste0(\n    '{\"name\":', json_str(name),\n    ',\"maxcolors\":', if (is.na(row$maxcolors)) \"null\" else as.integer(row$maxcolors),\n    ',\"category\":', if (is.na(row$category)) \"null\" else json_str(as.character(row$category)),\n    ',\"colorblind\":', if (is.na(row$colorblind)) \"null\" else tolower(as.character(row$colorblind)),\n    \"}\"\n  )\n}\n\ncases <- list(\n  list(\n    label = \"full\",\n    rownames = rownames(brewer.pal.info),\n    maxcolors = as.integer(brewer.pal.info$maxcolors),\n    category = as.character(brewer.pal.info$category),\n    colorblind = as.integer(brewer.pal.info$colorblind)\n  ),\n  list(\n    label = \"Blues\",\n    row = row_json(\"Blues\")\n  ),\n  list(\n    label = \"Blues_maxcolors\",\n    value = as.integer(brewer.pal.info[\"Blues\",]$maxcolors)\n  ),\n  list(\n    label = \"missing\",\n    row = row_json(\"nope\")\n  )\n)\n\ncase_json <- function(item) {\n  if (item$label == \"full\") {\n    rn <- paste0(\"[\", paste(vapply(item$rownames, json_str, \"\"), collapse = \",\"), \"]\")\n    mc <- paste0(\"[\", paste(item$maxcolors, collapse = \",\"), \"]\")\n    cat <- paste0(\"[\", paste(vapply(item$category, json_str, \"\"), collapse = \",\"), \"]\")\n    cb <- paste0(\"[\", paste(item$colorblind, collapse = \",\"), \"]\")\n    paste0(\n      '{\"label\":', json_str(item$label),\n      ',\"rownames\":', rn,\n      ',\"maxcolors\":', mc,\n      ',\"category\":', cat,\n      ',\"colorblind\":', cb, \"}\"\n    )\n  } else if (item$label == \"Blues_maxcolors\") {\n    paste0(\n      '{\"label\":', json_str(item$label),\n      ',\"value\":', item$value, \"}\"\n    )\n  } else {\n    paste0('{\"label\":', json_str(item$label), ',\"row\":', item$row, \"}\")\n  }\n}\n\nvalue_json <- paste0(\"[\", paste(value, collapse = \",\"), \"]\")\ncases_json <- paste0(\"[\", paste(vapply(cases, case_json, \"\"), collapse = \",\"), \"]\")\ncat(sprintf(\n  '{\"value\":%s,\"cases\":%s,\"median_ms\":%.17g}\\n',\n  value_json,\n  cases_json,\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom io import StringIO\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom RColorBrewer.brewer import (\n    brewer_pal_info,\n    format_brewer_pal_info,\n    format_brewer_pal_info_row,\n)\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\n\ndef row_json(name):\n    row = brewer_pal_info[name]\n    return {\n        \"name\": name,\n        \"maxcolors\": row.maxcolors,\n        \"category\": row.category,\n        \"colorblind\": row.colorblind,\n    }\n\n\ndef one():\n    info = brewer_pal_info\n    blues = brewer_pal_info[\"Blues\"].maxcolors\n    return info.maxcolors + [int(bool(v)) for v in info.colorblind] + [blues]\n\n\ndef capture_example():\n    buffer = StringIO()\n    buffer.write(format_brewer_pal_info(brewer_pal_info))\n    buffer.write(format_brewer_pal_info_row(brewer_pal_info, \"Blues\"))\n    buffer.write(f\"[1] {brewer_pal_info['Blues'].maxcolors}\\n\")\n    return buffer.getvalue()\n\n\n(OUT / \"brewer.pal.info-python.txt\").write_text(capture_example())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\ncases = [\n    {\n        \"label\": \"full\",\n        \"rownames\": brewer_pal_info.row_names(),\n        \"maxcolors\": brewer_pal_info.maxcolors,\n        \"category\": brewer_pal_info.category,\n        \"colorblind\": [int(v) for v in brewer_pal_info.colorblind],\n    },\n    {\"label\": \"Blues\", \"row\": row_json(\"Blues\")},\n    {\"label\": \"Blues_maxcolors\", \"value\": brewer_pal_info[\"Blues\"].maxcolors},\n    {\"label\": \"missing\", \"row\": row_json(\"nope\")},\n]\n\nprint(json.dumps({\"value\": value, \"cases\": cases, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small"
+}

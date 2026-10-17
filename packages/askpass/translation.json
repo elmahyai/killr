@@ -1,0 +1,68 @@
+{
+  "name": "askpass",
+  "cran_version": "1.2.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Both exports of askpass 1.2.1 are done. A non-interactive session returns None. An interactive prompt uses getpass. Linux has no bundled helper, so ssh_askpass is None. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "getpass",
+      "subprocess",
+      "termios"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "askpass",
+      "translated": true,
+      "python": "askpass.askpass",
+      "loads": [],
+      "uses": [],
+      "done": "Ask for a password. Non-interactive sessions return None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "non-interactive askpass is NULL",
+        "r_ms": 0.04208087921142578,
+        "translated_ms": 0.000691999048285652,
+        "speedup": 60.81060272507067,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(askpass))\none <- function() {\n  is.null(askpass(\"x\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport askpass as ask\nask.options['rlib_interactive'] = False\n\ndef one():\n        return \"TRUE\" if ask.askpass(\"x\") is None else \"FALSE\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nif isinstance(value, (list, tuple)):\n    shown = \"|\".join(\"\" if item is None else str(item) for item in value)\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ssh_askpass",
+      "translated": true,
+      "python": "askpass.ssh_askpass",
+      "loads": [],
+      "uses": [],
+      "done": "Path of the bundled helper. On Linux this is None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Linux ssh_askpass is NULL",
+        "r_ms": 0.10526180267333984,
+        "translated_ms": 0.000648000423097983,
+        "speedup": 162.44094744583737,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(askpass))\none <- function() {\n  is.null(ssh_askpass())\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom askpass import ssh_askpass\n\ndef one():\n        return \"TRUE\" if ssh_askpass() is None else \"FALSE\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nif isinstance(value, (list, tuple)):\n    shown = \"|\".join(\"\" if item is None else str(item) for item in value)\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

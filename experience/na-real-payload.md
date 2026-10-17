@@ -1,0 +1,1 @@
+R's NA real has low 32 bits 1954. A plain NaN is a different value. `log` of a negative is a positive NaN in R and a negative NaN in NumPy. Integer overflow wraps, and `-2147483648` is often `NA_integer_` because matrixStats defines `R_INT_MIN` as `-INT_MAX`.

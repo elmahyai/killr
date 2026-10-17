@@ -1,0 +1,18 @@
+.libPaths(c(path.expand("~/R/library"), .libPaths()))
+suppressPackageStartupMessages(library(openssl))
+one <- function() {
+  k1 <- read_x25519_key(as.raw(1:32))
+  k2 <- read_x25519_key(as.raw(32:1))
+  paste(as.integer(ec_dh(k1, k2$pubkey)), collapse = ",")
+}
+value <- one()
+elapsed <- numeric(20)
+for (i in seq_len(20)) {
+  t0 <- as.numeric(Sys.time())
+  one()
+  elapsed[[i]] <- as.numeric(Sys.time()) - t0
+}
+shown <- enc2utf8(paste(as.character(value), collapse = "|"))
+shown <- gsub("\n", " / ", shown, fixed = TRUE)
+cat("VALUE ", shown, "\n", sep = "")
+cat(sprintf("MS %.17g\n", median(elapsed) * 1000))

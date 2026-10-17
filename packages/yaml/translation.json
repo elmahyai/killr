@@ -1,0 +1,168 @@
+{
+  "name": "yaml",
+  "cran_version": "2.3.12",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN yaml 2.3.12 is inventoried. All 6 exports are checked. PyYAML parses the events. yes, no, 1:20, and as.yaml's layout follow the R package. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "pyyaml"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "as.yaml",
+      "translated": true,
+      "python": "r_yaml.as_yaml",
+      "loads": [],
+      "uses": [],
+      "done": "Writes yes and no, quotes strings whose implicit tag is not a string, and keeps each atomic vector as a sequence.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "foo is 1 through 10 and bar is test1, test2",
+        "r_ms": 0.09071826934814453,
+        "translated_ms": 0.17611349994695047,
+        "speedup": 0.5151125233186042,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\none <- function() {\n  txt <- as.yaml(list(foo = 1:10, bar = c(\"test1\", \"test2\")))\n  gsub(\"\\n\", \"|\", sub(\"\\n$\", \"\", txt))\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom r_yaml import as_yaml\nfrom r_yaml.types import Vector\n\nvalue = {\n    \"foo\": Vector(list(range(1, 11)), \"integer\"),\n    \"bar\": Vector([\"test1\", \"test2\"], \"character\"),\n}\n\ndef one():\n    return as_yaml(value).rstrip(\"\\n\").replace(\"\\n\", \"|\")\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "read_yaml",
+      "translated": true,
+      "python": "r_yaml.read_yaml",
+      "loads": [],
+      "uses": [
+        "pyyaml"
+      ],
+      "done": "Reads a path or the text argument, joins the lines, and parses them with yaml_load.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a file with flag y and octal 015",
+        "r_ms": 0.14603137969970703,
+        "translated_ms": 0.5533690000447677,
+        "speedup": 0.2638951218588194,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\npath <- tempfile()\nwriteLines(c(\"flag: y\", \"oct: 015\"), path)\none <- function() {\n  value <- read_yaml(path)\n  paste(value$flag, value$oct, sep = \",\")\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport tempfile\nimport time\nfrom pathlib import Path\n\nfrom r_yaml import read_yaml\n\npath = tempfile.mktemp(suffix=\".yml\")\nPath(path).write_text(\"flag: y\\noct: 015\\n\", encoding=\"utf-8\")\n\ndef one():\n    value = read_yaml(path)\n    flag = \"TRUE\" if value[\"flag\"] else \"FALSE\"\n    return f\"{flag},{value['oct']}\"\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "verbatim_logical",
+      "translated": true,
+      "python": "r_yaml.verbatim_logical",
+      "loads": [],
+      "uses": [],
+      "done": "Turns TRUE and FALSE into the unquoted words true and false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "TRUE and FALSE passed through the logical handler",
+        "r_ms": 0.11169910430908203,
+        "translated_ms": 0.01488350062572863,
+        "speedup": 7.504894656032155,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\none <- function() {\n  txt <- as.yaml(c(TRUE, FALSE), handlers = list(logical = verbatim_logical))\n  gsub(\"\\n\", \"|\", sub(\"\\n$\", \"\", txt))\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom r_yaml import as_yaml, verbatim_logical\nfrom r_yaml.types import Vector\n\ndef one():\n    text = as_yaml(Vector([True, False], \"logical\"), handlers={\"logical\": verbatim_logical})\n    return text.rstrip(\"\\n\").replace(\"\\n\", \"|\")\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "write_yaml",
+      "translated": true,
+      "python": "r_yaml.write_yaml",
+      "loads": [],
+      "uses": [],
+      "done": "Writes the as_yaml string to a path or a stream and returns that string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "foo is the integers 1, 2, and 3",
+        "r_ms": 0.17213821411132812,
+        "translated_ms": 0.18944450039271032,
+        "speedup": 0.9086471961682339,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\npath <- tempfile()\none <- function() {\n  write_yaml(list(foo = 1:3), path)\n  paste(readLines(path), collapse = \"|\")\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport tempfile\nimport time\nfrom pathlib import Path\n\nfrom r_yaml import write_yaml\nfrom r_yaml.types import Vector\n\npath = tempfile.mktemp(suffix=\".yml\")\n\ndef one():\n    write_yaml({\"foo\": Vector([1, 2, 3], \"integer\")}, path)\n    return \"|\".join(Path(path).read_text(encoding=\"utf-8\").splitlines())\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "yaml.load",
+      "translated": true,
+      "python": "r_yaml.yaml_load",
+      "loads": [],
+      "uses": [
+        "pyyaml"
+      ],
+      "done": "Parses YAML 1.1 events. y is TRUE, and a plain 1:20 stays a string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "flag y and clock 1:20",
+        "r_ms": 0.09334087371826172,
+        "translated_ms": 0.44557099954545265,
+        "speedup": 0.20948597151404155,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\none <- function() {\n  value <- yaml.load(\"flag: y\\nclock: 1:20\\n\")\n  paste(value$flag, value$clock, sep = \",\")\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom r_yaml import yaml_load\n\ndef one():\n    value = yaml_load(\"flag: y\\nclock: 1:20\\n\")\n    flag = \"TRUE\" if value[\"flag\"] else \"FALSE\"\n    return f\"{flag},{value['clock']}\"\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "yaml.load_file",
+      "translated": true,
+      "python": "r_yaml.yaml_load_file",
+      "loads": [],
+      "uses": [
+        "pyyaml"
+      ],
+      "done": "Reads a path or a stream as lines and passes them to yaml_load.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a file of hey, hi, and hello",
+        "r_ms": 0.17440319061279297,
+        "translated_ms": 0.26041250112029957,
+        "speedup": 0.6697189645754604,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(yaml))\npath <- tempfile()\nwriteLines(c(\"- hey\", \"- hi\", \"- hello\"), path)\none <- function() {\n  paste(yaml.load_file(path), collapse = \",\")\n}\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport tempfile\nimport time\nfrom pathlib import Path\n\nfrom r_yaml import yaml_load_file\n\npath = tempfile.mktemp(suffix=\".yml\")\nPath(path).write_text(\"- hey\\n- hi\\n- hello\\n\", encoding=\"utf-8\")\n\ndef one():\n    return \",\".join(yaml_load_file(path))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

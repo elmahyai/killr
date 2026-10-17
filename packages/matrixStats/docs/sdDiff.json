@@ -1,0 +1,68 @@
+{
+  "name": "sdDiff",
+  "title": "Standard deviation from sequential differences",
+  "origin": {
+    "description": "Estimation of scale based on sequential-order differences, corresponding to the scale estimates provided by stats::var, stats::sd, stats::mad and stats::IQR.",
+    "usage": "sdDiff(x, idxs = NULL, na.rm = FALSE, diff = 1L, trim = 0, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A numeric vector of length N or a numeric N by K matrix."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating the subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "diff",
+        "text": "The positional distance of elements for which the difference should be calculated."
+      },
+      {
+        "name": "trim",
+        "text": "A double in [0, 1/2] specifying the fraction of observations to be trimmed from each end of the sorted values before estimation."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "n-order difference MAD estimates, like stats::mad, apply a consistency factor for the Gaussian standard deviation. The IQR estimates do not. That factor would be 1 / (2 * qnorm(3/4)) and has to be applied by hand. Differences are computed by diff2, which is a faster diff. The result is then divided by 2^diff for the variance and by sqrt(2)^diff otherwise. The divisor uses the original diff, while diff2 truncates the order with as.integer.",
+    "value": "A numeric scalar.",
+    "example": "sdDiff(c(1, 3, 6, 10))",
+    "output": "output/sdDiff-r.txt"
+  },
+  "translation": {
+    "description": "Estimation of scale based on sequential-order differences, corresponding to the scale estimates provided by stats::var, stats::sd, stats::mad and stats::IQR.",
+    "usage": "sdDiff(x, idxs=None, na_rm=False, diff=1, trim=0)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A numeric vector, or a matrix read in column-major order. Integer NA, the value -2147483648, is missing. Logical values are accepted when diff is 0."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based indexes, or None for every element. This is idxs in R. Positive indexes select, zero is dropped, and a negative index drops that position. A missing or out-of-range positive index inserts a missing value. Logical indexes are recycled when shorter than x."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are dropped before the differences are formed. This is na.rm in R. The default is False."
+      },
+      {
+        "name": "diff",
+        "text": "Order of difference passed to diff2, default 1. diff2 truncates a non-integer with as.integer. The scale correction still uses this original value, so 1.9 is a first difference divided by 2^1.9. Zero skips the difference. A negative value is an error."
+      },
+      {
+        "name": "trim",
+        "text": "Fraction trimmed from each end of the sorted differences before the scale estimate. The default is 0. The kept slice is lo:hi with lo = floor(n * trim) + 1 and hi = n + 1 - lo. A missing value in that slice makes the estimate missing when trim is positive."
+      }
+    ],
+    "details": "The calculation runs on the vector, or on the column-major contents of a matrix. Differences come from matrixstats.diff2.diff2, with lag 1. The estimate is the sample standard deviation stats::sd, divided by sqrt(2)^diff. stats::var is the compensated two-pass sample variance. stats::sd is its square root. stats::mad is constant times the median absolute deviation from the median, default constant 1.4826. The quartiles follow stats::quantile, default type 7. Extra arguments are accepted and ignored, as in R. Integer input is read as float64, and R's integer NA becomes a missing value before diff2.",
+    "value": "A Python float. Missing results are nan.",
+    "example": "import numpy as np\nfrom matrixstats.vardiff import sdDiff\n\nsdDiff(np.array([1.0, 3.0, 6.0, 10.0]))",
+    "output": "output/sdDiff-python.txt"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "progressor",
+  "title": "Signal progress updates",
+  "origin": {
+    "description": "Create a function that signals progression conditions.",
+    "usage": "progressor(steps = length(along), along = NULL, offset = 0L, scale = 1L, transform = function(steps) scale * steps + offset, message = character(0L), label = NA_character_, trace = FALSE, initiate = TRUE, finalize = FALSE, auto_finish = TRUE, on_exit = !identical(envir, globalenv()), enable = getOption(\"progressr.enable\", TRUE), envir = parent.frame())",
+    "arguments": [
+      {
+        "name": "steps",
+        "text": "Number of steps. When omitted, steps is length(along). along = NULL gives length 0."
+      },
+      {
+        "name": "transform",
+        "text": "Applied once at creation. The default is scale * steps + offset."
+      },
+      {
+        "name": "initiate",
+        "text": "If TRUE, signal type initiate with steps and auto_finish when the progressor is created."
+      },
+      {
+        "name": "on_exit",
+        "text": "If TRUE, signal type finish when the creating frame returns. TRUE in the global environment is an error."
+      },
+      {
+        "name": "enable",
+        "text": "If FALSE, return one shared progressor that does nothing."
+      }
+    ],
+    "details": "A progressor must be created inside a function, or inside with_progress or without_progress. Each call increments progression_index and signals an update unless type is passed. length(progressor) is the transformed step count. A second progressor in the same frame finishes the previous one first. finalize = TRUE signals type shutdown when the object is collected.",
+    "value": "A function of class progressor.",
+    "example": "report <- function() {\n  p <- progressor(steps = 4)\n  cat(length(p), \"\\n\", sep = \"\")\n  p(message = \"one\")\n  p(message = \"two\")\n  p(message = \"three\")\n  p(message = \"four\")\n}\nhandler <- make_progression_handler(\"rec\", reporter = list(\n  update = function(config, state, progression, ...) {\n    cat(progression$type, \" \", progression$amount, \" \", conditionMessage(progression), \"\\n\", sep = \"\")\n  }\n), enable = TRUE, target = \"file\", interval = 0)\nwith_progress(report(), handlers = handler, enable = TRUE, interval = 0,\n  delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n",
+    "output": "output/progressor-r.txt"
+  },
+  "translation": {
+    "description": "Create a callable that signals progression conditions.",
+    "usage": "progressor(steps=<omitted>, along=None, offset=0, scale=1, transform=None, message=(), label=None, trace=False, initiate=True, finalize=False, auto_finish=True, on_exit=<omitted>, enable=None, envir=None)",
+    "arguments": [
+      {
+        "name": "steps",
+        "text": "Number of steps. When omitted, steps is len(along), and along None is length 0."
+      },
+      {
+        "name": "transform",
+        "text": "Applied once at creation. The default is scale * steps + offset."
+      },
+      {
+        "name": "initiate",
+        "text": "If True, signal type initiate with steps and auto_finish when the progressor is created."
+      },
+      {
+        "name": "on_exit",
+        "text": "If True, signal type finish when the creating frame returns. A frame-return hook does this. True at module level is an error."
+      },
+      {
+        "name": "enable",
+        "text": "If False, return one shared progressor that does nothing. The default option is false when stdin is not a terminal."
+      }
+    ],
+    "details": "Calling progressor at module level is the global-environment error unless with_progress or without_progress has allowed it. Inside a function it is allowed. on_exit uses sys.setprofile and signals type finish when that frame returns. finalize=True signals type shutdown from a garbage-collection finalizer, not instead of on_exit. len(progressor) is the transformed step count. A second progressor in the same frame finishes the previous one first.",
+    "value": "A Progressor. len(progressor) is the transformed steps.",
+    "example": "from progressr.condition import condition_message\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\ndef update(config, state, progression, **kwargs):\n    print(progression[\"type\"], f\"{progression['amount']:g}\", condition_message(progression))\n\nhandler = make_progression_handler(\"rec\", reporter={\"update\": update}, enable=True, target=\"file\", interval=0)\n\ndef report():\n    progress = progressor(steps=4)\n    print(len(progress))\n    progress(message=\"one\")\n    progress(message=\"two\")\n    progress(message=\"three\")\n    progress(message=\"four\")\n\nwith_progress(report, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\n",
+    "output": "output/progressor-python.txt"
+  }
+}

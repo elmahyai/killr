@@ -1,0 +1,358 @@
+{
+  "name": "rpart",
+  "cran_version": "4.1.27",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 14 exports match rpart 4.1.27. Cross-validation draws use boot's generator, the same Mersenne Twister as set.seed. There is no crate.",
+  "dependencies": {
+    "translated": [
+      "boot"
+    ],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "rpart.control",
+      "translated": true,
+      "python": "rpart.rpart_control",
+      "loads": [],
+      "uses": [],
+      "done": "The nine default control numbers, with the cross-validation count last.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the defaults",
+        "r_ms": 0.02944469451904297,
+        "translated_ms": 0.003975999788963236,
+        "speedup": 7.405607666473452,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  unlist(rpart.control())\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\"]\nfrom rpart import rpart_control\n\ndef one():\n    return list(rpart_control().values())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "meanvar",
+      "translated": true,
+      "python": "rpart.meanvar",
+      "loads": [],
+      "uses": [],
+      "done": "Leaf mean and mean deviance of the 30-row tree.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the anova leaves",
+        "r_ms": 6.34610652923584,
+        "translated_ms": 5.505045500058259,
+        "speedup": 1.152780032275606,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  mv <- meanvar(fit30())\n  c(mv$x, mv$y)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    mv = meanvar(fit30())\n    return mv[\"x\"] + mv[\"y\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "na.rpart",
+      "translated": true,
+      "python": "rpart.na_rpart",
+      "loads": [],
+      "uses": [],
+      "done": "Rows kept and rows dropped. A missing response goes, and so does a row with no predictors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "five rows, then three rows",
+        "r_ms": 1.46484375,
+        "translated_ms": 0.020928500134687056,
+        "speedup": 69.99277256243302,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  z <- data.frame(y=c(1,NA,3,4,NA), a=c(1,2,NA,NA,NA), b=c(NA,2,3,NA,NA))\n  attr(z, \"terms\") <- terms(y ~ a + b)\n  na <- na.rpart(z)\n  z0 <- data.frame(a=c(1,NA,3), b=c(NA,NA,3))\n  na0 <- na.rpart(z0)\n  c(as.integer(rownames(na)), as.integer(attr(na, \"na.action\")),\n    as.integer(rownames(na0)), as.integer(attr(na0, \"na.action\")))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    z = {\"y\": [1, float(\"nan\"), 3, 4, float(\"nan\")],\n         \"a\": [1, 2, float(\"nan\"), float(\"nan\"), float(\"nan\")],\n         \"b\": [float(\"nan\"), 2, 3, float(\"nan\"), float(\"nan\")]}\n    na = na_rpart(z, response=\"y\")\n    z0 = {\"a\": [1, float(\"nan\"), 3], \"b\": [float(\"nan\"), float(\"nan\"), 3]}\n    na0 = na_rpart(z0)\n    return na[\"rows\"] + na[\"na_action\"] + na0[\"rows\"] + na0[\"na_action\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "path.rpart",
+      "translated": true,
+      "python": "rpart.path_rpart",
+      "loads": [],
+      "uses": [],
+      "done": "Checksum of the labels on the path to nodes 10 and 7.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "nodes 10 and 7",
+        "r_ms": 5.159497261047363,
+        "translated_ms": 5.539584999723957,
+        "speedup": 0.931386965143502,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  path <- path.rpart(fit30(), nodes=c(10, 7))\n  text <- paste(unlist(path[c(\"10\", \"7\")]), collapse=\"|\")\n  sum(utf8ToInt(text))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    path = path_rpart(fit30(), [10, 7])\n    text = \"|\".join(label for key in (\"10\", \"7\") for label in path[key])\n    return [sum(ord(ch) for ch in text)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "plotcp",
+      "translated": true,
+      "python": "rpart.plotcp",
+      "loads": [],
+      "uses": [],
+      "done": "Cross-validated error, its standard error, and the finite geometric complexities.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the 30-row table",
+        "r_ms": 4.542350769042969,
+        "translated_ms": 6.212551499857,
+        "speedup": 0.7311570405730278,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  fit <- fit30()\n  p <- fit$cptable\n  cp0 <- p[, 1]\n  cpg <- sqrt(cp0 * c(Inf, cp0[-length(cp0)]))\n  c(p[, 4], p[, 5], cpg[is.finite(cpg)])\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    drawn = plotcp(fit30())\n    return drawn[\"xerror\"] + drawn[\"xstd\"] + finite(drawn[\"cp\"])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "post",
+      "translated": true,
+      "python": "rpart.post",
+      "loads": [],
+      "uses": [],
+      "done": "The plot returns nothing. The check is 0 when that is so.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the 30-row tree",
+        "r_ms": 12.956023216247559,
+        "translated_ms": 5.17038699990735,
+        "speedup": 2.505813049676885,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  fn <- tempfile(fileext=\".ps\")\n  res <- post(fit30(), filename=fn)\n  unlink(fn)\n  if (!is.null(res)) stop(\"post returned a value\")\n  0\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    if post(fit30()) is not None:\n        raise SystemExit(\"post returned a value\")\n    return [0]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "printcp",
+      "translated": true,
+      "python": "rpart.printcp",
+      "loads": [],
+      "uses": [],
+      "done": "The complexity table.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the 30-row table",
+        "r_ms": 5.495429039001465,
+        "translated_ms": 5.755798499876619,
+        "speedup": 0.9547639722132846,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  as.numeric(printcp(fit30()))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    return columns(printcp(fit30()))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "prune",
+      "translated": true,
+      "python": "rpart.prune",
+      "loads": [],
+      "uses": [],
+      "done": "Frame means, row map, complexity table, and importance after cp = 0.05.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cp = 0.05",
+        "r_ms": 6.36136531829834,
+        "translated_ms": 6.7211825000867975,
+        "speedup": 0.9464651968929856,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  pr <- prune(fit30(), cp=0.05)\n  c(pr$frame$yval, pr$where, as.numeric(pr$cptable), pr$variable.importance)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    pr = prune(fit30(), cp=0.05)\n    return ([row[\"yval\"] for row in pr.frame] + list(pr.where) + columns(pr.cptable)\n            + [value for _name, value in pr.variable_importance])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "prune.rpart",
+      "translated": true,
+      "python": "rpart.prune_rpart",
+      "loads": [],
+      "uses": [],
+      "done": "The same pruned tree as prune at cp = 0.05.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cp = 0.05",
+        "r_ms": 8.01098346710205,
+        "translated_ms": 6.661749499926373,
+        "speedup": 1.2025344794472668,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  pr <- prune.rpart(fit30(), cp=0.05)\n  c(pr$frame$yval, pr$where, as.numeric(pr$cptable), pr$variable.importance)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    pr = prune_rpart(fit30(), cp=0.05)\n    return ([row[\"yval\"] for row in pr.frame] + list(pr.where) + columns(pr.cptable)\n            + [value for _name, value in pr.variable_importance])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rpart",
+      "translated": true,
+      "python": "rpart.rpart",
+      "loads": [
+        "boot"
+      ],
+      "uses": [],
+      "done": "Anova tree on 30 rows with one missing predictor, and a weighted tree on 12 rows. Cross-validation draws use boot's generator.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "n = 30, xval = 5, and n = 12, xval = 4",
+        "r_ms": 8.359313011169434,
+        "translated_ms": 7.558415999710633,
+        "speedup": 1.1059609594774173,
+        "matches": true,
+        "max_abs_diff": 1.4210854715202004e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  a <- fit30(); b <- fit12()\n  c(a$frame$yval, a$frame$dev, as.numeric(a$cptable), a$where, a$variable.importance,\n    b$frame$yval, b$frame$dev, as.numeric(b$cptable), b$where, b$variable.importance)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    a, b = fit30(), fit12()\n    def pack(fit):\n        return ([row[\"yval\"] for row in fit.frame] + [row[\"dev\"] for row in fit.frame]\n                + columns(fit.cptable) + list(fit.where)\n                + [value for _name, value in fit.variable_importance])\n    return pack(a) + pack(b)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rsq.rpart",
+      "translated": true,
+      "python": "rpart.rsq_rpart",
+      "loads": [],
+      "uses": [],
+      "done": "Apparent and cross-validated R-squared.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the 30-row table",
+        "r_ms": 4.655122756958008,
+        "translated_ms": 5.84549700010939,
+        "speedup": 0.7963604731763431,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  p <- fit30()$cptable\n  c(1 - p[, 3], 1 - p[, 4])\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    drawn = rsq_rpart(fit30())\n    return drawn[\"apparent\"] + drawn[\"x_relative\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "snip.rpart",
+      "translated": true,
+      "python": "rpart.snip_rpart",
+      "loads": [],
+      "uses": [],
+      "done": "Frame means and the row map after node 2 is removed.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "toss node 2",
+        "r_ms": 5.412578582763672,
+        "translated_ms": 5.803158000162512,
+        "speedup": 0.932695367352069,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  sn <- snip.rpart(fit30(), toss=2)\n  c(sn$frame$yval, sn$where)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    sn = snip_rpart(fit30(), [2])\n    return [row[\"yval\"] for row in sn.frame] + list(sn.where)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "xpred.rpart",
+      "translated": true,
+      "python": "rpart.xpred_rpart",
+      "loads": [
+        "boot"
+      ],
+      "uses": [],
+      "done": "Cross-validated predictions. The group draw uses boot's generator.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "xval = 5 on the 30-row fit",
+        "r_ms": 4.717588424682617,
+        "translated_ms": 9.413234500016188,
+        "speedup": 0.5011655052973029,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  set.seed(1)\n  fit <- rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n  as.numeric(xpred.rpart(fit, xval=5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    set_seed(1)\n    fit = rpart(\"y ~ .\", data30, control=ctrl30)\n    table = xpred_rpart(fit, xval=5)\n    return columns(table)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rpart.exp",
+      "translated": true,
+      "python": "rpart.rpart_exp",
+      "loads": [],
+      "uses": [],
+      "done": "Rescaled times for 12 right-censored observations, then the two method numbers.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "twelve survival times",
+        "r_ms": 1.5586614608764648,
+        "translated_ms": 0.06489900010819838,
+        "speedup": 24.016725346737147,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rpart))\nsuppressPackageStartupMessages(library(survival))\nif (packageDescription(\"rpart\")$Version != \"4.1.27\") stop(\"expected rpart 4.1.27\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x <- x[is.finite(x)]\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny30 <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n         0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n         5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7)\nx1 <- (1:30)/3\nx1[5] <- NA\nx2 <- c(5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3)\nx3 <- (30:1)/4\ndf30 <- data.frame(y=y30, x1=x1, x2=x2, x3=x3)\nctrl30 <- rpart.control(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\nfit30 <- function() {\n  set.seed(1)\n  rpart(y ~ ., df30, control=ctrl30, x=TRUE, y=TRUE)\n}\ny12 <- c(1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8)\ndf12 <- data.frame(y=y12, x1=c(1,2,3, 6,7,8, 12,13,14, 4,5,9), x2=c(2,2,1, 0,1,0, 5,4,6, 3,3,2))\nw12 <- c(1,1,2, 1,3,1, 2,1,1, 1,1,4)\nfit12 <- function() {\n  set.seed(11)\n  rpart(y ~ ., df12, weights=w12, control=rpart.control(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6), x=TRUE, y=TRUE)\n}\n\none <- function() {\n  tt <- c(8.653133, 3.075164, 6.164583, 5.020422, 1.021007, 1.043941, 11.41822, 0.05023914, 0.3403535, 0.5724944, 0.3862533, 2.036884)\n  st <- c(1,1,1,1,1,1,1,0,1,0,1,0)\n  ex <- rpart.exp(Surv(tt, st), offset=rep(0, length(tt)))\n  c(as.numeric(ex$y), ex$parms)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/rpart\", \"/home/ahmed/killr_projects/killr/packages/boot\"]\nfrom boot.rng import set_seed\nfrom rpart import (\n    meanvar, na_rpart, path_rpart, plotcp, post, printcp, prune, prune_rpart,\n    rpart, rpart_exp, rsq_rpart, snip_rpart, xpred_rpart,\n)\n\ny30 = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0,\n       0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0,\n       5.1, 0.8, 4.4, 1.5, 6.2, 2.9, 0.6, 3.8, 1.9, 4.7]\nx1 = [(i + 1) / 3 for i in range(30)]\nx1[4] = float(\"nan\")\ndata30 = {\n    \"y\": y30,\n    \"x1\": x1,\n    \"x2\": [5,1,8,2,9,3,7,4,6,2, 1,8,3,9,4,7,2,6,5,1, 9,3,8,2,7,4,6,1,5,3],\n    \"x3\": [(30 - i) / 4 for i in range(30)],\n}\nctrl30 = dict(minsplit=8, minbucket=3, cp=0.01, xval=5, maxdepth=10)\n\ndef fit30():\n    set_seed(1)\n    return rpart(\"y ~ .\", data30, control=ctrl30)\n\ndef fit12():\n    set_seed(11)\n    return rpart(\n        \"y ~ .\",\n        {\"y\": [1,2,1.2, 5,4.5,5.5, 8,9,7.5, 3,3.2,2.8],\n         \"x1\": [1,2,3, 6,7,8, 12,13,14, 4,5,9],\n         \"x2\": [2,2,1, 0,1,0, 5,4,6, 3,3,2]},\n        weights=[1,1,2, 1,3,1, 2,1,1, 1,1,4],\n        control=dict(minsplit=4, minbucket=2, cp=0.001, xval=4, maxdepth=6),\n    )\n\ndef finite(values):\n    return [float(v) for v in values if math.isfinite(float(v))]\n\ndef columns(rows):\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef one():\n    tt = [8.653133, 3.075164, 6.164583, 5.020422, 1.021007, 1.043941, 11.41822, 0.05023914, 0.3403535, 0.5724944, 0.3862533, 2.036884]\n    st = [1,1,1,1,1,1,1,0,1,0,1,0]\n    ex = rpart_exp([[tt[i], st[i]] for i in range(len(tt))])\n    return columns(ex[\"y\"]) + ex[\"parms\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "cv.glm",
+  "title": "Cross-validation for Generalized Linear Models",
+  "origin": {
+    "description": "K-fold cross-validation estimate of prediction error for a generalized linear model.",
+    "usage": "cv.glm(data, glmfit, cost, K)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A data frame or matrix. Rows are cases and columns are variables, one of them the response."
+      },
+      {
+        "name": "glmfit",
+        "text": "A glm fit of data."
+      },
+      {
+        "name": "cost",
+        "text": "A function of the observed responses and the predicted responses. It must return one non-negative number. The default is the mean squared error."
+      },
+      {
+        "name": "K",
+        "text": "Number of groups. The default is the number of rows, which is leave-one-out. K has to give groups of nearly equal size; otherwise it is replaced by the nearest such integer and a warning is given."
+      }
+    ],
+    "details": "The rows are split at random into K groups. For each group the model is refit without that group, and cost is applied to the held-out responses and the response-scale predictions. The raw estimate is the sum of those costs weighted by group size over n. The second value adjusts for the bias of K smaller than n. Groups are sample0(rep(1:K, ceiling(n/K)), n), which draws from the vector 1:K repeated ceiling(n/K) times. set.seed(1) is set before each call below so the printed folds can be repeated. Without it the K-fold result changes with the generator.",
+    "value": "A list with call, K, delta (raw and adjusted prediction error), and seed (the .Random.seed at entry).",
+    "example": "library(boot)\ndata(mammals, package = \"MASS\")\nmammals.glm <- glm(log(brain) ~ log(body), data = mammals)\nset.seed(1)\n(cv.err <- cv.glm(mammals, mammals.glm)$delta)\nset.seed(1)\n(cv.err.6 <- cv.glm(mammals, mammals.glm, K = 6)$delta)\nmuhat <- fitted(mammals.glm)\nmammals.diag <- glm.diag(mammals.glm)\n(cv.err <- mean((mammals.glm$y - muhat)^2/(1 - mammals.diag$h)^2))\ncost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)\nnodal.glm <- glm(r ~ stage + xray + acid, binomial, data = nodal)\nset.seed(1)\n(cv.err <- cv.glm(nodal, nodal.glm, cost, K = nrow(nodal))$delta)\nset.seed(1)\n(cv.11.err <- cv.glm(nodal, nodal.glm, cost, K = 11)$delta)\n",
+    "output": "output/cv.glm-r.txt"
+  },
+  "translation": {
+    "description": "K-fold cross-validation prediction error for a gaussian or binomial fit.",
+    "usage": "cv_glm(data, glmfit, cost=None, K=None)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A dict of one-dimensional columns, one row per case. The same columns the fit was built from."
+      },
+      {
+        "name": "glmfit",
+        "text": "A fit returned by glm() on data."
+      },
+      {
+        "name": "cost",
+        "text": "A function of observed responses and predicted responses returning one number. None uses the mean squared error."
+      },
+      {
+        "name": "K",
+        "text": "Number of groups. None uses one group per row. A value that is not one of round(n/j) is replaced by the nearest such integer and a warning is given."
+      }
+    ],
+    "details": "Call set_seed before cv_glm. The groups are the same draw as R's sample0(rep(1:K, ceiling(n/K)), n): sample_int on the vector 1..K tiled ceiling(n/K) times. Each group is left out, the formula is refit, and cost compares the original response with predict(..., type='response'). delta[0] is the size-weighted sum of the group costs. delta[1] is that sum adjusted by the difference between the apparent error of the original fit and the apparent errors of the refits. The generator advances, and .Random.seed is not copied into the result.",
+    "value": "A dict with K and delta, a length-2 array of the raw and adjusted estimates.",
+    "example": "from boot.glm import cv_glm, glm, glm_diag\nfrom boot.rng import set_seed\nimport numpy as np\n\nbody = [3.385, 0.48, 1.35, 465, 36.33, 27.66, 14.83, 1.04, 4.19, 0.425, 0.101, 0.92, 1, 0.005, 0.06, 3.5, 2, 1.7, 2547, 0.023, 187.1, 521, 0.785, 10, 3.3, 0.2, 1.41, 529, 207, 85, 0.75, 62, 6654, 3.5, 6.8, 35, 4.05, 0.12, 0.023, 0.01, 1.4, 250, 2.5, 55.5, 100, 52.16, 10.55, 0.55, 60, 3.6, 4.288, 0.28, 0.075, 0.122, 0.048, 192, 3, 160, 0.9, 1.62, 0.104, 4.235]\nbrain = [44.5, 15.5, 8.1, 423, 119.5, 115, 98.2, 5.5, 58, 6.4, 4, 5.7, 6.6, 0.14, 1, 10.8, 12.3, 6.3, 4603, 0.3, 419, 655, 3.5, 115, 25.6, 5, 17.5, 680, 406, 325, 12.3, 1320, 5712, 3.9, 179, 56, 17, 1, 0.4, 0.25, 12.5, 490, 12.1, 175, 157, 440, 179.5, 2.4, 81, 21, 39.2, 1.9, 1.2, 3, 0.33, 180, 25, 169, 2.6, 11.4, 2.5, 50.4]\nmammals = {\"body\": body, \"brain\": brain}\nfit = glm(\"log(brain) ~ log(body)\", mammals)\nset_seed(1)\nprint(cv_glm(mammals, fit)[\"delta\"])\nset_seed(1)\nprint(cv_glm(mammals, fit, K=6)[\"delta\"])\ndiag = glm_diag(fit)\nprint(np.mean((fit.y - fit.fitted_values) ** 2 / (1 - diag[\"h\"]) ** 2))\n\nr = [1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0]\nstage = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0]\nxray = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1]\nacid = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0]\nnodal = {\"r\": r, \"stage\": stage, \"xray\": xray, \"acid\": acid}\nnodal_fit = glm(\"r ~ stage + xray + acid\", nodal, family=\"binomial\")\n\ndef cost(y, yhat):\n    return float(np.mean(np.abs(np.asarray(y) - np.asarray(yhat)) > 0.5))\n\nset_seed(1)\nprint(cv_glm(nodal, nodal_fit, cost, K=len(r))[\"delta\"])\nset_seed(1)\nprint(cv_glm(nodal, nodal_fit, cost, K=11)[\"delta\"])\n",
+    "output": "output/cv.glm-python.txt"
+  }
+}

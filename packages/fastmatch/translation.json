@@ -1,0 +1,160 @@
+{
+  "name": "fastmatch",
+  "cran_version": "1.1-8",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 6 exports of fastmatch 1.1-8 are done. Lookups are a Python dict. Real NA and NaN stay different, and -0 matches 0. A factor lookup uses labels and a factor table keeps its codes. There is no crate and no extra native library.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "fmatch",
+      "translated": true,
+      "python": "fastmatch.fmatch",
+      "loads": [],
+      "uses": [],
+      "done": "1-based positions. Real NA and NaN are different keys, and -0 matches 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "positions of 1, NA, NaN, -0, 0, and 2.5, then nomatch 0 for a miss",
+        "r_ms": 0.015139579772949219,
+        "translated_ms": 0.035896000554203056,
+        "speedup": 0.4217623005127943,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  c(\n    fmatch(c(1, NA, NaN, -0, 0, 2.5), c(0, NA, NaN, 2.5)),\n    fmatch(4L, 1:3, nomatch = 0)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return fmatch([1.0, None, float(\"nan\"), -0.0, 0.0, 2.5], [0.0, None, float(\"nan\"), 2.5]) + fmatch(4, [1, 2, 3], nomatch=0)\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fmatch.hash",
+      "translated": true,
+      "python": "fastmatch.fmatch_hash",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the table coerced to the lookup type, with the hash attached.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an integer table coerced to character because the lookup is character",
+        "r_ms": 0.013709068298339844,
+        "translated_ms": 0.010668998584151268,
+        "speedup": 1.2849442419745543,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  fmatch.hash(c(\"a\", \"b\"), c(1L, 2L, 1L))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return list(fmatch_hash([\"a\", \"b\"], [1, 2, 1]))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "%fin%",
+      "translated": true,
+      "python": "fastmatch.fin",
+      "loads": [],
+      "uses": [],
+      "done": "TRUE where the value occurs. A miss is FALSE because nomatch is 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1 and NA are in the table, 5 is not",
+        "r_ms": 0.02372264862060547,
+        "translated_ms": 0.01720649925118778,
+        "speedup": 1.3787027956292663,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  as.integer(c(1L, 5L, NA) %fin% c(1L, NA))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [1 if item else 0 for item in fin([1, 5, None], [1, None])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "%!fin%",
+      "translated": true,
+      "python": "fastmatch.not_fin",
+      "loads": [],
+      "uses": [],
+      "done": "The negation of %fin%. A hit is FALSE and a miss is TRUE.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the negation of 1 and NA in the table, and 5 absent",
+        "r_ms": 0.014424324035644531,
+        "translated_ms": 0.010776499038911425,
+        "speedup": 1.3384981507966234,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  as.integer(c(1L, 5L, NA) %!fin% c(1L, NA))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [1 if item else 0 for item in not_fin([1, 5, None], [1, None])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "coalesce",
+      "translated": true,
+      "python": "fastmatch.coalesce",
+      "loads": [],
+      "uses": [],
+      "done": "1-based order that packs equal values together, in order of first occurrence.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "character groups b, a, c, then real groups 1.5, 0, 2 including -0",
+        "r_ms": 0.015139579772949219,
+        "translated_ms": 0.019552498997654766,
+        "speedup": 0.7743040812719204,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  c(\n    coalesce(c(\"b\", \"a\", \"b\", \"a\", \"c\")),\n    coalesce(c(1.5, 0, -0, 1.5, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return coalesce([\"b\", \"a\", \"b\", \"a\", \"c\"]) + coalesce([1.5, 0.0, -0.0, 1.5, 2.0])\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ctapply",
+      "translated": true,
+      "python": "fastmatch.ctapply",
+      "loads": [],
+      "uses": [],
+      "done": "Applies a function to each contiguous run and combines the results with c().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sums of two integer runs, named 1 and 2",
+        "r_ms": 0.031232833862304688,
+        "translated_ms": 0.017522001144243404,
+        "speedup": 1.7824923994235542,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fastmatch))\nif (as.character(packageVersion(\"fastmatch\")) != \"1.1.8\") stop(\"expected fastmatch 1.1-8\")\noptions(warn = -1)\none <- function() {\n  result <- ctapply(c(10, 11, 20, 21, 22), c(1L, 1L, 2L, 2L, 2L), sum)\n  paste(names(result), result, sep = \":\", collapse = \"|\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fastmatch\")\nwarnings.simplefilter(\"ignore\")\n\nfrom fastmatch import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = ctapply([10, 11, 20, 21, 22], [1, 1, 2, 2, 2], sum)\n    return \"|\".join(f\"{name}:{value}\" for name, value in zip(result.names, result.values))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ]
+}

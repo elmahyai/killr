@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>httr2 · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>httr2</h1>
+<p class="note">CRAN 1.3.0</p>
+<p>Checked is_online, url_build, url_parse, example_url. The client is left unfinished. requests does not match those helpers.</p>
+<p class="note">4 of 155 functions · 2.6% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:2.6%"></div></div><strong>2.6%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#%>%">%&gt;%</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#StreamingBody">StreamingBody</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#curl_help">curl_help</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#curl_translate">curl_translate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#example_github_client">example_github_client</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#example_url">example_url</a></td><td><span class='yes'>translated</span></td><td>—</td><td>rlang solved</td><td>Reports that webfakes is required, then returns the cached local app URL.</td></tr>
+<tr><td><a href="#httr2_translate">httr2_translate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_online">is_online</a></td><td><span class='yes'>translated</span></td><td>—</td><td>curl solved</td><td>Wrapper around curl::has_internet.</td></tr>
+<tr><td><a href="#iterate_with_cursor">iterate_with_cursor</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#iterate_with_link_url">iterate_with_link_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#iterate_with_offset">iterate_with_offset</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jwt_claim">jwt_claim</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jwt_encode_hmac">jwt_encode_hmac</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jwt_encode_sig">jwt_encode_sig</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#last_request">last_request</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#last_request_json">last_request_json</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#last_response">last_response</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#last_response_json">last_response_json</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#local_mocked_responses">local_mocked_responses</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#local_verbosity">local_verbosity</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_response">new_response</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_cache_clear">oauth_cache_clear</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_cache_path">oauth_cache_path</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_cache_prune">oauth_cache_prune</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_client">oauth_client</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_client_req_auth">oauth_client_req_auth</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_client_req_auth_body">oauth_client_req_auth_body</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_client_req_auth_header">oauth_client_req_auth_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_client_req_auth_jwt_sig">oauth_client_req_auth_jwt_sig</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_auth_code">oauth_flow_auth_code</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_auth_code_listen">oauth_flow_auth_code_listen</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_auth_code_parse">oauth_flow_auth_code_parse</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_auth_code_pkce">oauth_flow_auth_code_pkce</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_auth_code_url">oauth_flow_auth_code_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_bearer_jwt">oauth_flow_bearer_jwt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_client_credentials">oauth_flow_client_credentials</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_device">oauth_flow_device</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_password">oauth_flow_password</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_refresh">oauth_flow_refresh</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_flow_token_exchange">oauth_flow_token_exchange</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_redirect_uri">oauth_redirect_uri</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_server_metadata">oauth_server_metadata</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_token">oauth_token</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#oauth_token_cached">oauth_token_cached</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obfuscate">obfuscate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obfuscated">obfuscated</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_auth_aws_v4">req_auth_aws_v4</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_auth_basic">req_auth_basic</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_auth_bearer_token">req_auth_bearer_token</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_file">req_body_file</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_form">req_body_form</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_json">req_body_json</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_json_modify">req_body_json_modify</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_multipart">req_body_multipart</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_body_raw">req_body_raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_cache">req_cache</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_cookie_preserve">req_cookie_preserve</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_cookies_set">req_cookies_set</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_dry_run">req_dry_run</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_error">req_error</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_get_body">req_get_body</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_get_body_type">req_get_body_type</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_get_headers">req_get_headers</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_get_method">req_get_method</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_get_url">req_get_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_headers">req_headers</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_headers_redacted">req_headers_redacted</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_method">req_method</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth">req_oauth</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_auth_code">req_oauth_auth_code</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_bearer_jwt">req_oauth_bearer_jwt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_client_credentials">req_oauth_client_credentials</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_device">req_oauth_device</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_password">req_oauth_password</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_refresh">req_oauth_refresh</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_oauth_token_exchange">req_oauth_token_exchange</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_options">req_options</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform">req_perform</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_connection">req_perform_connection</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_iterative">req_perform_iterative</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_parallel">req_perform_parallel</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_promise">req_perform_promise</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_sequential">req_perform_sequential</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_perform_stream">req_perform_stream</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_progress">req_progress</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_proxy">req_proxy</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_retry">req_retry</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_template">req_template</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_throttle">req_throttle</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_timeout">req_timeout</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_url">req_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_url_path">req_url_path</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_url_path_append">req_url_path_append</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_url_query">req_url_query</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_url_relative">req_url_relative</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_user_agent">req_user_agent</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#req_verbose">req_verbose</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#request">request</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_body_html">resp_body_html</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_body_json">resp_body_json</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_body_raw">resp_body_raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_body_string">resp_body_string</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_body_xml">resp_body_xml</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_check_content_type">resp_check_content_type</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_check_status">resp_check_status</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_content_type">resp_content_type</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_date">resp_date</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_encoding">resp_encoding</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_has_body">resp_has_body</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_header">resp_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_header_exists">resp_header_exists</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_headers">resp_headers</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_is_error">resp_is_error</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_link_url">resp_link_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_raw">resp_raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_request">resp_request</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_retry_after">resp_retry_after</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_status">resp_status</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_status_desc">resp_status_desc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_stream_aws">resp_stream_aws</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_stream_is_complete">resp_stream_is_complete</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_stream_lines">resp_stream_lines</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_stream_raw">resp_stream_raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_stream_sse">resp_stream_sse</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_timing">resp_timing</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_url">resp_url</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_url_path">resp_url_path</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_url_queries">resp_url_queries</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resp_url_query">resp_url_query</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#response">response</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#response_json">response_json</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resps_data">resps_data</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resps_failures">resps_failures</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resps_ok">resps_ok</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resps_requests">resps_requests</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#resps_successes">resps_successes</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_decrypt">secret_decrypt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_decrypt_file">secret_decrypt_file</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_encrypt">secret_encrypt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_encrypt_file">secret_encrypt_file</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_has_key">secret_has_key</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_make_key">secret_make_key</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_read_rds">secret_read_rds</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#secret_write_rds">secret_write_rds</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#signal_total_pages">signal_total_pages</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#throttle_status">throttle_status</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#url_build">url_build</a></td><td><span class='yes'>translated</span></td><td>—</td><td>curl solved</td><td>Builds a URL string from a parsed URL. Uses url_parse.</td></tr>
+<tr><td><a href="#url_modify">url_modify</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#url_modify_query">url_modify_query</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#url_modify_relative">url_modify_relative</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#url_parse">url_parse</a></td><td><span class='yes'>translated</span></td><td>—</td><td>curl solved</td><td>Parses a URL, including a relative URL against a base.</td></tr>
+<tr><td><a href="#url_query_build">url_query_build</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#url_query_parse">url_query_parse</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#with_mocked_responses">with_mocked_responses</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#with_verbosity">with_verbosity</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>example_url</td><td>example_url() reports that the webfakes package is required</td><td>30.1</td><td>0.234</td><td><button type="button" class="proof-toggle" data-name="example_url"><span class='yes'>+12756%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:0.8%'></span></div></td></tr>
+<tr><td>is_online</td><td>is_online() returns curl::has_internet()</td><td>3.71</td><td>7.03</td><td><button type="button" class="proof-toggle" data-name="is_online"><span class='slower'>-47%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:52.7%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>url_build</td><td>url_build round-trips a URL with user, password, port, a colon in the path, query, and fragment</td><td>1.29</td><td>0.953</td><td><button type="button" class="proof-toggle" data-name="url_build"><span class='yes'>+36%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:73.7%'></span></div></td></tr>
+<tr><td>url_parse</td><td>url_parse of a URL with user, password, port, query, and fragment</td><td>0.259</td><td>0.265</td><td><button type="button" class="proof-toggle" data-name="url_parse"><span class='slower'>-2%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:97.6%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "example_url", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(httr2))\nstopifnot(identical(as.character(packageVersion(\"httr2\")), \"1.3.0\"))\none \u003c- function() {\n  tryCatch(example_url(), error = function(e) conditionMessage(e))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/httr2\")\nfrom httr2.example_url import example_url\nfrom rlang import RLangError\n\n\ndef one():\n    try:\n        return example_url()\n    except RLangError as exc:\n        return str(exc)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "is_online", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(httr2))\nstopifnot(identical(as.character(packageVersion(\"httr2\")), \"1.3.0\"))\none \u003c- function() {\n  if (isTRUE(is_online())) \"TRUE\" else \"FALSE\"\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/httr2\")\nfrom httr2.is_online import is_online\n\n\ndef one():\n    return \"TRUE\" if is_online() else \"FALSE\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "url_build", "r": ".libPaths(c(\"/home/ahmed/R/curl-8.1.0\", \"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(httr2))\nstopifnot(identical(as.character(packageVersion(\"httr2\")), \"1.3.0\"))\nstopifnot(packageVersion(\"curl\") >= \"6.4.0\")\none \u003c- function() {\n  url_build(url_parse(\"http://user:pass@example.com:81/a:b/foo%20bar/?a=1&b=2&c={1{2}3}#frag\"))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/curl\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/httr2\")\nfrom httr2.url_build import url_build\nfrom httr2.url_parse import url_parse\n\n\ndef one():\n    return url_build(\n        url_parse(\n            \"http://user:pass@example.com:81/a:b/foo%20bar/?a=1&b=2&c={1{2}3}#frag\"\n        )\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "url_parse", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(httr2))\nfmt \u003c- function(x) if (is.null(x)) \"NULL\" else as.character(x)\none \u003c- function() {\n  u \u003c- url_parse(\"http://user:pass@example.com:81/path?a=1&b=2&c={1{2}3}#frag\")\n  query \u003c- if (is.null(u$query)) \"NULL\" else paste(names(u$query), unlist(u$query, use.names = FALSE), sep = \"=\", collapse = \"&\")\n  paste(paste(class(u), collapse = \"/\"), fmt(u$scheme), fmt(u$hostname), fmt(u$username), fmt(u$password), fmt(u$port), fmt(u$path), query, fmt(u$fragment), sep = \"|\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/httr2\")\nfrom httr2.url_parse import url_parse\n\n\ndef fmt(value):\n    return \"NULL\" if value is None else str(value)\n\n\ndef one():\n    u = url_parse(\"http://user:pass@example.com:81/path?a=1&b=2&c={1{2}3}#frag\")\n    if u.query is None:\n        query = \"NULL\"\n    else:\n        query = \"&\".join(f\"{name}={value}\" for name, value in u.query)\n    return \"|\".join(\n        [\n            \"httr2_url\",\n            fmt(u.scheme),\n            fmt(u.hostname),\n            fmt(u.username),\n            fmt(u.password),\n            fmt(u.port),\n            fmt(u.path),\n            query,\n            fmt(u.fragment),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="cli.html">cli</a> <span class="note">>= 3.0.0 · replaced</span></p><p><a href="curl.html">curl</a> <span class="note">>= 6.4.0 · replaced</span></p><p><a href="glue.html">glue</a> <span class="note">replaced</span></p><p><a href="lifecycle.html">lifecycle</a> <span class="note">replaced</span></p><p><a href="magrittr.html">magrittr</a> <span class="note">finished</span></p><p><a href="openssl.html">openssl</a> <span class="note">replaced</span></p><p><a href="R6.html">R6</a> <span class="note">replaced</span></p><p><a href="rlang.html">rlang</a> <span class="note">>= 1.3.0 · replaced</span></p><p><a href="vctrs.html">vctrs</a> <span class="note">>= 0.6.3 · replaced</span></p><p><a href="withr.html">withr</a> <span class="note">finished</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "%>%", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "%>%", "origin": null, "translation": null}, {"name": "StreamingBody", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "StreamingBody", "origin": null, "translation": null}, {"name": "curl_help", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "curl_help", "origin": null, "translation": null}, {"name": "curl_translate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "curl_translate", "origin": null, "translation": null}, {"name": "example_github_client", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "example_github_client", "origin": null, "translation": null}, {"name": "example_url", "translated": true, "not_done": "", "title": "example_url", "origin": {"description": "Reports that webfakes is required, then returns the cached local app URL.", "example": "example_url() reports that the webfakes package is required", "output": "output/example_url-r.txt", "output_blocks": [{"text": "Error in example_url() : The package \"webfakes\" is required.\nCalls: example_url -> check_installed\nExecution halted"}]}, "translation": {"description": "Reports that webfakes is required, then returns the cached local app URL.", "usage": "httr2.example_url.example_url", "example": "example_url() reports that the webfakes package is required", "output": "output/example_url-python.txt", "output_blocks": [{"text": "Traceback (most recent call last):\n  File \"\u003cstring>\", line 5, in \u003cmodule>\n    example_url()\n    ~~~~~~~~~~~^^\n  File \"/home/ahmed/killr_projects/killr/packages/httr2/httr2/example_url.py\", line 377, in example_url\n    check_installed(\"webfakes\")\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"/home/ahmed/killr_projects/killr/packages/rlang/rlang/__init__.py\", line 207, in check_installed\n    raise RLangError(f'The package \"{pkg}\" is required.')\nrlang.RLangError: The package \"webfakes\" is required."}]}}, {"name": "httr2_translate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "httr2_translate", "origin": null, "translation": null}, {"name": "is_online", "translated": true, "not_done": "", "title": "is_online", "origin": {"description": "Wrapper around curl::has_internet.", "example": "is_online() returns curl::has_internet()", "output": "output/is_online-r.txt", "output_blocks": [{"text": "[1] TRUE"}]}, "translation": {"description": "Wrapper around curl::has_internet.", "usage": "httr2.is_online.is_online", "example": "is_online() returns curl::has_internet()", "output": "output/is_online-python.txt", "output_blocks": [{"text": "[1] TRUE"}]}}, {"name": "iterate_with_cursor", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "iterate_with_cursor", "origin": null, "translation": null}, {"name": "iterate_with_link_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "iterate_with_link_url", "origin": null, "translation": null}, {"name": "iterate_with_offset", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "iterate_with_offset", "origin": null, "translation": null}, {"name": "jwt_claim", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jwt_claim", "origin": null, "translation": null}, {"name": "jwt_encode_hmac", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jwt_encode_hmac", "origin": null, "translation": null}, {"name": "jwt_encode_sig", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jwt_encode_sig", "origin": null, "translation": null}, {"name": "last_request", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "last_request", "origin": null, "translation": null}, {"name": "last_request_json", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "last_request_json", "origin": null, "translation": null}, {"name": "last_response", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "last_response", "origin": null, "translation": null}, {"name": "last_response_json", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "last_response_json", "origin": null, "translation": null}, {"name": "local_mocked_responses", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "local_mocked_responses", "origin": null, "translation": null}, {"name": "local_verbosity", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "local_verbosity", "origin": null, "translation": null}, {"name": "new_response", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_response", "origin": null, "translation": null}, {"name": "oauth_cache_clear", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_cache_clear", "origin": null, "translation": null}, {"name": "oauth_cache_path", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_cache_path", "origin": null, "translation": null}, {"name": "oauth_cache_prune", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_cache_prune", "origin": null, "translation": null}, {"name": "oauth_client", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_client", "origin": null, "translation": null}, {"name": "oauth_client_req_auth", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_client_req_auth", "origin": null, "translation": null}, {"name": "oauth_client_req_auth_body", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_client_req_auth_body", "origin": null, "translation": null}, {"name": "oauth_client_req_auth_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_client_req_auth_header", "origin": null, "translation": null}, {"name": "oauth_client_req_auth_jwt_sig", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_client_req_auth_jwt_sig", "origin": null, "translation": null}, {"name": "oauth_flow_auth_code", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_auth_code", "origin": null, "translation": null}, {"name": "oauth_flow_auth_code_listen", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_auth_code_listen", "origin": null, "translation": null}, {"name": "oauth_flow_auth_code_parse", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_auth_code_parse", "origin": null, "translation": null}, {"name": "oauth_flow_auth_code_pkce", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_auth_code_pkce", "origin": null, "translation": null}, {"name": "oauth_flow_auth_code_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_auth_code_url", "origin": null, "translation": null}, {"name": "oauth_flow_bearer_jwt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_bearer_jwt", "origin": null, "translation": null}, {"name": "oauth_flow_client_credentials", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_client_credentials", "origin": null, "translation": null}, {"name": "oauth_flow_device", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_device", "origin": null, "translation": null}, {"name": "oauth_flow_password", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_password", "origin": null, "translation": null}, {"name": "oauth_flow_refresh", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_refresh", "origin": null, "translation": null}, {"name": "oauth_flow_token_exchange", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_flow_token_exchange", "origin": null, "translation": null}, {"name": "oauth_redirect_uri", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_redirect_uri", "origin": null, "translation": null}, {"name": "oauth_server_metadata", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_server_metadata", "origin": null, "translation": null}, {"name": "oauth_token", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_token", "origin": null, "translation": null}, {"name": "oauth_token_cached", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "oauth_token_cached", "origin": null, "translation": null}, {"name": "obfuscate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obfuscate", "origin": null, "translation": null}, {"name": "obfuscated", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obfuscated", "origin": null, "translation": null}, {"name": "req_auth_aws_v4", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_auth_aws_v4", "origin": null, "translation": null}, {"name": "req_auth_basic", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_auth_basic", "origin": null, "translation": null}, {"name": "req_auth_bearer_token", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_auth_bearer_token", "origin": null, "translation": null}, {"name": "req_body_file", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_file", "origin": null, "translation": null}, {"name": "req_body_form", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_form", "origin": null, "translation": null}, {"name": "req_body_json", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_json", "origin": null, "translation": null}, {"name": "req_body_json_modify", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_json_modify", "origin": null, "translation": null}, {"name": "req_body_multipart", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_multipart", "origin": null, "translation": null}, {"name": "req_body_raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_body_raw", "origin": null, "translation": null}, {"name": "req_cache", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_cache", "origin": null, "translation": null}, {"name": "req_cookie_preserve", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_cookie_preserve", "origin": null, "translation": null}, {"name": "req_cookies_set", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_cookies_set", "origin": null, "translation": null}, {"name": "req_dry_run", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_dry_run", "origin": null, "translation": null}, {"name": "req_error", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_error", "origin": null, "translation": null}, {"name": "req_get_body", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_get_body", "origin": null, "translation": null}, {"name": "req_get_body_type", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_get_body_type", "origin": null, "translation": null}, {"name": "req_get_headers", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_get_headers", "origin": null, "translation": null}, {"name": "req_get_method", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_get_method", "origin": null, "translation": null}, {"name": "req_get_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_get_url", "origin": null, "translation": null}, {"name": "req_headers", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_headers", "origin": null, "translation": null}, {"name": "req_headers_redacted", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_headers_redacted", "origin": null, "translation": null}, {"name": "req_method", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_method", "origin": null, "translation": null}, {"name": "req_oauth", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth", "origin": null, "translation": null}, {"name": "req_oauth_auth_code", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_auth_code", "origin": null, "translation": null}, {"name": "req_oauth_bearer_jwt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_bearer_jwt", "origin": null, "translation": null}, {"name": "req_oauth_client_credentials", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_client_credentials", "origin": null, "translation": null}, {"name": "req_oauth_device", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_device", "origin": null, "translation": null}, {"name": "req_oauth_password", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_password", "origin": null, "translation": null}, {"name": "req_oauth_refresh", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_refresh", "origin": null, "translation": null}, {"name": "req_oauth_token_exchange", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_oauth_token_exchange", "origin": null, "translation": null}, {"name": "req_options", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_options", "origin": null, "translation": null}, {"name": "req_perform", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform", "origin": null, "translation": null}, {"name": "req_perform_connection", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_connection", "origin": null, "translation": null}, {"name": "req_perform_iterative", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_iterative", "origin": null, "translation": null}, {"name": "req_perform_parallel", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_parallel", "origin": null, "translation": null}, {"name": "req_perform_promise", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_promise", "origin": null, "translation": null}, {"name": "req_perform_sequential", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_sequential", "origin": null, "translation": null}, {"name": "req_perform_stream", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_perform_stream", "origin": null, "translation": null}, {"name": "req_progress", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_progress", "origin": null, "translation": null}, {"name": "req_proxy", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_proxy", "origin": null, "translation": null}, {"name": "req_retry", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_retry", "origin": null, "translation": null}, {"name": "req_template", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_template", "origin": null, "translation": null}, {"name": "req_throttle", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_throttle", "origin": null, "translation": null}, {"name": "req_timeout", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_timeout", "origin": null, "translation": null}, {"name": "req_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_url", "origin": null, "translation": null}, {"name": "req_url_path", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_url_path", "origin": null, "translation": null}, {"name": "req_url_path_append", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_url_path_append", "origin": null, "translation": null}, {"name": "req_url_query", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_url_query", "origin": null, "translation": null}, {"name": "req_url_relative", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_url_relative", "origin": null, "translation": null}, {"name": "req_user_agent", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_user_agent", "origin": null, "translation": null}, {"name": "req_verbose", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "req_verbose", "origin": null, "translation": null}, {"name": "request", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "request", "origin": null, "translation": null}, {"name": "resp_body_html", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_body_html", "origin": null, "translation": null}, {"name": "resp_body_json", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_body_json", "origin": null, "translation": null}, {"name": "resp_body_raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_body_raw", "origin": null, "translation": null}, {"name": "resp_body_string", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_body_string", "origin": null, "translation": null}, {"name": "resp_body_xml", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_body_xml", "origin": null, "translation": null}, {"name": "resp_check_content_type", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_check_content_type", "origin": null, "translation": null}, {"name": "resp_check_status", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_check_status", "origin": null, "translation": null}, {"name": "resp_content_type", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_content_type", "origin": null, "translation": null}, {"name": "resp_date", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_date", "origin": null, "translation": null}, {"name": "resp_encoding", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_encoding", "origin": null, "translation": null}, {"name": "resp_has_body", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_has_body", "origin": null, "translation": null}, {"name": "resp_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_header", "origin": null, "translation": null}, {"name": "resp_header_exists", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_header_exists", "origin": null, "translation": null}, {"name": "resp_headers", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_headers", "origin": null, "translation": null}, {"name": "resp_is_error", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_is_error", "origin": null, "translation": null}, {"name": "resp_link_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_link_url", "origin": null, "translation": null}, {"name": "resp_raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_raw", "origin": null, "translation": null}, {"name": "resp_request", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_request", "origin": null, "translation": null}, {"name": "resp_retry_after", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_retry_after", "origin": null, "translation": null}, {"name": "resp_status", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_status", "origin": null, "translation": null}, {"name": "resp_status_desc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_status_desc", "origin": null, "translation": null}, {"name": "resp_stream_aws", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_stream_aws", "origin": null, "translation": null}, {"name": "resp_stream_is_complete", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_stream_is_complete", "origin": null, "translation": null}, {"name": "resp_stream_lines", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_stream_lines", "origin": null, "translation": null}, {"name": "resp_stream_raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_stream_raw", "origin": null, "translation": null}, {"name": "resp_stream_sse", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_stream_sse", "origin": null, "translation": null}, {"name": "resp_timing", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_timing", "origin": null, "translation": null}, {"name": "resp_url", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_url", "origin": null, "translation": null}, {"name": "resp_url_path", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_url_path", "origin": null, "translation": null}, {"name": "resp_url_queries", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_url_queries", "origin": null, "translation": null}, {"name": "resp_url_query", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resp_url_query", "origin": null, "translation": null}, {"name": "response", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "response", "origin": null, "translation": null}, {"name": "response_json", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "response_json", "origin": null, "translation": null}, {"name": "resps_data", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resps_data", "origin": null, "translation": null}, {"name": "resps_failures", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resps_failures", "origin": null, "translation": null}, {"name": "resps_ok", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resps_ok", "origin": null, "translation": null}, {"name": "resps_requests", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resps_requests", "origin": null, "translation": null}, {"name": "resps_successes", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "resps_successes", "origin": null, "translation": null}, {"name": "secret_decrypt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_decrypt", "origin": null, "translation": null}, {"name": "secret_decrypt_file", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_decrypt_file", "origin": null, "translation": null}, {"name": "secret_encrypt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_encrypt", "origin": null, "translation": null}, {"name": "secret_encrypt_file", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_encrypt_file", "origin": null, "translation": null}, {"name": "secret_has_key", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_has_key", "origin": null, "translation": null}, {"name": "secret_make_key", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_make_key", "origin": null, "translation": null}, {"name": "secret_read_rds", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_read_rds", "origin": null, "translation": null}, {"name": "secret_write_rds", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "secret_write_rds", "origin": null, "translation": null}, {"name": "signal_total_pages", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "signal_total_pages", "origin": null, "translation": null}, {"name": "throttle_status", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "throttle_status", "origin": null, "translation": null}, {"name": "url_build", "translated": true, "not_done": "", "title": "url_build", "origin": {"description": "Builds a URL string from a parsed URL.", "example": "url_build round-trips a URL with user, password, port, a colon in the path, query, and fragment", "output": "output/url_build-r.txt", "output_blocks": [{"text": "[1] \"http://google.com/\"\n[1] \"http://google.com/path\"\n[1] \"http://google.com/path?a=1&b=2\"\n[1] \"http://google.com:81/path?a=1&b=2\"\n[1] \"http://google.com:81/path?a=1&b=2#frag\"\n[1] \"http://google.com:81/path?a=1&b=2&c=%7B1%7B2%7D3%7D#frag\"\n[1] \"http://user@google.com:81/path?a=1&b=2\"\n[1] \"http://user:pass@google.com:81/path?a=1&b=2\"\n[1] \"https://example.com/a:b/foo%20bar/\""}]}, "translation": {"description": "Builds a URL string from a parsed URL.", "usage": "httr2.url_build.url_build", "example": "url_build round-trips a URL with user, password, port, a colon in the path, query, and fragment", "output": "output/url_build-python.txt", "output_blocks": [{"text": "[1] \"http://google.com/\"\n[1] \"http://google.com/path\"\n[1] \"http://google.com/path?a=1&b=2\"\n[1] \"http://google.com:81/path?a=1&b=2\"\n[1] \"http://google.com:81/path?a=1&b=2#frag\"\n[1] \"http://google.com:81/path?a=1&b=2&c=%7B1%7B2%7D3%7D#frag\"\n[1] \"http://user@google.com:81/path?a=1&b=2\"\n[1] \"http://user:pass@google.com:81/path?a=1&b=2\"\n[1] \"https://example.com/a:b/foo%20bar/\""}]}}, {"name": "url_modify", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "url_modify", "origin": {"description": "Modifies selected pieces of a URL and leaves the rest unchanged.", "example": "url_modify sets scheme, path, query, and fragment and keeps the user, password, and port", "output": "output/url_modify-r.txt", "output_blocks": [{"text": "[1] \"http://hadley.nz/about\"\n[1] \"https://hadley.nz/\"\n[1] \"http://hadley.nz/cde\"\n[1] \"http://hadley.nz/\"\n[1] \"http://hadley.nz/?b=2\"\n[1] \"http://hadley.nz/?c=3\""}]}, "translation": {"description": "Modifies selected pieces of a URL and leaves the rest unchanged.", "usage": "httr2.url_modify.url_modify", "example": "url_modify sets scheme, path, query, and fragment and keeps the user, password, and port", "output": "output/url_modify-python.txt", "output_blocks": [{"text": "[1] \"http://hadley.nz/about\"\n[1] \"https://hadley.nz/\"\n[1] \"http://hadley.nz/cde\"\n[1] \"http://hadley.nz/\"\n[1] \"http://hadley.nz/?b=2\"\n[1] \"http://hadley.nz/?c=3\""}]}}, {"name": "url_modify_query", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "url_modify_query", "origin": null, "translation": null}, {"name": "url_modify_relative", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "url_modify_relative", "origin": null, "translation": null}, {"name": "url_parse", "translated": true, "not_done": "", "title": "url_parse", "origin": {"description": "Parses a URL, including a relative URL against a base.", "example": "url_parse of a URL with user, password, port, query, and fragment", "output": "output/url_parse-r.txt", "output_blocks": [{"text": "\u003chttr2_url> http://google.com/\n* scheme: http\n* hostname: google.com\n* path: /\n\u003chttr2_url> http://google.com:80/\n* scheme: http\n* hostname: google.com\n* port: 80\n* path: /\n\u003chttr2_url> http://google.com:80/?a=1&b=2\n* scheme: http\n* hostname: google.com\n* port: 80\n* path: /\n* query:\n  * a: 1\n  * b: 2\n\u003chttr2_url> http://username@google.com:80/path%3Btest?a=1&b=2#40\n* scheme: http\n* hostname: google.com\n* username: username\n* port: 80\n* path: /path;test\n* query:\n  * a: 1\n  * b: 2\n* fragment: 40\n\u003chttr2_url> http://google.com/bar/foo\n* scheme: http\n* hostname: google.com\n* path: /bar/foo\n\u003chttr2_url> http://google.com/\n* scheme: http\n* hostname: google.com\n* path: /"}]}, "translation": {"description": "Parses a URL, including a relative URL against a base.", "usage": "httr2.url_parse.url_parse", "example": "url_parse of a URL with user, password, port, query, and fragment", "output": "output/url_parse-python.txt", "output_blocks": [{"text": "\u003chttr2_url> http://google.com/\n* scheme: http\n* hostname: google.com\n* path: /\n\u003chttr2_url> http://google.com:80/\n* scheme: http\n* hostname: google.com\n* port: 80\n* path: /\n\u003chttr2_url> http://google.com:80/?a=1&b=2\n* scheme: http\n* hostname: google.com\n* port: 80\n* path: /\n* query:\n  * a: 1\n  * b: 2\n\u003chttr2_url> http://username@google.com:80/path%3Btest?a=1&b=2#40\n* scheme: http\n* hostname: google.com\n* username: username\n* port: 80\n* path: /path;test\n* query:\n  * a: 1\n  * b: 2\n* fragment: 40\n\u003chttr2_url> http://google.com/bar/foo\n* scheme: http\n* hostname: google.com\n* path: /bar/foo\n\u003chttr2_url> http://google.com/\n* scheme: http\n* hostname: google.com\n* path: /"}]}}, {"name": "url_query_build", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "url_query_build", "origin": null, "translation": null}, {"name": "url_query_parse", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "url_query_parse", "origin": null, "translation": null}, {"name": "with_mocked_responses", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "with_mocked_responses", "origin": null, "translation": null}, {"name": "with_verbosity", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "with_verbosity", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

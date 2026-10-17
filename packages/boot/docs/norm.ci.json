@@ -1,0 +1,104 @@
+{
+  "name": "norm.ci",
+  "title": "Normal Approximation Confidence Intervals",
+  "origin": {
+    "description": "Equi-tailed two-sided intervals from the normal approximation to a statistic.",
+    "usage": "norm.ci(boot.out = NULL, conf = 0.95, index = 1, var.t0 = NULL,\n        t0 = NULL, t = NULL, L = NULL, h = function(t) t,\n        hdot = function(t) 1, hinv = function(t) t)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A bootstrap object. Required when t0 is omitted, and also when both var.t0 and t are omitted."
+      },
+      {
+        "name": "conf",
+        "text": "One confidence level, or several."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the statistic in the bootstrap output. Unused when boot.out is omitted."
+      },
+      {
+        "name": "var.t0",
+        "text": "Variance of the statistic. If omitted, the sample variance of t is used. With a transformation, a supplied variance is scaled by hdot(t0)^2 before h is applied."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Taken from boot.out when omitted."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates. They estimate the variance when var.t0 is omitted, and they estimate the bias whenever they are supplied."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values for the untransformed statistic. Used for the variance only when both var.t0 and t are omitted."
+      },
+      {
+        "name": "h",
+        "text": "Monotone transformation. The interval is calculated on the scale of h and mapped back by hinv. The default is the identity."
+      },
+      {
+        "name": "hdot",
+        "text": "Derivative of h. The default is the constant function 1."
+      },
+      {
+        "name": "hinv",
+        "text": "Inverse of h. If h is supplied and hinv is not, the interval stays on the transformed scale."
+      }
+    ],
+    "details": "The interval has half-width qnorm((1+conf)/2) * sqrt(var.t0). When replicates are supplied it is centered at 2*h(t0) - mean(h(t)); otherwise it is centered at h(t0). The variance from L is sum((hdot(t0) * L / length(L))^2). The manual says a single confidence level is returned as a vector. The installed function builds the result with cbind, so one level is still a one-row matrix.",
+    "value": "A matrix with one row per confidence level and three columns: the level and the two endpoints. A single level is still that one-row matrix.",
+    "example": "library(boot)\nhours <- c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)\nair.mean <- mean(hours)\nair.n <- length(hours)\nair.v <- air.mean^2 / air.n\nprint(norm.ci(t0 = air.mean, var.t0 = air.v))\nprint(exp(norm.ci(t0 = log(air.mean), var.t0 = 1/air.n)[, 2:3]))",
+    "output": "output/norm.ci-r.txt"
+  },
+  "translation": {
+    "description": "Equi-tailed two-sided intervals from the normal approximation to a statistic.",
+    "usage": "norm_ci(boot_out=None, conf=0.95, index=1, var_t0=None, t0=None, t=None, L=None, h=None, hdot=None, hinv=None)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "Optional bootstrap object with t0 and t. Required when t0 is omitted."
+      },
+      {
+        "name": "conf",
+        "text": "One confidence level, or several."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the statistic. Unused when boot_out is omitted."
+      },
+      {
+        "name": "var_t0",
+        "text": "Variance of the statistic. If omitted, the sample variance of t is used. A supplied variance is scaled by hdot(t0)^2."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Taken from boot_out when omitted."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates. They estimate the variance when var_t0 is omitted, and the bias whenever they are supplied."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values for the untransformed statistic. Used for the variance only when both var_t0 and t are omitted."
+      },
+      {
+        "name": "h",
+        "text": "Monotone transformation. None is the identity."
+      },
+      {
+        "name": "hdot",
+        "text": "Derivative of h. None is the constant 1."
+      },
+      {
+        "name": "hinv",
+        "text": "Inverse of h. None is the identity."
+      }
+    ],
+    "details": "The half-width is qnorm((1+conf)/2) * sqrt(var_t0), with qnorm in pure Python. Replicates center the interval at 2*h(t0) - mean(h(t)). The variance from L is the sum of squared scaled influence values. One confidence level is still one row of a three-column matrix, matching cbind in the installed function. The sample variance divides by n - 1.",
+    "value": "A NumPy array with one row per confidence level and three columns: the level and the two endpoints.",
+    "example": "import math\nimport numpy as np\nfrom boot.ci import norm_ci\n\nhours = np.array([3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487], dtype=float)\nair_mean = float(np.mean(hours))\nair_n = hours.size\nair_v = air_mean ** 2 / air_n\nprint(norm_ci(t0=air_mean, var_t0=air_v))\nlogged = norm_ci(t0=math.log(air_mean), var_t0=1.0 / air_n)\nprint(np.exp(logged[0, 1:]))",
+    "output": "output/norm.ci-python.txt"
+  }
+}

@@ -1,0 +1,1520 @@
+{
+  "name": "matrixcalc",
+  "cran_version": "1.0-6",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked %s%, is.non.singular.matrix, H.matrices, is.negative.semi.definite, is.skew.symmetric.matrix, E.matrices, frobenius.matrix, frobenius.prod, is.negative.definite, is.indefinite, hilbert.schmidt.norm, fibonacci.matrix, matrix, elimination, hadamard, entrywise, is, one, vec, vech, is, hankel.matrix, inf.norm, and is.idempotent.matrix.positive.definite.norm, hilbert.matrix, maximum.norm, and is.symmetric.matrix.square.matrix, and is.diagonal.matrix.norm, and frobenius.norm.prod.matrix.trace, commutation.matrix, creation.matrix, D.matrix, direct.prod, direct.sum, and duplication.matrix, is.singular.matrix, is.positive.semi.definite, lower.triangle, L.matrix, spectral.norm, upper.triangle, lu.decomposition, pascal.matrix, K.matrix, N.matrix, matrix.inverse, shift.down, matrix.rank, shift.right, set.submatrix, matrix.power, shift.left, shift.up, toeplitz.matrix, svd.inverse, vandermonde.matrix, T.matrices, symmetric.pascal.matrix, u.vectors, stirling.matrix. The other exports are listed and not translated.",
+  "functions": [
+    {
+      "name": "commutation.matrix",
+      "translated": true,
+      "python": "matrixcalc.commutation_matrix.commutation_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "The commutation matrix places one unit entry per column-major vec swap so K @ vec(A) matches vec(A.T).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Commutation matrices for (3, 4), (2, 2), and (3, 3), then K %*% vec(A) versus vec(t(A)) for a 3 by 4 row-filled A",
+        "r_ms": 2.072930335998535,
+        "translated_ms": 0.31014950036478695,
+        "speedup": 6.68364880020902,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  k34 <- commutation.matrix(3, 4)\n  k22 <- commutation.matrix(2, 2)\n  k33 <- commutation.matrix(3)\n  a <- matrix(seq(1, 12, 1), nrow = 3, byrow = TRUE)\n  vec_a <- vec(a)\n  vec_at <- vec(t(a))\n  c(\n    c(k34),\n    c(k22),\n    c(k33),\n    c(k34 %*% vec_a),\n    c(vec_at)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.commutation_matrix import commutation_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    k34 = commutation_matrix(3, 4)\n    k22 = commutation_matrix(2, 2)\n    k33 = commutation_matrix(3)\n    a = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"C\")\n    vec_a = _vec(a)\n    vec_at = _vec(a.T)\n    parts = [\n        k34.reshape(-1, order=\"F\"),\n        k22.reshape(-1, order=\"F\"),\n        k33.reshape(-1, order=\"F\"),\n        k34 @ vec_a,\n        vec_at,\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "creation.matrix",
+      "translated": true,
+      "python": "matrixcalc.creation_matrix.creation_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "The creation matrix places k on row k+1 and column k for k = 1 through n-1, with the same scalar integer validation messages as R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Creation matrices for n = 10, 2, and 5, flattened in column-major order",
+        "r_ms": 0.13589859008789062,
+        "translated_ms": 0.03755649959202856,
+        "speedup": 3.618510552477989,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  h10 <- creation.matrix(10)\n  h2 <- creation.matrix(2)\n  h5 <- creation.matrix(5)\n  c(c(h10), c(h2), c(h5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.creation_matrix import creation_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        creation_matrix(10),\n        creation_matrix(2),\n        creation_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "D.matrix",
+      "translated": true,
+      "python": "matrixcalc.d_matrix.d_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "The duplication matrix maps vech(A) to vec(A) for a symmetric matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "D.matrix(3) and D.matrix(4) flattened column-major, then D %*% vech(A) versus vec(A) for a 3 by 3 symmetric matrix",
+        "r_ms": 1.1519193649291992,
+        "translated_ms": 0.2501880007912405,
+        "speedup": 4.604215075407924,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  d3 <- D.matrix(3)\n  a <- matrix(c(1, 2, 3, 2, 3, 4, 3, 4, 5), nrow = 3, byrow = TRUE)\n  vec_a <- vec(a)\n  vech_a <- vech(a)\n  y <- d3 %*% vech_a\n  d4 <- D.matrix(4)\n  c(c(d3), c(y), c(vec_a), c(d4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.d_matrix import d_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef _vech(array):\n    array = np.asarray(array, dtype=float)\n    n = array.shape[0]\n    parts = []\n    for j in range(n):\n        for i in range(j, n):\n            parts.append(array[i, j])\n    return np.asarray(parts, dtype=float)\n\n\ndef one():\n    d3 = d_matrix(3)\n    a = np.array(\n        [[1, 2, 3], [2, 3, 4], [3, 4, 5]],\n        dtype=float,\n    )\n    vec_a = _vec(a)\n    vech_a = _vech(a)\n    y = d3 @ vech_a\n    d4 = d_matrix(4)\n    parts = [\n        d3.reshape(-1, order=\"F\"),\n        y.reshape(-1, order=\"F\"),\n        vec_a.reshape(-1, order=\"F\"),\n        d4.reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "direct.prod",
+      "translated": true,
+      "python": "matrixcalc.direct_prod.direct_prod",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the direct product, promoting vectors to column matrices first.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Column-major flattenings of a 4 by 1 pair, a 2 by 3 pair, two length-3 vectors, and two 1 by 2 rows",
+        "r_ms": 0.4137754440307617,
+        "translated_ms": 0.1991990002352395,
+        "speedup": 2.07719638924956,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  x <- matrix(seq(1, 4))\n  y <- matrix(seq(5, 8))\n  a <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  b <- matrix(seq(11, 16), nrow = 2, byrow = TRUE)\n  u <- c(0.25, -1.5, 2)\n  v <- c(4, 0.5, -0.125)\n  c(\n    c(direct.prod(x, y)),\n    c(direct.prod(a, b)),\n    c(direct.prod(u, v)),\n    c(direct.prod(matrix(1:2, nrow = 1), matrix(3:4, nrow = 1)))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.direct_prod import direct_prod\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    x = np.arange(1, 5, dtype=float).reshape(-1, 1)\n    y = np.arange(5, 9, dtype=float).reshape(-1, 1)\n    a = np.arange(1, 7, dtype=float).reshape(2, 3, order=\"C\")\n    b = np.arange(11, 17, dtype=float).reshape(2, 3, order=\"C\")\n    u = np.array([0.25, -1.5, 2], dtype=float)\n    v = np.array([4, 0.5, -0.125], dtype=float)\n    parts = [\n        direct_prod(x, y),\n        direct_prod(a, b),\n        direct_prod(u, v),\n        direct_prod(np.array([[1, 2]], dtype=float), np.array([[3, 4]], dtype=float)),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "direct.sum",
+      "translated": true,
+      "python": "matrixcalc.direct_sum.direct_sum",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the block-diagonal direct sum, promoting each vector to a column matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Four block-diagonal results flattened column-major: 4 by 1 columns, 2 by 3 matrices, length-3 vectors, and 1 by 2 rows",
+        "r_ms": 0.205,
+        "translated_ms": 0.118,
+        "speedup": 1.7372881355932204,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  x <- matrix(seq(1, 4))\n  y <- matrix(seq(5, 8))\n  a <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  b <- matrix(seq(11, 16), nrow = 2, byrow = TRUE)\n  u <- c(0.25, -1.5, 2)\n  v <- c(4, 0.5, -0.125)\n  c(\n    c(direct.sum(x, y)),\n    c(direct.sum(a, b)),\n    c(direct.sum(u, v)),\n    c(direct.sum(matrix(1:2, nrow = 1), matrix(3:4, nrow = 1)))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.direct_sum import direct_sum\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    x = np.arange(1, 5, dtype=float).reshape(-1, 1)\n    y = np.arange(5, 9, dtype=float).reshape(-1, 1)\n    a = np.arange(1, 7, dtype=float).reshape(2, 3, order=\"C\")\n    b = np.arange(11, 17, dtype=float).reshape(2, 3, order=\"C\")\n    u = np.array([0.25, -1.5, 2], dtype=float)\n    v = np.array([4, 0.5, -0.125], dtype=float)\n    parts = [\n        direct_sum(x, y),\n        direct_sum(a, b),\n        direct_sum(u, v),\n        direct_sum(np.array([[1, 2]], dtype=float), np.array([[3, 4]], dtype=float)),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "duplication.matrix",
+      "translated": true,
+      "python": "matrixcalc.duplication_matrix.duplication_matrix",
+      "loads": [],
+      "uses": [
+        "D.matrix"
+      ],
+      "done": "R's duplication.matrix delegates to D.matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help example: duplication.matrix(3) and (4), D %*% vech(A) versus vec(A) for a 3 by 3 symmetric matrix, flattened column-major.",
+        "r_ms": 1.0690689086914062,
+        "translated_ms": 0.4222530005790759,
+        "speedup": 2.5318207501788974,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  d3 <- duplication.matrix(3)\n  a <- matrix(c(1, 2, 3, 2, 3, 4, 3, 4, 5), nrow = 3, byrow = TRUE)\n  vec_a <- vec(a)\n  vech_a <- vech(a)\n  y <- d3 %*% vech_a\n  d4 <- duplication.matrix(4)\n  c(c(d3), c(y), c(vec_a), c(d4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.duplication_matrix import duplication_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef _vech(array):\n    array = np.asarray(array, dtype=float)\n    n = array.shape[0]\n    parts = []\n    for j in range(n):\n        for i in range(j, n):\n            parts.append(array[i, j])\n    return np.asarray(parts, dtype=float)\n\n\ndef one():\n    d3 = duplication_matrix(3)\n    a = np.array(\n        [[1, 2, 3], [2, 3, 4], [3, 4, 5]],\n        dtype=float,\n    )\n    vec_a = _vec(a)\n    vech_a = _vech(a)\n    y = d3 @ vech_a\n    d4 = duplication_matrix(4)\n    parts = [\n        d3.reshape(-1, order=\"F\"),\n        y.reshape(-1, order=\"F\"),\n        vec_a.reshape(-1, order=\"F\"),\n        d4.reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "E.matrices",
+      "translated": true,
+      "python": "matrixcalc.e_matrices.e_matrices",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the outer products of the standard basis vectors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "E.matrices(3) and E.matrices(4), flattened column-major.",
+        "r_ms": 0.6254911422729492,
+        "translated_ms": 0.25067050228244625,
+        "speedup": 2.49527222619983,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\nflatten_e <- function(E) {\n  parts <- numeric(0)\n  for (i in seq_along(E)) {\n    for (j in seq_along(E[[i]])) {\n      parts <- c(parts, c(E[[i]][[j]]))\n    }\n  }\n  parts\n}\none <- function() {\n  e3 <- E.matrices(3)\n  e4 <- E.matrices(4)\n  c(flatten_e(e3), flatten_e(e4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.e_matrices import e_matrices\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten_e(blocks):\n    parts = []\n    for row in blocks:\n        for matrix in row:\n            parts.append(np.asarray(matrix, dtype=float).reshape(-1, order=\"F\"))\n    return np.concatenate(parts)\n\n\ndef one():\n    return np.concatenate([flatten_e(e_matrices(3)), flatten_e(e_matrices(4))])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "elimination.matrix",
+      "translated": true,
+      "python": "matrixcalc.elimination_matrix.elimination_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "elimination.matrix builds the matrix mapping vec(A) to vech(A) for a lower-triangular A.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "elimination.matrix(3) and (4) on a 3 by 3 lower triangle, checking L %*% vec(A) equals vech(A).",
+        "r_ms": 1.1981725692749023,
+        "translated_ms": 0.3936395005439408,
+        "speedup": 3.043832155104449,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  l3 <- elimination.matrix(3)\n  a <- lower.triangle(matrix(seq(1, 9, 1), nrow = 3, byrow = TRUE))\n  vec_a <- vec(a)\n  vech_a <- vech(a)\n  y <- l3 %*% vec_a\n  l4 <- elimination.matrix(4)\n  c(c(l3), c(y), c(vec_a), c(vech_a), c(l4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.elimination_matrix import elimination_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef _vech(array):\n    array = np.asarray(array, dtype=float)\n    n = array.shape[0]\n    parts = []\n    for j in range(n):\n        for i in range(j, n):\n            parts.append(array[i, j])\n    return np.asarray(parts, dtype=float)\n\n\ndef _lower_triangle(array):\n    array = np.asarray(array, dtype=float).copy()\n    n = array.shape[0]\n    for i in range(n):\n        for j in range(i + 1, n):\n            array[i, j] = 0.0\n    return array\n\n\ndef one():\n    l3 = elimination_matrix(3)\n    a = _lower_triangle(np.arange(1, 10, dtype=float).reshape(3, 3, order=\"C\"))\n    vec_a = _vec(a)\n    vech_a = _vech(a)\n    y = l3 @ vec_a\n    l4 = elimination_matrix(4)\n    parts = [\n        l3.reshape(-1, order=\"F\"),\n        y.reshape(-1, order=\"F\"),\n        vec_a.reshape(-1, order=\"F\"),\n        vech_a.reshape(-1, order=\"F\"),\n        l4.reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "entrywise.norm",
+      "translated": true,
+      "python": "matrixcalc.entrywise_norm.entrywise_norm",
+      "loads": [],
+      "uses": [],
+      "done": "Entrywise p-norm of a numeric matrix or vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Eight norms: a 3 by 3 matrix at p=2 and Inf, a 3 by 4 L1, a vector at p=3, a 2 by 3 at p=1.5, 1:4 at p=1, and two empty inputs.",
+        "r_ms": 0.1709461212158203,
+        "translated_ms": 0.17214150011568563,
+        "speedup": 0.9930558354663926,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 12, 1), nrow = 3, byrow = TRUE)\n  u <- c(0.25, -1.5, 2.75, 4)\n  v <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  c(\n    entrywise.norm(a, 2),\n    entrywise.norm(a, Inf),\n    entrywise.norm(b, 1),\n    entrywise.norm(u, 3),\n    entrywise.norm(v, 1.5),\n    entrywise.norm(1:4, 1),\n    entrywise.norm(matrix(numeric(0), 0, 0), 2),\n    entrywise.norm(numeric(0), 4)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.entrywise_norm import entrywise_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"C\")\n    u = np.array([0.25, -1.5, 2.75, 4.0], dtype=float)\n    v = np.arange(1, 7, dtype=float).reshape(2, 3, order=\"C\")\n    return [\n        entrywise_norm(a, 2),\n        entrywise_norm(a, float(\"inf\")),\n        entrywise_norm(b, 1),\n        entrywise_norm(u, 3),\n        entrywise_norm(v, 1.5),\n        entrywise_norm(np.arange(1, 5, dtype=float), 1),\n        entrywise_norm(np.zeros((0, 0), dtype=float), 2),\n        entrywise_norm(np.array([], dtype=float), 4),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fibonacci.matrix",
+      "translated": true,
+      "python": "matrixcalc.fibonacci_matrix.fibonacci_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the Fibonacci matrix of order n.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Orders 10, 2, and 5, flattened column-major.",
+        "r_ms": 0.1043081283569336,
+        "translated_ms": 0.09218200284522027,
+        "speedup": 1.131545476746409,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  f10 <- fibonacci.matrix(10)\n  f2 <- fibonacci.matrix(2)\n  f5 <- fibonacci.matrix(5)\n  c(c(f10), c(f2), c(f5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.fibonacci_matrix import fibonacci_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        fibonacci_matrix(10),\n        fibonacci_matrix(2),\n        fibonacci_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "frobenius.matrix",
+      "translated": true,
+      "python": "matrixcalc.frobenius_matrix.frobenius_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the Frobenius companion matrix from a shifted identity and signed binomial coefficients.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Orders 4, 10, 2, and 5, flattened column-major.",
+        "r_ms": 0.17750263214111328,
+        "translated_ms": 0.09756749932421371,
+        "speedup": 1.8192803276763059,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  f4 <- frobenius.matrix(4)\n  f10 <- frobenius.matrix(10)\n  f2 <- frobenius.matrix(2)\n  f5 <- frobenius.matrix(5)\n  c(c(f4), c(f10), c(f2), c(f5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.frobenius_matrix import frobenius_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        frobenius_matrix(4),\n        frobenius_matrix(10),\n        frobenius_matrix(2),\n        frobenius_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "frobenius.norm",
+      "translated": true,
+      "python": "matrixcalc.frobenius_norm.frobenius_norm",
+      "loads": [],
+      "uses": [
+        "entrywise.norm"
+      ],
+      "done": "Frobenius norm as the entrywise 2-norm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Six Frobenius norms: the help 3 by 3, a 4 by 4 grid, a length-12 vector, a 1 by 1, an empty matrix, and a 3 by 3 float matrix.",
+        "r_ms": 0.11336803436279297,
+        "translated_ms": 0.09491950004303362,
+        "speedup": 1.1943597923650604,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  v <- 1:12\n  c(\n    frobenius.norm(a),\n    frobenius.norm(b),\n    frobenius.norm(v),\n    frobenius.norm(matrix(3.5)),\n    frobenius.norm(matrix(numeric(0), 0, 0)),\n    frobenius.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.frobenius_norm import frobenius_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    v = np.arange(1, 13, dtype=float)\n    return [\n        frobenius_norm(a),\n        frobenius_norm(b),\n        frobenius_norm(v),\n        frobenius_norm(np.array([[3.5]])),\n        frobenius_norm(np.zeros((0, 0))),\n        frobenius_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "frobenius.prod",
+      "translated": true,
+      "python": "matrixcalc.frobenius_prod.frobenius_prod",
+      "loads": [],
+      "uses": [
+        "hadamard.prod"
+      ],
+      "done": "Frobenius inner product, the sum of the element-wise product.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The help 2 by 2 example, column matrices, 2 by 3 matrices, and two vectors.",
+        "r_ms": 0.2580881118774414,
+        "translated_ms": 0.15082000027177855,
+        "speedup": 1.71123267081531,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  ex_x <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  ex_y <- matrix(c(2, 4, 6, 8), nrow = 2, byrow = TRUE)\n  x <- matrix(seq(1, 4))\n  y <- matrix(seq(5, 8))\n  a <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  b <- matrix(seq(11, 16), nrow = 2, byrow = TRUE)\n  u <- c(0.25, -1.5, 2)\n  v <- c(4, 0.5, -0.125)\n  c(\n    frobenius.prod(ex_x, ex_y),\n    frobenius.prod(x, y),\n    frobenius.prod(a, b),\n    frobenius.prod(u, v),\n    frobenius.prod(matrix(1:2, nrow = 1), matrix(3:4, nrow = 1))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.frobenius_prod import frobenius_prod\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    if isinstance(value, (np.floating, np.integer)):\n        return value.item()\n    return value\n\n\ndef one():\n    ex_x = np.array([[1, 2], [3, 4]], dtype=float)\n    ex_y = np.array([[2, 4], [6, 8]], dtype=float)\n    x = np.arange(1, 5, dtype=float).reshape(4, 1)\n    y = np.arange(5, 9, dtype=float).reshape(4, 1)\n    a = np.arange(1, 7, dtype=float).reshape(2, 3, order=\"C\")\n    b = np.arange(11, 17, dtype=float).reshape(2, 3, order=\"C\")\n    u = np.array([0.25, -1.5, 2], dtype=float)\n    v = np.array([4, 0.5, -0.125], dtype=float)\n    return [\n        frobenius_prod(ex_x, ex_y),\n        frobenius_prod(x, y),\n        frobenius_prod(a, b),\n        frobenius_prod(u, v),\n        frobenius_prod(np.array([[1, 2]], dtype=float), np.array([[3, 4]], dtype=float)),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "H.matrices",
+      "translated": true,
+      "python": "matrixcalc.h_matrices.h_matrices",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the H matrices as outer products of identity rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "H.matrices(2, 3) and H.matrices(3), flattened column-major.",
+        "r_ms": 0.4254579544067383,
+        "translated_ms": 0.16231750123552047,
+        "speedup": 2.621146525594949,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten_h <- function(H) {\n  unlist(lapply(H, function(sub) unlist(lapply(sub, c))))\n}\none <- function() {\n  c(flatten_h(H.matrices(2, 3)), flatten_h(H.matrices(3)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.h_matrices import h_matrices\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten_h(nested):\n    parts = []\n    for sub in nested:\n        for matrix in sub:\n            parts.append(np.asarray(matrix, dtype=float).reshape(-1, order=\"F\"))\n    return np.concatenate(parts)\n\n\ndef one():\n    return np.concatenate(\n        [\n            flatten_h(h_matrices(2, 3)),\n            flatten_h(h_matrices(3)),\n        ]\n    )\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "hadamard.prod",
+      "translated": true,
+      "python": "matrixcalc.hadamard_prod.hadamard_prod",
+      "loads": [],
+      "uses": [],
+      "done": "Element-wise Hadamard product for numeric matrices and vectors, matching R's promotion rules.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Flattened bundle of the Rd 2 by 2 example, 4 by 1 columns, 2 by 3 matrices, two length-3 vectors, and 1 by 2 row matrices.",
+        "r_ms": 0.19156932830810547,
+        "translated_ms": 0.07490549978683703,
+        "speedup": 2.5574801430237506,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  ex_x <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  ex_y <- matrix(c(2, 4, 6, 8), nrow = 2, byrow = TRUE)\n  x <- matrix(seq(1, 4))\n  y <- matrix(seq(5, 8))\n  a <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  b <- matrix(seq(11, 16), nrow = 2, byrow = TRUE)\n  u <- c(0.25, -1.5, 2)\n  v <- c(4, 0.5, -0.125)\n  c(\n    c(hadamard.prod(ex_x, ex_y)),\n    c(hadamard.prod(x, y)),\n    c(hadamard.prod(a, b)),\n    c(hadamard.prod(u, v)),\n    c(hadamard.prod(matrix(1:2, nrow = 1), matrix(3:4, nrow = 1)))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.hadamard_prod import hadamard_prod\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    ex_x = np.array([[1, 2], [3, 4]], dtype=float)\n    ex_y = np.array([[2, 4], [6, 8]], dtype=float)\n    x = np.arange(1, 5, dtype=float).reshape(-1, 1)\n    y = np.arange(5, 9, dtype=float).reshape(-1, 1)\n    a = np.arange(1, 7, dtype=float).reshape(2, 3, order=\"C\")\n    b = np.arange(11, 17, dtype=float).reshape(2, 3, order=\"C\")\n    u = np.array([0.25, -1.5, 2], dtype=float)\n    v = np.array([4, 0.5, -0.125], dtype=float)\n    parts = [\n        hadamard_prod(ex_x, ex_y),\n        hadamard_prod(x, y),\n        hadamard_prod(a, b),\n        hadamard_prod(u, v),\n        hadamard_prod(np.array([[1, 2]], dtype=float), np.array([[3, 4]], dtype=float)),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "hankel.matrix",
+      "translated": true,
+      "python": "matrixcalc.hankel_matrix.hankel_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a Hankel matrix by shifting a vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Orders 4, 3, and 2.",
+        "r_ms": 0.14150142669677734,
+        "translated_ms": 0.09367649909108877,
+        "speedup": 1.5105328238108553,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  h4 <- hankel.matrix(4, seq(1, 7))\n  h3 <- hankel.matrix(3, c(1, 2, 3, 4, 5, 6))\n  h2 <- hankel.matrix(2, c(10, 20, 30))\n  c(c(h4), c(h3), c(h2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.hankel_matrix import hankel_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        hankel_matrix(4, np.arange(1, 8, dtype=float)),\n        hankel_matrix(3, [1, 2, 3, 4, 5, 6]),\n        hankel_matrix(2, [10, 20, 30]),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "hilbert.matrix",
+      "translated": true,
+      "python": "matrixcalc.hilbert_matrix.hilbert_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the Hilbert matrix of a given order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Orders 4, 10, 2, and 5, flattened column-major.",
+        "r_ms": 0.1214742660522461,
+        "translated_ms": 0.04576799983624369,
+        "speedup": 2.6541309755042124,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  h4 <- hilbert.matrix(4)\n  h10 <- hilbert.matrix(10)\n  h2 <- hilbert.matrix(2)\n  h5 <- hilbert.matrix(5)\n  c(c(h4), c(h10), c(h2), c(h5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.hilbert_matrix import hilbert_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        hilbert_matrix(4),\n        hilbert_matrix(10),\n        hilbert_matrix(2),\n        hilbert_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "hilbert.schmidt.norm",
+      "translated": true,
+      "python": "matrixcalc.hilbert_schmidt_norm.hilbert_schmidt_norm",
+      "loads": [],
+      "uses": [
+        "entrywise.norm"
+      ],
+      "done": "Hilbert-Schmidt norm, the entrywise 2-norm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Six inputs: two 3 by 3 matrices, a 4 by 4, a vector, a scalar, and an empty matrix.",
+        "r_ms": 0.12290477752685547,
+        "translated_ms": 0.091073499788763,
+        "speedup": 1.3495119635450743,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  v <- 1:12\n  c(\n    hilbert.schmidt.norm(a),\n    hilbert.schmidt.norm(b),\n    hilbert.schmidt.norm(v),\n    hilbert.schmidt.norm(matrix(3.5)),\n    hilbert.schmidt.norm(matrix(numeric(0), 0, 0)),\n    hilbert.schmidt.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.hilbert_schmidt_norm import hilbert_schmidt_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    v = np.arange(1, 13, dtype=float)\n    return [\n        hilbert_schmidt_norm(a),\n        hilbert_schmidt_norm(b),\n        hilbert_schmidt_norm(v),\n        hilbert_schmidt_norm(np.array([[3.5]])),\n        hilbert_schmidt_norm(np.zeros((0, 0))),\n        hilbert_schmidt_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "inf.norm",
+      "translated": true,
+      "python": "matrixcalc.inf_norm.inf_norm",
+      "loads": [],
+      "uses": [],
+      "done": "Infinity norm is the largest absolute row sum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The help 3 by 3, a 4 by 4 grid, a vector, a scalar, an empty matrix, and a signed 3 by 3.",
+        "r_ms": 0.5576610565185547,
+        "translated_ms": 0.12194400187581778,
+        "speedup": 4.5730913201163546,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  v <- 1:12\n  c(\n    inf.norm(a),\n    inf.norm(b),\n    inf.norm(v),\n    inf.norm(matrix(3.5)),\n    inf.norm(matrix(numeric(0), 0, 0)),\n    inf.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.inf_norm import inf_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and (math.isinf(value) or math.isnan(value)):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    v = np.arange(1, 13, dtype=float)\n    return [\n        inf_norm(a),\n        inf_norm(b),\n        inf_norm(v),\n        inf_norm(np.array([[3.5]])),\n        inf_norm(np.zeros((0, 0))),\n        inf_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.diagonal.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_diagonal_matrix.is_diagonal_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether a numeric square matrix is diagonal within a tolerance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Eleven squares: help examples, empty and 1 by 1, values at and beyond tol, and NA, NaN, Inf, and an integer off-diagonal.",
+        "r_ms": 0.2168416976928711,
+        "translated_ms": 0.31412200041813776,
+        "speedup": 0.6903104443631017,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(1, 3)\n  b <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  c <- matrix(c(1, 0, 0, 0), nrow = 2, byrow = TRUE)\n  near <- matrix(c(1, 1e-9, 0, 2), nrow = 2, byrow = TRUE)\n  far <- matrix(c(1, 1e-7, 0, 2), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  na_case <- matrix(c(1, NA, 0, 2), nrow = 2, byrow = TRUE)\n  nan_case <- matrix(c(1, NaN, 0, 2), nrow = 2, byrow = TRUE)\n  inf_case <- matrix(c(1, Inf, 0, 2), nrow = 2, byrow = TRUE)\n  c(\n    is.diagonal.matrix(a),\n    is.diagonal.matrix(b),\n    is.diagonal.matrix(c),\n    is.diagonal.matrix(near),\n    is.diagonal.matrix(far),\n    is.diagonal.matrix(empty),\n    is.diagonal.matrix(matrix(3.5)),\n    is.diagonal.matrix(na_case),\n    is.diagonal.matrix(nan_case),\n    is.diagonal.matrix(inf_case),\n    is.diagonal.matrix(matrix(1L:4L, 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_diagonal_matrix import is_diagonal_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.eye(3, dtype=float)\n    b = np.array([[1, 2], [3, 4]], dtype=float)\n    c = np.array([[1, 0], [0, 0]], dtype=float)\n    near = np.array([[1, 1e-9], [0, 2]], dtype=float)\n    far = np.array([[1, 1e-7], [0, 2]], dtype=float)\n    empty = np.zeros((0, 0), dtype=float)\n    na_case = np.array([[1, np.nan], [0, 2]], dtype=float)\n    nan_case = np.array([[1, np.nan], [0, 2]], dtype=float)\n    inf_case = np.array([[1, np.inf], [0, 2]], dtype=float)\n    return [\n        is_diagonal_matrix(a),\n        is_diagonal_matrix(b),\n        is_diagonal_matrix(c),\n        is_diagonal_matrix(near),\n        is_diagonal_matrix(far),\n        is_diagonal_matrix(empty),\n        is_diagonal_matrix(np.array([[3.5]], dtype=float)),\n        is_diagonal_matrix(na_case),\n        is_diagonal_matrix(nan_case),\n        is_diagonal_matrix(inf_case),\n        is_diagonal_matrix(np.array([[1, 2], [3, 4]], dtype=int)),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.idempotent.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_idempotent_matrix.is_idempotent_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether a square matrix equals its square within a tolerance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page projectors, tolerance edges, empty and 1 by 1 matrices, and NA.",
+        "r_ms": 0.21660327911376953,
+        "translated_ms": 0.5458595005620737,
+        "speedup": 0.39681141189396224,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(1, 3)\n  b <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  c <- matrix(c(1, 0, 0, 0), nrow = 2, byrow = TRUE)\n  near <- matrix(c(1, 0, 0, 1e-9), nrow = 2, byrow = TRUE)\n  far <- matrix(c(1, 0, 0, 1e-7), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  na_case <- matrix(c(1, NA, 0, 2), nrow = 2, byrow = TRUE)\n  nan_case <- matrix(c(1, NaN, NaN, 2), nrow = 2, byrow = TRUE)\n  inf_case <- matrix(c(1, Inf, 0, 2), nrow = 2, byrow = TRUE)\n  c(\n    is.idempotent.matrix(a),\n    is.idempotent.matrix(b),\n    is.idempotent.matrix(c),\n    is.idempotent.matrix(near),\n    is.idempotent.matrix(far),\n    is.idempotent.matrix(empty),\n    is.idempotent.matrix(matrix(3.5)),\n    is.idempotent.matrix(na_case),\n    is.idempotent.matrix(nan_case),\n    is.idempotent.matrix(inf_case),\n    is.idempotent.matrix(matrix(1L:4L, 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_idempotent_matrix import is_idempotent_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.eye(3, dtype=float)\n    b = np.array([[1, 2], [3, 4]], dtype=float)\n    c = np.array([[1, 0], [0, 0]], dtype=float)\n    near = np.array([[1, 0], [0, 1e-9]], dtype=float)\n    far = np.array([[1, 0], [0, 1e-7]], dtype=float)\n    empty = np.zeros((0, 0), dtype=float)\n    na_case = np.array([[1, np.nan], [0, 2]], dtype=float)\n    nan_case = np.array([[1, np.nan], [np.nan, 2]], dtype=float)\n    inf_case = np.array([[1, np.inf], [0, 2]], dtype=float)\n    return [\n        is_idempotent_matrix(a),\n        is_idempotent_matrix(b),\n        is_idempotent_matrix(c),\n        is_idempotent_matrix(near),\n        is_idempotent_matrix(far),\n        is_idempotent_matrix(empty),\n        is_idempotent_matrix(np.array([[3.5]], dtype=float)),\n        is_idempotent_matrix(na_case),\n        is_idempotent_matrix(nan_case),\n        is_idempotent_matrix(inf_case),\n        is_idempotent_matrix(np.array([[1, 2], [3, 4]], dtype=int)),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.indefinite",
+      "translated": true,
+      "python": "matrixcalc.is_indefinite.is_indefinite",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "is.symmetric.matrix"
+      ],
+      "done": "Reports whether a square symmetric matrix has both a positive and a negative eigenvalue after zeroing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page examples, a non-symmetric matrix, and tolerance edges at 1e-9 and 1e-7.",
+        "r_ms": 5.178928375244141,
+        "translated_ms": 0.9944520006683888,
+        "speedup": 5.207821364694617,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  i3 <- diag(1, 3)\n  a <- matrix(c(2, -1, 0, -1, 2, -1, 0, -1, 2), nrow = 3, byrow = TRUE)\n  b <- matrix(c(2, -1, 2, -1, 2, -1, 2, -1, 2), nrow = 3, byrow = TRUE)\n  c_mat <- matrix(c(-2, 1, 0, 1, -2, 1, 0, 1, -2), nrow = 3, byrow = TRUE)\n  d <- matrix(c(-2, 1, -2, 1, -2, 1, -2, 1, -2), nrow = 3, byrow = TRUE)\n  e <- matrix(c(1, 2, 0, 2, 1, 2, 0, 2, 1), nrow = 3, byrow = TRUE)\n  bad2 <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  mixed2 <- matrix(c(1, 0, 0, -1), nrow = 2, byrow = TRUE)\n  tiny_pos <- matrix(c(1e-9, 0, 0, -1), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(1e-7, 0, 0, -1), nrow = 2, byrow = TRUE)\n  c(\n    is.indefinite(i3),\n    is.indefinite(a),\n    is.indefinite(b),\n    is.indefinite(c_mat),\n    is.indefinite(d),\n    is.indefinite(e),\n    is.indefinite(bad2),\n    is.indefinite(mixed2),\n    is.indefinite(tiny_pos),\n    is.indefinite(above_tol),\n    is.indefinite(matrix(2.5)),\n    is.indefinite(matrix(1L))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_indefinite import is_indefinite\n\n\ndef one():\n    i3 = np.eye(3, dtype=float)\n    a = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]], dtype=float)\n    b = np.array([[2, -1, 2], [-1, 2, -1], [2, -1, 2]], dtype=float)\n    c_mat = np.array([[-2, 1, 0], [1, -2, 1], [0, 1, -2]], dtype=float)\n    d = np.array([[-2, 1, -2], [1, -2, 1], [-2, 1, -2]], dtype=float)\n    e = np.array([[1, 2, 0], [2, 1, 2], [0, 2, 1]], dtype=float)\n    bad2 = np.array([[1, 2], [2, 1]], dtype=float)\n    mixed2 = np.array([[1, 0], [0, -1]], dtype=float)\n    tiny_pos = np.array([[1e-9, 0], [0, -1]], dtype=float)\n    above_tol = np.array([[1e-7, 0], [0, -1]], dtype=float)\n    return [\n        is_indefinite(i3),\n        is_indefinite(a),\n        is_indefinite(b),\n        is_indefinite(c_mat),\n        is_indefinite(d),\n        is_indefinite(e),\n        is_indefinite(bad2),\n        is_indefinite(mixed2),\n        is_indefinite(tiny_pos),\n        is_indefinite(above_tol),\n        is_indefinite(np.array([[2.5]], dtype=float)),\n        is_indefinite(np.array([[1]], dtype=int)),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.negative.definite",
+      "translated": true,
+      "python": "matrixcalc.is_negative_definite.is_negative_definite",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "is.symmetric.matrix"
+      ],
+      "done": "Reports whether a square symmetric matrix is negative definite after zeroing tiny eigenvalues.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page 3 by 3 types, tolerance edges at 1e-9 and 1e-7, and 1 by 1 scalars.",
+        "r_ms": 6.430625915527344,
+        "translated_ms": 0.937726999836741,
+        "speedup": 6.857673839664338,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  i3 <- diag(1, 3)\n  a <- matrix(c(2, -1, 0, -1, 2, -1, 0, -1, 2), nrow = 3, byrow = TRUE)\n  b <- matrix(c(2, -1, 2, -1, 2, -1, 2, -1, 2), nrow = 3, byrow = TRUE)\n  c_mat <- matrix(c(-2, 1, 0, 1, -2, 1, 0, 1, -2), nrow = 3, byrow = TRUE)\n  d <- matrix(c(-2, 1, -2, 1, -2, 1, -2, 1, -2), nrow = 3, byrow = TRUE)\n  e <- matrix(c(1, 2, 0, 2, 1, 2, 0, 2, 1), nrow = 3, byrow = TRUE)\n  bad2 <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  tiny_ev <- matrix(c(-1, 0, 0, -1e-9), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(-1, 0, 0, -1e-7), nrow = 2, byrow = TRUE)\n  base <- matrix(1:9, 3, 3) + t(matrix(1:9, 3, 3))\n  c(\n    is.negative.definite(i3),\n    is.negative.definite(a),\n    is.negative.definite(b),\n    is.negative.definite(c_mat),\n    is.negative.definite(d),\n    is.negative.definite(e),\n    is.negative.definite(bad2),\n    is.negative.definite(tiny_ev),\n    is.negative.definite(above_tol),\n    is.negative.definite(matrix(-2.5)),\n    is.negative.definite(matrix(1L)),\n    is.negative.definite(-base, tol = 1e-6)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_negative_definite import is_negative_definite\n\n\ndef one():\n    i3 = np.eye(3, dtype=float)\n    a = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]], dtype=float)\n    b = np.array([[2, -1, 2], [-1, 2, -1], [2, -1, 2]], dtype=float)\n    c_mat = np.array([[-2, 1, 0], [1, -2, 1], [0, 1, -2]], dtype=float)\n    d = np.array([[-2, 1, -2], [1, -2, 1], [-2, 1, -2]], dtype=float)\n    e = np.array([[1, 2, 0], [2, 1, 2], [0, 2, 1]], dtype=float)\n    bad2 = np.array([[1, 2], [2, 1]], dtype=float)\n    tiny_ev = np.array([[-1, 0], [0, -1e-9]], dtype=float)\n    above_tol = np.array([[-1, 0], [0, -1e-7]], dtype=float)\n    base = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)\n    custom_tol = base + base.T\n    return [\n        is_negative_definite(i3),\n        is_negative_definite(a),\n        is_negative_definite(b),\n        is_negative_definite(c_mat),\n        is_negative_definite(d),\n        is_negative_definite(e),\n        is_negative_definite(bad2),\n        is_negative_definite(tiny_ev),\n        is_negative_definite(above_tol),\n        is_negative_definite(np.array([[-2.5]], dtype=float)),\n        is_negative_definite(np.array([[1]], dtype=int)),\n        is_negative_definite(-custom_tol, tol=1e-6),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.negative.semi.definite",
+      "translated": true,
+      "python": "matrixcalc.is_negative_semi_definite.is_negative_semi_definite",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "is.symmetric.matrix"
+      ],
+      "done": "Reports whether a square symmetric matrix has no positive eigenvalue after zeroing tiny ones.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page definiteness types, tolerance edges, and 1 by 1 scalars.",
+        "r_ms": 6.8683624267578125,
+        "translated_ms": 1.041290001012385,
+        "speedup": 6.5960130415927445,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  i3 <- diag(1, 3)\n  a <- matrix(c(2, -1, 0, -1, 2, -1, 0, -1, 2), nrow = 3, byrow = TRUE)\n  b <- matrix(c(2, -1, 2, -1, 2, -1, 2, -1, 2), nrow = 3, byrow = TRUE)\n  c_mat <- matrix(c(-2, 1, 0, 1, -2, 1, 0, 1, -2), nrow = 3, byrow = TRUE)\n  d <- matrix(c(-2, 1, -2, 1, -2, 1, -2, 1, -2), nrow = 3, byrow = TRUE)\n  e <- matrix(c(1, 2, 0, 2, 1, 2, 0, 2, 1), nrow = 3, byrow = TRUE)\n  bad2 <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  tiny_ev <- matrix(c(-1, 0, 0, -1e-9), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(-1, 0, 0, -1e-7), nrow = 2, byrow = TRUE)\n  base <- matrix(1:9, 3, 3)\n  custom_tol <- base + t(base)\n  c(\n    is.negative.semi.definite(i3),\n    is.negative.semi.definite(a),\n    is.negative.semi.definite(b),\n    is.negative.semi.definite(c_mat),\n    is.negative.semi.definite(d),\n    is.negative.semi.definite(e),\n    is.negative.semi.definite(bad2),\n    is.negative.semi.definite(tiny_ev),\n    is.negative.semi.definite(above_tol),\n    is.negative.semi.definite(matrix(-2.5)),\n    is.negative.semi.definite(matrix(1L)),\n    is.negative.semi.definite(-custom_tol, tol = 1e-6)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_negative_semi_definite import is_negative_semi_definite\n\n\ndef one():\n    i3 = np.eye(3, dtype=float)\n    a = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]], dtype=float)\n    b = np.array([[2, -1, 2], [-1, 2, -1], [2, -1, 2]], dtype=float)\n    c_mat = np.array([[-2, 1, 0], [1, -2, 1], [0, 1, -2]], dtype=float)\n    d = np.array([[-2, 1, -2], [1, -2, 1], [-2, 1, -2]], dtype=float)\n    e = np.array([[1, 2, 0], [2, 1, 2], [0, 2, 1]], dtype=float)\n    bad2 = np.array([[1, 2], [2, 1]], dtype=float)\n    tiny_ev = np.array([[-1, 0], [0, -1e-9]], dtype=float)\n    above_tol = np.array([[-1, 0], [0, -1e-7]], dtype=float)\n    base = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)\n    custom_tol = base + base.T\n    return [\n        is_negative_semi_definite(i3),\n        is_negative_semi_definite(a),\n        is_negative_semi_definite(b),\n        is_negative_semi_definite(c_mat),\n        is_negative_semi_definite(d),\n        is_negative_semi_definite(e),\n        is_negative_semi_definite(bad2),\n        is_negative_semi_definite(tiny_ev),\n        is_negative_semi_definite(above_tol),\n        is_negative_semi_definite(np.array([[-2.5]], dtype=float)),\n        is_negative_semi_definite(np.array([[1]], dtype=int)),\n        is_negative_semi_definite(-custom_tol, tol=1e-6),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.non.singular.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_non_singular_matrix.is_non_singular_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether the absolute determinant of a square numeric matrix is at least tol.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page examples, determinant edges at 1e-9 and 1e-7, empty and 1 by 1 matrices, and a missing value.",
+        "r_ms": 0.26476383209228516,
+        "translated_ms": 0.45693450010730885,
+        "speedup": 0.5794349781644998,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(1, 3)\n  b <- matrix(c(0, 0, 3, 4), nrow = 2, byrow = TRUE)\n  full <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  singular <- matrix(c(1, 2, 2, 4), nrow = 2, byrow = TRUE)\n  tiny_det <- matrix(c(1e-9, 0, 0, 1), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(1e-7, 0, 0, 1), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  na_case <- matrix(c(1, NA, 0, 2), nrow = 2, byrow = TRUE)\n  c(\n    is.non.singular.matrix(a),\n    is.non.singular.matrix(b),\n    is.non.singular.matrix(full),\n    is.non.singular.matrix(singular),\n    is.non.singular.matrix(tiny_det),\n    is.non.singular.matrix(above_tol),\n    is.non.singular.matrix(empty),\n    is.non.singular.matrix(matrix(3.5)),\n    is.non.singular.matrix(matrix(1L:4L, 2, 2)),\n    is.non.singular.matrix(tiny_det, tol = 1e-10),\n    is.non.singular.matrix(na_case)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_non_singular_matrix import is_non_singular_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.eye(3, dtype=float)\n    b = np.array([[0, 0], [3, 4]], dtype=float)\n    full = np.array([[1, 2], [3, 4]], dtype=float)\n    singular = np.array([[1, 2], [2, 4]], dtype=float)\n    tiny_det = np.array([[1e-9, 0], [0, 1]], dtype=float)\n    above_tol = np.array([[1e-7, 0], [0, 1]], dtype=float)\n    empty = np.empty((0, 0), dtype=float)\n    na_case = np.array([[1, np.nan], [0, 2]], dtype=float)\n    return [\n        is_non_singular_matrix(a),\n        is_non_singular_matrix(b),\n        is_non_singular_matrix(full),\n        is_non_singular_matrix(singular),\n        is_non_singular_matrix(tiny_det),\n        is_non_singular_matrix(above_tol),\n        is_non_singular_matrix(empty),\n        is_non_singular_matrix(np.array([[3.5]], dtype=float)),\n        is_non_singular_matrix(np.array([[1, 2], [3, 4]], dtype=int)),\n        is_non_singular_matrix(tiny_det, tol=1e-10),\n        is_non_singular_matrix(na_case),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": clean(value), \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.positive.definite",
+      "translated": true,
+      "python": "matrixcalc.is_positive_definite.is_positive_definite",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "is.symmetric.matrix"
+      ],
+      "done": "Reports whether a symmetric matrix has positive eigenvalues.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page 3 by 3 types, diagonal edges at 1e-9 and 1e-7, and a 1 by 1.",
+        "r_ms": 6.499290466308594,
+        "translated_ms": 1.0060414997496991,
+        "speedup": 6.460260802288576,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  i3 <- diag(1, 3)\n  a <- matrix(c(2, -1, 0, -1, 2, -1, 0, -1, 2), nrow = 3, byrow = TRUE)\n  b <- matrix(c(2, -1, 2, -1, 2, -1, 2, -1, 2), nrow = 3, byrow = TRUE)\n  c_mat <- matrix(c(-2, 1, 0, 1, -2, 1, 0, 1, -2), nrow = 3, byrow = TRUE)\n  d <- matrix(c(-2, 1, -2, 1, -2, 1, -2, 1, -2), nrow = 3, byrow = TRUE)\n  e <- matrix(c(1, 2, 0, 2, 1, 2, 0, 2, 1), nrow = 3, byrow = TRUE)\n  bad2 <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  tiny_ev <- matrix(c(1, 0, 0, 1e-9), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(1, 0, 0, 1e-7), nrow = 2, byrow = TRUE)\n  c(\n    is.positive.definite(i3),\n    is.positive.definite(a),\n    is.positive.definite(b),\n    is.positive.definite(c_mat),\n    is.positive.definite(d),\n    is.positive.definite(e),\n    is.positive.definite(bad2),\n    is.positive.definite(tiny_ev),\n    is.positive.definite(above_tol),\n    is.positive.definite(matrix(2.5)),\n    is.positive.definite(matrix(1L)),\n    is.positive.definite(matrix(1:9, 3, 3) + t(matrix(1:9, 3, 3)), tol = 1e-6)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_positive_definite import is_positive_definite\n\n\ndef one():\n    i3 = np.eye(3, dtype=float)\n    a = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]], dtype=float)\n    b = np.array([[2, -1, 2], [-1, 2, -1], [2, -1, 2]], dtype=float)\n    c_mat = np.array([[-2, 1, 0], [1, -2, 1], [0, 1, -2]], dtype=float)\n    d = np.array([[-2, 1, -2], [1, -2, 1], [-2, 1, -2]], dtype=float)\n    e = np.array([[1, 2, 0], [2, 1, 2], [0, 2, 1]], dtype=float)\n    bad2 = np.array([[1, 2], [2, 1]], dtype=float)\n    tiny_ev = np.array([[1, 0], [0, 1e-9]], dtype=float)\n    above_tol = np.array([[1, 0], [0, 1e-7]], dtype=float)\n    base = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)\n    custom_tol = base + base.T\n    return [\n        is_positive_definite(i3),\n        is_positive_definite(a),\n        is_positive_definite(b),\n        is_positive_definite(c_mat),\n        is_positive_definite(d),\n        is_positive_definite(e),\n        is_positive_definite(bad2),\n        is_positive_definite(tiny_ev),\n        is_positive_definite(above_tol),\n        is_positive_definite(np.array([[2.5]], dtype=float)),\n        is_positive_definite(np.array([[1]], dtype=int)),\n        is_positive_definite(custom_tol, tol=1e-6),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.positive.semi.definite",
+      "translated": true,
+      "python": "matrixcalc.is_positive_semi_definite.is_positive_semi_definite",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "is.symmetric.matrix"
+      ],
+      "done": "After the square, symmetric, and numeric checks, eigenvalues below tol in absolute value are set to zero and the function returns false only when some eigenvalue is strictly negative.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Twelve logical outputs: Rd example matrices I, A, B, C, D, E; indefinite 2x2 bad2; 2x2 diagonals with 1e-9 and 1e-7 off-diagonal; 1x1 2.5 and integer 1; symmetric (1:9) matrix plus transpose with tol=1e-6.",
+        "r_ms": 6.915,
+        "translated_ms": 1.052,
+        "speedup": 6.573193916349809,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  i3 <- diag(1, 3)\n  a <- matrix(c(2, -1, 0, -1, 2, -1, 0, -1, 2), nrow = 3, byrow = TRUE)\n  b <- matrix(c(2, -1, 2, -1, 2, -1, 2, -1, 2), nrow = 3, byrow = TRUE)\n  c_mat <- matrix(c(-2, 1, 0, 1, -2, 1, 0, 1, -2), nrow = 3, byrow = TRUE)\n  d <- matrix(c(-2, 1, -2, 1, -2, 1, -2, 1, -2), nrow = 3, byrow = TRUE)\n  e <- matrix(c(1, 2, 0, 2, 1, 2, 0, 2, 1), nrow = 3, byrow = TRUE)\n  bad2 <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  tiny_ev <- matrix(c(1, 0, 0, 1e-9), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(1, 0, 0, 1e-7), nrow = 2, byrow = TRUE)\n  base <- matrix(1:9, 3, 3)\n  custom_tol <- base + t(base)\n  c(\n    is.positive.semi.definite(i3),\n    is.positive.semi.definite(a),\n    is.positive.semi.definite(b),\n    is.positive.semi.definite(c_mat),\n    is.positive.semi.definite(d),\n    is.positive.semi.definite(e),\n    is.positive.semi.definite(bad2),\n    is.positive.semi.definite(tiny_ev),\n    is.positive.semi.definite(above_tol),\n    is.positive.semi.definite(matrix(2.5)),\n    is.positive.semi.definite(matrix(1L)),\n    is.positive.semi.definite(custom_tol, tol = 1e-6)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_positive_semi_definite import is_positive_semi_definite\n\n\ndef one():\n    i3 = np.eye(3, dtype=float)\n    a = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]], dtype=float)\n    b = np.array([[2, -1, 2], [-1, 2, -1], [2, -1, 2]], dtype=float)\n    c_mat = np.array([[-2, 1, 0], [1, -2, 1], [0, 1, -2]], dtype=float)\n    d = np.array([[-2, 1, -2], [1, -2, 1], [-2, 1, -2]], dtype=float)\n    e = np.array([[1, 2, 0], [2, 1, 2], [0, 2, 1]], dtype=float)\n    bad2 = np.array([[1, 2], [2, 1]], dtype=float)\n    tiny_ev = np.array([[1, 0], [0, 1e-9]], dtype=float)\n    above_tol = np.array([[1, 0], [0, 1e-7]], dtype=float)\n    base = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)\n    custom_tol = base + base.T\n    return [\n        is_positive_semi_definite(i3),\n        is_positive_semi_definite(a),\n        is_positive_semi_definite(b),\n        is_positive_semi_definite(c_mat),\n        is_positive_semi_definite(d),\n        is_positive_semi_definite(e),\n        is_positive_semi_definite(bad2),\n        is_positive_semi_definite(tiny_ev),\n        is_positive_semi_definite(above_tol),\n        is_positive_semi_definite(np.array([[2.5]], dtype=float)),\n        is_positive_semi_definite(np.array([[1]], dtype=int)),\n        is_positive_semi_definite(custom_tol, tol=1e-6),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.singular.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_singular_matrix.is_singular_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether the absolute determinant of a square numeric matrix is below tol.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page-style matrices, determinant edges at 1e-9 and 1e-7, empty and 1x1 matrices, custom tol, and a missing value.",
+        "r_ms": 0.4248619079589844,
+        "translated_ms": 0.16697050159564242,
+        "speedup": 2.5445327402075217,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(1, 3)\n  b <- matrix(c(0, 0, 3, 4), nrow = 2, byrow = TRUE)\n  full <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  singular <- matrix(c(1, 2, 2, 4), nrow = 2, byrow = TRUE)\n  tiny_det <- matrix(c(1e-9, 0, 0, 1), nrow = 2, byrow = TRUE)\n  above_tol <- matrix(c(1e-7, 0, 0, 1), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  na_case <- matrix(c(1, NA, 0, 2), nrow = 2, byrow = TRUE)\n  c(\n    is.singular.matrix(a),\n    is.singular.matrix(b),\n    is.singular.matrix(full),\n    is.singular.matrix(singular),\n    is.singular.matrix(tiny_det),\n    is.singular.matrix(above_tol),\n    is.singular.matrix(empty),\n    is.singular.matrix(matrix(3.5)),\n    is.singular.matrix(matrix(1L:4L, 2, 2)),\n    is.singular.matrix(tiny_det, tol = 1e-10),\n    is.singular.matrix(na_case)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_singular_matrix import is_singular_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.eye(3, dtype=float)\n    b = np.array([[0, 0], [3, 4]], dtype=float)\n    full = np.array([[1, 2], [3, 4]], dtype=float)\n    singular = np.array([[1, 2], [2, 4]], dtype=float)\n    tiny_det = np.array([[1e-9, 0], [0, 1]], dtype=float)\n    above_tol = np.array([[1e-7, 0], [0, 1]], dtype=float)\n    empty = np.empty((0, 0), dtype=float)\n    na_case = np.array([[1, np.nan], [0, 2]], dtype=float)\n    return [\n        is_singular_matrix(a),\n        is_singular_matrix(b),\n        is_singular_matrix(full),\n        is_singular_matrix(singular),\n        is_singular_matrix(tiny_det),\n        is_singular_matrix(above_tol),\n        is_singular_matrix(empty),\n        is_singular_matrix(np.array([[3.5]], dtype=float)),\n        is_singular_matrix(np.array([[1, 2], [3, 4]], dtype=int)),\n        is_singular_matrix(tiny_det, tol=1e-10),\n        is_singular_matrix(na_case),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": clean(value), \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.skew.symmetric.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_skew_symmetric_matrix.is_skew_symmetric_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether a square numeric matrix plus its transpose is within tol of zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Thirteen matrices: help examples, tolerance edges, empty and 1 by 1, and missing values.",
+        "r_ms": 0.5981160011288011,
+        "translated_ms": 0.5561975012824405,
+        "speedup": 1.0753662138893252,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0-6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(1, 3)\n  b <- matrix(c(0, -2, -1, -2, 0, -4, 1, 4, 0), nrow = 3, byrow = TRUE)\n  c <- matrix(c(0, 2, 1, 2, 0, 4, 1, 4, 0), nrow = 3, byrow = TRUE)\n  d <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  near <- matrix(c(0, -1 + 1e-9, 1, 0), nrow = 2, byrow = TRUE)\n  far <- matrix(c(0, -1 + 1e-7, 1, 0), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  na_case <- matrix(c(0, NA, 0, 0), nrow = 2, byrow = TRUE)\n  nan_case <- matrix(c(0, NaN, 0, 0), nrow = 2, byrow = TRUE)\n  inf_case <- matrix(c(0, Inf, -Inf, 0), nrow = 2, byrow = TRUE)\n  c(\n    is.skew.symmetric.matrix(a),\n    is.skew.symmetric.matrix(b),\n    is.skew.symmetric.matrix(c),\n    is.skew.symmetric.matrix(d),\n    is.skew.symmetric.matrix(near),\n    is.skew.symmetric.matrix(far),\n    is.skew.symmetric.matrix(empty),\n    is.skew.symmetric.matrix(matrix(3.5)),\n    is.skew.symmetric.matrix(na_case),\n    is.skew.symmetric.matrix(nan_case),\n    is.skew.symmetric.matrix(inf_case),\n    is.skew.symmetric.matrix(matrix(0, 64, 64)),\n    is.skew.symmetric.matrix(matrix(c(0L, -1L, 1L, 0L), 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_skew_symmetric_matrix import is_skew_symmetric_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.eye(3, dtype=float)\n    b = np.array([[0, -2, -1], [-2, 0, -4], [1, 4, 0]], dtype=float)\n    c = np.array([[0, 2, 1], [2, 0, 4], [1, 4, 0]], dtype=float)\n    d = np.array([[1, 2], [3, 4]], dtype=float)\n    near = np.array([[0, -1 + 1e-9], [1, 0]], dtype=float)\n    far = np.array([[0, -1 + 1e-7], [1, 0]], dtype=float)\n    empty = np.zeros((0, 0), dtype=float)\n    na_case = np.array([[0, np.nan], [0, 0]], dtype=float)\n    nan_case = np.array([[0, np.nan], [0, 0]], dtype=float)\n    inf_case = np.array([[0, np.inf], [-np.inf, 0]], dtype=float)\n    return [\n        is_skew_symmetric_matrix(a),\n        is_skew_symmetric_matrix(b),\n        is_skew_symmetric_matrix(c),\n        is_skew_symmetric_matrix(d),\n        is_skew_symmetric_matrix(near),\n        is_skew_symmetric_matrix(far),\n        is_skew_symmetric_matrix(empty),\n        is_skew_symmetric_matrix(np.array([[3.5]], dtype=float)),\n        is_skew_symmetric_matrix(na_case),\n        is_skew_symmetric_matrix(nan_case),\n        is_skew_symmetric_matrix(inf_case),\n        is_skew_symmetric_matrix(np.zeros((64, 64), dtype=float)),\n        is_skew_symmetric_matrix(np.array([[0, -1], [1, 0]], dtype=int)),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.square.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_square_matrix.is_square_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether a matrix has the same number of rows and columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Eight inputs: 3 by 4, 4 by 4, 1 by 1, empty, 2 by 3, numeric and logical 2 by 2, and a 64 by 64 square.",
+        "r_ms": 0.17690658569335938,
+        "translated_ms": 0.02786799996101763,
+        "speedup": 6.348018729037612,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 12, 1), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  c(\n    is.square.matrix(a),\n    is.square.matrix(b),\n    is.square.matrix(matrix(3.5)),\n    is.square.matrix(matrix(numeric(0), 0, 0)),\n    is.square.matrix(matrix(0, 2, 3)),\n    is.square.matrix(matrix(1:4, 2, 2)),\n    is.square.matrix(matrix(c(TRUE, FALSE, TRUE, TRUE), 2, 2)),\n    is.square.matrix(matrix(0, 64, 64))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_square_matrix import is_square_matrix\n\n\ndef one():\n    a = np.arange(1, 13, dtype=float).reshape(3, 4)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4)\n    return [\n        is_square_matrix(a),\n        is_square_matrix(b),\n        is_square_matrix(np.array([[3.5]])),\n        is_square_matrix(np.zeros((0, 0))),\n        is_square_matrix(np.zeros((2, 3))),\n        is_square_matrix(np.array([[1, 3], [2, 4]])),\n        is_square_matrix(np.array([[True, True], [False, True]])),\n        is_square_matrix(np.zeros((64, 64))),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.symmetric.matrix",
+      "translated": true,
+      "python": "matrixcalc.is_symmetric_matrix.is_symmetric_matrix",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Reports whether a numeric matrix equals its transpose.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page 2 by 2 matrices, empty and 1 by 1 squares, a tiny off-diagonal, NA, NaN, Inf, and a 64 by 64 zero matrix.",
+        "r_ms": 0.196,
+        "translated_ms": 26.06,
+        "speedup": 0.007521105141980047,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  b <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  empty <- matrix(numeric(0), 0, 0)\n  tiny <- matrix(c(1, 1 + 1e-9, 0, 2), nrow = 2, byrow = TRUE)\n  na_case <- matrix(c(1, NA, 0, 1), nrow = 2, byrow = TRUE)\n  nan_case <- matrix(c(1, NaN, NaN, 2), nrow = 2, byrow = TRUE)\n  inf_case <- matrix(c(1, Inf, 0, 2), nrow = 2, byrow = TRUE)\n  c(\n    is.symmetric.matrix(a),\n    is.symmetric.matrix(b),\n    is.symmetric.matrix(empty),\n    is.symmetric.matrix(matrix(3.5)),\n    is.symmetric.matrix(tiny),\n    is.symmetric.matrix(na_case),\n    is.symmetric.matrix(nan_case),\n    is.symmetric.matrix(inf_case),\n    is.symmetric.matrix(matrix(0, 64, 64)),\n    is.symmetric.matrix(matrix(1L:4L, 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.is_symmetric_matrix import is_symmetric_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[1, 2], [3, 4]], dtype=float)\n    b = np.array([[1, 2], [2, 1]], dtype=float)\n    empty = np.zeros((0, 0), dtype=float)\n    tiny = np.array([[1, 1 + 1e-9], [0, 2]], dtype=float)\n    na_case = np.array([[1, np.nan], [0, 1]], dtype=float)\n    nan_case = np.array([[1, np.nan], [np.nan, 2]], dtype=float)\n    inf_case = np.array([[1, np.inf], [0, 2]], dtype=float)\n    return [\n        is_symmetric_matrix(a),\n        is_symmetric_matrix(b),\n        is_symmetric_matrix(empty),\n        is_symmetric_matrix(np.array([[3.5]], dtype=float)),\n        is_symmetric_matrix(tiny),\n        is_symmetric_matrix(na_case),\n        is_symmetric_matrix(nan_case),\n        is_symmetric_matrix(inf_case),\n        is_symmetric_matrix(np.zeros((64, 64), dtype=float)),\n        is_symmetric_matrix(np.array([[1, 2], [3, 4]], dtype=int)),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "K.matrix",
+      "translated": true,
+      "python": "matrixcalc.k_matrix.k_matrix",
+      "loads": [],
+      "uses": [
+        "H.matrices"
+      ],
+      "done": "Sums H-matrix Kronecker products to form the commutation matrix K.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "K matrices for (3, 4), (2, 2), and (3, 3), then K %*% vec(A) versus vec(t(A)) for a 3 by 4 row-filled A.",
+        "r_ms": 1.8224716186523438,
+        "translated_ms": 1.7525435014249524,
+        "speedup": 1.039900930944387,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  k34 <- K.matrix(3, 4)\n  k22 <- K.matrix(2, 2)\n  k33 <- K.matrix(3)\n  a <- matrix(seq(1, 12, 1), nrow = 3, byrow = TRUE)\n  vec_a <- vec(a)\n  vec_at <- vec(t(a))\n  c(\n    c(k34),\n    c(k22),\n    c(k33),\n    c(k34 %*% vec_a),\n    c(vec_at)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.k_matrix import k_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    k34 = k_matrix(3, 4)\n    k22 = k_matrix(2, 2)\n    k33 = k_matrix(3)\n    a = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"C\")\n    vec_a = _vec(a)\n    vec_at = _vec(a.T)\n    parts = [\n        k34.reshape(-1, order=\"F\"),\n        k22.reshape(-1, order=\"F\"),\n        k33.reshape(-1, order=\"F\"),\n        k34 @ vec_a,\n        vec_at,\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "L.matrix",
+      "translated": true,
+      "python": "matrixcalc.l_matrix.l_matrix",
+      "loads": [],
+      "uses": [
+        "E.matrices"
+      ],
+      "done": "Constructs the elimination matrix mapping vec(A) to vech(A).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "L.matrix(3) and L.matrix(4) on a 3x3 lower-triangular A; flatten L, L %*% vec(A), vec(A), and vech(A) in column-major order.",
+        "r_ms": 1.400589942932129,
+        "translated_ms": 0.6124210012785625,
+        "speedup": 2.286972425844463,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  l3 <- L.matrix(3)\n  a <- lower.triangle(matrix(seq(1, 9, 1), nrow = 3, byrow = TRUE))\n  vec_a <- vec(a)\n  vech_a <- vech(a)\n  y <- l3 %*% vec_a\n  l4 <- L.matrix(4)\n  c(c(l3), c(y), c(vec_a), c(vech_a), c(l4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.l_matrix import l_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef _vech(array):\n    array = np.asarray(array, dtype=float)\n    n = array.shape[0]\n    parts = []\n    for j in range(n):\n        for i in range(j, n):\n            parts.append(array[i, j])\n    return np.asarray(parts, dtype=float)\n\n\ndef _lower_triangle(array):\n    array = np.asarray(array, dtype=float).copy()\n    n = array.shape[0]\n    for i in range(n):\n        for j in range(i + 1, n):\n            array[i, j] = 0.0\n    return array\n\n\ndef one():\n    l3 = l_matrix(3)\n    a = _lower_triangle(np.arange(1, 10, dtype=float).reshape(3, 3, order=\"C\"))\n    vec_a = _vec(a)\n    vech_a = _vech(a)\n    y = l3 @ vec_a\n    l4 = l_matrix(4)\n    parts = [\n        l3.reshape(-1, order=\"F\"),\n        y.reshape(-1, order=\"F\"),\n        vec_a.reshape(-1, order=\"F\"),\n        vech_a.reshape(-1, order=\"F\"),\n        l4.reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "lower.triangle",
+      "translated": true,
+      "python": "matrixcalc.lower_triangle.lower_triangle",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Returns a copy of a square matrix with every entry strictly above the main diagonal set to zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seven square matrices: 4x4 row-filled 1:16, a 3x3 double matrix, 3.5 scalar, empty 0x0, 64x64 with diagonal k/7, a 3x3 integer matrix, and a 3x3 logical matrix; results concatenated in column-major order.",
+        "r_ms": 0.3299713134765625,
+        "translated_ms": 0.24294600007124245,
+        "speedup": 1.3582084635260527,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  f <- matrix(\n    c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),\n    nrow = 3\n  )\n  parts <- list(\n    c(lower.triangle(a)),\n    c(lower.triangle(b)),\n    c(lower.triangle(matrix(3.5))),\n    c(lower.triangle(matrix(numeric(0), 0, 0))),\n    c(lower.triangle(d)),\n    c(lower.triangle(e)),\n    c(lower.triangle(f))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.lower_triangle import lower_triangle\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    f = np.array(\n        [\n            [True, False, True],\n            [False, True, False],\n            [True, False, True],\n        ],\n        dtype=bool,\n    )\n    parts = [\n        lower_triangle(a),\n        lower_triangle(b),\n        lower_triangle(np.array([[3.5]])),\n        lower_triangle(np.zeros((0, 0))),\n        lower_triangle(d),\n        lower_triangle(e),\n        lower_triangle(f),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "lu.decomposition",
+      "translated": true,
+      "python": "matrixcalc.lu_decomposition.lu_decomposition",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Doolittle LU without pivoting returns lower and upper triangular factors whose product reconstructs the input.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help examples A (2x2) and B (3x3), integer matrix(1L:4L, 2, 2), and a 1x1 scalar matrix; L and U flattened column-major.",
+        "r_ms": 0.3064870834350586,
+        "translated_ms": 0.22592200002691243,
+        "speedup": 1.3566057462245777,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten_lu <- function(lu) {\n  c(c(lu$L), c(lu$U))\n}\none <- function() {\n  a <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  b <- matrix(c(2, -1, -2, -4, 6, 3, -4, -2, 8), nrow = 3, byrow = TRUE)\n  c_int <- matrix(1L:4L, 2, 2)\n  d <- matrix(7)\n  c(\n    flatten_lu(lu.decomposition(a)),\n    flatten_lu(lu.decomposition(b)),\n    flatten_lu(lu.decomposition(c_int)),\n    flatten_lu(lu.decomposition(d))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.lu_decomposition import lu_decomposition\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten_lu(lu):\n    return np.concatenate(\n        [\n            np.asarray(lu[\"L\"], dtype=float).reshape(-1, order=\"F\"),\n            np.asarray(lu[\"U\"], dtype=float).reshape(-1, order=\"F\"),\n        ]\n    )\n\n\ndef one():\n    a = np.array([[1, 2], [2, 1]], dtype=float)\n    b = np.array([[2, -1, -2], [-4, 6, 3], [-4, -2, 8]], dtype=float)\n    c_int = np.arange(1, 5, dtype=int).reshape(2, 2, order=\"F\")\n    d = np.array([[7]], dtype=float)\n    parts = [\n        flatten_lu(lu_decomposition(a)),\n        flatten_lu(lu_decomposition(b)),\n        flatten_lu(lu_decomposition(c_int)),\n        flatten_lu(lu_decomposition(d)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "matrix.inverse",
+      "translated": true,
+      "python": "matrixcalc.matrix_inverse.matrix_inverse",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "The inverse is R solve on a square matrix after the square check.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Inverses of the 2x2 help example, the 3x3 LU example, a 2x2 integer matrix, a 1x1, a 2x2 logical matrix, and the 64x64 diagonal with entries k/7.",
+        "r_ms": 0.5195140838623047,
+        "translated_ms": 0.30284200147434603,
+        "speedup": 1.7154624567699308,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten <- function(m) c(m)\none <- function() {\n  a <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  b <- matrix(c(2, -1, -2, -4, 6, 3, -4, -2, 8), nrow = 3, byrow = TRUE)\n  c_int <- matrix(1L:4L, 2, 2)\n  d <- matrix(7)\n  e <- matrix(c(TRUE, FALSE, TRUE, TRUE), 2, 2)\n  big <- matrix(0, 64, 64)\n  diag(big) <- (1:64) / 7\n  c(\n    flatten(matrix.inverse(a)),\n    flatten(matrix.inverse(b)),\n    flatten(matrix.inverse(c_int)),\n    flatten(matrix.inverse(d)),\n    flatten(matrix.inverse(e)),\n    flatten(matrix.inverse(big))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.matrix_inverse import matrix_inverse\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten(matrix):\n    return np.asarray(matrix, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    a = np.array([[1, 2], [2, 1]], dtype=float)\n    b = np.array([[2, -1, -2], [-4, 6, 3], [-4, -2, 8]], dtype=float)\n    c_int = np.arange(1, 5, dtype=int).reshape(2, 2, order=\"F\")\n    d = np.array([[7]], dtype=float)\n    e = np.array([[True, True], [False, True]])\n    big = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(big, np.arange(1, 65, dtype=float) / 7)\n    parts = [\n        flatten(matrix_inverse(a)),\n        flatten(matrix_inverse(b)),\n        flatten(matrix_inverse(c_int)),\n        flatten(matrix_inverse(d)),\n        flatten(matrix_inverse(e)),\n        flatten(matrix_inverse(big)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "matrix.power",
+      "translated": true,
+      "python": "matrixcalc.matrix_power.matrix_power",
+      "loads": [],
+      "uses": [
+        "is.square.matrix",
+        "matrix.inverse"
+      ],
+      "done": "Integer exponents use repeated matrix multiplication, zero returns the identity, and negative exponents invert then recurse like R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Example 2x2 matrix at powers -2 through 3, 3x3 b at 4 and -1, and the square of a 48x48 diagonal with entries k/7, flattened column-major.",
+        "r_ms": 0.26476383209228516,
+        "translated_ms": 0.2595645000837976,
+        "speedup": 1.0200309826914273,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten <- function(m) c(m)\none <- function() {\n  a <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  b <- matrix(c(2, -1, -2, -4, 6, 3, -4, -2, 8), nrow = 3, byrow = TRUE)\n  big <- matrix(0, 48, 48)\n  diag(big) <- (1:48) / 7\n  c(\n    flatten(matrix.power(a, -2)),\n    flatten(matrix.power(a, -1)),\n    flatten(matrix.power(a, 0)),\n    flatten(matrix.power(a, 1)),\n    flatten(matrix.power(a, 2)),\n    flatten(matrix.power(a, 3)),\n    flatten(matrix.power(b, 4)),\n    flatten(matrix.power(b, -1)),\n    flatten(matrix.power(big, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.matrix_power import matrix_power\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten(matrix):\n    return np.asarray(matrix, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    a = np.array([[1, 2], [2, 1]], dtype=float)\n    b = np.array([[2, -1, -2], [-4, 6, 3], [-4, -2, 8]], dtype=float)\n    big = np.zeros((48, 48), dtype=float)\n    np.fill_diagonal(big, np.arange(1, 49, dtype=float) / 7)\n    parts = [\n        flatten(matrix_power(a, -2)),\n        flatten(matrix_power(a, -1)),\n        flatten(matrix_power(a, 0)),\n        flatten(matrix_power(a, 1)),\n        flatten(matrix_power(a, 2)),\n        flatten(matrix_power(a, 3)),\n        flatten(matrix_power(b, 4)),\n        flatten(matrix_power(b, -1)),\n        flatten(matrix_power(big, 2)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "matrix.rank",
+      "translated": true,
+      "python": "matrixcalc.matrix_rank.matrix_rank",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Rank uses default QR or pivoted Cholesky when method is chol, after rejecting a non-square matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Full-rank diagonal 4x4 and rank-deficient 4x4 from 1:16 with both methods, singular 2x2, 1x1, empty, integer 2x2, and logical 2x2.",
+        "r_ms": 0.4807710647583008,
+        "translated_ms": 0.4058419999637408,
+        "speedup": 1.184626196404646,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- diag(seq(1, 4, 1))\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  singular <- matrix(c(1, 2, 2, 4), nrow = 2, byrow = TRUE)\n  c(\n    matrix.rank(a),\n    matrix.rank(b),\n    matrix.rank(a, method = \"chol\"),\n    matrix.rank(b, method = \"chol\"),\n    matrix.rank(singular),\n    matrix.rank(singular, method = \"chol\"),\n    matrix.rank(matrix(3.5)),\n    matrix.rank(matrix(numeric(0), 0, 0)),\n    matrix.rank(matrix(1:4, 2, 2)),\n    matrix.rank(matrix(c(TRUE, FALSE, TRUE, TRUE), 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.matrix_rank import matrix_rank\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.diag(np.arange(1, 5, dtype=float))\n    b = np.arange(1, 17, dtype=float).reshape(4, 4)\n    singular = np.array([[1, 2], [2, 4]], dtype=float)\n    return [\n        matrix_rank(a),\n        matrix_rank(b),\n        matrix_rank(a, method=\"chol\"),\n        matrix_rank(b, method=\"chol\"),\n        matrix_rank(singular),\n        matrix_rank(singular, method=\"chol\"),\n        matrix_rank(np.array([[3.5]], dtype=float)),\n        matrix_rank(np.zeros((0, 0))),\n        matrix_rank(np.array([[1, 3], [2, 4]], dtype=int)),\n        matrix_rank(np.array([[True, True], [False, True]])),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "matrix.trace",
+      "translated": true,
+      "python": "matrixcalc.matrix_trace.matrix_trace",
+      "loads": [],
+      "uses": [],
+      "done": "The trace is the sum of the diagonal, after rejecting a value that is not a square matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "trace of the row-filled 4 by 4 matrix 1:16, a 3 by 3 double matrix, a 1 by 1, an empty matrix, the diagonal k/7 for k = 1..64, a 2 by 2 integer matrix, and a 2 by 2 logical matrix",
+        "r_ms": 0.32782554626464844,
+        "translated_ms": 0.11383049991309235,
+        "speedup": 2.8799447117858366,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE)\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  c(\n    matrix.trace(a),\n    matrix.trace(b),\n    matrix.trace(matrix(3.5)),\n    matrix.trace(matrix(numeric(0), 0, 0)),\n    matrix.trace(d),\n    matrix.trace(matrix(1:4, 2, 2)),\n    matrix.trace(matrix(c(TRUE, FALSE, TRUE, TRUE), 2, 2))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.matrix_trace import matrix_trace\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    return [\n        matrix_trace(a),\n        matrix_trace(b),\n        matrix_trace(np.array([[3.5]])),\n        matrix_trace(np.zeros((0, 0))),\n        matrix_trace(d),\n        matrix_trace(np.array([[1, 3], [2, 4]])),\n        matrix_trace(np.array([[True, True], [False, True]])),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "maximum.norm",
+      "translated": true,
+      "python": "matrixcalc.maximum_norm.maximum_norm",
+      "loads": [],
+      "uses": [],
+      "done": "Maximum norm is the largest absolute entry of a numeric matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The help 3 by 3, a 4 by 4 grid, a 1 by 1, an empty matrix, and a 3 by 3 float matrix.",
+        "r_ms": 0.15246868133544922,
+        "translated_ms": 0.05709000015485799,
+        "speedup": 2.6706722879991993,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  c(\n    maximum.norm(a),\n    maximum.norm(b),\n    maximum.norm(matrix(3.5)),\n    maximum.norm(matrix(numeric(0), 0, 0)),\n    maximum.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.maximum_norm import maximum_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    return [\n        maximum_norm(a),\n        maximum_norm(b),\n        maximum_norm(np.array([[3.5]])),\n        maximum_norm(np.zeros((0, 0))),\n        maximum_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "N.matrix",
+      "translated": true,
+      "python": "matrixcalc.n_matrix.n_matrix",
+      "loads": [],
+      "uses": [
+        "K.matrix"
+      ],
+      "done": "The N matrix is half the sum of the commutation matrix and the order n squared identity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "N.matrix(3) and N.matrix(4) flattened column-major, plus N %*% vec(A) for a 3x3 matrix filled with seq(1, 9) by row.",
+        "r_ms": 1.7313957214355469,
+        "translated_ms": 1.0221130014542723,
+        "speedup": 1.6939376751612594,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  n3 <- N.matrix(3)\n  n4 <- N.matrix(4)\n  a <- matrix(seq(1, 9, 1), nrow = 3, byrow = TRUE)\n  vec_a <- vec(a)\n  y <- n3 %*% vec_a\n  c(c(n3), c(n4), c(y))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.n_matrix import n_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef _vec(array):\n    return np.asarray(array, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    n3 = n_matrix(3)\n    n4 = n_matrix(4)\n    a = np.arange(1, 10, dtype=float).reshape(3, 3, order=\"C\")\n    vec_a = _vec(a)\n    y = n3 @ vec_a\n    parts = [\n        n3.reshape(-1, order=\"F\"),\n        n4.reshape(-1, order=\"F\"),\n        y.reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "one.norm",
+      "translated": true,
+      "python": "matrixcalc.one_norm.one_norm",
+      "loads": [],
+      "uses": [],
+      "done": "One-norm is the largest absolute column sum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help example, a 4 by 4 grid, a length-12 vector, a scalar, an empty matrix, and a 3 by 3 float matrix.",
+        "r_ms": 0.4857778549194336,
+        "translated_ms": 0.1302089995078859,
+        "speedup": 3.730754838416628,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  v <- 1:12\n  c(\n    one.norm(a),\n    one.norm(b),\n    one.norm(v),\n    one.norm(matrix(3.5)),\n    one.norm(matrix(numeric(0), 0, 0)),\n    one.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.one_norm import one_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and (math.isinf(value) or math.isnan(value)):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    v = np.arange(1, 13, dtype=float)\n    return [\n        one_norm(a),\n        one_norm(b),\n        one_norm(v),\n        one_norm(np.array([[3.5]])),\n        one_norm(np.zeros((0, 0))),\n        one_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pascal.matrix",
+      "translated": true,
+      "python": "matrixcalc.pascal_matrix.pascal_matrix",
+      "loads": [],
+      "uses": [
+        "lu.decomposition"
+      ],
+      "done": "pascal.matrix is the L factor from Doolittle LU of the symmetric Pascal matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pascal.matrix(4), (10), (2), and (5), flattened column-major.",
+        "r_ms": 1.0319948196411133,
+        "translated_ms": 1.083322002159548,
+        "speedup": 0.9526205667233597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  p4 <- pascal.matrix(4)\n  p10 <- pascal.matrix(10)\n  p2 <- pascal.matrix(2)\n  p5 <- pascal.matrix(5)\n  c(c(p4), c(p10), c(p2), c(p5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.pascal_matrix import pascal_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        pascal_matrix(4),\n        pascal_matrix(10),\n        pascal_matrix(2),\n        pascal_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%s%",
+      "translated": true,
+      "python": "matrixcalc.s_op.s_op",
+      "loads": [],
+      "uses": [],
+      "done": "Direct sum of two vectors or matrices, as a block-diagonal matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Block-diagonal direct sum of the help examples.",
+        "r_ms": 0.40984153747558594,
+        "translated_ms": 0.22791800074628554,
+        "speedup": 1.7981973171650212,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  x <- matrix(seq(1, 4))\n  y <- matrix(seq(5, 8))\n  a <- matrix(seq(1, 6), nrow = 2, byrow = TRUE)\n  b <- matrix(seq(11, 16), nrow = 2, byrow = TRUE)\n  u <- c(0.25, -1.5, 2)\n  v <- c(4, 0.5, -0.125)\n  m <- matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25), nrow = 3, byrow = TRUE)\n  w <- c(9, 8, 7, 6)\n  s <- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)\n  parts <- list(\n    c(x %s% y),\n    c(a %s% b),\n    c(u %s% v),\n    c(matrix(1:2, nrow = 1) %s% matrix(3:4, nrow = 1)),\n    c(m %s% w),\n    c(2.5 %s% s)\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.s_op import s_op\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    x = np.arange(1, 5, dtype=float).reshape(-1, 1)\n    y = np.arange(5, 9, dtype=float).reshape(-1, 1)\n    a = np.arange(1, 7, dtype=float).reshape(2, 3)\n    b = np.arange(11, 17, dtype=float).reshape(2, 3)\n    u = np.array([0.25, -1.5, 2], dtype=float)\n    v = np.array([4, 0.5, -0.125], dtype=float)\n    m = np.array([[0.1, -1.5], [2.25, 4], [0.5, -0.25]], dtype=float)\n    w = np.array([9, 8, 7, 6], dtype=float)\n    s = np.array([[1, 2], [3, 4]], dtype=float)\n    parts = [\n        s_op(x, y),\n        s_op(a, b),\n        s_op(u, v),\n        s_op(np.array([[1, 2]], dtype=float), np.array([[3, 4]], dtype=float)),\n        s_op(m, w),\n        s_op(2.5, s),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/%s%-r.txt"
+      },
+      "translation": {
+        "output": "output/%s%-python.txt"
+      }
+    },
+    {
+      "name": "set.submatrix",
+      "translated": true,
+      "python": "matrixcalc.set_submatrix.set_submatrix",
+      "loads": [],
+      "uses": [],
+      "done": "Copies a numeric matrix and overwrites the 1-based row and column block.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Four set.submatrix results flattened column-major: 4x4 with 2x2 at (3,3), 6x4 with 2x3 at (1,1), 5x5 with 1x1 at (5,5), and 3x6 with 2x2 at (2,4).",
+        "r_ms": 0.25212764739990234,
+        "translated_ms": 0.043085499783046544,
+        "speedup": 5.85179813787632,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  x <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  y <- matrix(seq(1, 4, 1), nrow = 2, byrow = TRUE)\n  a <- matrix(seq(1, 24, 1), nrow = 6, byrow = TRUE)\n  b <- matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25), nrow = 2, byrow = TRUE)\n  cmat <- matrix(seq(1, 25, 1), nrow = 5, byrow = TRUE)\n  d <- matrix(7.125, nrow = 1, ncol = 1)\n  e <- matrix(seq(1, 18, 1), nrow = 3, byrow = TRUE)\n  f <- matrix(c(9, 8, 7, 6), nrow = 2, byrow = TRUE)\n  parts <- list(\n    c(set.submatrix(x, y, 3, 3)),\n    c(set.submatrix(a, b, 1, 1)),\n    c(set.submatrix(cmat, d, 5, 5)),\n    c(set.submatrix(e, f, 2, 4))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.set_submatrix import set_submatrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    x = np.arange(1, 17, dtype=float).reshape(4, 4)\n    y = np.arange(1, 5, dtype=float).reshape(2, 2)\n    a = np.arange(1, 25, dtype=float).reshape(6, 4)\n    b = np.array([[0.1, -1.5, 2.25], [4, 0.5, -0.25]], dtype=float)\n    cmat = np.arange(1, 26, dtype=float).reshape(5, 5)\n    d = np.array([[7.125]], dtype=float)\n    e = np.arange(1, 19, dtype=float).reshape(3, 6)\n    f = np.array([[9, 8], [7, 6]], dtype=float)\n    parts = [\n        set_submatrix(x, y, 3, 3),\n        set_submatrix(a, b, 1, 1),\n        set_submatrix(cmat, d, 5, 5),\n        set_submatrix(e, f, 2, 4),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "shift.down",
+      "translated": true,
+      "python": "matrixcalc.shift_down.shift_down",
+      "loads": [],
+      "uses": [],
+      "done": "Shifts a numeric matrix down by a non-negative integer row count, filling vacated top rows with a numeric fill value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Example 4x4 A with rows 1, 3, 0, and 2 and fill -1.5; 3x3 B with rows 1 and fill 99; 1x1 and 0x0; 64x64 diagonal with rows 5; 3x3 integer with rows 10 and fill 0.25; all flattened column-major.",
+        "r_ms": 0.8698701858520508,
+        "translated_ms": 0.10719400052039418,
+        "speedup": 8.114914842520069,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  parts <- list(\n    c(shift.down(a, 1)),\n    c(shift.down(a, 3)),\n    c(shift.down(a, 0)),\n    c(shift.down(a, 2, fill = -1.5)),\n    c(shift.down(b, 1, fill = 99)),\n    c(shift.down(matrix(3.5), 1)),\n    c(shift.down(matrix(numeric(0), 0, 0), 2)),\n    c(shift.down(d, 5)),\n    c(shift.down(e, 10, fill = 0.25))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.shift_down import shift_down\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    parts = [\n        shift_down(a, 1),\n        shift_down(a, 3),\n        shift_down(a, 0),\n        shift_down(a, 2, fill=-1.5),\n        shift_down(b, 1, fill=99),\n        shift_down(np.array([[3.5]]), 1),\n        shift_down(np.zeros((0, 0)), 2),\n        shift_down(d, 5),\n        shift_down(e, 10, fill=0.25),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "shift.left",
+      "translated": true,
+      "python": "matrixcalc.shift_left.shift_left",
+      "loads": [],
+      "uses": [],
+      "done": "Shifts numeric matrices left by a non-negative integer number of columns and fills the vacated right columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nine column-major calls: 4x4 with cols 1, 3, 0, and 2 and fill -1.5; 3x3 with cols 1 and fill 99; 2x3 with cols 2; 0x0 with cols 0; 64x64 diagonal with cols 5; 3x3 integer with cols 10 and fill 0.25.",
+        "r_ms": 0.7536411285400391,
+        "translated_ms": 0.10340700100641698,
+        "speedup": 7.288105459061437,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  parts <- list(\n    c(shift.left(a, 1)),\n    c(shift.left(a, 3)),\n    c(shift.left(a, 0)),\n    c(shift.left(a, 2, fill = -1.5)),\n    c(shift.left(b, 1, fill = 99)),\n    c(shift.left(matrix(1:6, 2, 3), 2)),\n    c(shift.left(matrix(numeric(0), 0, 0), 0)),\n    c(shift.left(d, 5)),\n    c(shift.left(e, 10, fill = 0.25))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.shift_left import shift_left\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    parts = [\n        shift_left(a, 1),\n        shift_left(a, 3),\n        shift_left(a, 0),\n        shift_left(a, 2, fill=-1.5),\n        shift_left(b, 1, fill=99),\n        shift_left(np.arange(1, 7, dtype=float).reshape(2, 3, order=\"F\"), 2),\n        shift_left(np.zeros((0, 0)), 0),\n        shift_left(d, 5),\n        shift_left(e, 10, fill=0.25),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "shift.right",
+      "translated": true,
+      "python": "matrixcalc.shift_right.shift_right",
+      "loads": [],
+      "uses": [],
+      "done": "Shifts columns right by filling the leading columns and copying the remaining columns into the trailing block.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nine shift.right calls on 4x4, 3x3, 2x3, 64x64 diagonal, and 0x0 matrices, with shifts 0 through 10 and fills 0, -1.5, 99, and 0.25, flattened column-major.",
+        "r_ms": 0.8084774017333984,
+        "translated_ms": 0.19608900038292632,
+        "speedup": 4.12301251041409,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  parts <- list(\n    c(shift.right(a, 1)),\n    c(shift.right(a, 3)),\n    c(shift.right(a, 0)),\n    c(shift.right(a, 2, fill = -1.5)),\n    c(shift.right(b, 1, fill = 99)),\n    c(shift.right(matrix(1:6, 2, 3), 2)),\n    c(shift.right(matrix(numeric(0), 0, 0), 0)),\n    c(shift.right(d, 5)),\n    c(shift.right(e, 10, fill = 0.25))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.shift_right import shift_right\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    parts = [\n        shift_right(a, 1),\n        shift_right(a, 3),\n        shift_right(a, 0),\n        shift_right(a, 2, fill=-1.5),\n        shift_right(b, 1, fill=99),\n        shift_right(np.arange(1, 7, dtype=float).reshape(2, 3, order=\"F\"), 2),\n        shift_right(np.zeros((0, 0)), 0),\n        shift_right(d, 5),\n        shift_right(e, 10, fill=0.25),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "shift.up",
+      "translated": true,
+      "python": "matrixcalc.shift_up.shift_up",
+      "loads": [],
+      "uses": [],
+      "done": "Shifts matrix rows upward by a non-negative integer count and fills the vacated bottom rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nine shift.up runs: 4x4 at 1, 3, 0, and 2 rows with fill -1.5; 3x3 with fill 99; a 2x1 at 1 row; empty 0x0 at 0 rows; 64x64 diagonal at 5 rows; 3x3 integer at 10 rows with fill 0.25.",
+        "r_ms": 0.746607780456543,
+        "translated_ms": 0.09967400001187343,
+        "speedup": 7.490496823320074,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  parts <- list(\n    c(shift.up(a, 1)),\n    c(shift.up(a, 3)),\n    c(shift.up(a, 0)),\n    c(shift.up(a, 2, fill = -1.5)),\n    c(shift.up(b, 1, fill = 99)),\n    c(shift.up(matrix(c(3.5, 4), nrow = 2), 1)),\n    c(shift.up(matrix(numeric(0), 0, 0), 0)),\n    c(shift.up(d, 5)),\n    c(shift.up(e, 10, fill = 0.25))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.shift_up import shift_up\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    parts = [\n        shift_up(a, 1),\n        shift_up(a, 3),\n        shift_up(a, 0),\n        shift_up(a, 2, fill=-1.5),\n        shift_up(b, 1, fill=99),\n        shift_up(np.array([[3.5], [4.0]]), 1),\n        shift_up(np.zeros((0, 0)), 0),\n        shift_up(d, 5),\n        shift_up(e, 10, fill=0.25),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "spectral.norm",
+      "translated": true,
+      "python": "matrixcalc.spectral_norm.spectral_norm",
+      "loads": [],
+      "uses": [
+        "frobenius.norm"
+      ],
+      "done": "Spectral norm is the square root of the largest eigenvalue of t(x) %*% x, and vectors use the Euclidean length via frobenius.norm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Six spectral norms: the help 3x4 matrix, a 3x3 matrix, a 4x4 grid, a length-12 vector, a 1x1 matrix, and a 3x3 float matrix.",
+        "r_ms": 2.010822296142578,
+        "translated_ms": 0.32247599847323727,
+        "speedup": 6.23557196710086,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0.6\")\noptions(warn = -1)\none <- function() {\n  help_x <- matrix(c(2, 4, 2, 1, 3, 1, 5, 2, 1, 2, 3, 3), nrow = 3, ncol = 4, byrow = TRUE)\n  a <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, byrow = TRUE)\n  b <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  v <- 1:12\n  c(\n    spectral.norm(help_x),\n    spectral.norm(a),\n    spectral.norm(b),\n    spectral.norm(v),\n    spectral.norm(matrix(3.5)),\n    spectral.norm(matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.spectral_norm import spectral_norm\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    help_x = np.array(\n        [[2, 4, 2, 1], [3, 1, 5, 2], [1, 2, 3, 3]],\n        dtype=float,\n    )\n    a = np.array([[3, 5, 7], [2, 6, 4], [0, 2, 8]], dtype=float)\n    b = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    v = np.arange(1, 13, dtype=float)\n    return [\n        spectral_norm(help_x),\n        spectral_norm(a),\n        spectral_norm(b),\n        spectral_norm(v),\n        spectral_norm(np.array([[3.5]])),\n        spectral_norm(\n            np.array(\n                [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n                dtype=float,\n            )\n        ),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "stirling.matrix",
+      "translated": true,
+      "python": "matrixcalc.stirling_matrix.stirling_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the lower triangular Stirling matrix of order n+1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Orders 10, 4, 3, and 5, flattened column-major.",
+        "r_ms": 0.08678436279296875,
+        "translated_ms": 0.18101650130120106,
+        "speedup": 0.4794279094399497,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  s10 <- stirling.matrix(10)\n  s4 <- stirling.matrix(4)\n  s3 <- stirling.matrix(3)\n  s5 <- stirling.matrix(5)\n  c(c(s10), c(s4), c(s3), c(s5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.stirling_matrix import stirling_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        stirling_matrix(10),\n        stirling_matrix(4),\n        stirling_matrix(3),\n        stirling_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "svd.inverse",
+      "translated": true,
+      "python": "matrixcalc.svd_inverse.svd_inverse",
+      "loads": [],
+      "uses": [],
+      "done": "Moore-Penrose inverse via thin SVD, matching R's zero singular-value check.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "SVD inverses of the 2x2 help matrix, a 1x3 row, the 3x3 LU example, a 2x2 integer matrix, a 1x1, a length-3 vector, and the 64x64 diagonal with entries k/7.",
+        "r_ms": 118.85571479797363,
+        "translated_ms": 96.01120750085101,
+        "speedup": 1.2379358399061915,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten <- function(m) c(m)\none <- function() {\n  a <- matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)\n  b <- matrix(c(-1, 2, 2), nrow = 1, byrow = TRUE)\n  c3 <- matrix(c(2, -1, -2, -4, 6, 3, -4, -2, 8), nrow = 3, byrow = TRUE)\n  c_int <- matrix(1L:4L, 2, 2)\n  d <- matrix(7)\n  v <- c(1, 2, 3)\n  big <- matrix(0, 64, 64)\n  diag(big) <- (1:64) / 7\n  c(\n    flatten(svd.inverse(a)),\n    flatten(svd.inverse(b)),\n    flatten(svd.inverse(c3)),\n    flatten(svd.inverse(c_int)),\n    flatten(svd.inverse(d)),\n    flatten(svd.inverse(v)),\n    flatten(svd.inverse(big))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.svd_inverse import svd_inverse\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten(matrix):\n    return np.asarray(matrix, dtype=float).reshape(-1, order=\"F\")\n\n\ndef one():\n    a = np.array([[1, 2], [2, 1]], dtype=float)\n    b = np.array([[-1, 2, 2]], dtype=float)\n    c3 = np.array([[2, -1, -2], [-4, 6, 3], [-4, -2, 8]], dtype=float)\n    c_int = np.arange(1, 5, dtype=int).reshape(2, 2, order=\"F\")\n    d = np.array([[7]], dtype=float)\n    v = np.array([1, 2, 3], dtype=float)\n    big = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(big, np.arange(1, 65, dtype=float) / 7)\n    parts = [\n        flatten(svd_inverse(a)),\n        flatten(svd_inverse(b)),\n        flatten(svd_inverse(c3)),\n        flatten(svd_inverse(c_int)),\n        flatten(svd_inverse(d)),\n        flatten(svd_inverse(v)),\n        flatten(svd_inverse(big)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "symmetric.pascal.matrix",
+      "translated": true,
+      "python": "matrixcalc.symmetric_pascal_matrix.symmetric_pascal_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "The symmetric Pascal matrix is built with nested binomial coefficients and a leading column of ones.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "symmetric.pascal.matrix(4), (10), (2), and (5), flattened column-major.",
+        "r_ms": 0.6237030029296875,
+        "translated_ms": 0.35022250085603446,
+        "speedup": 1.7808764468450653,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  s4 <- symmetric.pascal.matrix(4)\n  s10 <- symmetric.pascal.matrix(10)\n  s2 <- symmetric.pascal.matrix(2)\n  s5 <- symmetric.pascal.matrix(5)\n  c(c(s4), c(s10), c(s2), c(s5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.symmetric_pascal_matrix import symmetric_pascal_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        symmetric_pascal_matrix(4),\n        symmetric_pascal_matrix(10),\n        symmetric_pascal_matrix(2),\n        symmetric_pascal_matrix(5),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "T.matrices",
+      "translated": true,
+      "python": "matrixcalc.t_matrices.t_matrices",
+      "loads": [],
+      "uses": [
+        "E.matrices"
+      ],
+      "done": "Nested T blocks reuse E.matrices and add the off-diagonal E pairs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Flattened T.matrices(3) and T.matrices(4) in column-major order.",
+        "r_ms": 0.5674362182617188,
+        "translated_ms": 0.25741000172274653,
+        "speedup": 2.204406256416167,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten_t <- function(T) {\n  parts <- numeric(0)\n  for (i in seq_along(T)) {\n    for (j in seq_along(T[[i]])) {\n      parts <- c(parts, c(T[[i]][[j]]))\n    }\n  }\n  parts\n}\none <- function() {\n  t3 <- T.matrices(3)\n  t4 <- T.matrices(4)\n  c(flatten_t(t3), flatten_t(t4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.t_matrices import t_matrices\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten_t(blocks):\n    parts = []\n    for row in blocks:\n        for matrix in row:\n            parts.append(np.asarray(matrix, dtype=float).reshape(-1, order=\"F\"))\n    return np.concatenate(parts)\n\n\ndef one():\n    return np.concatenate([flatten_t(t_matrices(3)), flatten_t(t_matrices(4))])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "toeplitz.matrix",
+      "translated": true,
+      "python": "matrixcalc.toeplitz_matrix.toeplitz_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Builds an order-n Toeplitz matrix from a length 2n-1 vector using R's (i-j)+n indexing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "toeplitz.matrix(4, seq(1,7)), toeplitz.matrix(3, 1:5), and toeplitz.matrix(2, c(10,20,30)), flattened column-major.",
+        "r_ms": 0.057220458984375,
+        "translated_ms": 0.07349450061155949,
+        "speedup": 0.7785678997507897,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  t4 <- toeplitz.matrix(4, seq(1, 7))\n  t3 <- toeplitz.matrix(3, c(1, 2, 3, 4, 5))\n  t2 <- toeplitz.matrix(2, c(10, 20, 30))\n  c(c(t4), c(t3), c(t2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.toeplitz_matrix import toeplitz_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        toeplitz_matrix(4, np.arange(1, 8, dtype=float)),\n        toeplitz_matrix(3, [1, 2, 3, 4, 5]),\n        toeplitz_matrix(2, [10, 20, 30]),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "u.vectors",
+      "translated": true,
+      "python": "matrixcalc.u_vectors.u_vectors",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the lower-triangle index map and the identity of order n(n+1)/2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "u.vectors(3) and u.vectors(4), each flattened as k then I in column-major order.",
+        "r_ms": 0.05221366882324219,
+        "translated_ms": 0.03429749995120801,
+        "speedup": 1.5223753596478435,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\nflatten_u <- function(u) {\n  c(c(u$k), c(u$I))\n}\none <- function() {\n  u3 <- u.vectors(3)\n  u4 <- u.vectors(4)\n  c(flatten_u(u3), flatten_u(u4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.u_vectors import u_vectors\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef flatten_u(result):\n    return np.concatenate(\n        [\n            np.asarray(result[\"k\"], dtype=float).reshape(-1, order=\"F\"),\n            np.asarray(result[\"I\"], dtype=float).reshape(-1, order=\"F\"),\n        ]\n    )\n\n\ndef one():\n    return np.concatenate([flatten_u(u_vectors(3)), flatten_u(u_vectors(4))])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "upper.triangle",
+      "translated": true,
+      "python": "matrixcalc.upper_triangle.upper_triangle",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Returns a copy of a square matrix with every entry strictly below the main diagonal set to zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seven square matrices: 4x4 row-filled 1:16, a 3x3 double matrix, 3.5 scalar, empty 0x0, 64x64 with diagonal k/7, a 3x3 integer matrix, and a 3x3 logical matrix; results concatenated in column-major order.",
+        "r_ms": 0.2516508102416992,
+        "translated_ms": 0.17267999828618485,
+        "speedup": 1.4573246046981942,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  f <- matrix(\n    c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),\n    nrow = 3\n  )\n  parts <- list(\n    c(upper.triangle(a)),\n    c(upper.triangle(b)),\n    c(upper.triangle(matrix(3.5))),\n    c(upper.triangle(matrix(numeric(0), 0, 0))),\n    c(upper.triangle(d)),\n    c(upper.triangle(e)),\n    c(upper.triangle(f))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.upper_triangle import upper_triangle\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    f = np.array(\n        [\n            [True, False, True],\n            [False, True, False],\n            [True, False, True],\n        ],\n        dtype=bool,\n    )\n    parts = [\n        upper_triangle(a),\n        upper_triangle(b),\n        upper_triangle(np.array([[3.5]])),\n        upper_triangle(np.zeros((0, 0))),\n        upper_triangle(d),\n        upper_triangle(e),\n        upper_triangle(f),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "vandermonde.matrix",
+      "translated": true,
+      "python": "matrixcalc.vandermonde_matrix.vandermonde_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Vandermonde columns are alpha to the power j-1, with a leading column of ones.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vandermonde.matrix(c(2,3,5), 4), c(1.5,-2) with n=3, scalar 5 with n=4, and c(0.5,1,2,4) with n=6, flattened column-major.",
+        "r_ms": 0.06413459777832031,
+        "translated_ms": 0.07224950059026014,
+        "speedup": 0.8876822296951103,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  v1 <- vandermonde.matrix(c(2, 3, 5), 4)\n  v2 <- vandermonde.matrix(c(1.5, -2), 3)\n  v3 <- vandermonde.matrix(5, 4)\n  v4 <- vandermonde.matrix(c(0.5, 1, 2, 4), 6)\n  c(c(v1), c(v2), c(v3), c(v4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.vandermonde_matrix import vandermonde_matrix\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        vandermonde_matrix([2, 3, 5], 4),\n        vandermonde_matrix([1.5, -2], 3),\n        vandermonde_matrix(5, 4),\n        vandermonde_matrix([0.5, 1, 2, 4], 6),\n    ]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "vec",
+      "translated": true,
+      "python": "matrixcalc.vec.vec",
+      "loads": [],
+      "uses": [],
+      "done": "Stacks a numeric matrix in column-major order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Six matrices from a 4 by 4 grid through an empty matrix and a scalar.",
+        "r_ms": 0.21135807037353516,
+        "translated_ms": 0.0856930000736611,
+        "speedup": 2.4664566556411054,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125), nrow = 3, byrow = TRUE)\n  c <- matrix(1:12, nrow = 3, ncol = 4)\n  d <- matrix(0, 5, 7)\n  diag(d) <- (1:5) / 3\n  e <- matrix(numeric(0), 0, 4)\n  f <- matrix(3.5, 1, 1)\n  c(\n    c(vec(a)),\n    c(vec(b)),\n    c(vec(c)),\n    c(vec(d)),\n    c(vec(e)),\n    c(vec(f))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.vec import vec\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4, order=\"C\")\n    b = np.array(\n        [[0.1, -1.5, 2.25], [4, 0.5, -0.25], [8, 3, 1.125]],\n        dtype=float,\n    )\n    c = np.arange(1, 13, dtype=int).reshape(3, 4, order=\"F\")\n    d = np.zeros((5, 7), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 6, dtype=float) / 3)\n    e = np.zeros((0, 4), dtype=float)\n    f = np.array([[3.5]], dtype=float)\n    parts = [vec(a), vec(b), vec(c), vec(d), vec(e), vec(f)]\n    return np.concatenate([part.reshape(-1, order=\"F\") for part in parts])\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "vech",
+      "translated": true,
+      "python": "matrixcalc.vech.vech",
+      "loads": [],
+      "uses": [
+        "is.square.matrix"
+      ],
+      "done": "Stacks the lower triangle of a square matrix, including the diagonal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seven square matrices from a 4 by 4 grid through a logical 3 by 3.",
+        "r_ms": 0.3554821014404297,
+        "translated_ms": 0.7334380006795982,
+        "speedup": 0.4846791427646817,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(matrixcalc))\nif (as.character(packageVersion(\"matrixcalc\")) != \"1.0.6\") stop(\"expected matrixcalc 1.0-6\")\noptions(warn = -1)\none <- function() {\n  a <- matrix(seq(1, 16, 1), nrow = 4, byrow = TRUE)\n  b <- matrix(\n    c(0.1, -1.5, 2.25, 4, 0.5, -0.25, 8, 3, 1.125),\n    nrow = 3,\n    byrow = TRUE\n  )\n  d <- matrix(0, 64, 64)\n  diag(d) <- (1:64) / 7\n  e <- matrix(1:9, nrow = 3)\n  f <- matrix(\n    c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),\n    nrow = 3\n  )\n  parts <- list(\n    c(vech(a)),\n    c(vech(b)),\n    c(vech(matrix(3.5))),\n    c(vech(matrix(numeric(0), 0, 0))),\n    c(vech(d)),\n    c(vech(e)),\n    c(vech(f))\n  )\n  unlist(parts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/matrixcalc\")\nwarnings.simplefilter(\"ignore\")\n\nfrom matrixcalc.vech import vech\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    a = np.arange(1, 17, dtype=float).reshape(4, 4)\n    b = np.array(\n        [\n            [0.1, -1.5, 2.25],\n            [4, 0.5, -0.25],\n            [8, 3, 1.125],\n        ],\n        dtype=float,\n    )\n    d = np.zeros((64, 64), dtype=float)\n    np.fill_diagonal(d, np.arange(1, 65, dtype=float) / 7)\n    e = np.arange(1, 10, dtype=int).reshape(3, 3, order=\"F\")\n    f = np.array(\n        [\n            [True, False, True],\n            [False, True, False],\n            [True, False, True],\n        ],\n        dtype=bool,\n    )\n    parts = [\n        vech(a).reshape(-1),\n        vech(b).reshape(-1),\n        vech(np.array([[3.5]])).reshape(-1),\n        vech(np.zeros((0, 0))).reshape(-1),\n        vech(d).reshape(-1),\n        vech(e).reshape(-1),\n        vech(f).reshape(-1),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small"
+}

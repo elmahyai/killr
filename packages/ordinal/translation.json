@@ -1,0 +1,662 @@
+{
+  "name": "ordinal",
+  "cran_version": "2026.7-26",
+  "inventory": "complete",
+  "status": "in_progress",
+  "blocked_by": [],
+  "assigned": "",
+  "resume": "Checked nominal_test, rgumbel, condVar, scale_test. The link densities and the four control lists match ordinal 2026.7-26. rgumbel draws with runif. The cumulative models are still open: they call MASS::ginv, and clmm's sparse path uses Matrix, which is not in the registry. Checked slice and drop.coef. Checked convergence.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": [
+      "ordinal_clmm"
+    ]
+  },
+  "functions": [
+    {
+      "name": "clm",
+      "translated": true,
+      "python": "ordinal.clm.clm",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R (max 2.1e-12) for location, scale, and nominal (~contact). Fixed shared bugs: _fitted.py probit/cauchit lower_tail, _clm_nll.py loglog/cloglog Gumbel gradient and scale Hessian, links.py Gumbel overflow.",
+      "not_done": "nominal = ~temp drifts to infinity at the top threshold (R singular Hessian), cannot be matched to 1e-8. offset(), Aranda-Ordaz and log-gamma links, optim methods, numeric nominal variables. Speed 0.59 to 0.81x (noisy). Not exported from __init__.py yet.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "clm location, scale, nominal (contact)",
+        "matches": true,
+        "max_abs_diff": 2.1e-12,
+        "tolerance": 1e-08,
+        "r_ms": 33.43,
+        "translated_ms": 56.89,
+        "speedup": 0.59,
+        "proof": {
+          "r": "packages/ordinal/proof/clm-r.R",
+          "python": "packages/ordinal/proof/clm-py.py"
+        },
+        "output": {
+          "dir": "packages/ordinal/docs/output/"
+        }
+      }
+    },
+    {
+      "name": "clm.fit",
+      "translated": true,
+      "python": "ordinal.clm_fit.clm_fit",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R (max 4.3e-14) for the wine data: location, scale, and the link family (probit, cloglog, loglog, cauchit, symmetric, equidistant thresholds all match at 1.4e-14).",
+      "not_done": "Start vector differs from R by about one ulp, which moves the clmm default-start gap to 1e-7. offset() terms, Aranda-Ordaz and log-gamma links (need nlminb), ucminf, nlminb, and optim methods, numeric nominal variables, non-treatment contrasts such as contr.poly.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "clm.fit wine data",
+        "matches": true,
+        "max_abs_diff": 4.3e-14,
+        "tolerance": 1e-08,
+        "r_ms": 5.62,
+        "translated_ms": 4.31,
+        "speedup": 1.3,
+        "proof": {
+          "r": "packages/ordinal/proof/clm.fit-r.R",
+          "python": "packages/ordinal/proof/clm.fit-py.py"
+        },
+        "output": {
+          "dir": "packages/ordinal/docs/output/"
+        }
+      }
+    },
+    {
+      "name": "clmm",
+      "translated": false,
+      "python": "ordinal.clmm.clmm",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Default start: the clm.fit starting vector differs from R by about one ulp, and nlminb amplifies it to about 1e-7 in the coefficients. Given R's exact start, the objective matches bit for bit at nAGQ=1 and nAGQ=10. To close, clm.fit's start needs R's chol and backsolve arithmetic. Multiple terms, slopes, nested or crossed groups need the Matrix kernels (scipy.sparse). ucminf, useMatrix and clmm2 not ported.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": false,
+        "max_abs_diff": 2.27e-05,
+        "tolerance": 1e-08,
+        "r_ms": 78.2,
+        "translated_ms": 76.7,
+        "speedup": 1.02,
+        "note": "Default start, nAGQ=1: Hessian max 2.27e-5, coefficients 3.3e-7. nAGQ=10: Hessian 2.8e-6, coefficients 7.4e-10 (speedup 1.18). Fixed start matches bit for bit.",
+        "proof": {
+          "r": "packages/ordinal/proof/clmm-r.R",
+          "python": "packages/ordinal/proof/clmm-py.py"
+        }
+      }
+    },
+    {
+      "name": "clm.control",
+      "translated": true,
+      "python": "ordinal.clm_control",
+      "loads": [],
+      "uses": [],
+      "done": "Control parameters for clm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default clm.control",
+        "r_ms": 0.10609626770019531,
+        "translated_ms": 0.017139000192401,
+        "speedup": 6.1903417065854125,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  ctrl <- clm.control()\n  c(match(ctrl$method, c(\"Newton\", \"model.frame\", \"design\", \"ucminf\", \"nlminb\", \"optim\")),\n    match(ctrl$sign.location, c(\"negative\", \"positive\")),\n    match(ctrl$sign.nominal, c(\"positive\", \"negative\")),\n    match(ctrl$convergence, c(\"warn\", \"silent\", \"stop\", \"message\")),\n    ctrl$trace, ctrl$maxIter, ctrl$gradTol, ctrl$relTol, ctrl$tol,\n    ctrl$maxLineIter, ctrl$maxModIter)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import clm_control\n\n\ndef one():\n    c = clm_control()\n    return np.array([\n        [\"Newton\", \"model.frame\", \"design\", \"ucminf\", \"nlminb\", \"optim\"].index(c[\"method\"]) + 1,\n        [\"negative\", \"positive\"].index(c[\"sign.location\"]) + 1,\n        [\"positive\", \"negative\"].index(c[\"sign.nominal\"]) + 1,\n        [\"warn\", \"silent\", \"stop\", \"message\"].index(c[\"convergence\"]) + 1,\n        c[\"trace\"], c[\"maxIter\"], c[\"gradTol\"], c[\"relTol\"], c[\"tol\"],\n        c[\"maxLineIter\"], c[\"maxModIter\"],\n    ], dtype=float)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "clmm.control",
+      "translated": true,
+      "python": "ordinal.clmm_control",
+      "loads": [],
+      "uses": [],
+      "done": "Control parameters for clmm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default clmm.control",
+        "r_ms": 0.3032684326171875,
+        "translated_ms": 0.009591998605174012,
+        "speedup": 31.616813669426694,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  ctrl <- clmm.control()\n  c(match(ctrl$method, c(\"nlminb\", \"ucminf\", \"model.frame\")),\n    as.numeric(ctrl$useMatrix),\n    ctrl$ctrl$trace, ctrl$ctrl$maxIter, ctrl$ctrl$gradTol, ctrl$ctrl$maxLineIter,\n    match(ctrl$ctrl$innerCtrl, c(\"warnOnly\", \"noWarn\", \"giveError\")),\n    ctrl$optCtrl$trace,\n    match(ctrl$checkRanef, c(\"warn\", \"error\", \"message\")))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import clmm_control\n\n\ndef one():\n    c = clmm_control()\n    return np.array([\n        [\"nlminb\", \"ucminf\", \"model.frame\"].index(c[\"method\"]) + 1,\n        float(c[\"useMatrix\"]),\n        c[\"ctrl\"][\"trace\"], c[\"ctrl\"][\"maxIter\"], c[\"ctrl\"][\"gradTol\"], c[\"ctrl\"][\"maxLineIter\"],\n        [\"warnOnly\", \"noWarn\", \"giveError\"].index(c[\"ctrl\"][\"innerCtrl\"]) + 1,\n        c[\"optCtrl\"][\"trace\"],\n        [\"warn\", \"error\", \"message\"].index(c[\"checkRanef\"]) + 1,\n    ], dtype=float)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "slice",
+      "translated": true,
+      "python": "ordinal.slice.slice",
+      "loads": [],
+      "uses": [],
+      "done": "Likelihood slices along Hessian-scaled grids for a fitted clm, with optional quadratic log-likelihood columns. The check uses the saved wine fit until clm is translated.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "slice(fm1, parm=1, grid=100) on clm(rating ~ contact + temp, data=wine)",
+        "r_ms": 24.44911,
+        "translated_ms": 47.18753,
+        "speedup": 0.5181265050321557,
+        "matches": true,
+        "max_abs_diff": 1.4210854715202004e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(wine)\n  fm1 <- clm(rating ~ contact + temp, data = wine)\n  sl <- slice(fm1, parm = 1, grid = 100, quad.approx = TRUE)\n  c(as.numeric(sl[[1]][, 1]), as.numeric(sl[[1]][, 2]), as.numeric(sl[[1]][, 3]))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ordinal._clm_rho import clm_like_from_npz\nfrom ordinal.slice import slice_clm, slice_values\n\n_RHO = Path(__file__).resolve().parent / \"slice_wine_rho.npz\"\n\n\ndef one():\n    obj = clm_like_from_npz(str(_RHO))\n    result = slice_clm(obj, parm=1, grid=100, quad_approx=True)\n    return slice_values(result)\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "convergence",
+      "translated": true,
+      "python": "ordinal.convergence.convergence",
+      "loads": [],
+      "uses": [],
+      "done": "Reports the Newton step and coefficient table for a cumulative link fit.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "convergence of the saved wine clm fit, coefficient table and Hessian eigenvalues",
+        "r_ms": 14.57,
+        "translated_ms": 5.3,
+        "speedup": 2.749056603773585,
+        "matches": true,
+        "max_abs_diff": 2.22e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(wine)\n  fm1 <- clm(rating ~ contact + temp, data = wine)\n  cv <- convergence(fm1)\n  c(as.vector(cv$coefficients), cv$eigen.values)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ordinal._clm_rho import clm_like_from_npz\nfrom ordinal.convergence import convergence, convergence_values\n\n_RHO = Path(__file__).resolve().parent / \"slice_wine_rho.npz\"\n\n\ndef one():\n    obj = clm_like_from_npz(str(_RHO))\n    return convergence_values(convergence(obj))\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "drop.coef",
+      "translated": true,
+      "python": "ordinal.drop_coef.drop_coef",
+      "loads": [],
+      "uses": [],
+      "done": "Drops redundant design columns with the same LINPACK QR pivot order as ordinal 2026.7-26.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "model.matrix(~ PRODID * DAY, data = soup); drop.coef(X, silent = TRUE)",
+        "r_ms": 6.96,
+        "translated_ms": 39.54,
+        "speedup": 0.17602427921092564,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(soup)\n  X <- model.matrix(~ PRODID * DAY, data = soup)\n  newX <- drop.coef(X, silent = TRUE)\n  c(\n    ncol(X),\n    ncol(newX),\n    qr(newX)$rank,\n    as.numeric(newX)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nfrom ordinal.drop_coef import drop_coef\n\n\ndef _soup_design():\n    \"\"\"Same PRODID * DAY model matrix as the R proof (fixed soup rows).\"\"\"\n    # Built once from ordinal::soup via model.matrix(~ PRODID * DAY, data = soup).\n    rows = np.load(Path(__file__).resolve().parent / \"drop_coef_soup_X.npz\")\n    return rows[\"X\"]\n\n\ndef one():\n    x = _soup_design()\n    new_x = drop_coef(x, silent=True)\n    rank = int(np.linalg.matrix_rank(new_x))\n    return np.concatenate(\n        [\n            np.array([x.shape[1], new_x.shape[1], rank], dtype=float),\n            np.ravel(new_x, order=\"F\"),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(v) for v in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "nominal_test",
+      "translated": true,
+      "python": "ordinal.nominal_test.nominal_test",
+      "loads": [],
+      "uses": [
+        "clm.control"
+      ],
+      "done": "Likelihood-ratio tests of nominal effects refit each scope term and return an anova table.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "nominal_test on clm(rating ~ contact + temp, data = wine), using the saved wine fit until clm is translated.",
+        "r_ms": 70.19162178039551,
+        "translated_ms": 28.764535500158672,
+        "speedup": 2.4402139843352697,
+        "matches": true,
+        "max_abs_diff": 1.4988010832439613e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(wine)\n  fm <- clm(rating ~ contact + temp, data = wine)\n  nt <- nominal_test(fm)\n  as.numeric(unlist(nt))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ordinal._clm_rho import clm_like_from_npz\nfrom ordinal.nominal_test import nominal_test, nominal_test_values\n\n_RHO = Path(__file__).resolve().parent / \"slice_wine_rho.npz\"\n\n\ndef one():\n    obj = clm_like_from_npz(str(_RHO))\n    return nominal_test_values(nominal_test(obj))\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "scale_test",
+      "translated": true,
+      "python": "ordinal.scale_test.scale_test",
+      "loads": [],
+      "uses": [
+        "clm.control"
+      ],
+      "done": "Likelihood-ratio tests of scale effects refit each scope term and return an anova table.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "scale_test on the saved wine clm fit of rating ~ contact + temp.",
+        "r_ms": 45.02284526824951,
+        "translated_ms": 18.11613599966222,
+        "speedup": 2.4852344489514198,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(wine)\n  fm <- clm(rating ~ contact + temp, data = wine)\n  st <- scale_test(fm)\n  as.numeric(unlist(st))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nfmt <- function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x)\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(vapply(value, fmt, character(1)), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ordinal.scale_test import clm_like_for_scale_test, scale_test, scale_test_values\n\n_RHO = Path(__file__).resolve().parent / \"slice_wine_rho.npz\"\n\n\ndef one():\n    obj = clm_like_for_scale_test(str(_RHO))\n    return scale_test_values(scale_test(obj))\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [float(x) for x in value],\n            \"median_ms\": statistics.median(elapsed),\n        },\n        allow_nan=True,\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "condVar",
+      "translated": true,
+      "python": "ordinal.cond_var.cond_var",
+      "loads": [],
+      "uses": [],
+      "done": "Returns conditional random-effect variances grouped by factor, using the formatRanef layout, without fitting clmm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "condVar of a saved wine clmm with rating ~ contact + temp + (1|judge).",
+        "r_ms": 70.9083080291748,
+        "translated_ms": 2.4995844996738015,
+        "speedup": 28.36803798328419,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  data(wine)\n  fm1 <- clmm(rating ~ contact + temp + (1|judge), data = wine)\n  cv <- condVar(fm1)\n  as.numeric(unlist(cv))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ordinal.cond_var import clmm_cond_var_like_from_npz, cond_var, cond_var_values\n\n_NPZ = Path(__file__).resolve().parent / \"condVar_wine_clmm.npz\"\n\n\ndef one():\n    obj = clmm_cond_var_like_from_npz(str(_NPZ))\n    return cond_var_values(cond_var(obj))\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ranef",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Waiting on nlme.",
+      "blocked_by": [
+        "nlme"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "VarCorr",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Waiting on nlme.",
+      "blocked_by": [
+        "nlme"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "gnorm",
+      "translated": true,
+      "python": "ordinal.gnorm",
+      "loads": [],
+      "uses": [],
+      "done": "Gradient of the standard normal density.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "gnorm at c(-2, -0.5, 0, 0.5, 2)",
+        "r_ms": 0.026226043701171875,
+        "translated_ms": 0.01210850132338237,
+        "speedup": 2.1659198773449804,
+        "matches": true,
+        "max_abs_diff": 1.3877787807814457e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  gnorm(c(-2, -0.5, 0, 0.5, 2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import gnorm\n\n\ndef one():\n    return gnorm(np.array([-2.0, -0.5, 0.0, 0.5, 2.0]))\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "glogis",
+      "translated": true,
+      "python": "ordinal.glogis",
+      "loads": [],
+      "uses": [],
+      "done": "Gradient of the logistic density.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "glogis at c(-2, -0.5, 0, 0.5, 2)",
+        "r_ms": 0.01823902130126953,
+        "translated_ms": 0.011833000826300122,
+        "speedup": 1.5413690549848806,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  glogis(c(-2, -0.5, 0, 0.5, 2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import glogis\n\n\ndef one():\n    return glogis(np.array([-2.0, -0.5, 0.0, 0.5, 2.0]))\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "gcauchy",
+      "translated": true,
+      "python": "ordinal.gcauchy",
+      "loads": [],
+      "uses": [],
+      "done": "Gradient of the Cauchy density.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "gcauchy at c(-2, -0.5, 0, 0.5, 2)",
+        "r_ms": 0.016808509826660156,
+        "translated_ms": 0.009848501576925628,
+        "speedup": 1.7067073295740092,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  gcauchy(c(-2, -0.5, 0, 0.5, 2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import gcauchy\n\n\ndef one():\n    return gcauchy(np.array([-2.0, -0.5, 0.0, 0.5, 2.0]))\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "pgumbel",
+      "translated": true,
+      "python": "ordinal.pgumbel",
+      "loads": [],
+      "uses": [],
+      "done": "Gumbel distribution function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "minimum Gumbel cdf at c(-1, 0, 1) with lower.tail FALSE",
+        "r_ms": 0.030040740966796875,
+        "translated_ms": 0.007802500476827845,
+        "speedup": 3.850142791533686,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  pgumbel(c(-1, 0, 1), max = FALSE, lower.tail = FALSE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import pgumbel\n\n\ndef one():\n    return pgumbel(np.array([-1.0, 0.0, 1.0]), max=False, lower_tail=False)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "dgumbel",
+      "translated": true,
+      "python": "ordinal.dgumbel",
+      "loads": [],
+      "uses": [],
+      "done": "Gumbel density on the log scale.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "log density at c(-1, 0, 1)",
+        "r_ms": 0.020623207092285156,
+        "translated_ms": 0.0071715003286954015,
+        "speedup": 2.875717234476766,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  dgumbel(c(-1, 0, 1), log = TRUE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import dgumbel\n\n\ndef one():\n    return dgumbel(np.array([-1.0, 0.0, 1.0]), log=True)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ggumbel",
+      "translated": true,
+      "python": "ordinal.ggumbel",
+      "loads": [],
+      "uses": [],
+      "done": "Gradient of the Gumbel density.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "minimum Gumbel gradient at c(-1, 0, 1)",
+        "r_ms": 0.022172927856445312,
+        "translated_ms": 0.01612149935681373,
+        "speedup": 1.3753638768762506,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  ggumbel(c(-1, 0, 1), max = FALSE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import ggumbel\n\n\ndef one():\n    return ggumbel(np.array([-1.0, 0.0, 1.0]), max=False)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "qgumbel",
+      "translated": true,
+      "python": "ordinal.qgumbel",
+      "loads": [],
+      "uses": [],
+      "done": "Gumbel quantile.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "minimum quantile at c(0.2, 0.8), location 1, scale 2, lower.tail FALSE",
+        "r_ms": 0.019311904907226562,
+        "translated_ms": 0.01481400067859795,
+        "speedup": 1.3036252209119186,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  qgumbel(c(0.2, 0.8), location = 1, scale = 2, lower.tail = FALSE, max = FALSE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import qgumbel\n\n\ndef one():\n    return qgumbel(np.array([0.2, 0.8]), location=1.0, scale=2.0, lower_tail=False, max=False)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "rgumbel",
+      "translated": true,
+      "python": "ordinal.rgumbel.rgumbel",
+      "loads": [
+        "boot"
+      ],
+      "uses": [],
+      "done": "Random Gumbel max and min samples using R's runif stream.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(12345); rgumbel(6, location = 1, scale = 2, max = FALSE)",
+        "r_ms": 0.018477439880371094,
+        "translated_ms": 0.724450499546947,
+        "speedup": 0.025505455365033798,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  set.seed(12345)\n  rgumbel(6, location = 1, scale = 2, max = FALSE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/ordinal\")\n\nimport numpy as np\n\nfrom boot.rng import set_seed\nfrom ordinal.rgumbel import rgumbel\n\n\ndef one():\n    set_seed(12345)\n    return rgumbel(6, location=1.0, scale=2.0, max=False)\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "plgamma",
+      "translated": true,
+      "python": "ordinal.plgamma",
+      "loads": [],
+      "uses": [],
+      "done": "Log-gamma distribution function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "plgamma at c(-1, 0, 1) with lambda 0.5",
+        "r_ms": 0.031948089599609375,
+        "translated_ms": 0.37874449844821356,
+        "speedup": 0.08435261695023062,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  plgamma(c(-1, 0, 1), 0.5)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import plgamma\n\n\ndef one():\n    return plgamma(np.array([-1.0, 0.0, 1.0]), 0.5)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "dlgamma",
+      "translated": true,
+      "python": "ordinal.dlgamma",
+      "loads": [],
+      "uses": [],
+      "done": "Log-gamma density on the log scale.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "log density at c(-1, 0, 1) with lambda -0.4",
+        "r_ms": 0.02765655517578125,
+        "translated_ms": 0.01433549914509058,
+        "speedup": 1.9292355917200608,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  dlgamma(c(-1, 0, 1), -0.4, log = TRUE)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import dlgamma\n\n\ndef one():\n    return dlgamma(np.array([-1.0, 0.0, 1.0]), -0.4, log=True)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "glgamma",
+      "translated": true,
+      "python": "ordinal.glgamma",
+      "loads": [],
+      "uses": [],
+      "done": "Gradient of the log-gamma density.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "glgamma at c(-1, 0, 1) with lambda 0.5",
+        "r_ms": 0.02682209014892578,
+        "translated_ms": 0.015942499885568395,
+        "speedup": 1.6824268678970418,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  glgamma(c(-1, 0, 1), 0.5)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import glgamma\n\n\ndef one():\n    return glgamma(np.array([-1.0, 0.0, 1.0]), 0.5)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "clm2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Not started: starting values use stats::glm.fit, which has no translation in the registry.",
+      "blocked_by": [
+        "MASS"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "clmm2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Not started: same random-effect kernels as clmm, plus clm2 start values (glm.fit).",
+      "blocked_by": [
+        "MASS"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "clm2.control",
+      "translated": true,
+      "python": "ordinal.clm2_control",
+      "loads": [],
+      "uses": [],
+      "done": "Control parameters for clm2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default clm2.control",
+        "r_ms": 0.03838539123535156,
+        "translated_ms": 0.010142000974155962,
+        "speedup": 3.784794670515802,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  ctrl <- clm2.control()\n  c(match(ctrl$method, c(\"ucminf\", \"Newton\", \"nlminb\", \"optim\", \"model.frame\")),\n    ctrl$convTol, ctrl$ctrl$trace, ctrl$ctrl$grtol)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import clm2_control\n\n\ndef one():\n    c = clm2_control()\n    return np.array([\n        [\"ucminf\", \"Newton\", \"nlminb\", \"optim\", \"model.frame\"].index(c[\"method\"]) + 1,\n        c[\"convTol\"], c[\"ctrl\"][\"trace\"], c[\"ctrl\"][\"grtol\"],\n    ], dtype=float)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "clmm2.control",
+      "translated": true,
+      "python": "ordinal.clmm2_control",
+      "loads": [],
+      "uses": [],
+      "done": "Control parameters for clmm2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default clmm2.control",
+        "r_ms": 0.08380413055419922,
+        "translated_ms": 0.015122001059353352,
+        "speedup": 5.541867787554755,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ordinal))\n\none <- function() {\n  ctrl <- clmm2.control()\n  c(match(ctrl$method, c(\"ucminf\", \"nlminb\", \"model.frame\")),\n    ctrl$ctrl$trace, ctrl$ctrl$maxIter, ctrl$ctrl$gradTol, ctrl$ctrl$maxLineIter,\n    match(ctrl$ctrl$innerCtrl, c(\"warnOnly\", \"noWarn\", \"giveError\")),\n    ctrl$optCtrl$trace, ctrl$optCtrl$grtol,\n    match(ctrl$optCtrl$grad, c(\"central\", \"forward\")))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ordinal import clmm2_control\n\n\ndef one():\n    c = clmm2_control()\n    return np.array([\n        [\"ucminf\", \"nlminb\", \"model.frame\"].index(c[\"method\"]) + 1,\n        c[\"ctrl\"][\"trace\"], c[\"ctrl\"][\"maxIter\"], c[\"ctrl\"][\"gradTol\"], c[\"ctrl\"][\"maxLineIter\"],\n        [\"warnOnly\", \"noWarn\", \"giveError\"].index(c[\"ctrl\"][\"innerCtrl\"]) + 1,\n        c[\"optCtrl\"][\"trace\"], c[\"optCtrl\"][\"grtol\"],\n        [\"central\", \"forward\"].index(c[\"optCtrl\"][\"grad\"]) + 1,\n    ], dtype=float)\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(x) for x in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

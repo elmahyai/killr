@@ -1,0 +1,16 @@
+.libPaths(c(path.expand("~/R/library"), .libPaths()))
+suppressPackageStartupMessages(library(moments))
+if (as.character(packageVersion("moments")) != "0.14.1") stop("expected moments 0.14.1")
+options(warn = -1)
+one <- function() {
+  result <- jarque.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))
+  c(unname(result$statistic), result$p.value)
+}
+value <- one()
+elapsed <- numeric(20)
+for (i in seq_len(20)) {
+  t0 <- as.numeric(Sys.time())
+  one()
+  elapsed[[i]] <- as.numeric(Sys.time()) - t0
+}
+cat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = "null"))

@@ -1,0 +1,66 @@
+{
+  "name": "filelock",
+  "cran_version": "1.0.3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "lock and unlock use POSIX fcntl record locks through the Python standard library. A second handle in this process shares the open descriptor. Rust File::lock is flock, so it does not contend with these locks.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "fcntl"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "lock",
+      "translated": true,
+      "python": "filelock.lock",
+      "loads": [],
+      "uses": [],
+      "done": "Acquire an exclusive or shared fcntl lock.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lock(tempfile()) then print",
+        "r_ms": 0.34797191619873047,
+        "translated_ms": 0.05382449944590917,
+        "speedup": 6.46493548069916,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(filelock))\none <- function() {\n  path <- tempfile(\"filelock\")\n  lck <- lock(path)\n  txt <- paste(capture.output(print(lck)), collapse = \"\\n\")\n  txt <- sub(path, \"PATH\", txt, fixed = TRUE)\n  unlock(lck)\n  txt\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"{\\\"value\\\":\\\"%s\\\",\\\"median_ms\\\":%.17g}\\n\", gsub(\"\\\"\", \"\\\\\\\"\", value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport tempfile\nimport time\n\nfrom filelock import lock, unlock\n\ndef one():\n    path = tempfile.mktemp(prefix=\"filelock\")\n    held = lock(path)\n    text = str(held).replace(path, \"PATH\")\n    unlock(held)\n    return text\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "unlock",
+      "translated": true,
+      "python": "filelock.unlock",
+      "loads": [],
+      "uses": [],
+      "done": "Release one lock handle.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "unlock(lock(tempfile()))",
+        "r_ms": 0.09191036224365234,
+        "translated_ms": 0.041752500692382455,
+        "speedup": 2.201313950529937,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(filelock))\none <- function() {\n  path <- tempfile(\"filelock\")\n  lck <- lock(path)\n  unlock(lck)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", if (isTRUE(value)) \"true\" else \"false\", median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport tempfile\nimport time\n\nfrom filelock import lock, unlock\n\ndef one():\n    path = tempfile.mktemp(prefix=\"filelock\")\n    held = lock(path)\n    return unlock(held)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

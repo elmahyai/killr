@@ -1,0 +1,76 @@
+{
+  "name": "weightedMedian",
+  "title": "Weighted Median Value",
+  "origin": {
+    "description": "Computes a weighted median of a numeric vector.",
+    "usage": "weightedMedian(x, w = NULL, idxs = NULL, na.rm = FALSE,\n  interpolate = is.null(ties), ties = NULL, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A vector of type integer, numeric, or logical."
+      },
+      {
+        "name": "w",
+        "text": "A vector of weights the same length as x giving the weights to use for each element of x. Negative weights are treated as zero weights. Default value is equal weight to all values."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values in x are stripped before the computation proceeds. If NA, no check at all for NAs is done."
+      },
+      {
+        "name": "interpolate",
+        "text": "If TRUE, linear interpolation is used to get a consistent estimate of the weighted median."
+      },
+      {
+        "name": "ties",
+        "text": "If interpolate == FALSE, a character string specifying how to solve ties between two x's that are satisfying the weighted median criteria. When ties is \"min\", the smaller value is returned and when it is \"max\", the larger value is returned. If ties is \"mean\", the mean of the two values is returned. If ties is \"weighted\" (or NULL) a weighted average of the two is returned."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "The weighted median is the element x[k] for which the total weight on either side is at most half the total weight. If w is missing, every element of x has the same positive weight. If all weights are zero, NA_real_ is returned. If one or more weights are Inf, those points are treated as equal weights and the others as zero. A missing value in w that remains after subsetting makes the result NA. Linear interpolation estimates the median from the two values around half the cumulative weight.",
+    "value": "A numeric scalar.",
+    "example": "x <- 1:10\nn <- length(x)\n\nm1 <- median(x)                             # 5.5\nm2 <- weightedMedian(x)                     # 5.5\nstopifnot(identical(m1, m2))\n\nw <- rep(1, times = n)\nm1 <- weightedMedian(x, w)                  # 5.5 (default)\nm2 <- weightedMedian(x, ties = \"weighted\")  # 5.5 (default)\nm3 <- weightedMedian(x, ties = \"min\")       # 5\nm4 <- weightedMedian(x, ties = \"max\")       # 6\nstopifnot(identical(m1, m2))\n\n# Pull the median towards zero\nw[1] <- 5\nm1 <- weightedMedian(x, w)                  # 3.5\n\n# Put even more weight on the zero\nw[1] <- 8.5\nweightedMedian(x, w)                # 2\n\n# All weight on the first value\nw[1] <- Inf\nweightedMedian(x, w)                # 1\n\n# All weight on the last value\nw[1] <- 1\nw[n] <- Inf\nweightedMedian(x, w)                # 10\n\n# All weights set to zero\nw <- rep(0, times = n)\nweightedMedian(x, w)                # NA",
+    "output": "output/weightedMedian-r.txt"
+  },
+  "translation": {
+    "description": "Computes a weighted median of a numeric vector.",
+    "usage": "weightedMedian(x, w=None, idxs=None, na_rm=False,\n  interpolate=None, ties=None)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "One-dimensional numeric vector. This is x in R."
+      },
+      {
+        "name": "w",
+        "text": "A vector of weights the same length as x. None gives every element weight 1. A weight of zero or less is dropped, including negative infinity. A positive infinite weight keeps only the infinite-weight points and takes their partial-sort median; on that pass negative infinity counts as infinite too. A missing weight makes the result missing when na_rm is false, and is dropped when na_rm is true."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based vector indicating the subset of elements to operate over. None means no subsetting. Integer, numeric, and logical subscripts follow the matrixStats index rules, including negative exclusion and logical recycling."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, points whose x is missing are skipped, and a missing weight is dropped. This is na.rm in R. The default is False."
+      },
+      {
+        "name": "interpolate",
+        "text": "If True, linear interpolation is used between the two values around half the cumulative weight. None follows R: true when ties is omitted, false when ties is given."
+      },
+      {
+        "name": "ties",
+        "text": "Used when interpolate is false. \"min\" returns the smaller of the two values that meet the median condition, \"max\" the larger, \"mean\" their average, and \"weighted\" or None the weighted average w_low * x_low + w_high * x_high. The names are exact; a prefix is not enough."
+      }
+    ],
+    "details": "Missing values follow matrixStats 1.5.0. If na_rm is false, a missing x with a positive finite weight, or a missing weight, returns R's NA. A weight of zero or less is skipped before x is read, so it also skips a missing x. If na_rm is true, missing x values and missing weights are both dropped. The manual says a missing weight always returns NA; the C code drops it when na.rm is true, and this function does too. Sorting and the partial-sort median run in the Rust crate weightedmedian. With positive infinite weights the result is that partial-sort median, which ignores ties and, for an odd count, is not the ordinary median.",
+    "value": "A numeric scalar. If x is empty, or every weight was dropped, the result is R's NA.",
+    "example": "import numpy as np\nfrom matrixstats.weightedmedian import weightedMedian\n\nx = np.arange(1, 11, dtype=float)\nn = x.size\n\nm2 = weightedMedian(x)\n\nw = np.ones(n)\nm1 = weightedMedian(x, w)\nm2 = weightedMedian(x, ties=\"weighted\")\nm3 = weightedMedian(x, ties=\"min\")\nm4 = weightedMedian(x, ties=\"max\")\n\nw = w.copy()\nw[0] = 5\nm1 = weightedMedian(x, w)\n\nw[0] = 8.5\nm1 = weightedMedian(x, w)\n\nw[0] = np.inf\nm1 = weightedMedian(x, w)\n\nw[0] = 1\nw[-1] = np.inf\nm1 = weightedMedian(x, w)\n\nw = np.zeros(n)\nm1 = weightedMedian(x, w)",
+    "output": "output/weightedMedian-python.txt"
+  }
+}

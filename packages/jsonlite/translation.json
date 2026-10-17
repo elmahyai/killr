@@ -1,0 +1,572 @@
+{
+  "name": "jsonlite",
+  "cran_version": "2.0.0",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 22 exports are done. JSON tokens, base64, and gzip use the Python standard library. Data frames are row objects, length-one list values stay arrays, and a missing data-frame cell is omitted. The compiled code is C, including yajl, so there is no crate. rbind_pages covers the column-union case; vctrs is suggested, not imported.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "base64",
+      "gzip",
+      "json"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "base64_enc",
+      "translated": true,
+      "python": "jsonlite.base64_enc",
+      "loads": [],
+      "uses": [],
+      "done": "Encodes bytes with the standard base64 alphabet, including padding.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "hello encodes to aGVsbG8=",
+        "r_ms": 0.01990795135498047,
+        "translated_ms": 0.0013040007615927607,
+        "speedup": 15.266824944691036,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() base64_enc(charToRaw(\"hello\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return base64_enc(b\"hello\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "base64_dec",
+      "translated": true,
+      "python": "jsonlite.base64_dec",
+      "loads": [],
+      "uses": [],
+      "done": "Decodes base64 text to bytes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "aGVsbG8= decodes to hello",
+        "r_ms": 0.02491474151611328,
+        "translated_ms": 0.0024810005925246514,
+        "speedup": 10.042215060803427,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() rawToChar(base64_dec(\"aGVsbG8=\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return base64_dec(\"aGVsbG8=\").decode()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "base64url_enc",
+      "translated": true,
+      "python": "jsonlite.base64url_enc",
+      "loads": [],
+      "uses": [],
+      "done": "Encodes base64url and drops the padding.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "hello encodes to aGVsbG8",
+        "r_ms": 0.03921985626220703,
+        "translated_ms": 0.007022499630693346,
+        "speedup": 5.584885485901374,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() base64url_enc(charToRaw(\"hello\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return base64url_enc(b\"hello\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "base64url_dec",
+      "translated": true,
+      "python": "jsonlite.base64url_dec",
+      "loads": [],
+      "uses": [],
+      "done": "Decodes base64url text, restoring padding.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "aGVsbG8 decodes to hello",
+        "r_ms": 0.057697296142578125,
+        "translated_ms": 0.003962499249610119,
+        "speedup": 14.560834591515727,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() rawToChar(base64url_dec(\"aGVsbG8\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return base64url_dec(\"aGVsbG8\").decode()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "validate",
+      "translated": true,
+      "python": "jsonlite.validate",
+      "loads": [],
+      "uses": [],
+      "done": "Accepts one JSON value and rejects a truncated one.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an object is valid and a lone brace is not",
+        "r_ms": 0.033974647521972656,
+        "translated_ms": 0.009985999895434361,
+        "speedup": 3.402227906842459,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() c(validate(\"{\\\"a\\\":1}\"), validate(\"{\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return [validate('{\"a\":1}'), validate(\"{\")]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "prettify",
+      "translated": true,
+      "python": "jsonlite.prettify",
+      "loads": [],
+      "uses": [],
+      "done": "Indents JSON with json.dumps and adds a trailing newline.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the array 1, 2 indented by two spaces",
+        "r_ms": 0.03826618194580078,
+        "translated_ms": 0.009656499059929047,
+        "speedup": 3.962738639367915,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() prettify(\"[1,2]\", indent = 2)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return prettify(\"[1,2]\", indent=2)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "minify",
+      "translated": true,
+      "python": "jsonlite.minify",
+      "loads": [],
+      "uses": [],
+      "done": "Removes insignificant whitespace and keeps the tokens as written.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an indented array of 1 and 2",
+        "r_ms": 0.018596649169921875,
+        "translated_ms": 0.002292999852215871,
+        "speedup": 8.110183326854886,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() minify(\"[\\n  1,\\n  2\\n]\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return minify(\"[\\n  1,\\n  2\\n]\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "toJSON",
+      "translated": true,
+      "python": "jsonlite.toJSON",
+      "loads": [],
+      "uses": [],
+      "done": "Writes a data frame as a row array. Length-one list values stay arrays. NULL becomes an object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a two-row data frame with an integer and a string",
+        "r_ms": 0.9658336639404297,
+        "translated_ms": 0.015712499589426443,
+        "speedup": 61.4691289850774,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() toJSON(data.frame(a = 1:2, b = c(\"x\", \"y\")))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return toJSON(DataFrame({\"a\": [1, 2], \"b\": [\"x\", \"y\"]}))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "fromJSON",
+      "translated": true,
+      "python": "jsonlite.fromJSON",
+      "loads": [],
+      "uses": [],
+      "done": "Turns an array of records into a data frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two records with a and b",
+        "r_ms": 0.20742416381835938,
+        "translated_ms": 0.012730499292956665,
+        "speedup": 16.293482215039266,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({df <- fromJSON('[{\"a\":1,\"b\":\"x\"},{\"a\":2,\"b\":\"y\"}]'); paste(df$a, df$b, collapse = \"|\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    frame = fromJSON('[{\"a\":1,\"b\":\"x\"},{\"a\":2,\"b\":\"y\"}]')\n    return \"|\".join(f\"{a} {b}\" for a, b in zip(frame.columns[\"a\"], frame.columns[\"b\"]))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_json",
+      "translated": true,
+      "python": "jsonlite.parse_json",
+      "loads": [],
+      "uses": [],
+      "done": "Parses JSON and leaves records as lists unless simplifying is asked for.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the b field of one record",
+        "r_ms": 0.02849102020263672,
+        "translated_ms": 0.005461999535327777,
+        "speedup": 5.216225306933674,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() parse_json('[{\"a\":1,\"b\":\"x\"}]')[[1]]$b\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return parse_json('[{\"a\":1,\"b\":\"x\"}]')[0][\"b\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "unbox",
+      "translated": true,
+      "python": "jsonlite.unbox",
+      "loads": [],
+      "uses": [],
+      "done": "Marks a length-one value so toJSON writes a scalar.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "foo is the number 123, not an array",
+        "r_ms": 0.4540681838989258,
+        "translated_ms": 0.005956999302725308,
+        "speedup": 76.22431375662426,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() toJSON(list(foo = unbox(123)))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return toJSON({\"foo\": unbox(123)})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "read_json",
+      "translated": true,
+      "python": "jsonlite.read_json",
+      "loads": [],
+      "uses": [],
+      "done": "Reads a file and parses it without simplifying.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a file holding an object with a equal to 1",
+        "r_ms": 0.6070137023925781,
+        "translated_ms": 0.15144550070544938,
+        "speedup": 4.0081329558490895,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({tmp <- tempfile(); write_json(list(a = 1L), tmp); paste(read_json(tmp)$a)})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import tempfile\n    from pathlib import Path\n    path = Path(tempfile.mkstemp(suffix=\".json\")[1])\n    write_json({\"a\": 1}, path)\n    return str(read_json(path)[\"a\"][0])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "write_json",
+      "translated": true,
+      "python": "jsonlite.write_json",
+      "loads": [],
+      "uses": [],
+      "done": "Writes toJSON text and a trailing newline.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an object with a equal to 1",
+        "r_ms": 0.5698204040527344,
+        "translated_ms": 0.15159350004978478,
+        "speedup": 3.758870953342985,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({tmp <- tempfile(); write_json(list(a = 1L), tmp); paste(readLines(tmp), collapse = \"\\n\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import tempfile\n    from pathlib import Path\n    path = Path(tempfile.mkstemp(suffix=\".json\")[1])\n    write_json({\"a\": 1}, path)\n    return path.read_text().rstrip(\"\\n\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "stream_out",
+      "translated": true,
+      "python": "jsonlite.stream_out",
+      "loads": [],
+      "uses": [],
+      "done": "Writes one minified JSON object per data-frame row.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two rows, a and b",
+        "r_ms": 1.0788440704345703,
+        "translated_ms": 0.017174000277009327,
+        "speedup": 62.81844957687632,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({x <- data.frame(a = 1:2, b = c(\"x\", \"y\")); con <- textConnection(\"out\", \"w\"); stream_out(x, con, verbose = FALSE); close(con); paste(out, collapse = \"\\n\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import io\n    buf = io.StringIO()\n    stream_out(DataFrame({\"a\": [1, 2], \"b\": [\"x\", \"y\"]}), buf)\n    return buf.getvalue().rstrip(\"\\n\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "stream_in",
+      "translated": true,
+      "python": "jsonlite.stream_in",
+      "loads": [],
+      "uses": [],
+      "done": "Reads newline-delimited objects and binds them into a data frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two rows, a and b",
+        "r_ms": 0.506281852722168,
+        "translated_ms": 0.02174500059481943,
+        "speedup": 23.282678265034654,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({con <- textConnection(c('{\"a\":1,\"b\":\"x\"}', '{\"a\":2,\"b\":\"y\"}')); df <- stream_in(con, verbose = FALSE); paste(df$a, df$b, collapse = \"|\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import io\n    frame = stream_in(io.StringIO('{\"a\":1,\"b\":\"x\"}\\n{\"a\":2,\"b\":\"y\"}\\n'))\n    return \"|\".join(f\"{a} {b}\" for a, b in zip(frame.columns[\"a\"], frame.columns[\"b\"]))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "as_gzjson_raw",
+      "translated": true,
+      "python": "jsonlite.as_gzjson_raw",
+      "loads": [],
+      "uses": [],
+      "done": "Gzips toJSON text. The check is that text after gunzip.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an object with a equal to 1",
+        "r_ms": 0.4260540008544922,
+        "translated_ms": 0.04375400021672249,
+        "speedup": 9.737486829642085,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() rawToChar(memDecompress(as_gzjson_raw(list(a = 1L)), \"gzip\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import gzip\n    return gzip.decompress(as_gzjson_raw({\"a\": 1})).decode()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "as_gzjson_b64",
+      "translated": true,
+      "python": "jsonlite.as_gzjson_b64",
+      "loads": [],
+      "uses": [],
+      "done": "Gzips toJSON text and returns base64. The check is the text after decoding and gunzip.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an object with a equal to 1",
+        "r_ms": 0.48410892486572266,
+        "translated_ms": 0.04939049995300593,
+        "speedup": 9.801660751082549,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() rawToChar(memDecompress(base64_dec(as_gzjson_b64(list(a = 1L))), \"gzip\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    import gzip\n    from jsonlite import base64_dec\n    return gzip.decompress(base64_dec(as_gzjson_b64({\"a\": 1}))).decode()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_gzjson_raw",
+      "translated": true,
+      "python": "jsonlite.parse_gzjson_raw",
+      "loads": [],
+      "uses": [],
+      "done": "Gunzips bytes and parses the JSON.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the a field of a gzipped object",
+        "r_ms": 0.5919933319091797,
+        "translated_ms": 0.06925249999767402,
+        "speedup": 8.548331568233102,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() paste(parse_gzjson_raw(as_gzjson_raw(list(a = 1L)))$a)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return str(parse_gzjson_raw(as_gzjson_raw({\"a\": 1}))[\"a\"][0])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_gzjson_b64",
+      "translated": true,
+      "python": "jsonlite.parse_gzjson_b64",
+      "loads": [],
+      "uses": [],
+      "done": "Decodes base64, gunzips, and parses the JSON.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the a field of a base64 gzipped object",
+        "r_ms": 0.8586645126342773,
+        "translated_ms": 0.05139950008015148,
+        "speedup": 16.705697745995405,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() paste(parse_gzjson_b64(as_gzjson_b64(list(a = 1L)))$a)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return str(parse_gzjson_b64(as_gzjson_b64({\"a\": 1}))[\"a\"][0])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "flatten",
+      "translated": true,
+      "python": "jsonlite.flatten",
+      "loads": [],
+      "uses": [],
+      "done": "Prefixes nested data-frame column names with the parent name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vehicle.model and vehicle.stats.speed",
+        "r_ms": 1.1370182037353516,
+        "translated_ms": 0.007848500899854116,
+        "speedup": 144.87074898041814,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({x <- data.frame(driver = c(\"Bowser\", \"Peach\"), occupation = c(\"Koopa\", \"Princess\"), stringsAsFactors = FALSE); x$vehicle <- data.frame(model = c(\"Piranha Prowler\", \"Royal Racer\"), stringsAsFactors = FALSE); x$vehicle$stats <- data.frame(speed = c(55, 34), weight = c(67, 24), stringsAsFactors = FALSE); paste(names(flatten(x)), collapse = \" \")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    vehicle = DataFrame({\"model\": [\"Piranha Prowler\", \"Royal Racer\"]})\n    vehicle.columns[\"stats\"] = DataFrame({\"speed\": [55, 34], \"weight\": [67, 24]})\n    frame = DataFrame({\"driver\": [\"Bowser\", \"Peach\"], \"occupation\": [\"Koopa\", \"Princess\"], \"vehicle\": vehicle})\n    return \" \".join(flatten(frame).columns)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "rbind_pages",
+      "translated": true,
+      "python": "jsonlite.rbind_pages",
+      "loads": [],
+      "uses": [],
+      "done": "Binds data frames and fills a column missing from a page with NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "foo from both pages, bar only on the first, col only on the second",
+        "r_ms": 0.843048095703125,
+        "translated_ms": 0.01584599885973148,
+        "speedup": 53.202584650281295,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({x <- data.frame(foo = c(1, 2), bar = c(TRUE, FALSE)); y <- data.frame(foo = 3, col = \"blue\"); z <- rbind_pages(list(x, y)); paste(z$foo, z$bar, z$col, sep = \":\", collapse = \"|\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    bound = rbind_pages([DataFrame({\"foo\": [1, 2], \"bar\": [True, False]}), DataFrame({\"foo\": [3], \"col\": [\"blue\"]})])\n    def cell(value):\n        if value is NA:\n            return \"NA\"\n        if value is True:\n            return \"TRUE\"\n        if value is False:\n            return \"FALSE\"\n        return str(value)\n    rows = zip(bound.columns[\"foo\"], bound.columns[\"bar\"], bound.columns[\"col\"])\n    return \"|\".join(\":\".join(cell(item) for item in row) for row in rows)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "serializeJSON",
+      "translated": true,
+      "python": "jsonlite.serializeJSON",
+      "loads": [],
+      "uses": [],
+      "done": "Tags a named list with storage types so it can be restored.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a named list with integer 1 and string x",
+        "r_ms": 0.9597539901733398,
+        "translated_ms": 0.08953050109994365,
+        "speedup": 10.71985500340223,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() serializeJSON(list(a = 1L, b = \"x\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    return serializeJSON({\"a\": 1, \"b\": \"x\"})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "unserializeJSON",
+      "translated": true,
+      "python": "jsonlite.unserializeJSON",
+      "loads": [],
+      "uses": [],
+      "done": "Restores a named list written by serializeJSON.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "integer 1 and string x",
+        "r_ms": 1.5865564346313477,
+        "translated_ms": 0.09707649951451458,
+        "speedup": 16.343362632210802,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(jsonlite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({obj <- unserializeJSON(serializeJSON(list(a = 1L, b = \"x\"))); paste(obj$a, obj$b)})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom jsonlite import (\n    NA,\n    DataFrame,\n    as_gzjson_b64,\n    as_gzjson_raw,\n    base64_dec,\n    base64_enc,\n    base64url_dec,\n    base64url_enc,\n    flatten,\n    fromJSON,\n    minify,\n    parse_gzjson_b64,\n    parse_gzjson_raw,\n    parse_json,\n    prettify,\n    rbind_pages,\n    read_json,\n    serializeJSON,\n    stream_in,\n    stream_out,\n    toJSON,\n    unbox,\n    unserializeJSON,\n    validate,\n    write_json,\n)\ndef one():\n    obj = unserializeJSON(serializeJSON({\"a\": 1, \"b\": \"x\"}))\n    return f\"{obj['a']} {obj['b']}\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    }
+  ]
+}

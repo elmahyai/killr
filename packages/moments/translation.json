@@ -1,0 +1,308 @@
+{
+  "name": "moments",
+  "cran_version": "0.14.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 12 exports of moments 0.14.1 are done. Moments and the three shape coefficients are the sample formulas. The normal tail is erfc. jarque.test uses SciPy's chi-square cdf. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "scipy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "moment",
+      "translated": true,
+      "python": "moments.moment",
+      "loads": [],
+      "uses": [],
+      "done": "The mean of the values after an optional center and absolute value, raised to order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "third central moment of 1, 2, 4, -1, and the third raw moment of -2, -1, 3",
+        "r_ms": 0.030755996704101562,
+        "translated_ms": 0.048920999688562006,
+        "speedup": 0.6286870035342406,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  c(moment(c(1, 2, 4, -1), order = 3, central = TRUE), moment(c(-2, -1, 3), order = 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [moment([1, 2, 4, -1], order=3, central=True), moment([-2, -1, 3], order=3)]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "all.moments",
+      "translated": true,
+      "python": "moments.all_moments",
+      "loads": [],
+      "uses": [],
+      "done": "Orders 0 through order.max. A data frame comes back as a matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "raw moments of 1:4 through order 4, then the central moments",
+        "r_ms": 0.12183189392089844,
+        "translated_ms": 0.20087250049982686,
+        "speedup": 0.6065135527150142,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  c(\n    all.moments(c(1, 2, 3, 4), order.max = 4),\n    all.moments(c(1, 2, 3, 4), order.max = 4, central = TRUE)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return all_moments([1, 2, 3, 4], order_max=4) + all_moments([1, 2, 3, 4], order_max=4, central=True)\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "all.cumulants",
+      "translated": true,
+      "python": "moments.all_cumulants",
+      "loads": [],
+      "uses": [],
+      "done": "kappa[1] stays 0, kappa[2] is the first central moment, and kappa[3] is the second.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cumulants from the raw moments of 1:4 through order 5",
+        "r_ms": 0.11289119720458984,
+        "translated_ms": 0.11624400030996185,
+        "speedup": 0.9711571943805114,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  all.cumulants(all.moments(c(1, 2, 3, 4), order.max = 5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return all_cumulants(all_moments([1, 2, 3, 4], order_max=5))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "raw2central",
+      "translated": true,
+      "python": "moments.raw2central",
+      "loads": [],
+      "uses": [],
+      "done": "The binomial shift by the first raw moment. The order-0 central moment is 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "central moments from the raw moments of -2, -1, 0, 3, 4",
+        "r_ms": 0.07259845733642578,
+        "translated_ms": 0.0806144998932723,
+        "speedup": 0.9005632663173602,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  raw2central(all.moments(c(-2, -1, 0, 3, 4), order.max = 4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return raw2central(all_moments([-2, -1, 0, 3, 4], order_max=4))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "central2raw",
+      "translated": true,
+      "python": "moments.central2raw",
+      "loads": [],
+      "uses": [],
+      "done": "The binomial shift by eta, undoing raw2central when eta is the mean.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "raw moments recovered from the central moments of 1:4 and their mean",
+        "r_ms": 0.15103816986083984,
+        "translated_ms": 0.1553705005790107,
+        "speedup": 0.9721161307839918,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  central2raw(all.moments(c(1, 2, 3, 4), central = TRUE, order.max = 5), mean(c(1, 2, 3, 4)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return central2raw(all_moments([1, 2, 3, 4], central=True, order_max=5), 2.5)\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "skewness",
+      "translated": true,
+      "python": "moments.skewness",
+      "loads": [],
+      "uses": [],
+      "done": "The third central moment divided by the second central moment to the power 3/2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "skewness of 1, 2, 4, -1, 5, 3, 8",
+        "r_ms": 0.052809715270996094,
+        "translated_ms": 0.028843500331277028,
+        "speedup": 1.8309052183146726,
+        "matches": true,
+        "max_abs_diff": 5.551115123125783e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  skewness(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [skewness([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "kurtosis",
+      "translated": true,
+      "python": "moments.kurtosis",
+      "loads": [],
+      "uses": [],
+      "done": "Pearson kurtosis, n times the fourth central sum over the squared second central sum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "kurtosis of 1, 2, 4, -1, 5, 3, 8",
+        "r_ms": 0.03540515899658203,
+        "translated_ms": 0.027389500246499665,
+        "speedup": 1.292654436113954,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  kurtosis(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [kurtosis([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "geary",
+      "translated": true,
+      "python": "moments.geary",
+      "loads": [],
+      "uses": [],
+      "done": "The mean absolute deviation divided by the root mean square.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Geary kurtosis of 1, 2, 4, -1, 5, 3, 8",
+        "r_ms": 0.03325939178466797,
+        "translated_ms": 0.04637250276573468,
+        "speedup": 0.7172222718426106,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  geary(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [geary([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "agostino.test",
+      "translated": true,
+      "python": "moments.agostino_test",
+      "loads": [],
+      "uses": [],
+      "done": "D'Agostino's z from the moment skewness. less keeps the upper tail.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "skewness, z, and the two-sided p-value for a sample of 30 standard normals",
+        "r_ms": 0.5284547805786133,
+        "translated_ms": 0.6078940004954347,
+        "speedup": 0.8693206054804319,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  result <- agostino.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = agostino_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "anscombe.test",
+      "translated": true,
+      "python": "moments.anscombe_test",
+      "loads": [],
+      "uses": [],
+      "done": "Anscombe-Glynn z from Pearson kurtosis. The null value is 3.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "kurtosis, z, and the two-sided p-value for a sample of 30 standard normals",
+        "r_ms": 0.38170814514160156,
+        "translated_ms": 0.3344669985381188,
+        "speedup": 1.141243072739503,
+        "matches": true,
+        "max_abs_diff": 3.1086244689504383e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  result <- anscombe.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = anscombe_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "bonett.test",
+      "translated": true,
+      "python": "moments.bonett_test",
+      "loads": [],
+      "uses": [],
+      "done": "Bonett-Seier z from Geary's kurtosis. The null value is sqrt(2/pi).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tau, z, and the two-sided p-value for a sample of 30 standard normals",
+        "r_ms": 0.5609989166259766,
+        "translated_ms": 0.2833760008797981,
+        "speedup": 1.979698050943771,
+        "matches": true,
+        "max_abs_diff": 2.886579864025407e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  result <- bonett.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = bonett_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "jarque.test",
+      "translated": true,
+      "python": "moments.jarque_test",
+      "loads": [],
+      "uses": [
+        "scipy"
+      ],
+      "done": "The Jarque-Bera statistic and one minus the chi-square cdf on 2 degrees of freedom.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "JB and its p-value for a sample of 30 standard normals",
+        "r_ms": 0.42235851287841797,
+        "translated_ms": 0.6118680012150435,
+        "speedup": 0.6902771709579537,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none <- function() {\n  result <- jarque.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = jarque_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ]
+}

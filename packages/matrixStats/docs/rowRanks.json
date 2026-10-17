@@ -1,0 +1,76 @@
+{
+  "name": "rowRanks",
+  "title": "Gets the rank of the elements in each row of a matrix",
+  "origin": {
+    "description": "Gets the rank of the elements in each row (column) of a matrix.",
+    "usage": "rowRanks(x, rows = NULL, cols = NULL, ties.method = c(\"max\", \"average\",\n  \"first\", \"last\", \"random\", \"max\", \"min\", \"dense\"), dim. = dim(x),\n  ..., useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "ties.method",
+        "text": "A character string specifying how ties are treated. The installed default is max. Partial matches follow charmatch against average, first, last, random, max, min, and dense."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when x is not a matrix. The argument is named with a period so it does not clash with dim."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "Each row is ranked on its own. Missing values, including a plain NaN, are ranked as NA and do not take part in the order. Ties use the method the C implements: max, min, average, first, last, random, and dense. Average returns a double matrix. The other methods return integer. -0 and 0 are one tie. The default method is max.",
+    "value": "An N by K matrix. N and K are the number of rows and columns whose ranks are calculated. The mode is double when ties.method is average, and integer otherwise.",
+    "example": "x <- matrix(c(3, 1, 3, 2), nrow = 2)\nrowRanks(x, ties.method = \"max\")",
+    "output": "output/rowRanks-r.txt"
+  },
+  "translation": {
+    "description": "Gets the rank of the elements in each row of a matrix.",
+    "usage": "rowRanks(x, rows=None, cols=None, ties_method=\"max\", dim=None, use_names=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. A 1-d vector is accepted when dim is set; it is filled column-major, as R stores a matrix. Integer values stay on the integer path. Floating values are computed as float64. Logical input is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and logical values are recycled. A missing index is ranked as NA."
+      },
+      {
+        "name": "cols",
+        "text": "1-based column subscripts. None selects every column. Ranks use only the selected columns, in this order."
+      },
+      {
+        "name": "ties_method",
+        "text": "How ties are ranked. This is ties.method. The default is max. A unique prefix matches average, first, last, random, max, min, or dense. average returns float64. The others return int32."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the number of rows and columns. This is dim. in R. None uses the shape of a 2-d x. A 1-d x is filled in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for the R argument useNames. It must be TRUE or FALSE. The result is a plain array, with no names attached."
+      }
+    ],
+    "details": "The scan lives in the Rust crate rowranks, ported from matrixStats src/rowRanksWithTies.c. Each selected row is ranked across the selected columns. A double NaN, including R's NA, and an integer NA are missing: they are written as NA and left out of the order. -0 and 0 compare equal. max, min, and dense give every tie the same integer rank. average gives the mean of the ranks those positions would have had. first gives earlier positions the smaller ranks, and last reverses that. random shuffles the ranks inside each tie. The result has one row per selected row and one column per selected column.",
+    "value": "An array of shape (N, K). average returns float64, with R's NA bit pattern for a missing rank. Every other method returns int32, and a missing rank is -2147483648.",
+    "example": "import numpy as np\nfrom matrixstats.rowranks import rowRanks\n\nx = np.array([3, 1, 3, 2]).reshape((2, 2), order=\"F\")\nrowRanks(x, ties_method=\"max\")",
+    "output": "output/rowRanks-python.txt"
+  }
+}

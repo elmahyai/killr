@@ -1,0 +1,76 @@
+{
+  "name": "rowRanges",
+  "title": "Gets the range of values in each row of a matrix",
+  "origin": {
+    "description": "Gets the range of values in each row of a matrix.",
+    "usage": "rowRanges(x, rows = NULL, cols = NULL, na.rm = FALSE, dim. = dim(x),\n  ..., useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when not a matrix. The argument is named with a period so it does not clash with dim."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "The installed function returns an N by 2 matrix. Column 1 is the minimum and column 2 is the maximum, in the order of cols. When x is integer and every selected row has a non-missing value, the result stays integer. A row with no counted value makes the whole result double, with +Inf as the minimum and -Inf as the maximum. For doubles, R's NA stops that row. A plain NaN is stored and later finite values do not replace it.",
+    "value": "An N by 2 matrix. N is the number of rows for which the ranges are calculated. The mode is integer when x is integer and every row counted a value, and double otherwise.",
+    "example": "x <- matrix(1:12, nrow = 4, ncol = 3)\nrowRanges(x)",
+    "output": "output/rowRanges-r.txt"
+  },
+  "translation": {
+    "description": "Gets the range of values in each row of a matrix.",
+    "usage": "rowRanges(x, rows=None, cols=None, na_rm=False, dim=None, use_names=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. A 1-d vector is accepted when dim is set; it is filled column-major, as R stores a matrix. Integer values stay on the integer path. Floating values are computed as float64. Logical input is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and logical values are recycled."
+      },
+      {
+        "name": "cols",
+        "text": "1-based column subscripts. None selects every column. The scan walks the selected columns in this order."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm. False keeps R's NA and a plain NaN."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the number of rows and columns. This is dim. in R. None uses the shape of a 2-d x. A 1-d x is filled in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for the R argument useNames. It must be TRUE or FALSE. The result is a plain array, with no names attached."
+      }
+    ],
+    "details": "The scan lives in the Rust crate rowranges, ported from matrixStats src/rowRanges.c with what 2 and hasNA TRUE. The result has two columns, the minimum and the maximum. R's NA is a NaN whose low 32 bits are 1954: that payload is copied and the rest of the row is skipped when na_rm is false. A plain NaN is stored, later finite values do not replace it, and a later NaN overwrites both columns with its own payload. A row with no counted value is +Inf and -Inf. Integer input returns int32 when every row counted a value. If any row counted nothing, the whole result is float64.",
+    "value": "An array of shape (N, 2). Floating input returns float64. Integer input returns int32 when every selected row has a non-missing value, and float64 otherwise.",
+    "example": "import numpy as np\nfrom matrixstats.rowranges import rowRanges\n\nx = np.arange(1, 13).reshape((4, 3), order=\"F\")\nrowRanges(x)",
+    "output": "output/rowRanges-python.txt"
+  }
+}

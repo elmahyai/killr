@@ -1,0 +1,40 @@
+{
+  "name": "glue_sql",
+  "title": "Interpolate a query with SQL quoting",
+  "origin": {
+    "description": "glue that quotes values and backtick identifiers through DBI.",
+    "usage": "glue_sql(..., .con, .sep = \"\", .na = DBI::SQL(\"NULL\"))",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Required. Accepted so the call matches R. Quoting is RSQLite's and does not use the object."
+      },
+      {
+        "name": "parts",
+        "text": "Query template. Backticks mark an identifier. A trailing * collapses values with commas."
+      }
+    ],
+    "details": "Strings are quoted, numbers are not, and an empty * collapse becomes NULL. DBI::SQL values are inserted unchanged.",
+    "value": "A DBI::SQL string.",
+    "example": "con <- DBI::dbConnect(RSQLite::SQLite(), \":memory:\")\nq <- glue_sql(\"SELECT {var} FROM {`tbl`} WHERE species IN ({vals*})\", .con = con, var = \"setosa\", tbl = \"iris\", vals = c(\"setosa\", \"versicolor\"))\ncat(as.character(q), \"\\n\", sep = \"\")\nDBI::dbDisconnect(con)\n",
+    "output": "output/glue_sql-r.txt"
+  },
+  "translation": {
+    "description": "glue that applies RSQLite's quoting rules in Python. The connection is required and is not used to run SQL.",
+    "usage": "glue_sql(*parts, con, sep=\"\", na=SQL(\"NULL\"), **names)",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Required. Accepted so the call matches R. Quoting is RSQLite's and does not use the object."
+      },
+      {
+        "name": "parts",
+        "text": "Query template. Backticks mark an identifier. A trailing * collapses values with commas."
+      }
+    ],
+    "details": "Identifiers use backticks, with an internal backtick doubled. Strings use single quotes, with an internal quote doubled. Numbers are left bare. TRUE becomes 1. An empty starred brace becomes NULL. SQL values are inserted unchanged. This is not a wrapper around sqlite3 or another driver.",
+    "value": "An SQL string.",
+    "example": "from glue import glue_sql, sqlite\nq = glue_sql(\"SELECT {var} FROM {`tbl`} WHERE species IN ({vals*})\", con=sqlite, var=\"setosa\", tbl=\"iris\", vals=[\"setosa\", \"versicolor\"], envir={})\nprint(q)\n",
+    "output": "output/glue_sql-python.txt"
+  }
+}

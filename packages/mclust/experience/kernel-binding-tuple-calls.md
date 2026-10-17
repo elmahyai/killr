@@ -1,0 +1,1 @@
+The `mclust_kernels` functions take one tuple, not separate positional arguments. Call `mclust_kernels.es1e((x, mu, sigsq, ...))`. The returned list keeps the Fortran argument order, so read `hood` and `z` by index, for example `out[7]` and `out[8]` for `es1e`, and `out[12]` and `out[13]` for `eseev`.

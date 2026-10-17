@@ -1,0 +1,31 @@
+      INTEGER FUNCTION I1MACH(I)
+      INTEGER I
+      IF (I .EQ. 9) THEN
+        I1MACH = 2147483647
+      ELSE IF (I .EQ. 5) THEN
+        I1MACH = 32
+      ELSE
+        I1MACH = 0
+      END IF
+      END
+
+      SUBROUTINE INTPR(TITLE, N, ARR, M)
+      CHARACTER*(*) TITLE
+      INTEGER N, ARR(*), M
+      RETURN
+      END
+
+      DOUBLE PRECISION FUNCTION D1MACH(I)
+      INTEGER I
+      DOUBLE PRECISION R
+      IF (I .EQ. 4) THEN
+        R = 1.0D0
+        D1MACH = R * 1.7976931348623157D308
+      ELSE IF (I .EQ. 5) THEN
+        D1MACH = 2.2250738585072014D-308
+      ELSE IF (I .EQ. 6) THEN
+        D1MACH = 2.2204460492503131D-16
+      ELSE
+        D1MACH = 0.0D0
+      END IF
+      END

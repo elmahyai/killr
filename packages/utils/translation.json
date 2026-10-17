@@ -1,0 +1,3311 @@
+{
+  "name": "utils",
+  "cran_version": "4.5.0",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked file_test.romans, .AtNames, .DollarNames, .S3methods, and apropos. utils 4.5.0 is the base package shipped with R 4.5.0. It has no Imports. The text progress bar, glob2rx, compareVersion, hasName, combn, URLencode, URLdecode, modifyList, alarm, head, tail, localeToCharset, osVersion, packageVersion, and data match R. data loads one named object from a package lazy-load database. osVersion uses the os module. winProgressBar keeps the Windows C state, and this R does not export it. The other exports are not started.",
+  "functions": [
+    {
+      "name": "?",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": ".AtNames",
+      "translated": true,
+      "python": "utils.at_names.AtNames",
+      "loads": [],
+      "uses": [],
+      "done": "Lists S4 slot names matching a partial pattern; a non-S4 object returns an empty character vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": ".AtNames(obj, \"\") on an S4 object with slots a and b",
+        "r_ms": 0.0730752944946289,
+        "translated_ms": 0.005706999218091369,
+        "speedup": 12.804504031291595,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\nif (!methods::isClass(\"TestS4AtNames\", where = .GlobalEnv)) {\n  methods::setClass(\n    \"TestS4AtNames\",\n    slots = c(a = \"numeric\", b = \"character\"),\n    where = .GlobalEnv\n  )\n}\nobj <- methods::new(\"TestS4AtNames\", a = 1, b = \"x\")\n\none <- function() {\n  paste(.AtNames(obj, \"\"), collapse = \",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils.at_names import AtNames, S4\n\n\ndef one():\n    obj = S4(\"TestS4AtNames\", a=1, b=\"x\")\n    return \",\".join(AtNames(obj, \"\"))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": ".DollarNames",
+      "translated": true,
+      "python": "utils.dollar_names.DollarNames",
+      "loads": [],
+      "uses": [],
+      "done": "Lists binding names for dollar completion on environments, including hidden bindings, and on named lists.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": ".DollarNames(env, \"\") on an environment with foo, bar, and .hidden",
+        "r_ms": 0.0978708267211914,
+        "translated_ms": 0.003349499820615165,
+        "speedup": 29.219534844822466,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\nutils::rc.settings(fuzzy = FALSE)\n\ne <- new.env()\ne$foo <- 1\nassign(\"bar\", 2, e)\nassign(\".hidden\", 3, e)\n\none <- function() {\n  paste(sort(utils:::.DollarNames(e, \"\")), collapse = \",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils.dollar_names import DollarNames, REnvironment\n\n\ndef one():\n    env = REnvironment(foo=1, bar=2, _hidden={\".hidden\": 3})\n    return \",\".join(sorted(DollarNames(env, \"\")))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": ".S3methods",
+      "translated": true,
+      "python": "utils.s3_methods.S3methods",
+      "loads": [
+        "tools"
+      ],
+      "uses": [],
+      "done": "Lists S3 methods for a generic or a class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A synthetic UseMethod generic on an attached environment, with sorted method names and info rows",
+        "r_ms": 8.20934772491455,
+        "translated_ms": 409.5617700004368,
+        "speedup": 0.02004422367084163,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\ng <- \"killrS3methodsProof\"\ne <- new.env()\nassign(g, eval(parse(text = sprintf(\"function(x) UseMethod(\\\"%s\\\")\", g))), envir = e)\nassign(paste0(g, \".alpha\"), function(x) x, envir = e)\nassign(paste0(g, \".beta\"), function(x) x, envir = e)\n\none <- function() {\n  res <- utils:::.S3methods(g, envir = e, useEnv = TRUE, dropPath = TRUE)\n  paste0(\n    paste(sort(res), collapse = \"|\"),\n    \"\\n\",\n    nrow(attr(res, \"info\")),\n    \"\\n\",\n    paste(attr(res, \"info\")$from, collapse = \"|\"),\n    \"\\n\",\n    paste(attr(res, \"info\")$generic, collapse = \"|\")\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils.s3_methods import S3methods\nfrom utils.s3_session import BindingEnviron\n\n\ndef _generic(name: str):\n    def method(x):\n        raise NotImplementedError\n\n    method.__name__ = name\n    method.__r_usemethod__ = name\n    return method\n\n\ndef one():\n    g = \"killrS3methodsProof\"\n    env = BindingEnviron(\n        {\n            g: _generic(g),\n            f\"{g}.alpha\": lambda x: x,\n            f\"{g}.beta\": lambda x: x,\n        }\n    )\n    res = S3methods(g, envir=env, use_env=True, drop_path=True)\n    info = res.info\n    return (\n        \"|\".join(sorted(res))\n        + \"\\n\"\n        + str(len(info))\n        + \"\\n\"\n        + \"|\".join(row.source for row in info)\n        + \"\\n\"\n        + \"|\".join(row.generic for row in info)\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": ".romans",
+      "translated": true,
+      "python": "utils.roman.romans",
+      "loads": [],
+      "uses": [],
+      "done": "The named integer dictionary of Roman numeral values from utils 4.5.0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sum(.romans)",
+        "r_ms": 0.00667572021484375,
+        "translated_ms": 0.001677499312791042,
+        "speedup": 3.9795665869672474,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\none <- function() {\n  as.character(sum(.romans))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils.roman import romans\n\n\ndef one():\n    return str(sum(romans.values()))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "Rprof",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rprofmem",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RShowDoc",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RSiteSearch",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "URLdecode",
+      "translated": true,
+      "python": "utils.URLdecode",
+      "loads": [],
+      "uses": [],
+      "done": "Turns each percent pair back into a byte, then UTF-8.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "URLdecode(\"%C3%A9\")",
+        "r_ms": 0.044226646423339844,
+        "translated_ms": 0.00287649982055882,
+        "speedup": 15.375160501399892,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(URLdecode(\"%C3%A9\"))\n",
+          "python": "from utils import URLdecode\nprint(URLdecode(\"%C3%A9\"))\n"
+        }
+      }
+    },
+    {
+      "name": "URLencode",
+      "translated": true,
+      "python": "utils.URLencode",
+      "loads": [],
+      "uses": [],
+      "done": "Encodes each character's UTF-8 bytes. A string that already has a percent escape is left unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "URLencode(\"a b\")",
+        "r_ms": 0.08857250213623047,
+        "translated_ms": 0.0044600001274375245,
+        "speedup": 19.85930484426229,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(URLencode(\"a b\"))\n",
+          "python": "from utils import URLencode\nprint(URLencode(\"a b\"))\n"
+        }
+      }
+    },
+    {
+      "name": "View",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "adist",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "alarm",
+      "translated": true,
+      "python": "utils.alarm",
+      "loads": [],
+      "uses": [],
+      "done": "Writes the bell character and flushes the stream.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "alarm()",
+        "r_ms": 0.09608268737792969,
+        "translated_ms": 0.0009559998943586834,
+        "speedup": 100.50491422113092,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(alarm())\n",
+          "python": "from utils import alarm\nprint(alarm())\n"
+        }
+      }
+    },
+    {
+      "name": "apropos",
+      "translated": true,
+      "python": "utils.apropos.apropos",
+      "loads": [],
+      "uses": [],
+      "done": "apropos walks the simulated search path, regex-filters names like R, and returns a sorted name list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An attached proof environment, apropos('killrAproposProofGLM'), apropos('GLM', ignore.case=FALSE), and length(apropos('GLM')) against R 4.5.0.",
+        "r_ms": 35.1104736328125,
+        "translated_ms": 1633.2835004996014,
+        "speedup": 0.021496864213758748,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\ne <- new.env()\nassign(\"killrAproposProofGLM\", 1, envir = e)\nattach(e, name = \"killrAproposProof\")\n\none <- function() {\n  paste(\n    paste(sort(apropos(\"killrAproposProofGLM\")), collapse = \"|\"),\n    paste(sort(apropos(\"GLM\", ignore.case = FALSE)), collapse = \"|\"),\n    length(apropos(\"GLM\")),\n    sep = \"\\n\"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils.apropos import apropos\nfrom utils.s3_session import BindingEnviron, attach\n\n\ndef one():\n    return \"\\n\".join(\n        [\n            \"|\".join(sorted(apropos(\"killrAproposProofGLM\"))),\n            \"|\".join(sorted(apropos(\"GLM\", ignore_case=False))),\n            str(len(apropos(\"GLM\"))),\n        ]\n    )\n\n\nenv = BindingEnviron({\"killrAproposProofGLM\": 1})\nattach(env, name=\"killrAproposProof\", pos=2)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "aregexec",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "argsAnywhere",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "asDateBuilt",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "askYesNo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "assignInMyNamespace",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "assignInNamespace",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "as.roman",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": null
+    },
+    {
+      "name": "as.person",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "as.personList",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "as.relistable",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell_package_C_files",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell_package_R_files",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell_package_Rd_files",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell_package_vignettes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aspell_write_personal_dictionary_file",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "available.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "browseEnv",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "browseURL",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "browseVignettes",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "bug.report",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "capture.output",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "changedFiles",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "charClass",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "checkCRAN",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": ".checkHT",
+      "translated": true,
+      "python": "utils.checkHT",
+      "loads": [],
+      "uses": [],
+      "done": "Accepts one finite n. An empty n is rejected.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": ".checkHT(6, NULL)",
+        "r_ms": 0.007510185241699219,
+        "translated_ms": 0.002083998879243154,
+        "speedup": 3.603737658643412,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  if (is.null(.checkHT(6, NULL))) \"TRUE\" else \"FALSE\"\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import checkHT\n\n\ndef one():\n    checkHT(6, None)\n    return \"TRUE\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "chooseBioCmirror",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "chooseCRANmirror",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "citation",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cite",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "citeNatbib",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "citEntry",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "citHeader",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "citFooter",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "close.socket",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "combn",
+      "translated": true,
+      "python": "utils.combn",
+      "loads": [],
+      "uses": [],
+      "done": "Walks the same index order as R. A single positive integer means seq_len of that integer.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "combn(4, 2)",
+        "r_ms": 0.05137920379638672,
+        "translated_ms": 0.006401499376806896,
+        "speedup": 8.02612025278599,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(combn(4, 2))\n",
+          "python": "from utils import combn\nprint(combn(4, 2))\n"
+        }
+      }
+    },
+    {
+      "name": "compareVersion",
+      "translated": true,
+      "python": "utils.compareVersion",
+      "loads": [],
+      "uses": [],
+      "done": "Splits on dots and dashes and compares each integer. A missing left side is -1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "compareVersion(\"1.0\", \"1.0-1\")",
+        "r_ms": 0.03230571746826172,
+        "translated_ms": 0.0034635004340088926,
+        "speedup": 9.327476084900868,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(compareVersion(\"1.0\", \"1.0-1\"))\n",
+          "python": "from utils import compareVersion\nprint(compareVersion(\"1.0\", \"1.0-1\"))\n"
+        }
+      }
+    },
+    {
+      "name": "contrib.url",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "count.fields",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "create.post",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "data",
+      "translated": true,
+      "python": "utils.data",
+      "loads": [
+        "readr"
+      ],
+      "uses": [],
+      "done": "Loads one named object from a package lazy-load database. Compression code 3 with type Z is raw LZMA2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "data(list = \"mtcars\", package = \"datasets\")",
+        "r_ms": 1.1731386184692383,
+        "translated_ms": 3.5387850020924816,
+        "speedup": 0.331509,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "e <- new.env()\ndata(list = \"mtcars\", package = \"datasets\", envir = e)\nx <- e$mtcars\ncat(paste(nrow(x), sprintf(\"%.17g\", x$mpg[1]), sprintf(\"%.17g\", x$mpg[nrow(x)]), paste(names(x), collapse = \",\"), sep = \"|\"), \"\\n\")\n",
+          "python": "from utils import data\nx = data(list=\"mtcars\", package=\"datasets\")[\"mtcars\"]\nprint(\"|\".join([str(x.nrow), format(x.columns[0][0], \".17g\"), format(x.columns[0][-1], \".17g\"), \",\".join(x.names)]))\n"
+        }
+      }
+    },
+    {
+      "name": "data.entry",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "dataentry",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "de",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "de.ncols",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "de.restore",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "de.setup",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "debugger",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "debugcall",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "demo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "download.file",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "download.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "dump.frames",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "edit",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "emacs",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "example",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "file_test",
+      "translated": true,
+      "python": "utils.file_test.file_test",
+      "loads": [],
+      "uses": [],
+      "done": "file_test mirrors R's nine unary and binary shell tests with vector recycling and tilde expansion.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "On R 4.5.0's shipped stats library, file_test('-d', dir) is true and file_test('-nt', ...) on R versus demo is false.",
+        "r_ms": 0.1735687255859375,
+        "translated_ms": 0.023148999389377423,
+        "speedup": 7.4978932206281215,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(utils)\n\none <- function() {\n  dir <- file.path(R.home(), \"library\", \"stats\")\n  paste(\n    as.integer(file_test(\"-d\", dir)),\n    as.integer(file_test(\"-nt\", file.path(dir, \"R\"), file.path(dir, \"demo\"))),\n    sep = \",\"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import os\nimport statistics\nimport time\n\nfrom utils.file_test import file_test\n\n\ndef one():\n    r_home = os.environ.get(\"R_HOME\", \"/usr/lib/R\")\n    directory = os.path.join(r_home, \"library\", \"stats\")\n    return \",\".join(\n        [\n            str(int(file_test(\"-d\", directory))),\n            str(\n                int(\n                    file_test(\n                        \"-nt\",\n                        os.path.join(directory, \"R\"),\n                        os.path.join(directory, \"demo\"),\n                    )\n                )\n            ),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "file.edit",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "fileSnapshot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "find",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "findCRANmirror",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "findMatches",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "fix",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "fixInNamespace",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "findLineNum",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "flush.console",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "formatOL",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "formatUL",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getAnywhere",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getCRANmirrors",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getFromNamespace",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getParseData",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getParseText",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getS3method",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getSrcDirectory",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getSrcFilename",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getSrcLocation",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getSrcref",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "glob2rx",
+      "translated": true,
+      "python": "utils.glob2rx",
+      "loads": [],
+      "uses": [],
+      "done": "Turns a glob into R's regular expression. Dots are escaped, * becomes .*, and ? becomes a dot.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "glob2rx(\"abc.*\")",
+        "r_ms": 0.07903575897216797,
+        "translated_ms": 0.0026634997993824072,
+        "speedup": 29.673649305509315,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(glob2rx(\"abc.*\"))\n",
+          "python": "from utils import glob2rx\nprint(glob2rx(\"abc.*\"))\n"
+        }
+      }
+    },
+    {
+      "name": "globalVariables",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "hasName",
+      "translated": true,
+      "python": "utils.hasName",
+      "loads": [],
+      "uses": [],
+      "done": "True when the name is a key. A vector of names returns one logical each.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "hasName(list(a=1, b=2), \"b\")",
+        "r_ms": 0.007152557373046875,
+        "translated_ms": 0.001327498466707766,
+        "speedup": 5.387996711427788,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(hasName(list(a=1, b=2), \"b\"))\n",
+          "python": "from utils import hasName\nprint(hasName(list(a=1, b=2), \"b\"))\n"
+        }
+      }
+    },
+    {
+      "name": "head",
+      "translated": true,
+      "python": "utils.head",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the first n elements. A negative n drops that many from the end.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "head(1:10)",
+        "r_ms": 0.027060508728027344,
+        "translated_ms": 0.00613999964116374,
+        "speedup": 4.40724923607625,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  paste(head(1:10), collapse=\",\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import head\n\n\ndef one():\n    return \",\".join(str(value) for value in head(list(range(1, 11))))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "head.matrix",
+      "translated": true,
+      "python": "utils.head_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Keeps the leading rows. A margin that n does not name stays whole.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "head(matrix(1:12, nrow=4), 2)",
+        "r_ms": 0.07832050323486328,
+        "translated_ms": 0.011886000720551237,
+        "speedup": 6.589306620135474,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  paste(as.vector(head(matrix(1:12, nrow=4), 2)), collapse=\",\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import RMatrix, head\n\n\ndef one():\n    return \",\".join(str(value) for value in head(RMatrix(list(range(1, 13)), 4, 3), 2).data)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "help",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "help.request",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "help.search",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "help.start",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "history",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "install.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "installed.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "is.relistable",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "isS3method",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "isS3stdGeneric",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "limitedLabels",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "loadhistory",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "localeToCharset",
+      "translated": true,
+      "python": "utils.localeToCharset",
+      "loads": [],
+      "uses": [],
+      "done": "A UTF-8 locale returns UTF-8 and the language guess. The at-sign pattern does not match.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "localeToCharset(\"en_US.UTF-8\")",
+        "r_ms": 0.1456737518310547,
+        "translated_ms": 0.002819499968609307,
+        "speedup": 51.666520110978034,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  paste(localeToCharset(\"en_US.UTF-8\"), collapse=\" \")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import localeToCharset\n\n\ndef one():\n    return \" \".join(localeToCharset(\"en_US.UTF-8\"))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "ls.str",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lsf.str",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "maintainer",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "make.packages.html",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "make.socket",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "memory.limit",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "memory.size",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "menu",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "methods",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "mirror2html",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "modifyList",
+      "translated": true,
+      "python": "utils.modifyList",
+      "loads": [],
+      "uses": [],
+      "done": "Nested lists are merged. A missing value removes the name unless keep_null is true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "modifyList(list(a=1, b=list(x=1)), list(b=list(y=2), a=NULL))",
+        "r_ms": 0.035881996154785156,
+        "translated_ms": 0.002377500095462892,
+        "speedup": 15.092321646279068,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "print(modifyList(list(a=1, b=list(x=1)), list(b=list(y=2), a=NULL)))\n",
+          "python": "from utils import modifyList\nprint(modifyList(list(a=1, b=list(x=1)), list(b=list(y=2), a=NULL)))\n"
+        }
+      }
+    },
+    {
+      "name": "new.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "news",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "object.size",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "old.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "osVersion",
+      "translated": true,
+      "python": "utils.osVersion",
+      "loads": [],
+      "uses": [
+        "os"
+      ],
+      "done": "Reads uname and the PRETTY_NAME in /etc/os-release.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "osVersion",
+        "r_ms": 0.010371208190917969,
+        "translated_ms": 0.0764164997235639,
+        "speedup": 0.13571948765562064,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  osVersion\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import osVersion\n\n\ndef one():\n    return osVersion()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "package.skeleton",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packageDate",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packageDescription",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packageName",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packageVersion",
+      "translated": true,
+      "python": "utils.packageVersion",
+      "loads": [],
+      "uses": [],
+      "done": "Reads the Version field from the installed DESCRIPTION.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "as.character(packageVersion(\"utils\"))",
+        "r_ms": 0.42808055877685547,
+        "translated_ms": 0.17649500023253495,
+        "speedup": 2.425454308693462,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  as.character(packageVersion(\"utils\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import packageVersion\n\n\ndef one():\n    return packageVersion(\"utils\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "packageStatus",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "page",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "person",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "personList",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pico",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "process.events",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prompt",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "promptData",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "promptImport",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "promptPackage",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rc.getOption",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rc.options",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rc.settings",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rc.status",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "readCitationFile",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.DIF",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.csv",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.csv2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.delim",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.delim2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.fwf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.fortran",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.socket",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "read.table",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "recover",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "relist",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "remove.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "removeSource",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rtags",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "savehistory",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "select.list",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "sessionInfo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "setBreakpoint",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "setRepositories",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "stack",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "str",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "strcapture",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "strOptions",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "summaryRprof",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "suppressForeignCheck",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "tail",
+      "translated": true,
+      "python": "utils.tail",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the last n elements. A negative n drops that many from the start.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tail(1:10)",
+        "r_ms": 0.029325485229492188,
+        "translated_ms": 0.006527500772790518,
+        "speedup": 4.49260540140166,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  paste(tail(1:10), collapse=\",\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import tail\n\n\ndef one():\n    return \",\".join(str(value) for value in tail(list(range(1, 11))))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "tail.matrix",
+      "translated": true,
+      "python": "utils.tail_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Keeps the trailing rows and labels only the margins n names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tail(matrix(1:12, nrow=4), 2)",
+        "r_ms": 0.1690387725830078,
+        "translated_ms": 0.01670399979047943,
+        "speedup": 10.11965844727517,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "one <- function() {\n  t <- tail(matrix(1:12, nrow=4), 2); paste(c(paste(as.vector(t), collapse=\",\"), rownames(t), colnames(t)), collapse=\"|\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep=\"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom utils import RMatrix, tail\n\n\ndef one():\n    bottom = tail(RMatrix(list(range(1, 13)), 4, 3), 2)\n    parts = [\",\".join(str(value) for value in bottom.data)]\n    for margin in bottom.dimnames or []:\n        if margin is not None:\n            parts.extend(margin)\n    return \"|\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "tar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "timestamp",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "toBibtex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "toLatex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "type.convert",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "undebugcall",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "unstack",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "untar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "unzip",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "update.packages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "upgrade",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "url.show",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vi",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vignette",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "warnErrList",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "write.csv",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "write.csv2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "write.socket",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "write.table",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xedit",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xemacs",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "zip",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "txtProgressBar",
+      "translated": true,
+      "python": "utils.txtProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Draws styles 1, 2, and 3. Style 3 uses width minus 10 when width is missing. The style 3 bar from 0 to 50 percent matches R byte for byte.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "txtProgressBar(min=0, max=10, style=3) then setTxtProgressBar(pb, 5)",
+        "r_ms": 3.296017646789551,
+        "translated_ms": 0.013249499716039281,
+        "speedup": 248.76544152074902,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(utils))\none <- function() {\n  f <- tempfile()\n  con <- file(f, open = \"wb\")\n  pb <- txtProgressBar(min = 0, max = 10, style = 3, file = con)\n  setTxtProgressBar(pb, 5)\n  close(pb)\n  close(con)\n  readChar(f, 1e6)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value)\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import io\nimport statistics\nimport time\n\nfrom utils import close, setTxtProgressBar, txtProgressBar\n\n\ndef one():\n    buf = io.StringIO()\n    bar = txtProgressBar(min=0, max=10, style=3, file=buf)\n    setTxtProgressBar(bar, 5)\n    close(bar)\n    return buf.getvalue()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "getTxtProgressBar",
+      "translated": true,
+      "python": "utils.getTxtProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the last accepted value. A bar that is not a txtProgressBar raises the curly-quote class error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getTxtProgressBar after setTxtProgressBar(pb, 4)",
+        "r_ms": 0.13399124145507812,
+        "translated_ms": 0.008728000466362573,
+        "speedup": 15.351882939451706,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(utils))\none <- function() {\n  f <- tempfile()\n  con <- file(f, open = \"wb\")\n  pb <- txtProgressBar(min = 0, max = 10, style = 1, file = con)\n  setTxtProgressBar(pb, 4)\n  value <- getTxtProgressBar(pb)\n  close(pb)\n  close(con)\n  value\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import io\nimport statistics\nimport time\n\nfrom utils import close, getTxtProgressBar, setTxtProgressBar, txtProgressBar\n\n\ndef one():\n    buf = io.StringIO()\n    bar = txtProgressBar(min=0, max=10, style=1, file=buf)\n    setTxtProgressBar(bar, 4)\n    value = getTxtProgressBar(bar)\n    close(bar)\n    return value\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "setTxtProgressBar",
+      "translated": true,
+      "python": "utils.setTxtProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the previous value. NA and out-of-range values do not move the bar. title and label are ignored.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "setTxtProgressBar(pb, 4) from an initial value of 0",
+        "r_ms": 0.14448165893554688,
+        "translated_ms": 0.008474999958707485,
+        "speedup": 17.0479834382892,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(utils))\none <- function() {\n  f <- tempfile()\n  con <- file(f, open = \"wb\")\n  pb <- txtProgressBar(min = 0, max = 10, style = 1, file = con)\n  value <- setTxtProgressBar(pb, 4)\n  close(pb)\n  close(con)\n  value\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import io\nimport statistics\nimport time\n\nfrom utils import close, setTxtProgressBar, txtProgressBar\n\n\ndef one():\n    buf = io.StringIO()\n    bar = txtProgressBar(min=0, max=10, style=1, file=buf)\n    value = setTxtProgressBar(bar, 4)\n    close(bar)\n    return value\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "hsearch_db",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "hsearch_db_concepts",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "hsearch_db_keywords",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "bibentry",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rtangle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RtangleSetup",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveLatex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveLatexSetup",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Stangle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Sweave",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "SweaveSyntConv",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "SweaveSyntaxLatex",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "SweaveSyntaxNoweb",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RtangleWritedoc",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveChunkPrefix",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveEvalWithOpt",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveTryStop",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "SweaveHooks",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveLatexWritedoc",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveLatexOptions",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RweaveLatexFinish",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RtangleFinish",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": ".RtangleCodeLabel",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "makeRweaveLatexCodeRunner",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "RtangleRuncode",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "nsl",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "DLL.version",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Filters",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "choose.dir",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "choose.files",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getClipboardFormats",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getIdentification",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getWindowsHandle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getWindowsHandles",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getWindowTitle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "loadRconsole",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "readClipboard",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "readRegistry",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "setStatusBar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "setWindowTitle",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "shortPathName",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "win.version",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winDialog",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winDialogString",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuAdd",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuAddItem",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuDel",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuDelItem",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuNames",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winMenuItems",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "writeClipboard",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "winProgressBar",
+      "translated": true,
+      "python": "utils.winProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Stores title, label, range, and value the way the Windows C code does. A negative width becomes 200. This R does not export the function, so the window was not compared.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "winProgressBar is not exported on this Linux R",
+        "r_ms": null,
+        "translated_ms": 0.0032260004445561208,
+        "speedup": null,
+        "matches": false,
+        "max_abs_diff": null,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "tryCatch(winProgressBar(), error = function(e) cat(conditionMessage(e), \"\\n\"))\n",
+          "python": "from utils import winProgressBar\nbar = winProgressBar(\"test progress bar\", \"Some information\", 0, 100, 50)\nprint(bar.value)\n"
+        }
+      }
+    },
+    {
+      "name": "getWinProgressBar",
+      "translated": true,
+      "python": "utils.getWinProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the stored value. This R does not export the function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getWinProgressBar is not exported on this Linux R",
+        "r_ms": null,
+        "translated_ms": 0.0032260004445561208,
+        "speedup": null,
+        "matches": false,
+        "max_abs_diff": null,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "tryCatch(getWinProgressBar(), error = function(e) cat(conditionMessage(e), \"\\n\"))\n",
+          "python": "from utils import getWinProgressBar, setWinProgressBar, winProgressBar\nbar = winProgressBar(min=0, max=100, initial=50, label=\"info\")\nsetWinProgressBar(bar, 75)\nprint(getWinProgressBar(bar))\n"
+        }
+      }
+    },
+    {
+      "name": "setWinProgressBar",
+      "translated": true,
+      "python": "utils.setWinProgressBar",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the previous value and ignores an out-of-range update. A label is kept only when the bar was created with one. This R does not export the function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "setWinProgressBar is not exported on this Linux R",
+        "r_ms": null,
+        "translated_ms": 0.0032260004445561208,
+        "speedup": null,
+        "matches": false,
+        "max_abs_diff": null,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "tryCatch(setWinProgressBar(), error = function(e) cat(conditionMessage(e), \"\\n\"))\n",
+          "python": "from utils import setWinProgressBar, winProgressBar\nbar = winProgressBar(min=0, max=100, initial=50, label=\"info\")\nprint(setWinProgressBar(bar, 75, \"test\", \"75% done\"))\n"
+        }
+      }
+    },
+    {
+      "name": "setInternet2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "zip.unpack",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "hashtab",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "gethash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "sethash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "remhash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "numhash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "typhash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "maphash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "clrhash",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "is.hashtab",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ],
+  "dependencies": {
+    "translated": [
+      "readr"
+    ],
+    "native": [
+      "bz2",
+      "lzma",
+      "os",
+      "zlib"
+    ],
+    "rust": []
+  }
+}

@@ -1,0 +1,1607 @@
+{
+  "name": "withr",
+  "cran_version": "3.0.3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "45 translated and matched. 34 gaps: graphics devices and parameters, search path, namespace, and library path (R-only). The database pair is translated with SQLAlchemy.",
+  "functions": [
+    {
+      "name": "defer",
+      "translated": true,
+      "python": "withr.deferred.defer",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.082,
+        "translated_ms": 0.006,
+        "speedup": 13.3,
+        "proof": {
+          "r": "# Proof: R side of withr::defer (withr 3.0.3).\n# Python name: withr.deferred.defer\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  bucket <- character()\n  f <- function() {\n    defer(bucket <<- c(bucket, \"a\"))\n    defer(bucket <<- c(bucket, \"b\"))\n    defer(bucket <<- c(bucket, \"c\"), priority = \"last\")\n  }\n  f()\n  list(bucket)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.deferred.defer, against R's withr::defer.\n\nPython name: withr.deferred.defer\nObservable result: the same values as the R side (defer-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import defer, scope\n\n\ndef one():\n    bucket = []\n    with scope():\n        defer(lambda: bucket.append(\"a\"))\n        defer(lambda: bucket.append(\"b\"))\n        defer(lambda: bucket.append(\"c\"), priority=\"last\")\n    return [bucket]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "defer(bucket <<- c(bucket, \"a\"))"
+      }
+    },
+    {
+      "name": "defer_parent",
+      "translated": true,
+      "python": "withr.deferred.defer_parent",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.059,
+        "translated_ms": 0.009,
+        "speedup": 6.8,
+        "proof": {
+          "r": "# Proof: R side of withr::defer_parent (withr 3.0.3).\n# Python name: withr.deferred.defer_parent\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  bucket <- character()\n  outer <- function() {\n    inner <- function() {\n      defer_parent(bucket <<- c(bucket, \"p\"))\n      defer(bucket <<- c(bucket, \"i\"))\n    }\n    inner()\n    bucket <<- c(bucket, \"mid\")\n  }\n  outer()\n  list(bucket)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.deferred.defer_parent, against R's withr::defer_parent.\n\nPython name: withr.deferred.defer_parent\nObservable result: the same values as the R side (defer_parent-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import defer, defer_parent, scope\n\n\ndef one():\n    bucket = []\n    with scope():\n        with scope():\n            defer_parent(lambda: bucket.append(\"p\"))\n            defer(lambda: bucket.append(\"i\"))\n        bucket.append(\"mid\")\n    return [bucket]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "defer_parent(bucket <<- c(bucket, \"p\"))"
+      }
+    },
+    {
+      "name": "deferred_clear",
+      "translated": true,
+      "python": "withr.deferred.deferred_clear",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.058,
+        "translated_ms": 0.005,
+        "speedup": 11.3,
+        "proof": {
+          "r": "# Proof: R side of withr::deferred_clear (withr 3.0.3).\n# Python name: withr.deferred.deferred_clear\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  bucket <- character()\n  f <- function() {\n    defer(bucket <<- c(bucket, \"a\"))\n    deferred_clear()\n    defer(bucket <<- c(bucket, \"b\"))\n  }\n  f()\n  list(bucket)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.deferred.deferred_clear, against R's withr::deferred_clear.\n\nPython name: withr.deferred.deferred_clear\nObservable result: the same values as the R side (deferred_clear-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import defer, deferred_clear, scope\n\n\ndef one():\n    bucket = []\n    with scope():\n        defer(lambda: bucket.append(\"a\"))\n        deferred_clear()\n        defer(lambda: bucket.append(\"b\"))\n    return [bucket]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "deferred_clear()"
+      }
+    },
+    {
+      "name": "deferred_run",
+      "translated": true,
+      "python": "withr.deferred.deferred_run",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.275,
+        "translated_ms": 0.016,
+        "speedup": 17.4,
+        "proof": {
+          "r": "# Proof: R side of withr::deferred_run (withr 3.0.3).\n# Python name: withr.deferred.deferred_run\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  bucket <- character()\n  f <- function() {\n    defer(bucket <<- c(bucket, \"a\"))\n    defer(bucket <<- c(bucket, \"b\"))\n    deferred_run()\n    bucket\n  }\n  list(f())\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.deferred.deferred_run, against R's withr::deferred_run.\n\nPython name: withr.deferred.deferred_run\nObservable result: the same values as the R side (deferred_run-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import defer, deferred_run, scope\n\n\ndef one():\n    bucket = []\n    with scope():\n        defer(lambda: bucket.append(\"a\"))\n        defer(lambda: bucket.append(\"b\"))\n        deferred_run()\n        seen = list(bucket)\n    return [seen]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "deferred_run()"
+      }
+    },
+    {
+      "name": "global_defer",
+      "translated": true,
+      "python": "withr.deferred.global_defer",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.319,
+        "translated_ms": 0.006,
+        "speedup": 54.5,
+        "proof": {
+          "r": "# Proof: R side of withr::global_defer (withr 3.0.3).\n# Python name: withr.deferred.global_defer\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  bucket <- character()\n  add <- function(item) bucket <<- c(bucket, item)\n  global_defer(add(\"g1\"))\n  global_defer(add(\"g2\"), priority = \"last\")\n  deferred_run(.GlobalEnv)\n  list(bucket)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.deferred.global_defer, against R's withr::global_defer.\n\nPython name: withr.deferred.global_defer\nObservable result: the same values as the R side (global_defer-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import GLOBAL, deferred_run, global_defer\n\n\ndef one():\n    bucket = []\n    global_defer(lambda: bucket.append(\"g1\"))\n    global_defer(lambda: bucket.append(\"g2\"), priority=\"last\")\n    deferred_run(GLOBAL)\n    return [bucket]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "global_defer(add(\"g1\"))"
+      }
+    },
+    {
+      "name": "local_",
+      "translated": true,
+      "python": "withr.factory.local_",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.035,
+        "translated_ms": 0.005,
+        "speedup": 6.5,
+        "proof": {
+          "r": "# Proof: R side of withr::local_ (withr 3.0.3).\n# Python name: withr.factory.local_\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\nstate <- 0\nsetx <- function(new) {\n  old <- state\n  state <<- new\n  old\n}\nresetx <- function(old) state <<- old\nlocal_x <- local_(setx, resetx)\n\none <- function() {\n  state <<- 0\n  f <- function() {\n    old <- local_x(5)\n    c(old, state)\n  }\n  inside <- f()\n  list(inside, state)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.factory.local_, against R's withr::local_.\n\nPython name: withr.factory.local_\nObservable result: the same values as the R side (local_-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_, scope\n\nstate = {\"x\": 0}\n\n\ndef setx(new):\n    old = state[\"x\"]\n    state[\"x\"] = new\n    return old\n\n\ndef resetx(old):\n    state[\"x\"] = old\n\nlocal_x = local_(setx, resetx)\n\n\n\ndef one():\n    state[\"x\"] = 0\n\n    def f():\n        with scope():\n            old = local_x(5)\n            return [old, state[\"x\"]]\n\n    inside = f()\n    return [inside, state[\"x\"]]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_x <- local_(setx, resetx)"
+      }
+    },
+    {
+      "name": "local_bmp",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_cairo_pdf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_cairo_ps",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_collate",
+      "translated": true,
+      "python": "withr.collate.local_collate",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.494,
+        "translated_ms": 0.034,
+        "speedup": 14.5,
+        "proof": {
+          "r": "# Proof: R side of withr::local_collate (withr 3.0.3).\n# Python name: withr.collate.local_collate\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  x <- c(\"b\\u00e9r\\u00e9nice\", \"boris\", \"bernard\", \"b\\u00e9atrice\")\n  before <- Sys.getlocale(\"LC_COLLATE\")\n  f <- function() {\n    local_collate(\"C\")\n    match(sort(x), x)\n  }\n  out <- f()\n  list(out, as.numeric(identical(Sys.getlocale(\"LC_COLLATE\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.collate.local_collate, against R's withr::local_collate.\n\nPython name: withr.collate.local_collate\nObservable result: the same values as the R side (local_collate-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_collate, scope\nimport locale\n\n\ndef one():\n    x = [\"b\\u00e9r\\u00e9nice\", \"boris\", \"bernard\", \"b\\u00e9atrice\"]\n    before = locale.setlocale(locale.LC_COLLATE)\n\n    def f():\n        with scope():\n            local_collate(\"C\")\n            return [x.index(s) + 1 for s in sorted(x, key=locale.strxfrm)]\n\n    out = f()\n    return [out, 1.0 if locale.setlocale(locale.LC_COLLATE) == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_collate(\"C\")"
+      }
+    },
+    {
+      "name": "local_connection",
+      "translated": true,
+      "python": "withr.connection.local_connection",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.132,
+        "translated_ms": 0.063,
+        "speedup": 2.1,
+        "proof": {
+          "r": "# Proof: R side of withr::local_connection (withr 3.0.3).\n# Python name: withr.connection.local_connection\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-local-connection.txt\")\n  f <- function() {\n    con <- local_connection(file(path, \"w\"))\n    writeLines(c(\"foo\", \"bar\"), con)\n  }\n  f()\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.connection.local_connection, against R's withr::local_connection.\n\nPython name: withr.connection.local_connection\nObservable result: the same values as the R side (local_connection-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_connection, scope\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-local-connection-py.txt\")\n\n    def f():\n        with scope():\n            con = local_connection(open(path, \"w\"))\n            con.write(\"foo\\nbar\\n\")\n\n    f()\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "con <- local_connection(file(path, \"w\"))"
+      }
+    },
+    {
+      "name": "local_db_connection",
+      "translated": true,
+      "python": "withr.connection.local_db_connection",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R; SQLAlchemy connection closed when the caller scope ends.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": null,
+        "r_ms": 4.083991,
+        "translated_ms": 1.580614,
+        "speedup": 2.5838
+      }
+    },
+    {
+      "name": "local_dir",
+      "translated": true,
+      "python": "withr.directory.local_dir",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.048,
+        "translated_ms": 0.014,
+        "speedup": 3.3,
+        "proof": {
+          "r": "# Proof: R side of withr::local_dir (withr 3.0.3).\n# Python name: withr.directory.local_dir\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  start <- getwd()\n  f <- function() {\n    local_dir(\"/usr/bin\")\n    getwd()\n  }\n  inside <- f()\n  list(inside, as.numeric(identical(getwd(), start)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.directory.local_dir, against R's withr::local_dir.\n\nPython name: withr.directory.local_dir\nObservable result: the same values as the R side (local_dir-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_dir, scope\nimport os\n\n\ndef one():\n    start = os.getcwd()\n\n    def f():\n        with scope():\n            local_dir(\"/usr/bin\")\n            return os.getcwd()\n\n    inside = f()\n    return [inside, 1.0 if os.getcwd() == start else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_dir(\"/usr/bin\")"
+      }
+    },
+    {
+      "name": "local_environment",
+      "translated": true,
+      "python": "withr.namespace.local_environment",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.205517,
+        "translated_ms": 0.005779,
+        "speedup": 35.56,
+        "proof": {
+          "r": "packages/withr/proof/local_environment-r.R",
+          "python": "packages/withr/proof/local_environment-py.py"
+        }
+      }
+    },
+    {
+      "name": "local_envvar",
+      "translated": true,
+      "python": "withr.envvar.local_envvar",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.282,
+        "translated_ms": 0.024,
+        "speedup": 11.9,
+        "proof": {
+          "r": "# Proof: R side of withr::local_envvar (withr 3.0.3).\n# Python name: withr.envvar.local_envvar\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  Sys.unsetenv(\"WITHR_PROOF\")\n  f <- function() {\n    local_envvar(c(WITHR_PROOF = \"xyz\"))\n    Sys.getenv(\"WITHR_PROOF\")\n  }\n  inside <- f()\n  list(inside, Sys.getenv(\"WITHR_PROOF\", unset = \"unset\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.envvar.local_envvar, against R's withr::local_envvar.\n\nPython name: withr.envvar.local_envvar\nObservable result: the same values as the R side (local_envvar-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_envvar, scope\nimport os\n\n\ndef one():\n    os.environ.pop(\"WITHR_PROOF\", None)\n\n    def f():\n        with scope():\n            local_envvar({\"WITHR_PROOF\": \"xyz\"})\n            return os.environ.get(\"WITHR_PROOF\", \"unset\")\n\n    inside = f()\n    return [inside, os.environ.get(\"WITHR_PROOF\", \"unset\")]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_envvar(c(WITHR_PROOF = \"xyz\"))"
+      }
+    },
+    {
+      "name": "local_file",
+      "translated": true,
+      "python": "withr.files.local_file",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.196,
+        "translated_ms": 0.116,
+        "speedup": 1.7,
+        "proof": {
+          "r": "# Proof: R side of withr::local_file (withr 3.0.3).\n# Python name: withr.files.local_file\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-local-file.txt\")\n  f <- function() {\n    local_file(path)\n    writeLines(\"foo\", path)\n    readLines(path)\n  }\n  inside <- f()\n  list(inside, as.numeric(file.exists(path)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.files.local_file, against R's withr::local_file.\n\nPython name: withr.files.local_file\nObservable result: the same values as the R side (local_file-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_file, scope\nimport os\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-local-file-py.txt\")\n\n    def f():\n        with scope():\n            local_file(path)\n            with open(path, \"w\") as handle:\n                handle.write(\"foo\\n\")\n            with open(path) as handle:\n                return handle.read().splitlines()\n\n    inside = f()\n    return [inside, 1.0 if os.path.exists(path) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_file(path)"
+      }
+    },
+    {
+      "name": "local_jpeg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_language",
+      "translated": true,
+      "python": "withr.language.local_language",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.612,
+        "translated_ms": 0.026,
+        "speedup": 23.6,
+        "proof": {
+          "r": "# Proof: R side of withr::local_language (withr 3.0.3).\n# Python name: withr.language.local_language\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getenv(\"LANGUAGE\", unset = \"unset\")\n  f <- function() {\n    local_language(\"de\")\n    Sys.getenv(\"LANGUAGE\")\n  }\n  inside <- f()\n  list(inside, as.numeric(identical(Sys.getenv(\"LANGUAGE\", unset = \"unset\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.language.local_language, against R's withr::local_language.\n\nPython name: withr.language.local_language\nObservable result: the same values as the R side (local_language-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_language, scope\nimport os\n\n\ndef one():\n    before = os.environ.get(\"LANGUAGE\", \"unset\")\n\n    def f():\n        with scope():\n            local_language(\"de\")\n            return os.environ.get(\"LANGUAGE\")\n\n    inside = f()\n    return [inside, 1.0 if os.environ.get(\"LANGUAGE\", \"unset\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_language(\"de\")"
+      }
+    },
+    {
+      "name": "local_libpaths",
+      "translated": true,
+      "python": "withr.libpaths.local_libpaths",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.251293,
+        "translated_ms": 0.023842,
+        "speedup": 10.54,
+        "proof": {
+          "r": "packages/withr/proof/local_libpaths-r.R",
+          "python": "packages/withr/proof/local_libpaths-py.py"
+        }
+      }
+    },
+    {
+      "name": "local_locale",
+      "translated": true,
+      "python": "withr.locale_settings.local_locale",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.483,
+        "translated_ms": 0.032,
+        "speedup": 15.0,
+        "proof": {
+          "r": "# Proof: R side of withr::local_locale (withr 3.0.3).\n# Python name: withr.locale_settings.local_locale\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getlocale(\"LC_COLLATE\")\n  f <- function() {\n    local_locale(c(LC_COLLATE = \"C\"))\n    Sys.getlocale(\"LC_COLLATE\")\n  }\n  inside <- f()\n  list(inside, as.numeric(identical(Sys.getlocale(\"LC_COLLATE\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.locale_settings.local_locale, against R's withr::local_locale.\n\nPython name: withr.locale_settings.local_locale\nObservable result: the same values as the R side (local_locale-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_locale, scope\nimport locale\n\n\ndef one():\n    before = locale.setlocale(locale.LC_COLLATE)\n\n    def f():\n        with scope():\n            local_locale({\"LC_COLLATE\": \"C\"})\n            return locale.setlocale(locale.LC_COLLATE)\n\n    inside = f()\n    return [inside, 1.0 if locale.setlocale(locale.LC_COLLATE) == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_locale(c(LC_COLLATE = \"C\"))"
+      }
+    },
+    {
+      "name": "local_makevars",
+      "translated": true,
+      "python": "withr.makevars.local_makevars",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.907,
+        "translated_ms": 0.279,
+        "speedup": 3.3,
+        "proof": {
+          "r": "# Proof: R side of withr::local_makevars (withr 3.0.3).\n# Python name: withr.makevars.local_makevars\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fixture <- file.path(tempdir(), \"withr-proof-makevars-local\")\n  writeLines(c(\"CFLAGS = -O2\", \"FC = gfortran\"), fixture)\n  before <- Sys.getenv(\"R_MAKEVARS_USER\", unset = \"unset\")\n  f <- function() {\n    local_makevars(c(FC = \"gfortran-14\"), .path = fixture)\n    readLines(Sys.getenv(\"R_MAKEVARS_USER\"))\n  }\n  inside <- f()\n  list(inside, as.numeric(identical(Sys.getenv(\"R_MAKEVARS_USER\", unset = \"unset\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.makevars.local_makevars, against R's withr::local_makevars.\n\nPython name: withr.makevars.local_makevars\nObservable result: the same values as the R side (local_makevars-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_makevars, scope\nimport os\n\n\ndef one():\n    fixture = os.path.join(tempfile.gettempdir(), \"withr-proof-makevars-local\")\n    with open(fixture, \"w\") as handle:\n        handle.write(\"CFLAGS = -O2\\nFC = gfortran\\n\")\n    before = os.environ.get(\"R_MAKEVARS_USER\", \"unset\")\n\n    def f():\n        with scope():\n            local_makevars({\"FC\": \"gfortran-14\"}, path=fixture)\n            with open(os.environ[\"R_MAKEVARS_USER\"]) as handle:\n                return handle.read().splitlines()\n\n    inside = f()\n    return [inside, 1.0 if os.environ.get(\"R_MAKEVARS_USER\", \"unset\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_makevars(c(FC = \"gfortran-14\"), .path = fixture)"
+      }
+    },
+    {
+      "name": "local_message_sink",
+      "translated": true,
+      "python": "withr.sink.local_message_sink",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.447,
+        "translated_ms": 0.084,
+        "speedup": 5.3,
+        "proof": {
+          "r": "# Proof: R side of withr::local_message_sink (withr 3.0.3).\n# Python name: withr.sink.local_message_sink\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-local-message.txt\")\n  f <- function() {\n    local_message_sink(path)\n    message(\"oops\")\n  }\n  f()\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.sink.local_message_sink, against R's withr::local_message_sink.\n\nPython name: withr.sink.local_message_sink\nObservable result: the same values as the R side (local_message_sink-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_message_sink, scope\nimport os\nimport sys\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-local-message-py.txt\")\n\n    def f():\n        with scope():\n            local_message_sink(path)\n            print(\"oops\", file=sys.stderr)\n\n    f()\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_message_sink(path)"
+      }
+    },
+    {
+      "name": "local_namespace",
+      "translated": true,
+      "python": "withr.namespace.local_namespace",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 7.644892,
+        "translated_ms": 0.005005,
+        "speedup": 1527.6,
+        "proof": {
+          "r": "packages/withr/proof/local_namespace-r.R",
+          "python": "packages/withr/proof/local_namespace-py.py"
+        }
+      }
+    },
+    {
+      "name": "local_options",
+      "translated": true,
+      "python": "withr.options.local_options",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.073,
+        "translated_ms": 0.01,
+        "speedup": 7.3,
+        "proof": {
+          "r": "# Proof: R side of withr::local_options (withr 3.0.3).\n# Python name: withr.options.local_options\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  f <- function() {\n    local_options(list(digits = 4))\n    getOption(\"digits\")\n  }\n  inside <- f()\n  list(inside, getOption(\"digits\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.options.local_options, against R's withr::local_options.\n\nPython name: withr.options.local_options\nObservable result: the same values as the R side (local_options-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_options, scope\nfrom withr.options import get_option\n\n\ndef one():\n    def f():\n        with scope():\n            local_options({\"digits\": 4})\n            return get_option(\"digits\")\n\n    inside = f()\n    return [inside, get_option(\"digits\")]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_options(list(digits = 4))"
+      }
+    },
+    {
+      "name": "local_output_sink",
+      "translated": true,
+      "python": "withr.sink.local_output_sink",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.23,
+        "translated_ms": 0.099,
+        "speedup": 2.3,
+        "proof": {
+          "r": "# Proof: R side of withr::local_output_sink (withr 3.0.3).\n# Python name: withr.sink.local_output_sink\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-local-output.txt\")\n  f <- function() {\n    local_output_sink(path)\n    cat(\"hello\\n\")\n  }\n  f()\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.sink.local_output_sink, against R's withr::local_output_sink.\n\nPython name: withr.sink.local_output_sink\nObservable result: the same values as the R side (local_output_sink-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_output_sink, scope\nimport os\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-local-output-py.txt\")\n\n    def f():\n        with scope():\n            local_output_sink(path)\n            print(\"hello\")\n\n    f()\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_output_sink(path)"
+      }
+    },
+    {
+      "name": "local_package",
+      "translated": true,
+      "python": "withr.namespace.local_package",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 2.677441,
+        "translated_ms": 0.0051,
+        "speedup": 525.04,
+        "proof": {
+          "r": "packages/withr/proof/local_package-r.R",
+          "python": "packages/withr/proof/local_package-py.py"
+        }
+      }
+    },
+    {
+      "name": "local_par",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_path",
+      "translated": true,
+      "python": "withr.path.local_path",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.318,
+        "translated_ms": 0.156,
+        "speedup": 2.0,
+        "proof": {
+          "r": "# Proof: R side of withr::local_path (withr 3.0.3).\n# Python name: withr.path.local_path\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getenv(\"PATH\")\n  f <- function() {\n    local_path(\"/usr/sbin\", action = \"suffix\")\n    strsplit(Sys.getenv(\"PATH\"), \":\", fixed = TRUE)[[1]]\n  }\n  parts <- f()\n  list(parts[length(parts)], as.numeric(identical(Sys.getenv(\"PATH\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.path.local_path, against R's withr::local_path.\n\nPython name: withr.path.local_path\nObservable result: the same values as the R side (local_path-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_path, scope\nimport os\n\n\ndef one():\n    before = os.environ.get(\"PATH\", \"\")\n\n    def f():\n        with scope():\n            local_path(\"/usr/sbin\", action=\"suffix\")\n            return os.environ[\"PATH\"].split(\":\")\n\n    parts = f()\n    return [parts[-1], 1.0 if os.environ.get(\"PATH\", \"\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_path(\"/usr/sbin\", action = \"suffix\")"
+      }
+    },
+    {
+      "name": "local_pdf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_png",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_postscript",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_preserve_seed",
+      "translated": true,
+      "python": "withr.seed.local_preserve_seed",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.129,
+        "translated_ms": 0.296,
+        "speedup": 0.4,
+        "proof": {
+          "r": "# Proof: R side of withr::local_preserve_seed (withr 3.0.3).\n# Python name: withr.seed.local_preserve_seed\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  set.seed(2)\n  f <- function() {\n    local_preserve_seed()\n    runif(3)\n  }\n  a <- f()\n  b <- runif(3)\n  list(c(a, b))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.seed.local_preserve_seed, against R's withr::local_preserve_seed.\n\nPython name: withr.seed.local_preserve_seed\nObservable result: the same values as the R side (local_preserve_seed-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_preserve_seed, scope\nfrom withr._rng import runif, set_seed\n\n\ndef one():\n    set_seed(2)\n\n    def f():\n        with scope():\n            local_preserve_seed()\n            return runif(3)\n\n    a = f()\n    b = runif(3)\n    return [a + b]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_preserve_seed()"
+      }
+    },
+    {
+      "name": "local_rng_version",
+      "translated": true,
+      "python": "withr.rng.local_rng_version",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.28,
+        "translated_ms": 0.5,
+        "speedup": 0.6,
+        "proof": {
+          "r": "# Proof: R side of withr::local_rng_version (withr 3.0.3).\n# Python name: withr.rng.local_rng_version\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  suppressWarnings({\n    before <- RNGkind()\n    f <- function() {\n      local_rng_version(\"3.5.0\")\n      RNGkind()\n    }\n    inside <- f()\n    restored <- identical(RNGkind(), before)\n  })\n  list(inside, as.numeric(restored))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.rng.local_rng_version, against R's withr::local_rng_version.\n\nPython name: withr.rng.local_rng_version\nObservable result: the same values as the R side (local_rng_version-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_rng_version, scope\nfrom withr._rng import get_kind\n\n\ndef one():\n    before = get_kind()\n\n    def f():\n        with scope():\n            local_rng_version(\"3.5.0\")\n            return list(get_kind())\n\n    inside = f()\n    return [inside, 1.0 if get_kind() == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_rng_version(\"3.5.0\")"
+      }
+    },
+    {
+      "name": "local_seed",
+      "translated": true,
+      "python": "withr.seed.local_seed",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.176,
+        "translated_ms": 0.767,
+        "speedup": 0.2,
+        "proof": {
+          "r": "# Proof: R side of withr::local_seed (withr 3.0.3).\n# Python name: withr.seed.local_seed\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  set.seed(5)\n  f <- function() {\n    local_seed(1)\n    runif(2)\n  }\n  a <- f()\n  b <- runif(1)\n  set.seed(5)\n  expected <- runif(1)\n  list(a, b, expected)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.seed.local_seed, against R's withr::local_seed.\n\nPython name: withr.seed.local_seed\nObservable result: the same values as the R side (local_seed-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_seed, scope\nfrom withr._rng import runif, set_seed\n\n\ndef one():\n    set_seed(5)\n\n    def f():\n        with scope():\n            local_seed(1)\n            return runif(2)\n\n    a = f()\n    b = runif(1)\n    set_seed(5)\n    expected = runif(1)\n    return [a, b, expected]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_seed(1)"
+      }
+    },
+    {
+      "name": "local_svg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_temp_libpaths",
+      "translated": true,
+      "python": "withr.libpaths.local_temp_libpaths",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.315785,
+        "translated_ms": 0.05139,
+        "speedup": 6.14,
+        "proof": {
+          "r": "packages/withr/proof/local_temp_libpaths-r.R",
+          "python": "packages/withr/proof/local_temp_libpaths-py.py"
+        }
+      }
+    },
+    {
+      "name": "local_tempdir",
+      "translated": true,
+      "python": "withr.tempfiles.local_tempdir",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.125,
+        "translated_ms": 0.091,
+        "speedup": 1.4,
+        "proof": {
+          "r": "# Proof: R side of withr::local_tempdir (withr 3.0.3).\n# Python name: withr.tempfiles.local_tempdir\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  holder <- new.env()\n  f <- function() {\n    d <- local_tempdir()\n    holder$d <- d\n    c(as.numeric(startsWith(basename(d), \"file\")), as.numeric(dir.exists(d)))\n  }\n  inside <- f()\n  list(inside, as.numeric(dir.exists(holder$d)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.tempfiles.local_tempdir, against R's withr::local_tempdir.\n\nPython name: withr.tempfiles.local_tempdir\nObservable result: the same values as the R side (local_tempdir-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_tempdir, scope\nimport os\n\n\ndef one():\n    holder = {}\n\n    def f():\n        with scope():\n            d = local_tempdir()\n            holder[\"d\"] = d\n            return [1.0 if os.path.basename(d).startswith(\"file\") else 0.0,\n                    1.0 if os.path.isdir(d) else 0.0]\n\n    inside = f()\n    return [inside, 1.0 if os.path.isdir(holder[\"d\"]) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "d <- local_tempdir()"
+      }
+    },
+    {
+      "name": "local_tempfile",
+      "translated": true,
+      "python": "withr.tempfiles.local_tempfile",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.195,
+        "translated_ms": 0.128,
+        "speedup": 1.5,
+        "proof": {
+          "r": "# Proof: R side of withr::local_tempfile (withr 3.0.3).\n# Python name: withr.tempfiles.local_tempfile\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  holder <- new.env()\n  f <- function() {\n    p <- local_tempfile(lines = c(\"x,y\", \"1,2\"))\n    holder$p <- p\n    readLines(p)\n  }\n  inside <- f()\n  list(inside, as.numeric(file.exists(holder$p)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.tempfiles.local_tempfile, against R's withr::local_tempfile.\n\nPython name: withr.tempfiles.local_tempfile\nObservable result: the same values as the R side (local_tempfile-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_tempfile, scope\nimport os\n\n\ndef one():\n    holder = {}\n\n    def f():\n        with scope():\n            p = local_tempfile(lines=[\"x,y\", \"1,2\"])\n            holder[\"p\"] = p\n            with open(p) as handle:\n                return handle.read().splitlines()\n\n    inside = f()\n    return [inside, 1.0 if os.path.exists(holder[\"p\"]) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "p <- local_tempfile(lines = c(\"x,y\", \"1,2\"))"
+      }
+    },
+    {
+      "name": "local_tiff",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "local_timezone",
+      "translated": true,
+      "python": "withr.timezone.local_timezone",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 1.518,
+        "translated_ms": 0.066,
+        "speedup": 23.0,
+        "proof": {
+          "r": "# Proof: R side of withr::local_timezone (withr 3.0.3).\n# Python name: withr.timezone.local_timezone\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fmt <- function() format(as.POSIXct(0, origin = \"1970-01-01\"), \"%H:%M %Z\")\n  default <- fmt()\n  f <- function() {\n    local_timezone(\"Asia/Tokyo\")\n    fmt()\n  }\n  inside <- f()\n  list(inside, as.numeric(identical(fmt(), default)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.timezone.local_timezone, against R's withr::local_timezone.\n\nPython name: withr.timezone.local_timezone\nObservable result: the same values as the R side (local_timezone-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import local_timezone, scope\nimport time\n\n\ndef one():\n    def fmt():\n        return time.strftime(\"%H:%M %Z\", time.localtime(0))\n\n    default = fmt()\n\n    def f():\n        with scope():\n            local_timezone(\"Asia/Tokyo\")\n            return fmt()\n\n    inside = f()\n    return [inside, 1.0 if fmt() == default else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "local_timezone(\"Asia/Tokyo\")"
+      }
+    },
+    {
+      "name": "local_xfig",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "makevars_user",
+      "translated": true,
+      "python": "withr.makevars.makevars_user",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 1.016,
+        "translated_ms": 0.092,
+        "speedup": 11.0,
+        "proof": {
+          "r": "# Proof: R side of withr::makevars_user (withr 3.0.3).\n# Python name: withr.makevars.makevars_user\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fixture <- file.path(tempdir(), \"Makevars-user-proof\")\n  writeLines(\"CFLAGS = -O2\", fixture)\n  found <- with_envvar(c(R_MAKEVARS_USER = fixture), basename(makevars_user()))\n  list(found, length(with_envvar(c(R_MAKEVARS_USER = fixture), makevars_user())))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.makevars.makevars_user, against R's withr::makevars_user.\n\nPython name: withr.makevars.makevars_user\nObservable result: the same values as the R side (makevars_user-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import makevars_user, with_envvar\nimport os\n\n\ndef one():\n    fixture = os.path.join(tempfile.gettempdir(), \"Makevars-user-proof\")\n    with open(fixture, \"w\") as handle:\n        handle.write(\"CFLAGS = -O2\\n\")\n    found = with_envvar({\"R_MAKEVARS_USER\": fixture},\n                        lambda: [os.path.basename(p) for p in makevars_user()])\n    count = with_envvar({\"R_MAKEVARS_USER\": fixture}, lambda: len(makevars_user()))\n    return [found, count]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "found <- with_envvar(c(R_MAKEVARS_USER = fixture), basename(makevars_user()))"
+      }
+    },
+    {
+      "name": "set_makevars",
+      "translated": true,
+      "python": "withr.makevars.set_makevars",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.347,
+        "translated_ms": 0.16,
+        "speedup": 2.2,
+        "proof": {
+          "r": "# Proof: R side of withr::set_makevars (withr 3.0.3).\n# Python name: withr.makevars.set_makevars\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fixture <- file.path(tempdir(), \"withr-proof-set-old\")\n  new_path <- file.path(tempdir(), \"withr-proof-set-new\")\n  writeLines(c(\"CFLAGS = -O2\", \"FC = gfortran\"), fixture)\n  old <- set_makevars(c(CFLAGS = \"-O3\", LDFLAGS = \"-L/opt\"), old_path = fixture, new_path = new_path)\n  list(old, readLines(new_path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.makevars.set_makevars, against R's withr::set_makevars.\n\nPython name: withr.makevars.set_makevars\nObservable result: the same values as the R side (set_makevars-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import set_makevars\nimport os\n\n\ndef one():\n    fixture = os.path.join(tempfile.gettempdir(), \"withr-proof-set-old\")\n    new_path = os.path.join(tempfile.gettempdir(), \"withr-proof-set-new\")\n    with open(fixture, \"w\") as handle:\n        handle.write(\"CFLAGS = -O2\\nFC = gfortran\\n\")\n    old = set_makevars({\"CFLAGS\": \"-O3\", \"LDFLAGS\": \"-L/opt\"}, old_path=fixture, new_path=new_path)\n    with open(new_path) as handle:\n        written = handle.read().splitlines()\n    return [old, written]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "old <- set_makevars(c(CFLAGS = \"-O3\", LDFLAGS = \"-L/opt\"), old_path = fixture, new_path = new_path)"
+      }
+    },
+    {
+      "name": "with_",
+      "translated": true,
+      "python": "withr.factory.with_",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.016,
+        "translated_ms": 0.001,
+        "speedup": 12.2,
+        "proof": {
+          "r": "# Proof: R side of withr::with_ (withr 3.0.3).\n# Python name: withr.factory.with_\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\nstate <- 0\nsetx <- function(new) {\n  old <- state\n  state <<- new\n  old\n}\nresetx <- function(old) state <<- old\nwith_x <- with_(setx, resetx)\n\none <- function() {\n  state <<- 0\n  inside <- with_x(7, state)\n  list(inside, state)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.factory.with_, against R's withr::with_.\n\nPython name: withr.factory.with_\nObservable result: the same values as the R side (with_-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_\n\nstate = {\"x\": 0}\n\n\ndef setx(new):\n    old = state[\"x\"]\n    state[\"x\"] = new\n    return old\n\n\ndef resetx(old):\n    state[\"x\"] = old\n\nwith_x = with_(setx, resetx)\n\n\n\ndef one():\n    state[\"x\"] = 0\n    inside = with_x(7, lambda: state[\"x\"])\n    return [inside, state[\"x\"]]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_x <- with_(setx, resetx)"
+      }
+    },
+    {
+      "name": "with_bmp",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_cairo_pdf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_cairo_ps",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_collate",
+      "translated": true,
+      "python": "withr.collate.with_collate",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.517,
+        "translated_ms": 0.033,
+        "speedup": 15.5,
+        "proof": {
+          "r": "# Proof: R side of withr::with_collate (withr 3.0.3).\n# Python name: withr.collate.with_collate\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  x <- c(\"b\\u00e9r\\u00e9nice\", \"boris\", \"bernard\", \"b\\u00e9atrice\")\n  before <- Sys.getlocale(\"LC_COLLATE\")\n  out <- with_collate(\"C\", match(sort(x), x))\n  list(out, as.numeric(identical(Sys.getlocale(\"LC_COLLATE\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.collate.with_collate, against R's withr::with_collate.\n\nPython name: withr.collate.with_collate\nObservable result: the same values as the R side (with_collate-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_collate\nimport locale\n\n\ndef one():\n    x = [\"b\\u00e9r\\u00e9nice\", \"boris\", \"bernard\", \"b\\u00e9atrice\"]\n    before = locale.setlocale(locale.LC_COLLATE)\n    out = with_collate(\"C\", lambda: [x.index(s) + 1 for s in sorted(x, key=locale.strxfrm)])\n    return [out, 1.0 if locale.setlocale(locale.LC_COLLATE) == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "out <- with_collate(\"C\", match(sort(x), x))"
+      }
+    },
+    {
+      "name": "with_connection",
+      "translated": true,
+      "python": "withr.connection.with_connection",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.125,
+        "translated_ms": 0.06,
+        "speedup": 2.1,
+        "proof": {
+          "r": "# Proof: R side of withr::with_connection (withr 3.0.3).\n# Python name: withr.connection.with_connection\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-connection.txt\")\n  with_connection(list(con = file(path, \"w\")), {\n    writeLines(c(\"foo\", \"bar\"), con)\n  })\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.connection.with_connection, against R's withr::with_connection.\n\nPython name: withr.connection.with_connection\nObservable result: the same values as the R side (with_connection-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_connection\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-connection-py.txt\")\n    with_connection({\"con\": open(path, \"w\")}, lambda con: con.write(\"foo\\nbar\\n\"))\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_connection(list(con = file(path, \"w\")), {"
+      }
+    },
+    {
+      "name": "with_db_connection",
+      "translated": true,
+      "python": "withr.connection.with_db_connection",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R; SQLAlchemy connection closed on exit (RSQLite vs sqlite in memory).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": null,
+        "r_ms": 5.754113,
+        "translated_ms": 1.438593,
+        "speedup": 3.9998
+      }
+    },
+    {
+      "name": "with_dir",
+      "translated": true,
+      "python": "withr.directory.with_dir",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.027,
+        "translated_ms": 0.011,
+        "speedup": 2.5,
+        "proof": {
+          "r": "# Proof: R side of withr::with_dir (withr 3.0.3).\n# Python name: withr.directory.with_dir\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  start <- getwd()\n  inside <- with_dir(\"/usr\", getwd())\n  list(inside, as.numeric(identical(getwd(), start)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.directory.with_dir, against R's withr::with_dir.\n\nPython name: withr.directory.with_dir\nObservable result: the same values as the R side (with_dir-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_dir\nimport os\n\n\ndef one():\n    start = os.getcwd()\n    inside = with_dir(\"/usr\", lambda: os.getcwd())\n    return [inside, 1.0 if os.getcwd() == start else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_dir(\"/usr\", getwd())"
+      }
+    },
+    {
+      "name": "with_environment",
+      "translated": true,
+      "python": "withr.namespace.with_environment",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.192881,
+        "translated_ms": 0.00569,
+        "speedup": 33.9,
+        "proof": {
+          "r": "packages/withr/proof/with_environment-r.R",
+          "python": "packages/withr/proof/with_environment-py.py"
+        }
+      }
+    },
+    {
+      "name": "with_envvar",
+      "translated": true,
+      "python": "withr.envvar.with_envvar",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.305,
+        "translated_ms": 0.019,
+        "speedup": 16.0,
+        "proof": {
+          "r": "# Proof: R side of withr::with_envvar (withr 3.0.3).\n# Python name: withr.envvar.with_envvar\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  Sys.setenv(WITHR_PROOF = \"1\")\n  suffixed <- with_envvar(c(WITHR_PROOF = \"2\"), Sys.getenv(\"WITHR_PROOF\", unset = \"unset\"), action = \"suffix\")\n  restored <- Sys.getenv(\"WITHR_PROOF\", unset = \"unset\")\n  Sys.unsetenv(\"WITHR_PROOF\")\n  list(suffixed, restored)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.envvar.with_envvar, against R's withr::with_envvar.\n\nPython name: withr.envvar.with_envvar\nObservable result: the same values as the R side (with_envvar-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_envvar\nimport os\n\n\ndef one():\n    os.environ[\"WITHR_PROOF\"] = \"1\"\n    suffixed = with_envvar({\"WITHR_PROOF\": \"2\"}, lambda: os.environ.get(\"WITHR_PROOF\", \"unset\"),\n                           action=\"suffix\")\n    restored = os.environ.get(\"WITHR_PROOF\", \"unset\")\n    os.environ.pop(\"WITHR_PROOF\", None)\n    return [suffixed, restored]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "suffixed <- with_envvar(c(WITHR_PROOF = \"2\"), Sys.getenv(\"WITHR_PROOF\", unset = \"unset\"), action = \"suffix\")"
+      }
+    },
+    {
+      "name": "with_file",
+      "translated": true,
+      "python": "withr.files.with_file",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.148,
+        "translated_ms": 0.108,
+        "speedup": 1.4,
+        "proof": {
+          "r": "# Proof: R side of withr::with_file (withr 3.0.3).\n# Python name: withr.files.with_file\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-with-file.txt\")\n  holder <- new.env()\n  with_file(path, {\n    writeLines(\"foo\", path)\n    holder$value <- readLines(path)\n  })\n  list(holder$value, as.numeric(file.exists(path)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.files.with_file, against R's withr::with_file.\n\nPython name: withr.files.with_file\nObservable result: the same values as the R side (with_file-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_file\nimport os\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-with-file-py.txt\")\n    captured = []\n\n    def body():\n        with open(path, \"w\") as handle:\n            handle.write(\"foo\\n\")\n        with open(path) as handle:\n            captured.append(handle.read().splitlines())\n\n    with_file([path], body)\n    return [captured[0], 1.0 if os.path.exists(path) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_file(path, {"
+      }
+    },
+    {
+      "name": "with_jpeg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_language",
+      "translated": true,
+      "python": "withr.language.with_language",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.588,
+        "translated_ms": 0.024,
+        "speedup": 24.5,
+        "proof": {
+          "r": "# Proof: R side of withr::with_language (withr 3.0.3).\n# Python name: withr.language.with_language\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getenv(\"LANGUAGE\", unset = \"unset\")\n  inside <- with_language(\"fr\", Sys.getenv(\"LANGUAGE\"))\n  list(inside, as.numeric(identical(Sys.getenv(\"LANGUAGE\", unset = \"unset\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.language.with_language, against R's withr::with_language.\n\nPython name: withr.language.with_language\nObservable result: the same values as the R side (with_language-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_language\nimport os\n\n\ndef one():\n    before = os.environ.get(\"LANGUAGE\", \"unset\")\n    inside = with_language(\"fr\", lambda: os.environ.get(\"LANGUAGE\"))\n    return [inside, 1.0 if os.environ.get(\"LANGUAGE\", \"unset\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_language(\"fr\", Sys.getenv(\"LANGUAGE\"))"
+      }
+    },
+    {
+      "name": "with_libpaths",
+      "translated": true,
+      "python": "withr.libpaths.with_libpaths",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.252008,
+        "translated_ms": 0.030212,
+        "speedup": 8.34,
+        "proof": {
+          "r": "packages/withr/proof/with_libpaths-r.R",
+          "python": "packages/withr/proof/with_libpaths-py.py"
+        }
+      }
+    },
+    {
+      "name": "with_locale",
+      "translated": true,
+      "python": "withr.locale_settings.with_locale",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.546,
+        "translated_ms": 0.032,
+        "speedup": 16.8,
+        "proof": {
+          "r": "# Proof: R side of withr::with_locale (withr 3.0.3).\n# Python name: withr.locale_settings.with_locale\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getlocale(\"LC_COLLATE\")\n  inside <- with_locale(c(LC_COLLATE = \"C\"), Sys.getlocale(\"LC_COLLATE\"))\n  list(inside, as.numeric(identical(Sys.getlocale(\"LC_COLLATE\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.locale_settings.with_locale, against R's withr::with_locale.\n\nPython name: withr.locale_settings.with_locale\nObservable result: the same values as the R side (with_locale-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_locale\nimport locale\n\n\ndef one():\n    before = locale.setlocale(locale.LC_COLLATE)\n    inside = with_locale({\"LC_COLLATE\": \"C\"}, lambda: locale.setlocale(locale.LC_COLLATE))\n    return [inside, 1.0 if locale.setlocale(locale.LC_COLLATE) == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_locale(c(LC_COLLATE = \"C\"), Sys.getlocale(\"LC_COLLATE\"))"
+      }
+    },
+    {
+      "name": "with_makevars",
+      "translated": true,
+      "python": "withr.makevars.with_makevars",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.763,
+        "translated_ms": 0.306,
+        "speedup": 2.5,
+        "proof": {
+          "r": "# Proof: R side of withr::with_makevars (withr 3.0.3).\n# Python name: withr.makevars.with_makevars\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fixture <- file.path(tempdir(), \"withr-proof-makevars-with\")\n  writeLines(c(\"CFLAGS = -O2\", \"FC = gfortran\"), fixture)\n  before <- Sys.getenv(\"R_MAKEVARS_USER\", unset = \"unset\")\n  holder <- new.env()\n  with_makevars(c(CFLAGS = \"-O3\", LDFLAGS = \"-L/opt\"), {\n    holder$lines <- readLines(Sys.getenv(\"R_MAKEVARS_USER\"))\n  }, path = fixture)\n  list(holder$lines, as.numeric(identical(Sys.getenv(\"R_MAKEVARS_USER\", unset = \"unset\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.makevars.with_makevars, against R's withr::with_makevars.\n\nPython name: withr.makevars.with_makevars\nObservable result: the same values as the R side (with_makevars-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_makevars\nimport os\n\n\ndef one():\n    fixture = os.path.join(tempfile.gettempdir(), \"withr-proof-makevars-with\")\n    with open(fixture, \"w\") as handle:\n        handle.write(\"CFLAGS = -O2\\nFC = gfortran\\n\")\n    before = os.environ.get(\"R_MAKEVARS_USER\", \"unset\")\n    captured = []\n\n    def body():\n        with open(os.environ[\"R_MAKEVARS_USER\"]) as handle:\n            captured.append(handle.read().splitlines())\n\n    with_makevars({\"CFLAGS\": \"-O3\", \"LDFLAGS\": \"-L/opt\"}, body, path=fixture)\n    return [captured[0], 1.0 if os.environ.get(\"R_MAKEVARS_USER\", \"unset\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_makevars(c(CFLAGS = \"-O3\", LDFLAGS = \"-L/opt\"), {"
+      }
+    },
+    {
+      "name": "with_message_sink",
+      "translated": true,
+      "python": "withr.sink.with_message_sink",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.43,
+        "translated_ms": 0.062,
+        "speedup": 6.9,
+        "proof": {
+          "r": "# Proof: R side of withr::with_message_sink (withr 3.0.3).\n# Python name: withr.sink.with_message_sink\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-message.txt\")\n  with_message_sink(path, message(\"oops\"))\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.sink.with_message_sink, against R's withr::with_message_sink.\n\nPython name: withr.sink.with_message_sink\nObservable result: the same values as the R side (with_message_sink-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_message_sink\nimport os\nimport sys\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-message-py.txt\")\n    with_message_sink(path, lambda: print(\"oops\", file=sys.stderr))\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_message_sink(path, message(\"oops\"))"
+      }
+    },
+    {
+      "name": "with_namespace",
+      "translated": true,
+      "python": "withr.namespace.with_namespace",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 7.223606,
+        "translated_ms": 0.009272,
+        "speedup": 779.04,
+        "proof": {
+          "r": "packages/withr/proof/with_namespace-r.R",
+          "python": "packages/withr/proof/with_namespace-py.py"
+        }
+      }
+    },
+    {
+      "name": "with_options",
+      "translated": true,
+      "python": "withr.options.with_options",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.032,
+        "translated_ms": 0.005,
+        "speedup": 6.2,
+        "proof": {
+          "r": "# Proof: R side of withr::with_options (withr 3.0.3).\n# Python name: withr.options.with_options\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  inside <- with_options(list(digits = 3), getOption(\"digits\"))\n  list(inside, getOption(\"digits\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.options.with_options, against R's withr::with_options.\n\nPython name: withr.options.with_options\nObservable result: the same values as the R side (with_options-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_options\nfrom withr.options import get_option\n\n\ndef one():\n    inside = with_options({\"digits\": 3}, lambda: get_option(\"digits\"))\n    return [inside, get_option(\"digits\")]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_options(list(digits = 3), getOption(\"digits\"))"
+      }
+    },
+    {
+      "name": "with_output_sink",
+      "translated": true,
+      "python": "withr.sink.with_output_sink",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.19,
+        "translated_ms": 0.053,
+        "speedup": 3.6,
+        "proof": {
+          "r": "# Proof: R side of withr::with_output_sink (withr 3.0.3).\n# Python name: withr.sink.with_output_sink\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  path <- file.path(tempdir(), \"withr-proof-output.txt\")\n  with_output_sink(path, cat(\"hello\\n\"))\n  list(readLines(path))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.sink.with_output_sink, against R's withr::with_output_sink.\n\nPython name: withr.sink.with_output_sink\nObservable result: the same values as the R side (with_output_sink-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_output_sink\nimport os\n\n\ndef one():\n    path = os.path.join(tempfile.gettempdir(), \"withr-proof-output-py.txt\")\n    with_output_sink(path, lambda: print(\"hello\"))\n    with open(path) as handle:\n        return [handle.read().splitlines()]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "with_output_sink(path, cat(\"hello\\n\"))"
+      }
+    },
+    {
+      "name": "with_package",
+      "translated": true,
+      "python": "withr.namespace.with_package",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 2.503633,
+        "translated_ms": 0.006288,
+        "speedup": 398.16,
+        "proof": {
+          "r": "packages/withr/proof/with_package-r.R",
+          "python": "packages/withr/proof/with_package-py.py"
+        }
+      }
+    },
+    {
+      "name": "with_par",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_path",
+      "translated": true,
+      "python": "withr.path.with_path",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.258,
+        "translated_ms": 0.151,
+        "speedup": 1.7,
+        "proof": {
+          "r": "# Proof: R side of withr::with_path (withr 3.0.3).\n# Python name: withr.path.with_path\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- Sys.getenv(\"PATH\")\n  first <- with_path(\"/usr/bin\", strsplit(Sys.getenv(\"PATH\"), \":\", fixed = TRUE)[[1]][1])\n  list(first, as.numeric(identical(Sys.getenv(\"PATH\"), before)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.path.with_path, against R's withr::with_path.\n\nPython name: withr.path.with_path\nObservable result: the same values as the R side (with_path-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_path\nimport os\n\n\ndef one():\n    before = os.environ.get(\"PATH\", \"\")\n    first = with_path(\"/usr/bin\", lambda: os.environ[\"PATH\"].split(\":\")[0])\n    return [first, 1.0 if os.environ.get(\"PATH\", \"\") == before else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "first <- with_path(\"/usr/bin\", strsplit(Sys.getenv(\"PATH\"), \":\", fixed = TRUE)[[1]][1])"
+      }
+    },
+    {
+      "name": "with_pdf",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_png",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_postscript",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_preserve_seed",
+      "translated": true,
+      "python": "withr.seed.with_preserve_seed",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.091,
+        "translated_ms": 0.291,
+        "speedup": 0.3,
+        "proof": {
+          "r": "# Proof: R side of withr::with_preserve_seed (withr 3.0.3).\n# Python name: withr.seed.with_preserve_seed\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  set.seed(2)\n  a <- with_preserve_seed(runif(3))\n  b <- runif(3)\n  list(c(a, b))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.seed.with_preserve_seed, against R's withr::with_preserve_seed.\n\nPython name: withr.seed.with_preserve_seed\nObservable result: the same values as the R side (with_preserve_seed-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_preserve_seed\nfrom withr._rng import runif, set_seed\n\n\ndef one():\n    set_seed(2)\n    a = with_preserve_seed(lambda: runif(3))\n    b = runif(3)\n    return [a + b]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "a <- with_preserve_seed(runif(3))"
+      }
+    },
+    {
+      "name": "with_rng_version",
+      "translated": true,
+      "python": "withr.rng.with_rng_version",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 1.208,
+        "translated_ms": 1.033,
+        "speedup": 1.2,
+        "proof": {
+          "r": "# Proof: R side of withr::with_rng_version (withr 3.0.3).\n# Python name: withr.rng.with_rng_version\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  suppressWarnings({\n    before <- RNGkind()\n    inside <- with_rng_version(\"3.5.0\", RNGkind())\n    inside2 <- with_rng_version(\"1.6.0\", RNGkind())\n    stream <- with_rng_version(\"1.6.0\", with_seed(1, runif(3)))\n    restored <- identical(RNGkind(), before)\n  })\n  list(inside, inside2, stream, as.numeric(restored))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.rng.with_rng_version, against R's withr::with_rng_version.\n\nPython name: withr.rng.with_rng_version\nObservable result: the same values as the R side (with_rng_version-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_rng_version, with_seed\nfrom withr._rng import get_kind, runif\n\n\ndef one():\n    before = get_kind()\n    inside = with_rng_version(\"3.5.0\", lambda: list(get_kind()))\n    inside2 = with_rng_version(\"1.6.0\", lambda: list(get_kind()))\n    stream = with_rng_version(\"1.6.0\", lambda: with_seed(1, lambda: runif(3)))\n    restored = 1.0 if get_kind() == before else 0.0\n    return [inside, inside2, stream, restored]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_rng_version(\"3.5.0\", RNGkind())"
+      }
+    },
+    {
+      "name": "with_seed",
+      "translated": true,
+      "python": "withr.seed.with_seed",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.316,
+        "translated_ms": 0.074,
+        "speedup": 4.3,
+        "proof": {
+          "r": "# Proof: R side of withr::with_seed (withr 3.0.3).\n# Python name: withr.seed.with_seed\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  suppressWarnings({\n    a <- with_seed(1, runif(5))\n    b <- with_seed(1, runif(5), .rng_kind = \"Marsaglia-Multicarry\")\n  })\n  list(a, b)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.seed.with_seed, against R's withr::with_seed.\n\nPython name: withr.seed.with_seed\nObservable result: the same values as the R side (with_seed-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_seed\nfrom withr._rng import runif\n\n\ndef one():\n    a = with_seed(1, lambda: runif(5))\n    b = with_seed(1, lambda: runif(5), rng_kind=\"Marsaglia-Multicarry\")\n    return [a, b]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "a <- with_seed(1, runif(5))"
+      }
+    },
+    {
+      "name": "with_svg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_temp_libpaths",
+      "translated": true,
+      "python": "withr.libpaths.with_temp_libpaths",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly (observable state).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.324488,
+        "translated_ms": 0.052757,
+        "speedup": 6.15,
+        "proof": {
+          "r": "packages/withr/proof/with_temp_libpaths-r.R",
+          "python": "packages/withr/proof/with_temp_libpaths-py.py"
+        }
+      }
+    },
+    {
+      "name": "with_tempdir",
+      "translated": true,
+      "python": "withr.tempfiles.with_tempdir",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.116,
+        "translated_ms": 0.09,
+        "speedup": 1.3,
+        "proof": {
+          "r": "# Proof: R side of withr::with_tempdir (withr 3.0.3).\n# Python name: withr.tempfiles.with_tempdir\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  before <- getwd()\n  holder <- new.env()\n  inside <- with_tempdir({\n    holder$dir <- getwd()\n    c(as.numeric(startsWith(basename(getwd()), \"file\")), as.numeric(dir.exists(getwd())))\n  })\n  list(inside, as.numeric(identical(getwd(), before)), as.numeric(dir.exists(holder$dir)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.tempfiles.with_tempdir, against R's withr::with_tempdir.\n\nPython name: withr.tempfiles.with_tempdir\nObservable result: the same values as the R side (with_tempdir-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_tempdir\nimport os\n\n\ndef one():\n    before = os.getcwd()\n    holder = {}\n\n    def body():\n        here = os.getcwd()\n        holder[\"dir\"] = here\n        return [1.0 if os.path.basename(here).startswith(\"file\") else 0.0,\n                1.0 if os.path.isdir(here) else 0.0]\n\n    inside = with_tempdir(body)\n    return [inside, 1.0 if os.getcwd() == before else 0.0,\n            1.0 if os.path.isdir(holder[\"dir\"]) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_tempdir({"
+      }
+    },
+    {
+      "name": "with_tempfile",
+      "translated": true,
+      "python": "withr.tempfiles.with_tempfile",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.203,
+        "translated_ms": 0.129,
+        "speedup": 1.6,
+        "proof": {
+          "r": "# Proof: R side of withr::with_tempfile (withr 3.0.3).\n# Python name: withr.tempfiles.with_tempfile\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  holder <- new.env()\n  inside <- with_tempfile(\"p\", {\n    holder$p <- p\n    writeLines(\"abc\", p)\n    readLines(p)\n  })\n  list(inside, as.numeric(file.exists(holder$p)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.tempfiles.with_tempfile, against R's withr::with_tempfile.\n\nPython name: withr.tempfiles.with_tempfile\nObservable result: the same values as the R side (with_tempfile-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_tempfile\nimport os\n\n\ndef one():\n    holder = {}\n\n    def body(p):\n        holder[\"p\"] = p\n        with open(p, \"w\") as handle:\n            handle.write(\"abc\\n\")\n        with open(p) as handle:\n            return handle.read().splitlines()\n\n    inside = with_tempfile([\"p\"], body)\n    return [inside, 1.0 if os.path.exists(holder[\"p\"]) else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_tempfile(\"p\", {"
+      }
+    },
+    {
+      "name": "with_tiff",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_timezone",
+      "translated": true,
+      "python": "withr.timezone.with_timezone",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (seeded streams agree).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 1.366,
+        "translated_ms": 0.056,
+        "speedup": 24.5,
+        "proof": {
+          "r": "# Proof: R side of withr::with_timezone (withr 3.0.3).\n# Python name: withr.timezone.with_timezone\n# Observable result: the values the call returns and the state it leaves\n# behind, flattened to numbers and strings. One untimed call, then the\n# median of 20 timed calls (Sys.time()). Prints one JSON line.\n\nsuppressPackageStartupMessages(library(withr))\n\nemit <- function(value, ms) {\n  items <- character()\n  for (piece in value) {\n    for (item in piece) {\n      if (is.character(item)) {\n        items <- c(items, paste0('\"', item, '\"'))\n      } else {\n        items <- c(items, sprintf(\"%.17g\", as.numeric(item)))\n      }\n    }\n  }\n  cat(sprintf('{\"value\": [%s], \"median_ms\": %.6f}\\n',\n              paste(items, collapse = \", \"), ms))\n}\n\none <- function() {\n  fmt <- function() format(as.POSIXct(0, origin = \"1970-01-01\"), \"%H:%M %Z\")\n  default <- fmt()\n  inside <- with_timezone(\"America/New_York\", fmt())\n  list(inside, as.numeric(identical(fmt(), default)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000\n}\nemit(value, median(elapsed))\n",
+          "python": "\"\"\"Proof: Python side of withr.timezone.with_timezone, against R's withr::with_timezone.\n\nPython name: withr.timezone.with_timezone\nObservable result: the same values as the R side (with_timezone-r.R).\nOne untimed call, then the median of 20 timed calls (time.perf_counter).\nPrints one JSON line.\n\"\"\"\nimport json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom withr import with_timezone\nimport time\n\n\ndef one():\n    def fmt():\n        return time.strftime(\"%H:%M %Z\", time.localtime(0))\n\n    default = fmt()\n    inside = with_timezone(\"America/New_York\", fmt)\n    return [inside, 1.0 if fmt() == default else 0.0]\n\n\ndef emit(value, ms):\n    items = []\n    for piece in value:\n        for item in (piece if isinstance(piece, list) else [piece]):\n            if isinstance(item, str):\n                items.append(json.dumps(item))\n            else:\n                items.append(repr(float(item)))\n    print('{\"value\": [' + \", \".join(items) + '], \"median_ms\": ' + repr(float(ms)) + \"}\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - t0) * 1000)\nemit(value, statistics.median(elapsed))\n"
+        },
+        "case": "inside <- with_timezone(\"America/New_York\", fmt())"
+      }
+    },
+    {
+      "name": "with_xfig",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: graphics device or parameter. User decision: withr left; charts are Matplotlib or killplot.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ],
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "strategy": "medium"
+}

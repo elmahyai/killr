@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>readxl · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>readxl</h1>
+<p class="note">CRAN 1.5.0.1</p>
+<p>readxl 1.5.0.1 is in progress. cellranger is not in the registry, so cell_limits, cell_rows, cell_cols, and anchored live here. tibble is loaded for new_tibble. cpp11 and progress are the compile bridge and the spinner and are not translated. The xls and xlsx readers are still reserved.</p>
+<p class="note">9 of 13 functions · 69.2% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:69.2%"></div></div><strong>69.2%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#anchored">anchored</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The upper left is the anchor and the extent is dim rows by dim columns.</td></tr>
+<tr><td><a href="#cell_cols">cell_cols</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Letter columns become numbers. Rows stay open.</td></tr>
+<tr><td><a href="#cell_limits">cell_limits</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Open corners stay missing, and a missing minimum becomes 1 when the maximum is set.</td></tr>
+<tr><td><a href="#cell_rows">cell_rows</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A missing start row becomes 1 when the end row is set. Columns stay open.</td></tr>
+<tr><td><a href="#excel_format">excel_format</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The extension wins when it is xls or xlsx. Otherwise the leading bytes are consulted when the file exists.</td></tr>
+<tr><td><a href="#excel_sheets">excel_sheets</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#format_from_ext">format_from_ext</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>xlsx, xlsm, xltx, and xltm are xlsx. xls is xls. Anything else is missing.</td></tr>
+<tr><td><a href="#format_from_signature">format_from_signature</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>PK.. is xlsx. The OLE header is xls.</td></tr>
+<tr><td><a href="#read_excel">read_excel</a></td><td><span class='yes'>ready</span></td><td>—</td><td>tibble solved</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#read_xls">read_xls</a></td><td><span class='yes'>ready</span></td><td>—</td><td>tibble solved</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#read_xlsx">read_xlsx</a></td><td><span class='yes'>ready</span></td><td>—</td><td>tibble solved</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#readxl_example">readxl_example</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>With no name, the example file names. With a name, the path of that file.</td></tr>
+<tr><td><a href="#readxl_progress">readxl_progress</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>False outside an interactive session.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<table>
+<thead><tr><th>Crate</th><th>Fortran origin</th><th>Blocked</th></tr></thead>
+<tbody>
+<tr><td>readxls</td><td>readxl src/libxls src/XlsCell.h src/XlsCellSet.h src/XlsWorkBook.h</td><td><span class='no'>readxl-xls</span></td></tr>
+</tbody>
+</table></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>anchored</td><td>anchored(&quot;C4&quot;, dim = c(3, 2))</td><td>2.08</td><td>0.0304</td><td><button type="button" class="proof-toggle" data-name="anchored"><span class='yes'>+6741%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.5%'></span></div></td></tr>
+<tr><td>cell_cols</td><td>cell_cols(&quot;C:D&quot;)</td><td>0.917</td><td>0.0134</td><td><button type="button" class="proof-toggle" data-name="cell_cols"><span class='yes'>+6734%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.5%'></span></div></td></tr>
+<tr><td>cell_limits</td><td>cell_limits(c(NA, 7), c(3, NA))</td><td>0.587</td><td>0.00811</td><td><button type="button" class="proof-toggle" data-name="cell_limits"><span class='yes'>+7137%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.4%'></span></div></td></tr>
+<tr><td>cell_rows</td><td>cell_rows(c(NA, 3))</td><td>0.383</td><td>0.00776</td><td><button type="button" class="proof-toggle" data-name="cell_rows"><span class='yes'>+4834%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:2.0%'></span></div></td></tr>
+<tr><td>excel_format</td><td>excel_format(c(&quot;a.xlsx&quot;, &quot;b.xls&quot;, &quot;c.png&quot;, &quot;/etc/hostname&quot;, readxl_example(&quot;clippy.xlsx&quot;), readxl_example(&quot;deaths.xls&quot;)))</td><td>2.44</td><td>0.286</td><td><button type="button" class="proof-toggle" data-name="excel_format"><span class='yes'>+752%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.7%'></span></div></td></tr>
+<tr><td>format_from_ext</td><td>format_from_ext(c(&quot;a.xlsx&quot;, &quot;b.xls&quot;, &quot;c.png&quot;, &quot;book.xlsm&quot;))</td><td>0.266</td><td>0.0089</td><td><button type="button" class="proof-toggle" data-name="format_from_ext"><span class='yes'>+2883%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.4%'></span></div></td></tr>
+<tr><td>format_from_signature</td><td>format_from_signature(c(readxl_example(&quot;clippy.xlsx&quot;), readxl_example(&quot;deaths.xls&quot;)))</td><td>2.24</td><td>0.343</td><td><button type="button" class="proof-toggle" data-name="format_from_signature"><span class='yes'>+551%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:15.4%'></span></div></td></tr>
+<tr><td>readxl_example</td><td>readxl_example()</td><td>0.964</td><td>0.438</td><td><button type="button" class="proof-toggle" data-name="readxl_example"><span class='yes'>+120%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:45.4%'></span></div></td></tr>
+<tr><td>readxl_progress</td><td>readxl_progress()</td><td>0.0154</td><td>0.00067</td><td><button type="button" class="proof-toggle" data-name="readxl_progress"><span class='yes'>+2195%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.4%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "anchored", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  paste(capture.output(print(anchored(\"C4\", dim = c(3, 2)))), collapse = \"\\n\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import anchored\ndef one():\n    return str(anchored(\"C4\", dim=(3, 2)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "cell_cols", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  paste(capture.output(print(cell_cols(\"C:D\"))), collapse = \"\\n\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import cell_cols\ndef one():\n    return str(cell_cols(\"C:D\"))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "cell_limits", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  paste(capture.output(print(cell_limits(c(NA_integer_, 7), c(3, NA)))), collapse = \"\\n\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import cell_limits\ndef one():\n    return str(cell_limits([None, 7], [3, None]))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "cell_rows", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  paste(capture.output(print(cell_rows(c(NA_integer_, 3)))), collapse = \"\\n\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import cell_rows\ndef one():\n    return str(cell_rows([None, 3]))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "excel_format", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  files \u003c- c(\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\"))\npaste(ifelse(is.na(excel_format(files)), \"NA\", excel_format(files)), collapse = \"|\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import excel_format, readxl_example\ndef one():\n    files = [\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")]\n    return \"|\".join(\"NA\" if item is None else item for item in excel_format(files))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "format_from_ext", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  files \u003c- c(\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\")\npaste(ifelse(is.na(format_from_ext(files)), \"NA\", format_from_ext(files)), collapse = \"|\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import format_from_ext\ndef one():\n    files = [\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\"]\n    return \"|\".join(\"NA\" if item is None else item for item in format_from_ext(files))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "format_from_signature", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  files \u003c- c(readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\"))\npaste(format_from_signature(files), collapse = \"|\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import format_from_signature, readxl_example\ndef one():\n    files = [readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")]\n    return \"|\".join(format_from_signature(files))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "readxl_example", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  paste(readxl_example(), collapse = \"|\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import readxl_example\ndef one():\n    return \"|\".join(readxl_example())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}, {"name": "readxl_progress", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(readxl))\none \u003c- function() {\n  if (readxl_progress()) \"TRUE\" else \"FALSE\"\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(value, \"\\n\", sep = \"\")\ncat(\"\u003c\u003c\u003cEND>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport sys\nimport time\n\nfrom readxl import readxl_progress\ndef one():\n    return \"TRUE\" if readxl_progress() else \"FALSE\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(value)\nsys.stdout.write(\"\\n\u003c\u003c\u003cEND>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>cellranger <span class="note">replaced</span></p><p><a href="tibble.html">tibble</a> <span class="note">>= 2.0.1 · replaced</span></p><p><a href="utils.html">utils</a></p><h3>LinkingTo</h3><p>cpp11 <span class="note">>= 0.5.5 · replaced</span></p><p>progress <span class="note">replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Packages</h3><p><a href="tibble.html">tibble</a> <span class="note">replaced</span></p><h3>Native</h3><p>re, zipfile, xml.etree</p><h3>Crates</h3><p>readxls</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "anchored", "translated": true, "not_done": "", "title": "Rectangle anchored at one cell", "origin": {"description": "Rectangle anchored at one cell.", "usage": "anchored(\"C4\", dim = c(3, 2))", "arguments": [], "details": "The upper left is the anchor and the extent is dim rows by dim columns.", "value": "See the example output.", "example": "anchored(\"C4\", dim = c(3, 2))\n", "output": "output/anchored-r.txt", "output_blocks": [{"text": "\u003ccell_limits (4, 3) x (6, 4)>"}]}, "translation": {"description": "The upper left is the anchor and the extent is dim rows by dim columns.", "usage": "anchored(\"C4\", dim = c(3, 2))", "arguments": [], "details": "The upper left is the anchor and the extent is dim rows by dim columns.", "value": "See the example output.", "example": "from readxl import anchored\nprint(anchored(\"C4\", dim=(3, 2)))\n", "output": "output/anchored-python.txt", "output_blocks": [{"text": "\u003ccell_limits (4, 3) x (6, 4)>"}]}}, {"name": "cell_cols", "translated": true, "not_done": "", "title": "Column limits", "origin": {"description": "Column limits.", "usage": "cell_cols(\"C:D\")", "arguments": [], "details": "Letter columns become numbers. Rows stay open.", "value": "See the example output.", "example": "cell_cols(\"C:D\")\n", "output": "output/cell_cols-r.txt", "output_blocks": [{"text": "\u003ccell_limits (-, 3) x (-, 4)>"}]}, "translation": {"description": "Letter columns become numbers. Rows stay open.", "usage": "cell_cols(\"C:D\")", "arguments": [], "details": "Letter columns become numbers. Rows stay open.", "value": "See the example output.", "example": "from readxl import cell_cols\nprint(cell_cols(\"C:D\"))\n", "output": "output/cell_cols-python.txt", "output_blocks": [{"text": "\u003ccell_limits (-, 3) x (-, 4)>"}]}}, {"name": "cell_limits", "translated": true, "not_done": "", "title": "Upper-left and lower-right corners", "origin": {"description": "Upper-left and lower-right corners.", "usage": "cell_limits(c(NA, 7), c(3, NA))", "arguments": [], "details": "Open corners stay missing, and a missing minimum becomes 1 when the maximum is set.", "value": "See the example output.", "example": "cell_limits(c(NA, 7), c(3, NA))\n", "output": "output/cell_limits-r.txt", "output_blocks": [{"text": "\u003ccell_limits (1, 7) x (3, -)>"}]}, "translation": {"description": "Open corners stay missing, and a missing minimum becomes 1 when the maximum is set.", "usage": "cell_limits(c(NA, 7), c(3, NA))", "arguments": [], "details": "Open corners stay missing, and a missing minimum becomes 1 when the maximum is set.", "value": "See the example output.", "example": "from readxl import cell_limits\nprint(cell_limits([None, 7], [3, None]))\n", "output": "output/cell_limits-python.txt", "output_blocks": [{"text": "\u003ccell_limits (1, 7) x (3, -)>"}]}}, {"name": "cell_rows", "translated": true, "not_done": "", "title": "Row limits", "origin": {"description": "Row limits.", "usage": "cell_rows(c(NA, 3))", "arguments": [], "details": "A missing start row becomes 1 when the end row is set. Columns stay open.", "value": "See the example output.", "example": "cell_rows(c(NA, 3))\n", "output": "output/cell_rows-r.txt", "output_blocks": [{"text": "\u003ccell_limits (1, -) x (3, -)>"}]}, "translation": {"description": "A missing start row becomes 1 when the end row is set. Columns stay open.", "usage": "cell_rows(c(NA, 3))", "arguments": [], "details": "A missing start row becomes 1 when the end row is set. Columns stay open.", "value": "See the example output.", "example": "from readxl import cell_rows\nprint(cell_rows([None, 3]))\n", "output": "output/cell_rows-python.txt", "output_blocks": [{"text": "\u003ccell_limits (1, -) x (3, -)>"}]}}, {"name": "excel_format", "translated": true, "not_done": "", "title": "xls or xlsx from the extension and the signature", "origin": {"description": "xls or xlsx from the extension and the signature.", "usage": "excel_format(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))", "arguments": [], "details": "The extension wins when it is xls or xlsx. Otherwise the leading bytes are consulted when the file exists.", "value": "See the example output.", "example": "excel_format(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))\n", "output": "output/excel_format-r.txt", "output_blocks": [{"text": "xlsx|xls|NA|NA|xlsx|xls"}]}, "translation": {"description": "The extension wins when it is xls or xlsx. Otherwise the leading bytes are consulted when the file exists.", "usage": "excel_format(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))", "arguments": [], "details": "The extension wins when it is xls or xlsx. Otherwise the leading bytes are consulted when the file exists.", "value": "See the example output.", "example": "from readxl import excel_format, readxl_example\nfiles = [\"a.xlsx\", \"b.xls\", \"c.png\", \"/etc/hostname\", readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")]\nprint(\"|\".join(\"NA\" if item is None else item for item in excel_format(files)))\n", "output": "output/excel_format-python.txt", "output_blocks": [{"text": "xlsx|xls|NA|NA|xlsx|xls"}]}}, {"name": "excel_sheets", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "excel_sheets", "origin": null, "translation": null}, {"name": "format_from_ext", "translated": true, "not_done": "", "title": "Format from the file extension", "origin": {"description": "Format from the file extension.", "usage": "format_from_ext(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\"))", "arguments": [], "details": "xlsx, xlsm, xltx, and xltm are xlsx. xls is xls. Anything else is missing.", "value": "See the example output.", "example": "format_from_ext(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\"))\n", "output": "output/format_from_ext-r.txt", "output_blocks": [{"text": "xlsx|xls|NA|xlsx"}]}, "translation": {"description": "xlsx, xlsm, xltx, and xltm are xlsx. xls is xls. Anything else is missing.", "usage": "format_from_ext(c(\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\"))", "arguments": [], "details": "xlsx, xlsm, xltx, and xltm are xlsx. xls is xls. Anything else is missing.", "value": "See the example output.", "example": "from readxl import format_from_ext\nprint(\"|\".join(\"NA\" if item is None else item for item in format_from_ext([\"a.xlsx\", \"b.xls\", \"c.png\", \"book.xlsm\"])))\n", "output": "output/format_from_ext-python.txt", "output_blocks": [{"text": "xlsx|xls|NA|xlsx"}]}}, {"name": "format_from_signature", "translated": true, "not_done": "", "title": "Format from the leading bytes", "origin": {"description": "Format from the leading bytes.", "usage": "format_from_signature(c(readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))", "arguments": [], "details": "PK.. is xlsx. The OLE header is xls.", "value": "See the example output.", "example": "format_from_signature(c(readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))\n", "output": "output/format_from_signature-r.txt", "output_blocks": [{"text": "xlsx|xls"}]}, "translation": {"description": "PK.. is xlsx. The OLE header is xls.", "usage": "format_from_signature(c(readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")))", "arguments": [], "details": "PK.. is xlsx. The OLE header is xls.", "value": "See the example output.", "example": "from readxl import format_from_signature, readxl_example\nprint(\"|\".join(format_from_signature([readxl_example(\"clippy.xlsx\"), readxl_example(\"deaths.xls\")])))\n", "output": "output/format_from_signature-python.txt", "output_blocks": [{"text": "xlsx|xls"}]}}, {"name": "read_excel", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "read_excel", "origin": null, "translation": null}, {"name": "read_xls", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "read_xls", "origin": null, "translation": null}, {"name": "read_xlsx", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "read_xlsx", "origin": null, "translation": null}, {"name": "readxl_example", "translated": true, "not_done": "", "title": "Path of a shipped workbook", "origin": {"description": "Path of a shipped workbook.", "usage": "readxl_example()", "arguments": [], "details": "With no name, the example file names. With a name, the path of that file.", "value": "See the example output.", "example": "readxl_example()\n", "output": "output/readxl_example-r.txt", "output_blocks": [{"text": "clippy.xls|clippy.xlsx|datasets.xls|datasets.xlsx|deaths.xls|deaths.xlsx|geometry.xls|geometry.xlsx|type-me.xls|type-me.xlsx"}]}, "translation": {"description": "With no name, the example file names. With a name, the path of that file.", "usage": "readxl_example()", "arguments": [], "details": "With no name, the example file names. With a name, the path of that file.", "value": "See the example output.", "example": "from readxl import readxl_example\nprint(\"|\".join(readxl_example()))\n", "output": "output/readxl_example-python.txt", "output_blocks": [{"text": "clippy.xls|clippy.xlsx|datasets.xls|datasets.xlsx|deaths.xls|deaths.xlsx|geometry.xls|geometry.xlsx|type-me.xls|type-me.xlsx"}]}}, {"name": "readxl_progress", "translated": true, "not_done": "", "title": "Whether the spinner would show", "origin": {"description": "Whether the spinner would show.", "usage": "readxl_progress()", "arguments": [], "details": "False outside an interactive session.", "value": "See the example output.", "example": "readxl_progress()\n", "output": "output/readxl_progress-r.txt", "output_blocks": [{"text": "FALSE"}]}, "translation": {"description": "False outside an interactive session.", "usage": "readxl_progress()", "arguments": [], "details": "False outside an interactive session.", "value": "See the example output.", "example": "from readxl import readxl_progress\nprint(\"TRUE\" if readxl_progress() else \"FALSE\")\n", "output": "output/readxl_progress-python.txt", "output_blocks": [{"text": "FALSE"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

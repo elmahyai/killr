@@ -1,0 +1,23 @@
+import statistics
+import time
+from mass import fractions, is_fractions
+
+
+def one():
+    flag = "TRUE" if is_fractions(fractions(0.5)) else "FALSE"
+    other = "TRUE" if is_fractions(0.5) else "FALSE"
+    return flag + "\n" + other
+
+value = one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+if isinstance(value, str):
+    print(value)
+else:
+    import numpy as np
+    flat = np.asarray(value, dtype=float).reshape(-1)
+    print("\n".join("%.17g" % item for item in flat))
+print("%.17g" % statistics.median(elapsed))

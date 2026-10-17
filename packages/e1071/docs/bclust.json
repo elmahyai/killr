@@ -1,0 +1,38 @@
+{
+  "name": "bclust",
+  "title": "Bagged clustering",
+  "origin": {
+    "description": "Runs the base clustering on resampled rows, keeps all the centers, then cuts a hierarchical clustering of those centers into groups.",
+    "usage": "bclust(x, centers = 2, iter.base = 10, minsize = 0, dist.method = \"euclidean\", hclust.method = \"average\", base.method = \"kmeans\", base.centers = 20, verbose = TRUE, final.kmeans = FALSE, docmdscale = FALSE, resample = TRUE, weights = NULL, maxcluster = base.centers, ...)",
+    "arguments": [
+      {"name": "x", "text": "Data rows."},
+      {"name": "centers", "text": "Number of final clusters."},
+      {"name": "iter.base", "text": "Number of resampled base clusterings."},
+      {"name": "base.centers", "text": "Centers per base clustering."},
+      {"name": "hclust.method", "text": "Linkage method for the hierarchical step."},
+      {"name": "resample", "text": "Resample the rows before each base clustering."},
+      {"name": "verbose", "text": "Print progress."}
+    ],
+    "details": "The example seeds the RNG and turns verbose off so the output is repeatable. The check uses resample = FALSE, which still runs kmeans with random starts.",
+    "value": "A bclust object with cluster, centers, allcenters, members, and hclust.",
+    "example": "set.seed(1); x <- matrix(c(1,2, 1.2,1.8, 1.1,2.2, 5,8, 5.5,7.5, 4.8,8.2, 9,1, 8.5,1.5, 8.2,1.2, 5.2,7.8, 3,3, 3.1,2.9, 0.5,6, 7,4, 6.5,3.5), ncol=2, byrow=TRUE); bc <- bclust(x, 3, iter.base=4, base.centers=4, verbose=FALSE); cat(bc$cluster, \"\\n\"); cat(sprintf(\"%.4f\", t(bc$centers)), \"\\n\")",
+    "output": "output/bclust-r.txt"
+  },
+  "translation": {
+    "description": "Python port of bclust. The base step calls the kmeans port, the knn1 step calls class.knn1, and the hierarchical step calls cluster.agnes or cluster.diana.",
+    "usage": "bclust(x, centers=2, iter_base=10, minsize=0, dist_method=\"euclidean\", hclust_method=\"average\", base_method=\"kmeans\", base_centers=20, verbose=True, final_kmeans=False, docmdscale=False, resample=True, weights=None, maxcluster=None)",
+    "arguments": [
+      {"name": "x", "text": "Data rows, as a NumPy array."},
+      {"name": "centers", "text": "Number of final clusters."},
+      {"name": "iter_base", "text": "Number of resampled base clusterings."},
+      {"name": "base_centers", "text": "Centers per base clustering."},
+      {"name": "hclust_method", "text": "Linkage method. average, complete, single, and diana work."},
+      {"name": "resample", "text": "Resample the rows before each base clustering."},
+      {"name": "verbose", "text": "Print progress."}
+    ],
+    "details": "hclust.method ward.D, ward.D2, centroid, median, and mcquitty are not accepted because the hierarchical step uses agnes. docmdscale=True raises NotImplementedError. With minsize > 0, the knn1 step does not reproduce R's random tie draw, so the pruned centers can differ from R when centers tie.",
+    "value": "A dict with cluster, centers, allcenters, members, and hclust.",
+    "example": "set_seed(1); x = np.array([[1,2],[1.2,1.8],[1.1,2.2],[5,8],[5.5,7.5],[4.8,8.2],[9,1],[8.5,1.5],[8.2,1.2],[5.2,7.8],[3,3],[3.1,2.9],[0.5,6],[7,4],[6.5,3.5]], dtype=float); bc = bclust(x, 3, iter_base=4, base_centers=4, verbose=False); print(\" \".join(str(int(v)) for v in bc[\"cluster\"]) + \" \"); print(\" \".join(f\"{v:.4f}\" for v in np.asarray(bc[\"centers\"], dtype=float).reshape(-1)) + \" \")",
+    "output": "output/bclust-python.txt"
+  }
+}

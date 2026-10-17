@@ -1,0 +1,72 @@
+{
+  "title": "Bound-constrained quadratic approximation",
+  "origin": {
+    "description": "Minimize a function of several variables by a trust-region method that builds a quadratic model from interpolation points. Parameters may have box bounds.",
+    "usage": "bobyqa(par, fn, lower = -Inf, upper = Inf, control = list(), ...)",
+    "arguments": [
+      {
+        "name": "par",
+        "text": "Numeric starting values. Every value must be finite."
+      },
+      {
+        "name": "fn",
+        "text": "Objective. Its first argument is the parameter vector, and it must return one number."
+      },
+      {
+        "name": "lower",
+        "text": "Lower bounds. A length-1 value is reused for every parameter."
+      },
+      {
+        "name": "upper",
+        "text": "Upper bounds. A length-1 value is reused for every parameter."
+      },
+      {
+        "name": "control",
+        "text": "npt, rhobeg, rhoend, iprint, maxfun, obstop, and force.start. Unknown names warn once and are ignored."
+      },
+      {
+        "name": "...",
+        "text": "Passed through to fn."
+      }
+    ],
+    "details": "npt starts at min(n + 2, 2n) and is then forced into [n + 2, (n + 1)(n + 2) / 2]. rhobeg defaults to min(0.95, 0.2 * max(abs(par))) and rhoend to 1e-6 times rhobeg. A bound range shorter than 2 * rhobeg shrinks rhobeg and warns. A start outside the box stops when obstop is TRUE.",
+    "value": "A list with par, fval, feval, ierr, and msg. ierr 0 is a normal exit. 1 means maxfun was hit, 2 is a bad npt, 3 is a trust-region step that did not reduce the model, 4 is a bound range shorter than 2 * RHOBEG, and 5 is cancellation in a denominator.",
+    "example": "fr <- function(x) 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2\nbobyqa(c(1, 2), fr, lower = c(0, 0), upper = c(4, 4))\n",
+    "output": "output/bobyqa-r.txt"
+  },
+  "translation": {
+    "description": "The same control and bound checks. The search is the bobyqa crate, a port of Powell's Fortran.",
+    "usage": "bobyqa(par, fn, lower=-inf, upper=inf, control=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "par",
+        "text": "Starting values. A number or a sequence of numbers."
+      },
+      {
+        "name": "fn",
+        "text": "Objective. The first argument is the parameter list."
+      },
+      {
+        "name": "lower",
+        "text": "Lower bounds. A single number applies to every parameter. The default is negative infinity."
+      },
+      {
+        "name": "upper",
+        "text": "Upper bounds. A single number applies to every parameter. The default is infinity."
+      },
+      {
+        "name": "control",
+        "text": "Dict of npt, rhobeg, rhoend, iprint, maxfun, obstop, and force.start. force_start is accepted as the same switch."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Passed through to fn."
+      }
+    ],
+    "details": "The crate returns Powell's Fortran ierr. This wrapper remaps 390 to 1, 10 to 2, 430 to 3, 20 to 4, and 320 to 5. fval is a fresh call at the returned point and is not included in feval.",
+    "value": "MinqaResult with par, fval, feval, ierr, msg, and classes (\"bobyqa\", \"minqa\").",
+    "example": "from minqa import bobyqa\n\ndef fr(x):\n    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2\n\nprint(bobyqa([1, 2], fr, lower=[0, 0], upper=[4, 4]))\n",
+    "output": "output/bobyqa-python.txt"
+  },
+  "name": "bobyqa"
+}

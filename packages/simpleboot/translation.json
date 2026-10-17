@@ -1,0 +1,494 @@
+{
+  "name": "simpleboot",
+  "cran_version": "1.1-8",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN simpleboot 1.1-8 is translated. one.boot, two.boot, and pairs_boot call the translated boot(). The linear-model bootstrap matches. loess.boot matches loess(surface='direct'); the default interpolated surface still differs, and that check is recorded with matches false. Residual resampling of a loess fit adds the resampled residual to the predictor, as the R source does.",
+  "dependencies": {
+    "translated": [
+      "boot"
+    ],
+    "native": [
+      "matplotlib",
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "one.boot",
+      "translated": true,
+      "python": "simpleboot.one_boot",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One-sample bootstrap through boot.boot. A studentized call nests another one_boot and appends the sample variance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(2), 12 standard normals, mean, R=25",
+        "r_ms": 1.906275749206543,
+        "translated_ms": 2.7608734999375883,
+        "speedup": 0.6904610983623972,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109)\nset.seed(2)\none <- function() one.boot(x, mean, R = 25)\nwarm <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm$t), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nx = np.array([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311])\nset_seed(2)\ndef one():\n    return one_boot(x, \"mean\", 25)\nwarm = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm.t).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "two.boot",
+      "translated": true,
+      "python": "simpleboot.two_boot",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Difference of a statistic on two samples, resampled with boot's strata.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(3), two samples of 12, median, R=20",
+        "r_ms": 3.9256811141967773,
+        "translated_ms": 8.853834000547067,
+        "speedup": 0.44338770231678326,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109)\ny <- c(-0.12124058054180376, -1.7146998871774999, 1.6249309181431082, 0.45506639098476914, 0.48380973690105389, 1.4438362106852991, 1.3212211950980886, 1.0939013212175088, 1.4189773716082184, 1.2821363007310671, 0.57456498336519057, -1.4893516958633728)\nset.seed(3)\none <- function() two.boot(x, y, median, R = 20)\nwarm <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm$t), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nx = np.array([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311]); y = np.array([-0.12124058054180376, -1.7146998871774999, 1.6249309181431082, 0.45506639098476914, 0.4838097369010539, 1.443836210685299, 1.3212211950980886, 1.0939013212175088, 1.4189773716082184, 1.282136300731067, 0.5745649833651906, -1.4893516958633728])\nset_seed(3)\ndef one():\n    return two_boot(x, y, \"median\", 20)\nwarm = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm.t).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "pairs_boot",
+      "translated": true,
+      "python": "simpleboot.pairs_boot",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Bootstrap of a function of paired columns. cor is the Pearson correlation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(4), paired normals, cor, R=15",
+        "r_ms": 1.5968084335327148,
+        "translated_ms": 3.9708075009912136,
+        "speedup": 0.40213695404124006,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109); y <- c(-0.12124058054180376, -1.7146998871774999, 1.6249309181431082, 0.45506639098476914, 0.48380973690105389, 1.4438362106852991, 1.3212211950980886, 1.0939013212175088, 1.4189773716082184, 1.2821363007310671, 0.57456498336519057, -1.4893516958633728)\nset.seed(4)\none <- function() pairs_boot(x, y, cor, R = 15)\nwarm <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm$t), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nx = np.array([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311]); y = np.array([-0.12124058054180376, -1.7146998871774999, 1.6249309181431082, 0.45506639098476914, 0.4838097369010539, 1.443836210685299, 1.3212211950980886, 1.0939013212175088, 1.4189773716082184, 1.282136300731067, 0.5745649833651906, -1.4893516958633728])\nset_seed(4)\ndef one():\n    return pairs_boot(x, y, \"cor\", 15)\nwarm = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm.t).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "perc",
+      "translated": true,
+      "python": "simpleboot.perc",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Percentiles of the bootstrap replicates. An lm.simpleboot object is sent to perc.lm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "percentiles 0.025 and 0.975 of the set.seed(2) mean bootstrap",
+        "r_ms": 0.6605386734008789,
+        "translated_ms": 0.07604549955431139,
+        "speedup": 8.686098155343497,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109)\nset.seed(2)\nb <- one.boot(x, mean, R = 25)\none <- function() perc(b)\nwarm <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nx = np.array([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311])\nset_seed(2)\nb = one_boot(x, \"mean\", 25)\ndef one():\n    return perc(b)\nwarm = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "lm.boot",
+      "translated": true,
+      "python": "simpleboot.lm_boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Bootstrap a least-squares fit by resampling rows or residuals. Row draws use sample with the probability weights, including weights that are all equal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(7), y = 1.5 + 0.7 x + noise, R=12, ngrid=8, coefficient matrix",
+        "r_ms": 25.808334350585938,
+        "translated_ms": 7.219372500003374,
+        "speedup": 3.5748722413996337,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() lm.boot(fit, R = 12, ngrid = 8)\nset.seed(7)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  set.seed(7)\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", samples(warm, \"coef\")), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    set_seed(7)\n    return lm_boot(fit, 12, ngrid=8)\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in samples(warm, \"coef\").ravel(order=\"F\")))\n"
+        }
+      }
+    },
+    {
+      "name": "perc.lm",
+      "translated": true,
+      "python": "simpleboot.perc_lm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Percentiles of each bootstrapped coefficient.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2.5% and 97.5% of the set.seed(7) coefficient replicates",
+        "r_ms": 1.1733770370483398,
+        "translated_ms": 0.15819950021978002,
+        "speedup": 7.417071706410043,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() perc.lm(lb, c(0.025, 0.975))\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return perc_lm(lb, [0.025, 0.975])\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).ravel(order=\"F\")))\n"
+        }
+      }
+    },
+    {
+      "name": "samples",
+      "translated": true,
+      "python": "simpleboot.samples",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Stack coef, fitted, rsquare, or rss from each bootstrap fit. Rows are the parameter or the grid point.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "coefficient matrix of the set.seed(7) linear-model bootstrap",
+        "r_ms": 0.06794929504394531,
+        "translated_ms": 0.02474899974913569,
+        "speedup": 2.7455370209989316,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() samples(lb, \"coef\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return samples(lb, \"coef\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).ravel(order=\"F\")))\n"
+        }
+      }
+    },
+    {
+      "name": "summary.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.summary_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Sample standard deviation of each bootstrapped coefficient.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bootstrap standard deviations from the set.seed(7) linear-model bootstrap",
+        "r_ms": 0.15497207641601562,
+        "translated_ms": 0.08606500068708556,
+        "speedup": 1.8006399253915288,
+        "matches": true,
+        "max_abs_diff": 1.942890293094024e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() summary(lb)$stdev.params\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return summary_lm_simpleboot(lb).stdev_params\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "print.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.print_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Print the bootstrap method and the original least-squares coefficients.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "original coefficients printed for the set.seed(7) linear-model bootstrap",
+        "r_ms": 0.3153085708618164,
+        "translated_ms": 0.005384998985391576,
+        "speedup": 58.553134683439204,
+        "matches": true,
+        "max_abs_diff": 6.661338147750939e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() coef(lb$orig.lm)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); capture.output(print(lb)); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return lb.orig_lm.coef\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    print_lm_simpleboot(lb)\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "print.summary.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.print_summary_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Print the original fit and the bootstrap standard deviations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bootstrap standard deviations from print(summary()) of the set.seed(7) fit",
+        "r_ms": 0.7394552230834961,
+        "translated_ms": 0.01903750035125995,
+        "speedup": 38.842033325796216,
+        "matches": true,
+        "max_abs_diff": 1.942890293094024e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\nsm <- summary(lb)\none <- function() sm$stdev.params\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); capture.output(print(sm)); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\nsm = summary_lm_simpleboot(lb)\ndef one():\n    return sm.stdev_params\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    print_summary_lm_simpleboot(sm)\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "fitted.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.fitted_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Fitted values of each bootstrap fit on the new x grid.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "fitted grid of the set.seed(7) linear-model bootstrap",
+        "r_ms": 0.07653236389160156,
+        "translated_ms": 0.026912999601336196,
+        "speedup": 2.8436950553739773,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() fitted(lb)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return fitted_lm_simpleboot(lb)\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).ravel(order=\"F\")))\n"
+        }
+      }
+    },
+    {
+      "name": "model.frame.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.model_frame_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Return the response and predictors stored on the original fit.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "predictor column of the set.seed(7) original fit",
+        "r_ms": 0.031232833862304688,
+        "translated_ms": 0.0031685003705206327,
+        "speedup": 9.857292160320203,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() model.frame(lb)[, \"xx\"]\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ndef one():\n    return model_frame_lm_simpleboot(lb)[\"xx\"]\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "plot.lm.simpleboot",
+      "translated": true,
+      "python": "simpleboot.plot_lm_simpleboot",
+      "loads": [],
+      "uses": [
+        "matplotlib"
+      ],
+      "done": "Scatter the original points, draw the fitted line, and a band two bootstrap standard deviations out.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "upper band of the set.seed(7) linear-model bootstrap",
+        "r_ms": 3.466010093688965,
+        "translated_ms": 11.12496000041574,
+        "speedup": 0.3115525892730796,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nxx <- c(0.26960598203752734, -0.62998541403927499, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.73862193071140592, 0.044872987374990611, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.65320671109690864, -0.36856649170363698, -0.59955464354477905, 0.054605165457354457, 1.7076774254493652, -1.0943729755782943); yy <- c(1.6019396400773509, 1.7212340984136483, 2.263686581307069, 2.2875614812285812, 2.1213906932851359, 1.4011701227872366, 0.64067123353047151, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.1275236411239682, 0.50688047505081113, 1.7558068826966029, 1.3897350222267362, 0.72649459466583832, 1.2206083802466674, 3.036744981714592, 0.68585933162490342)\nfit <- lm(yy ~ xx)\nset.seed(7)\nlb <- lm.boot(fit, R = 12, ngrid = 8)\n\none <- function() { pdf(tempfile()); plot(lb); dev.off() }\nupper <- predict(lb$orig.lm, lb$new.xpts) + 2 * apply(samples(lb, \"fitted\"), 1, sd)\nwarm <- upper\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nfit = lm(\"yy ~ xx\", {\"yy\": np.array([1.601939640077351, 1.7212340984136483, 2.263686581307069, 2.287561481228581, 2.121390693285136, 1.4011701227872366, 0.6406712335304715, 1.6661145784816185, 1.519986623329185, 1.4723832382082347, 3.127523641123968, 0.5068804750508111, 1.755806882696603, 1.3897350222267362, 0.7264945946658383, 1.2206083802466674, 3.036744981714592, 0.6858593316249034]), \"xx\": np.array([0.26960598203752734, -0.629985414039275, 0.8686598276522649, 1.7271955171152407, 0.024187641767722562, 0.36802517699251047, -1.3092042982085272, 0.7386219307114059, 0.04487298737499061, -1.0483972001212025, 1.727851090445738, -1.1785997390224787, 0.6532067110969086, -0.368566491703637, -0.599554643544779, 0.05460516545735446, 1.7076774254493652, -1.0943729755782943])})\nset_seed(7)\nlb = lm_boot(fit, 12, ngrid=8)\n\ngrid = lb.new_xpts[\"xx\"]\nbmat = samples(lb, \"fitted\")\ncenter = np.sum(bmat, axis=1) / bmat.shape[1]\nstd = np.sqrt(np.sum((bmat - center[:, None]) ** 2, axis=1) / (bmat.shape[1] - 1))\nwarm = lb.orig_lm.predict(lb.new_xpts) + 2 * std\ndef one():\n    plot_lm_simpleboot(lb)\n    plt.close()\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm).reshape(-1)))\n"
+        }
+      }
+    },
+    {
+      "name": "hist.simpleboot",
+      "translated": true,
+      "python": "simpleboot.hist_simpleboot",
+      "loads": [],
+      "uses": [
+        "matplotlib"
+      ],
+      "done": "Histogram of the first replicate column and a vertical line at the original estimate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "replicates from the set.seed(2) mean bootstrap",
+        "r_ms": 1.9611120223999023,
+        "translated_ms": 20.25880600012897,
+        "speedup": 0.0968029420088932,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109)\nset.seed(2)\none <- function() one.boot(x, mean, R = 25)\nwarm <- one()\n\none <- function() { pdf(tempfile()); hist(warm); dev.off() }\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm$t[, 1]), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nx = np.array([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311])\nset_seed(2)\ndef one():\n    return one_boot(x, \"mean\", 25)\nwarm = one()\n\ndef one():\n    hist_simpleboot(warm)\n    plt.close()\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"%.17g\" % v for v in np.asarray(warm.t)[:, 0]))\n"
+        }
+      }
+    },
+    {
+      "name": "loess.boot",
+      "translated": true,
+      "python": "simpleboot.loess_boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Bootstrap a one-predictor loess fit. The local polynomial matches loess(surface='direct'). simpleboot calls the default interpolated surface, so boundary fits differ. Residual resampling adds the resampled residual to the predictor, as the source does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(10), span 0.5, 16 points, R=6, ngrid=6 fitted grid",
+        "r_ms": 13.88394832611084,
+        "translated_ms": 22.085082499870623,
+        "speedup": 0.6286572996135366,
+        "matches": false,
+        "max_abs_diff": 0.16390159099604584,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nlx <- c(0.22160139726474881, 0.024233909789472818, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.39065778977237642, 0.36931577185168862, 0.66869295667856932, 0.9921099659986794, 0.11763895396143198, 0.0084711641538888216, 0.88336681458167732, 0.30105470796115696, 0.49274350586347282, 0.50062993867322803); ly <- c(0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.93002210619709469, 0.35337815799847327, 0.71965587966423872, 0.8187597313560564, 0.64795987456427284, -0.88006562832362734, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.96721302969387679, 0.018889227668710096, 0.088684152043046791)\nlo <- loess(ly ~ lx, span = 0.5)\nset.seed(10)\none <- function() loess.boot(lo, R = 6, ngrid = 6)\nwarm <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  set.seed(10)\n  t0 <- as.numeric(Sys.time()); loess.boot(lo, R = 6, ngrid = 6); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", samples(warm, \"fitted\")), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nlo = loess(\"ly ~ lx\", {\"ly\": np.array([0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.9300221061970947, 0.3533781579984733, 0.7196558796642387, 0.8187597313560564, 0.6479598745642728, -0.8800656283236273, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.9672130296938768, 0.018889227668710096, 0.08868415204304679]), \"lx\": np.array([0.2216013972647488, 0.02423390978947282, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.3906577897723764, 0.3693157718516886, 0.6686929566785693, 0.9921099659986794, 0.11763895396143198, 0.008471164153888822, 0.8833668145816773, 0.30105470796115696, 0.4927435058634728, 0.500629938673228])}, span=0.5)\nset_seed(10)\ndef one():\n    set_seed(10)\n    return loess_boot(lo, 6, ngrid=6)\nwarm = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nvals = samples(warm, \"fitted\").ravel(order=\"F\")\nprint(\" \".join(\"NA\" if not np.isfinite(v) else \"%.17g\" % v for v in vals))\n"
+        }
+      }
+    },
+    {
+      "name": "fitted.loess.simpleboot",
+      "translated": true,
+      "python": "simpleboot.fitted_loess_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Fitted values of each loess bootstrap on the new grid.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "fitted grid of the set.seed(10) loess bootstrap",
+        "r_ms": 0.07605552673339844,
+        "translated_ms": 0.015494499166379683,
+        "speedup": 4.908550183953377,
+        "matches": false,
+        "max_abs_diff": 0.16390159099604584,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nlx <- c(0.22160139726474881, 0.024233909789472818, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.39065778977237642, 0.36931577185168862, 0.66869295667856932, 0.9921099659986794, 0.11763895396143198, 0.0084711641538888216, 0.88336681458167732, 0.30105470796115696, 0.49274350586347282, 0.50062993867322803); ly <- c(0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.93002210619709469, 0.35337815799847327, 0.71965587966423872, 0.8187597313560564, 0.64795987456427284, -0.88006562832362734, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.96721302969387679, 0.018889227668710096, 0.088684152043046791)\nlo <- loess(ly ~ lx, span = 0.5)\nset.seed(10)\none <- function() loess.boot(lo, R = 6, ngrid = 6)\nwarm <- one()\n\nonef <- function() fitted(warm)\ngot <- onef()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); onef(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", got), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nlo = loess(\"ly ~ lx\", {\"ly\": np.array([0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.9300221061970947, 0.3533781579984733, 0.7196558796642387, 0.8187597313560564, 0.6479598745642728, -0.8800656283236273, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.9672130296938768, 0.018889227668710096, 0.08868415204304679]), \"lx\": np.array([0.2216013972647488, 0.02423390978947282, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.3906577897723764, 0.3693157718516886, 0.6686929566785693, 0.9921099659986794, 0.11763895396143198, 0.008471164153888822, 0.8833668145816773, 0.30105470796115696, 0.4927435058634728, 0.500629938673228])}, span=0.5)\nset_seed(10)\ndef one():\n    set_seed(10)\n    return loess_boot(lo, 6, ngrid=6)\nwarm = one()\n\ndef onef():\n    return fitted_loess_simpleboot(warm)\ngot = onef()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); onef(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"NA\" if not np.isfinite(v) else \"%.17g\" % v for v in np.asarray(got).ravel(order=\"F\")))\n"
+        }
+      }
+    },
+    {
+      "name": "print.loess.simpleboot",
+      "translated": true,
+      "python": "simpleboot.print_loess_simpleboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Print the loess bootstrap method and the original span.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "span and sample size printed for the span-0.5 loess bootstrap",
+        "r_ms": 0.32782554626464844,
+        "translated_ms": 0.0021915002434980124,
+        "speedup": 149.58955502618713,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nlx <- c(0.22160139726474881, 0.024233909789472818, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.39065778977237642, 0.36931577185168862, 0.66869295667856932, 0.9921099659986794, 0.11763895396143198, 0.0084711641538888216, 0.88336681458167732, 0.30105470796115696, 0.49274350586347282, 0.50062993867322803); ly <- c(0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.93002210619709469, 0.35337815799847327, 0.71965587966423872, 0.8187597313560564, 0.64795987456427284, -0.88006562832362734, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.96721302969387679, 0.018889227668710096, 0.088684152043046791)\nlo <- loess(ly ~ lx, span = 0.5)\nset.seed(10)\none <- function() loess.boot(lo, R = 6, ngrid = 6)\nwarm <- one()\n\nonep <- function() capture.output(print(warm))\ninvisible(onep())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); onep(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", c(lo$pars$span, length(lo$x))), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nlo = loess(\"ly ~ lx\", {\"ly\": np.array([0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.9300221061970947, 0.3533781579984733, 0.7196558796642387, 0.8187597313560564, 0.6479598745642728, -0.8800656283236273, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.9672130296938768, 0.018889227668710096, 0.08868415204304679]), \"lx\": np.array([0.2216013972647488, 0.02423390978947282, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.3906577897723764, 0.3693157718516886, 0.6686929566785693, 0.9921099659986794, 0.11763895396143198, 0.008471164153888822, 0.8833668145816773, 0.30105470796115696, 0.4927435058634728, 0.500629938673228])}, span=0.5)\nset_seed(10)\ndef one():\n    set_seed(10)\n    return loess_boot(lo, 6, ngrid=6)\nwarm = one()\n\ndef onep():\n    return print_loess_simpleboot(warm)\nonep()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); onep(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\"%.17g %.17g\" % (lo.span, lo.x.size))\n"
+        }
+      }
+    },
+    {
+      "name": "plot.loess.simpleboot",
+      "translated": true,
+      "python": "simpleboot.plot_loess_simpleboot",
+      "loads": [],
+      "uses": [
+        "matplotlib"
+      ],
+      "done": "Draw the original smooth and a band two bootstrap standard deviations out. The band follows the direct local polynomial. The R method reads the grid column named x.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "upper band of the set.seed(10) loess bootstrap with the predictor named x",
+        "r_ms": 3.573894500732422,
+        "translated_ms": 15.2218584998991,
+        "speedup": 0.23478700059891583,
+        "matches": false,
+        "max_abs_diff": 0.11024625295188051,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(simpleboot))\nstopifnot(packageDescription(\"simpleboot\")$Version == \"1.1-8\")\nx <- c(0.22160139726474881, 0.024233909789472818, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.39065778977237642, 0.36931577185168862, 0.66869295667856932, 0.9921099659986794, 0.11763895396143198, 0.0084711641538888216, 0.88336681458167732, 0.30105470796115696, 0.49274350586347282, 0.50062993867322803); y <- c(0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.93002210619709469, 0.35337815799847327, 0.71965587966423872, 0.8187597313560564, 0.64795987456427284, -0.88006562832362734, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.96721302969387679, 0.018889227668710096, 0.088684152043046791)\nlo <- loess(y ~ x, span = 0.5)\nset.seed(10)\nwarm <- loess.boot(lo, R = 6, ngrid = 6)\n\nonep <- function() { pdf(tempfile()); plot(warm); dev.off() }\nbmat <- samples(warm, \"fitted\")\nupper <- as.numeric(predict(lo, warm$new.xpts)) + 2 * apply(bmat, 1, sd, na.rm = TRUE)\ninvisible(onep())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); onep(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", upper), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.rng import set_seed, unif\nfrom simpleboot import (\n    fitted_lm_simpleboot, fitted_loess_simpleboot, hist_simpleboot, lm, lm_boot,\n    loess, loess_boot, model_frame_lm_simpleboot, one_boot, pairs_boot, perc,\n    perc_lm, plot_lm_simpleboot, plot_loess_simpleboot, print_lm_simpleboot,\n    print_loess_simpleboot, print_summary_lm_simpleboot, samples,\n    summary_lm_simpleboot, two_boot,\n)\nlo = loess(\"y ~ x\", {\"y\": np.array([0.9593144430351811, 0.11538475731459258, 1.0916800586373816, 0.9300221061970947, 0.3533781579984733, 0.7196558796642387, 0.8187597313560564, 0.6479598745642728, -0.8800656283236273, -0.31132479480415964, 0.7624464118055545, -0.017548378379548764, -0.4932749629707428, 0.9672130296938768, 0.018889227668710096, 0.08868415204304679]), \"x\": np.array([0.2216013972647488, 0.02423390978947282, 0.20711901946924627, 0.21573354955762625, 0.44372358778491616, 0.13407615036703646, 0.3906577897723764, 0.3693157718516886, 0.6686929566785693, 0.9921099659986794, 0.11763895396143198, 0.008471164153888822, 0.8833668145816773, 0.30105470796115696, 0.4927435058634728, 0.500629938673228])}, span=0.5)\nset_seed(10)\nwarm = loess_boot(lo, 6, ngrid=6)\n\nbmat = samples(warm, \"fitted\")\ncenter = np.nansum(bmat, axis=1) / np.sum(np.isfinite(bmat), axis=1)\nstd = np.sqrt(np.nansum((bmat - center[:, None]) ** 2, axis=1) / (np.sum(np.isfinite(bmat), axis=1) - 1))\nwarm_band = lo.predict(warm.new_xpts) + 2 * std\ndef onep():\n    plot_loess_simpleboot(warm)\n    plt.close()\nonep()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); onep(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\nprint(\" \".join(\"NA\" if not np.isfinite(v) else \"%.17g\" % v for v in np.asarray(warm_band).reshape(-1)))\n"
+        }
+      }
+    }
+  ]
+}

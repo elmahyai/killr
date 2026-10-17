@@ -1,0 +1,48 @@
+{
+  "name": "cache_gcs",
+  "title": "Cloud Storage cache",
+  "origin": {
+    "description": "Keep cached values in a remote bucket.",
+    "usage": "cache_gcs(cache_name, algo='sha512', compress=False)",
+    "arguments": [
+      {
+        "name": "cache_name",
+        "text": "Bucket name."
+      },
+      {
+        "name": "algo",
+        "text": "Hash used as the object name when memoise uses this cache."
+      },
+      {
+        "name": "compress",
+        "text": "FALSE, \"gzip\", \"bzip2\", or \"xz\"."
+      }
+    ],
+    "details": "Stores a serialized value and deletes that one object. Listing uses the object name.",
+    "value": "A cache with set, get, has_key, drop_key, reset, keys, and digest.",
+    "example": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\nroot <- tempfile(\"gcsroot\")\ndir.create(root)\nupload <- function(file, bucket = NULL, name = \"object\", ...) {\n  dest <- file.path(root, bucket)\n  dir.create(dest, showWarnings = FALSE, recursive = TRUE)\n  file.copy(file, file.path(dest, name), overwrite = TRUE)\n  invisible(TRUE)\n}\ndownload <- function(object_name, bucket = NULL, saveToDisk = NULL, overwrite = TRUE, ...) {\n  file.copy(file.path(root, bucket, object_name), saveToDisk, overwrite = TRUE)\n  TRUE\n}\nlisting <- function(bucket = NULL, prefix = NULL, ...) {\n  dest <- file.path(root, bucket)\n  files <- if (dir.exists(dest)) list.files(dest) else character(0)\n  if (!is.null(prefix)) files <- files[startsWith(files, prefix)]\n  if (!length(files)) return(data.frame())\n  data.frame(name = files, stringsAsFactors = FALSE)\n}\nremove_one <- function(object_name, bucket = NULL, ...) {\n  unlink(file.path(root, bucket, object_name))\n  TRUE\n}\nassignInNamespace(\"gcs_upload\", upload, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_get_object\", download, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_list_objects\", listing, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_delete_object\", remove_one, \"googleCloudStorageR\")\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\none <- function() {\n  name <- paste0(\"bkt\", sprintf(\"%08d\", sample.int(1e8, 1)))\n  gcs <- cache_gcs(name)\n  gcs$set(\"abc\", 4)\n  got <- gcs$get(\"abc\")\n  has <- gcs$has_key(\"abc\")\n  nkeys <- length(gcs$keys())\n  gcs$drop_key(\"abc\")\n  has2 <- gcs$has_key(\"abc\")\n  c(got, as.integer(has), nkeys, as.integer(has2))\n}\ncat(paste(one(), collapse = \" \"), \"\\n\", sep = \"\")\n",
+    "output": "output/cache_gcs-r.txt"
+  },
+  "translation": {
+    "description": "Keep cached values in a bucket.",
+    "usage": "cache_gcs(cache_name, algo='sha512', compress=False)",
+    "arguments": [
+      {
+        "name": "cache_name",
+        "text": "Bucket name."
+      },
+      {
+        "name": "algo",
+        "text": "Hash used as the object name when memoise uses this cache."
+      },
+      {
+        "name": "compress",
+        "text": "False, \"gzip\", \"bzip2\", or \"xz\"."
+      }
+    ],
+    "details": "Stores a serialized value and deletes that one object. Listing uses the object name.",
+    "value": "A cache with set, get, has_key, drop_key, reset, keys, and digest.",
+    "example": "\nimport json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nready = Path(tempfile.mktemp(prefix=\"gcsready\"))\nsubprocess.Popen(\n    [sys.executable, \"-m\", \"memoise._gcsmock\", str(ready)],\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nfor _ in range(100):\n    if ready.exists() and ready.stat().st_size:\n        break\n    time.sleep(0.05)\ninfo = json.loads(ready.read_text())\nos.environ[\"GCS_API_HOST\"] = f\"127.0.0.1:{info['port']}\"\nos.environ[\"SSL_CERT_FILE\"] = info[\"cert\"]\nos.environ[\"CURL_CA_BUNDLE\"] = info[\"cert\"]\n\nfrom memoise import cache_gcs\n\ndef one():\n    name = f\"bkt{os.urandom(4).hex()}\"\n    store = cache_gcs(name)\n    store.set(\"abc\", 4)\n    got = store.get(\"abc\")\n    has = store.has_key(\"abc\")\n    nkeys = len(store.keys())\n    store.drop_key(\"abc\")\n    has2 = store.has_key(\"abc\")\n    return [got, int(has), nkeys, int(has2)]\n\nprint(*one())\n",
+    "output": "output/cache_gcs-python.txt"
+  }
+}

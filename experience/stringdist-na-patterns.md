@@ -1,0 +1,1 @@
+An NA pattern has length 1 in R, so `grab` and `grabl` accept it. In Python, `None` is the NA pattern. The `_stopifnot_grab` check in `grab.py` counts `None` as length 0 and raises, which R does not do. `grabl.py` counts `None` as length 1. `grabl` returns NA (`None`, `null` in the proof) for an NA text or pattern, where `grepl` gives FALSE.

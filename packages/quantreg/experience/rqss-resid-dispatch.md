@@ -1,0 +1,1 @@
+R exports resid.rqss but NAMESPACE does not register it as an S3 method for resid or residuals, so resid(fit) returns the full stacked residuals (n plus penalty rows, 118 and 177 for the two proof fits). The method itself, resid.rqss(fit), returns the first n. In R proofs call resid.rqss(fit) directly, and in Python return the first n.

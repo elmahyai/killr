@@ -1,0 +1,43 @@
+import json
+import statistics
+import sys
+import time
+
+import numpy as np
+
+ROOT = "/home/ahmed/killr_projects/killr"
+sys.path[:0] = [
+    f"{ROOT}/packages/deSolve",
+    f"{ROOT}/crates/dlsoda",
+]
+
+from deSolve.lsoda import lsoda
+
+
+def logist(t, x, parms):
+    r = parms["r"]
+    k = parms["K"]
+    dx = r * x[0] * (1.0 - x[0] / k)
+    return [dx]
+
+
+def one():
+    out = lsoda({"N": 0.1}, list(range(0, 11, 2)), logist, {"r": 0.5, "K": 100})
+    return np.ravel(out.data, order="F")
+
+
+value = one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+
+print(
+    json.dumps(
+        {
+            "value": [float(item) for item in value],
+            "median_ms": statistics.median(elapsed),
+        }
+    )
+)

@@ -1,0 +1,30 @@
+# One bootstrap, then imp.moments. The bootstrap is not inside the timer.
+suppressPackageStartupMessages(library(boot))
+set.seed(1)
+n <- 40
+x <- rnorm(n)
+strata <- rep(1:2, each = n / 2)
+wts <- runif(n)
+statistic <- function(d, w) c(sum(d * w) / sum(w), sum(d * d * w) / sum(w))
+b <- boot(x, statistic, R = 200, stype = "w", strata = strata, weights = wts)
+f <- boot.array(b)
+wts_m <- as.matrix(b$weights)
+con <- file("/tmp/boot-importance-check.bin", "wb")
+writeBin(as.integer(c(n, length(b$R), nrow(b$t), ncol(b$t), length(b$t0), nrow(wts_m), ncol(wts_m))), con)
+writeBin(as.double(b$data), con)
+writeBin(as.double(as.numeric(b$strata)), con)
+writeBin(as.integer(b$R), con)
+writeBin(as.double(b$t0), con)
+writeBin(as.double(t(b$t)), con)
+writeBin(as.double(t(wts_m)), con)
+writeBin(as.double(t(f)), con)
+close(con)
+one <- function() imp.moments(b)
+invisible(one())
+elapsed <- numeric(20)
+for (i in seq_len(20)) {
+  t0 <- as.numeric(Sys.time())
+  one()
+  elapsed[[i]] <- as.numeric(Sys.time()) - t0
+}
+cat(sprintf("%.17g\n", median(elapsed) * 1000))

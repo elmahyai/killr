@@ -1,0 +1,211 @@
+{
+  "name": "BB",
+  "cran_version": "2026.1.0",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "dependencies": {
+    "translated": [
+      "numDeriv",
+      "quadprog"
+    ],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "resume": "All seven exports match BB 2026.1.0 on the spectral-gradient paths. spg can check an analytic gradient with numDeriv. projectLinear calls quadprog solve.QP. BBsolve starts small systems with the same Nelder-Mead simplex as stats::optim. control BFGS=TRUE is the L-BFGS-B fallback in stats::optim and is not translated. There is no crate.",
+  "functions": [
+    {
+      "name": "spg",
+      "translated": true,
+      "python": "BB.spg",
+      "loads": [
+        "numDeriv"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Birgin, Martinez, and Raydan spectral projected gradient, including the nonmonotone line search.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Spectral projected gradient. A box constraint is the default projection. An analytic gradient is checked with numDeriv only when checkGrad asks for it.",
+        "r_ms": 0.5040168762207031,
+        "translated_ms": 0.5511720009963028,
+        "speedup": 0.914445718051059,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nfn <- function(x) sum((x - c(1, 2, 3))^2)\ngr <- function(x) 2 * (x - c(1, 2, 3))\none <- function() {\n  res <- spg(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import spg\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = spg([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "dfsane",
+      "translated": true,
+      "python": "BB.dfsane",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "DF-SANE with the two-sided nonmonotone line search. NM and BFGS stay off unless control asks for them.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Derivative-free spectral residual method. Nelder-Mead and L-BFGS-B are optional and off by default.",
+        "r_ms": 0.4036426544189453,
+        "translated_ms": 0.19265800074208528,
+        "speedup": 2.095125314620642,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys <- function(x) c(x[1] - 1, x[2] - 2)\none <- function() {\n  res <- dfsane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import dfsane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = dfsane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "sane",
+      "translated": true,
+      "python": "BB.sane",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "SANE line search along the residual, with the safeguarded quadratic step.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The earlier spectral residual solver. The directional derivative uses a step of 1e-7.",
+        "r_ms": 0.46753883361816406,
+        "translated_ms": 0.2711489996727323,
+        "speedup": 1.7242875104922668,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys <- function(x) c(x[1] - 1, x[2] - 2)\none <- function() {\n  res <- sane(c(0, 0), sys, control=list(NM=FALSE, BFGS=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import sane\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = sane([0.0, 0.0], sys, control={\"NM\": False, \"BFGS\": False, \"trace\": False}, quiet=True)\n    return np.array([res[\"par\"][0], res[\"par\"][1], res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "BBoptim",
+      "translated": true,
+      "python": "BB.bb_optim",
+      "loads": [
+        "numDeriv"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The grid is method within M, the same order as expand.grid. The first convergence stops the search.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Expands method and M, calls spg, and keeps the first successful run.",
+        "r_ms": 1.1289119720458984,
+        "translated_ms": 0.4556995008897502,
+        "speedup": 2.477316674347252,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nfn <- function(x) sum((x - c(1, 2, 3))^2)\ngr <- function(x) 2 * (x - c(1, 2, 3))\none <- function() {\n  res <- BBoptim(c(0, 0, 0), fn, gr, control=list(checkGrad=FALSE, trace=FALSE), quiet=TRUE)\n  c(res$par, res$value, res$gradient, res$fn.reduction, res$iter, res$feval, res$convergence, res$cpar)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import bb_optim\ndef fn(x):\n    return np.sum((np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0])) ** 2)\ndef gr(x):\n    return 2 * (np.asarray(x, dtype=float) - np.array([1.0, 2.0, 3.0]))\ndef one():\n    res = bb_optim([0.0, 0.0, 0.0], fn, gr, control={\"checkGrad\": False, \"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"value\"], res[\"gradient\"], res[\"fn.reduction\"], res[\"iter\"], res[\"feval\"], res[\"convergence\"]], res[\"cpar\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "BBsolve",
+      "translated": true,
+      "python": "BB.bb_solve",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The default small system starts with Nelder-Mead, using the same simplex as stats::optim.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Expands method, M, and Nelder-Mead. For two to twenty parameters the default tries Nelder-Mead first.",
+        "r_ms": 1.0963678359985352,
+        "translated_ms": 0.5957840003247838,
+        "speedup": 1.8402102698307854,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys <- function(x) c(x[1] - 1, x[2] - 2)\none <- function() {\n  res <- BBsolve(c(0, 0), sys, control=list(trace=FALSE), quiet=TRUE)\n  c(res$par, res$residual, res$fn.reduction, res$feval, res$iter, res$convergence, res$cpar)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import bb_solve\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = bb_solve([0.0, 0.0], sys, control={\"trace\": False}, quiet=True)\n    return np.concatenate([res[\"par\"], [res[\"residual\"], res[\"fn.reduction\"], res[\"feval\"], res[\"iter\"], res[\"convergence\"]], res[\"cpar\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "projectLinear",
+      "translated": true,
+      "python": "BB.project_linear",
+      "loads": [
+        "quadprog"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The step is the solution of a least-distance quadratic program. D is the identity, passed already factorized.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Project onto linear equalities and inequalities with solve.QP. The feasible set is A x >= b.",
+        "r_ms": 0.13315677642822266,
+        "translated_ms": 0.3250780009693699,
+        "speedup": 0.40961484945506726,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nA <- rbind(c(1, 1), c(1, 0))\nb <- c(3, 0)\none <- function() projectLinear(c(0.2, 0.2), A, b, meq=0)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import project_linear\nA = np.array([[1.0, 1.0], [1.0, 0.0]])\nb = np.array([3.0, 0.0])\ndef one():\n    return project_linear([0.2, 0.2], A, b, 0)\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "multiStart",
+      "translated": true,
+      "python": "BB.multi_start",
+      "loads": [
+        "numDeriv"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "A vector start becomes one row. Converged is true when the solver reports convergence 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Each row of par is a start. action solve calls BBsolve. action optimize calls BBoptim.",
+        "r_ms": 2.6684999465942383,
+        "translated_ms": 0.45137799861549865,
+        "speedup": 5.911896359103161,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(BB))\nsys <- function(x) c(x[1] - 1, x[2] - 2)\none <- function() {\n  res <- multiStart(rbind(c(0, 0), c(4, -1)), sys, action=\"solve\", control=list(trace=FALSE, NM=FALSE), quiet=TRUE)\n  c(as.vector(res$par), res$fvalue, as.numeric(res$converged))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom BB import multi_start\ndef sys(x):\n    return np.array([x[0] - 1.0, x[1] - 2.0])\ndef one():\n    res = multi_start(np.array([[0.0, 0.0], [4.0, -1.0]]), sys, action=\"solve\", control={\"trace\": False, \"NM\": False}, quiet=True)\n    par = np.ravel(res[\"par\"], order=\"F\")\n    return np.concatenate([par, res[\"fvalue\"], res[\"converged\"].astype(float)])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    }
+  ]
+}

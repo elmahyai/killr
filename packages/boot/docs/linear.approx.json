@@ -1,0 +1,86 @@
+{
+  "name": "linear.approx",
+  "title": "Linear approximation of bootstrap replicates",
+  "origin": {
+    "description": "Linear approximation to the statistic on each bootstrap replicate.",
+    "usage": "linear.approx(boot.out, L = NULL, index = 1, type = NULL,\n              t0 = NULL, t = NULL, ...)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A nonparametric bootstrap object. Frequencies are rebuilt by boot.array from its seed."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values. If omitted, they are calculated by empinf."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the component of interest. If several positions are given and either t0 or t is missing, only the first is used, with a warning."
+      },
+      {
+        "name": "type",
+        "text": "Influence type passed to empinf when L is omitted. See empinf."
+      },
+      {
+        "name": "t0",
+        "text": "Observed value of the statistic. When omitted, boot.out$t0[index] is used. When t0 is supplied but both t and L are omitted, the installed function warns and then uses t0[index]; it does not replace t0 by boot.out$t0[index]."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates used to calculate L when t0 is supplied and L is omitted. Ignored when t0 is omitted."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to empinf, and from there to the statistic, when L is calculated."
+      }
+    ],
+    "details": "A replicate with frequency vector f is approximated by t0 + sum(L * f / n_s), where n_s is the size of the stratum containing each observation. The frequencies come from boot.array. The manual's city and bigcity examples plot the approximation against the bootstrap replicates.",
+    "value": "A numeric vector of length boot.out$R, one approximation per replicate.",
+    "example": "set.seed(1)\nx <- c(2.2, 1.1, 4.4, 3.0, 5.5, 0.2, 6.1, 7.3)\nmean.w <- function(d, w) sum(d * w) / sum(w)\nb <- boot(x, mean.w, R = 30, stype = \"w\")\nlin <- linear.approx(b)\nprint(lin)\nplot(seq_along(lin), lin, type = \"l\",\n     xlab = \"replicate\", ylab = \"tL*\", main = \"Linear approximation\")",
+    "output": [
+      "output/linear.approx-r.txt",
+      "output/linear.approx-r.svg"
+    ]
+  },
+  "translation": {
+    "description": "Linear approximation to the statistic on each bootstrap replicate.",
+    "usage": "linear_approx(boot_out, L=None, index=1, type=None, t0=None, t=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "An object with data, statistic, stype, sim, R, seed, t0, and optionally strata and t. sim \"ordinary\" or \"permutation\" is rebuilt from seed. This does not call boot()."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values. If omitted, they are calculated by empinf."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the component of interest. If several positions are given and either t0 or t is missing, only the first is used, with a warning."
+      },
+      {
+        "name": "type",
+        "text": "Influence type passed to empinf when L is omitted."
+      },
+      {
+        "name": "t0",
+        "text": "Observed value of the statistic. When omitted, boot_out.t0[index] is used. When t0 is supplied but both t and L are omitted, t0 is reduced with index after a warning."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates used to calculate L when t0 is supplied and L is omitted."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Further arguments passed to empinf when L is calculated."
+      }
+    ],
+    "details": "A replicate with frequency row f is approximated by t0 + sum(L * f / n_s), where n_s is the stratum size. Frequencies are rebuilt from seed with the same ordinary and permutation sampling as boot.array, including column-major placement of the index draws. The generator state is restored afterwards. The example plots the approximation against the replicate number with Matplotlib.",
+    "value": "A one-dimensional NumPy array of length R, one approximation per replicate.",
+    "example": "from types import SimpleNamespace\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.influence import linear_approx\n\nx = np.array([2.2, 1.1, 4.4, 3.0, 5.5, 0.2, 6.1, 7.3])\n\ndef mean_w(d, w):\n    d = np.asarray(d, dtype=float)\n    w = np.asarray(w, dtype=float)\n    return np.sum(d * w) / np.sum(w)\n\nboot_out = SimpleNamespace(\n    data=x,\n    statistic=mean_w,\n    stype=\"w\",\n    sim=\"ordinary\",\n    strata=None,\n    R=30,\n    seed=1,\n    t0=np.array([mean_w(x, np.full(x.size, 1.0 / x.size))]),\n)\nlin = linear_approx(boot_out)\nprint(lin)\nfig, ax = plt.subplots()\nax.plot(np.arange(1, lin.size + 1), lin)\nax.set_xlabel(\"replicate\")\nax.set_ylabel(\"tL*\")\nax.set_title(\"Linear approximation\")",
+    "output": [
+      "output/linear.approx-python.txt",
+      "output/linear.approx-python.svg"
+    ]
+  }
+}

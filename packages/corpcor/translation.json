@@ -1,0 +1,772 @@
+{
+  "name": "corpcor",
+  "cran_version": "1.6.10",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All twenty-nine exports are done. Shrinkage variances, correlations, covariances, and partial correlations match corpcor. NumPy supplies the eigendecomposition and the SVD.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "cor.shrink",
+      "translated": true,
+      "python": "corpcor.cor_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Shrinks the off-diagonal correlations toward zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shrinks the off-diagonal correlations toward zero.",
+        "r_ms": 2.400517463684082,
+        "translated_ms": 0.6360119987220969,
+        "speedup": 3.7743273216657967,
+        "matches": true,
+        "max_abs_diff": 6.106226635438361e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(cor.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(cor_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "cor2pcor",
+      "translated": true,
+      "python": "corpcor.cor2pcor",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Turns a covariance into partial correlations by inverting and rescaling.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Turns a covariance into partial correlations by inverting and rescaling.",
+        "r_ms": 0.20623207092285156,
+        "translated_ms": 0.13005149776290637,
+        "speedup": 1.5857723630282836,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(cor2pcor(M))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(cor2pcor(M))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "cov.shrink",
+      "translated": true,
+      "python": "corpcor.cov_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Shrinks variances toward their median and correlations toward zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shrinks variances toward their median and correlations toward zero.",
+        "r_ms": 3.6100149154663086,
+        "translated_ms": 0.9833474996412406,
+        "speedup": 3.6711487208574463,
+        "matches": true,
+        "max_abs_diff": 2.7755575615628914e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(cov.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(cov_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "crossprod.powcor.shrink",
+      "translated": true,
+      "python": "corpcor.crossprod_powcor_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Multiplies y by a power of the shrinkage correlation without forming the power.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Multiplies y by a power of the shrinkage correlation without forming the power.",
+        "r_ms": 3.558635711669922,
+        "translated_ms": 1.393988000927493,
+        "speedup": 2.5528452965894797,
+        "matches": true,
+        "max_abs_diff": 2.4424906541753444e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  Y <- cbind(c(1, 0, 1, 0.5), c(0, 1, -1, 0.5))\n  as.numeric(crossprod.powcor.shrink(X, Y, alpha=0.5, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    Y = np.array([[1.0, 0.0],[0.0, 1.0],[1.0, -1.0],[0.5, 0.5]])\n    return flat(crossprod_powcor_shrink(X, Y, alpha=0.5, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "decompose.cov",
+      "translated": true,
+      "python": "corpcor.decompose_cov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Splits a covariance into its correlation matrix and variances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Splits a covariance into its correlation matrix and variances.",
+        "r_ms": 0.07474422454833984,
+        "translated_ms": 0.0773584997659782,
+        "speedup": 0.9662057146202815,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  d <- decompose.cov(M)\n  c(d$v, as.numeric(d$r))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    d = decompose_cov(M)\n    return flat(d['v']) + flat(d['r'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "decompose.invcov",
+      "translated": true,
+      "python": "corpcor.decompose_invcov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Splits a precision matrix into partial correlations and partial variances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Splits a precision matrix into partial correlations and partial variances.",
+        "r_ms": 0.10216236114501953,
+        "translated_ms": 0.1305919995502336,
+        "speedup": 0.7823018369951652,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  d <- decompose.invcov(solve(M))\n  c(d$pv, as.numeric(d$pr))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    d = decompose_invcov(np.linalg.inv(M))\n    return flat(d['pv']) + flat(d['pr'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "estimate.lambda",
+      "translated": true,
+      "python": "corpcor.estimate_lambda",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Estimates how far the correlation matrix should shrink toward the identity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Estimates how far the correlation matrix should shrink toward the identity.",
+        "r_ms": 0.9210109710693359,
+        "translated_ms": 0.35619150185084436,
+        "speedup": 2.585718542647911,
+        "matches": true,
+        "max_abs_diff": 9.43689570931383e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  estimate.lambda(X, verbose=FALSE)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return [estimate_lambda(X, verbose=False)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "estimate.lambda.var",
+      "translated": true,
+      "python": "corpcor.estimate_lambda_var",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Estimates how far the variances should shrink toward their median.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Estimates how far the variances should shrink toward their median.",
+        "r_ms": 0.6042718887329102,
+        "translated_ms": 0.3436539991525933,
+        "speedup": 1.758372928069998,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  estimate.lambda.var(X, verbose=FALSE)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return [estimate_lambda_var(X, verbose=False)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "fast.svd",
+      "translated": true,
+      "python": "corpcor.fast_svd",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Drops nonpositive singular values and uses the smaller Gram matrix when one side is short.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Drops nonpositive singular values and uses the smaller Gram matrix when one side is short.",
+        "r_ms": 0.2167224884033203,
+        "translated_ms": 0.13556249905377626,
+        "speedup": 1.5986905664622537,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  s <- fast.svd(X)\n  c(s$d, as.numeric(s$u %*% diag(s$d, length(s$d)) %*% t(s$v)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    s = fast_svd(X)\n    return s['d'].tolist() + flat(s['u'] @ np.diag(s['d']) @ s['v'].T)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "invcor.shrink",
+      "translated": true,
+      "python": "corpcor.invcor_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Inverts the shrinkage correlation matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Inverts the shrinkage correlation matrix.",
+        "r_ms": 2.698659896850586,
+        "translated_ms": 0.8525244993506931,
+        "speedup": 3.165492486029389,
+        "matches": true,
+        "max_abs_diff": 3.774758283725532e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(invcor.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(invcor_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "invcov.shrink",
+      "translated": true,
+      "python": "corpcor.invcov_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Inverts the shrinkage covariance matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Inverts the shrinkage covariance matrix.",
+        "r_ms": 2.599358558654785,
+        "translated_ms": 1.2918470019940287,
+        "speedup": 2.012125704237846,
+        "matches": true,
+        "max_abs_diff": 7.993605777301127e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(invcov.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(invcov_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.positive.definite",
+      "translated": true,
+      "python": "corpcor.is_positive_definite",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Tests positive definiteness from the eigenvalues, or from chol.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Tests positive definiteness from the eigenvalues, or from chol.",
+        "r_ms": 0.3769397735595703,
+        "translated_ms": 0.14495799950964283,
+        "speedup": 2.600337855341993,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  bad <- matrix(c(1, 2, 2, 1), 2)\n  msg <- tryCatch(is.positive.definite(M, method='chol'), error=function(e) conditionMessage(e))\n  c(as.integer(is.positive.definite(M)), as.integer(is.positive.definite(bad, method='chol')), nchar(msg))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    bad = np.array([[1.0, 2.0],[2.0, 1.0]])\n    try:\n        is_positive_definite(M, method='chol')\n        msg = ''\n    except ValueError as exc:\n        msg = str(exc)\n    return [int(is_positive_definite(M)), int(is_positive_definite(bad, method='chol')), len(msg)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "make.positive.definite",
+      "translated": true,
+      "python": "corpcor.make_positive_definite",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Lifts nonpositive eigenvalues by Higham's correction.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Lifts nonpositive eigenvalues by Higham's correction.",
+        "r_ms": 0.1990795135498047,
+        "translated_ms": 0.12907449854537845,
+        "speedup": 1.5423613168624066,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(make.positive.definite(matrix(c(1, 2, 2, 1), 2)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(make_positive_definite(np.array([[1.0, 2.0],[2.0, 1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "mpower",
+      "translated": true,
+      "python": "corpcor.mpower",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Raises a symmetric matrix to a real power from its eigenvalues.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Raises a symmetric matrix to a real power from its eigenvalues.",
+        "r_ms": 0.17964839935302734,
+        "translated_ms": 0.18234500021208078,
+        "speedup": 0.9852115448412784,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(mpower(M, 0.5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(mpower(M, 0.5))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pcor.shrink",
+      "translated": true,
+      "python": "corpcor.pcor_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Shrinkage partial correlations, with standardized partial variances attached.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shrinkage partial correlations, with standardized partial variances attached.",
+        "r_ms": 2.5441646575927734,
+        "translated_ms": 1.118651001888793,
+        "speedup": 2.2743149143897994,
+        "matches": true,
+        "max_abs_diff": 1.27675647831893e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(pcor.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(pcor_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pcor2cor",
+      "translated": true,
+      "python": "corpcor.pcor2cor",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Recovers the correlation matrix from partial correlations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Recovers the correlation matrix from partial correlations.",
+        "r_ms": 0.43487548828125,
+        "translated_ms": 0.3765189994737739,
+        "speedup": 1.1549894929313942,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(pcor2cor(cor2pcor(M)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(pcor2cor(cor2pcor(M)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "powcor.shrink",
+      "translated": true,
+      "python": "corpcor.powcor_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Any real power of the shrinkage correlation matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Any real power of the shrinkage correlation matrix.",
+        "r_ms": 3.159642219543457,
+        "translated_ms": 0.8137975019053556,
+        "speedup": 3.88259021703279,
+        "matches": true,
+        "max_abs_diff": 1.4432899320127035e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(powcor.shrink(X, alpha=0.5, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(powcor_shrink(X, alpha=0.5, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pseudoinverse",
+      "translated": true,
+      "python": "corpcor.pseudoinverse",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Moore-Penrose inverse from the positive singular values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Moore-Penrose inverse from the positive singular values.",
+        "r_ms": 0.2071857452392578,
+        "translated_ms": 0.12869350030086935,
+        "speedup": 1.6099161554770318,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(pseudoinverse(M))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(pseudoinverse(M))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pvar.shrink",
+      "translated": true,
+      "python": "corpcor.pvar_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Partial variances from the inverse shrinkage covariance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Partial variances from the inverse shrinkage covariance.",
+        "r_ms": 3.5064220428466797,
+        "translated_ms": 1.7233724993275246,
+        "speedup": 2.0346280587713435,
+        "matches": true,
+        "max_abs_diff": 7.216449660063518e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(pvar.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(pvar_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rank.condition",
+      "translated": true,
+      "python": "corpcor.rank_condition",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Rank and condition number from the singular values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rank and condition number from the singular values.",
+        "r_ms": 0.06783008575439453,
+        "translated_ms": 0.04899299892713316,
+        "speedup": 1.3844852783002242,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  rc <- rank.condition(M)\n  c(rc$rank, rc$condition, rc$tol)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    rc = rank_condition(M)\n    return [rc['rank'], rc['condition'], rc['tol']]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rebuild.cov",
+      "translated": true,
+      "python": "corpcor.rebuild_cov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Rebuilds a covariance from correlations and variances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rebuilds a covariance from correlations and variances.",
+        "r_ms": 0.38111209869384766,
+        "translated_ms": 0.0533915008418262,
+        "speedup": 7.138066783754643,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  d <- decompose.cov(M)\n  as.numeric(rebuild.cov(d$r, d$v))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    d = decompose_cov(M)\n    return flat(rebuild_cov(d['r'], d['v']))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rebuild.invcov",
+      "translated": true,
+      "python": "corpcor.rebuild_invcov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Rebuilds a precision matrix from partial correlations and partial variances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rebuilds a precision matrix from partial correlations and partial variances.",
+        "r_ms": 0.32961368560791016,
+        "translated_ms": 0.15171849918260705,
+        "speedup": 2.1725345780753473,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  d <- decompose.invcov(solve(M))\n  as.numeric(rebuild.invcov(d$pr, d$pv))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    d = decompose_invcov(np.linalg.inv(M))\n    return flat(rebuild_invcov(d['pr'], d['pv']))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sm.index",
+      "translated": true,
+      "python": "corpcor.sm_index",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One-based row and column of each packed symmetric entry.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One-based row and column of each packed symmetric entry.",
+        "r_ms": 0.048995018005371094,
+        "translated_ms": 0.02181250056310091,
+        "speedup": 2.2461898792224426,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(sm.index(M))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return sm_index(M).reshape(-1, order='F').tolist()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sm2vec",
+      "translated": true,
+      "python": "corpcor.sm2vec",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Packs the strict lower triangle in column-major order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Packs the strict lower triangle in column-major order.",
+        "r_ms": 0.019788742065429688,
+        "translated_ms": 0.014523502613883466,
+        "speedup": 1.3625323444024457,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  sm2vec(M)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return sm2vec(M).tolist()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "var.shrink",
+      "translated": true,
+      "python": "corpcor.var_shrink",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Shrinks each variance toward the median variance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shrinks each variance toward the median variance.",
+        "r_ms": 0.7584095001220703,
+        "translated_ms": 0.2711274992179824,
+        "speedup": 2.79724300305046,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(var.shrink(X, verbose=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(var_shrink(X, verbose=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "vec2sm",
+      "translated": true,
+      "python": "corpcor.vec2sm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Unpacks a vector into a symmetric matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Unpacks a vector into a symmetric matrix.",
+        "r_ms": 0.0680685043334961,
+        "translated_ms": 0.059117499404237606,
+        "speedup": 1.151410411797913,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(vec2sm(sm2vec(M, diag=TRUE), diag=TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(vec2sm(sm2vec(M, diag=True), diag=True))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "wt.moments",
+      "translated": true,
+      "python": "corpcor.wt_moments",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Weighted column means and bias-corrected variances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Weighted column means and bias-corrected variances.",
+        "r_ms": 0.05614757537841797,
+        "translated_ms": 0.06102450061007403,
+        "speedup": 0.9200825048480451,
+        "matches": true,
+        "max_abs_diff": 1.6653345369377348e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  wm <- wt.moments(X, w)\n  c(wm$mean, wm$var)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    wm = wt_moments(X, w)\n    return flat(wm['mean']) + flat(wm['var'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "wt.scale",
+      "translated": true,
+      "python": "corpcor.wt_scale",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Centers and scales columns with those weighted moments.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Centers and scales columns with those weighted moments.",
+        "r_ms": 0.22125244140625,
+        "translated_ms": 0.18065800031763501,
+        "speedup": 1.2247032570782437,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  as.numeric(wt.scale(X, w, center=TRUE, scale=TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return flat(wt_scale(X, w, center=True, scale=True))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "wt.var",
+      "translated": true,
+      "python": "corpcor.wt_var",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Bias-corrected weighted variance of one vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Bias-corrected weighted variance of one vector.",
+        "r_ms": 0.04017353057861328,
+        "translated_ms": 0.027717500415747054,
+        "speedup": 1.4493922603421203,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(corpcor))\nsuppressPackageStartupMessages(library(jsonlite))\nX <- matrix(c(\n  1.2, 0.4, -0.2, 0.7,\n  0.3, 1.1, 0.5, -0.4,\n  -0.6, 0.2, 1.4, 0.1,\n  0.8, -0.3, 0.2, 1.5,\n  0.1, 0.9, -0.7, 0.3,\n  -0.4, 0.6, 0.8, -0.2\n), nrow = 6, byrow = TRUE)\nM <- matrix(c(2, 0.4, 0.1, 0.4, 1.5, -0.2, 0.1, -0.2, 1.2), 3, 3, byrow = TRUE)\nw <- c(0.1, 0.2, 0.05, 0.25, 0.15, 0.25)\njson_val <- function(x) toJSON(as.numeric(x), auto_unbox = FALSE, digits = 17, na = \"null\")\n\none <- function() {\n  wt.var(X[,1], w)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, warnings\nimport numpy as np\nwarnings.filterwarnings(\"ignore\")\nfrom corpcor import *\nX = np.array([\n [1.2, 0.4, -0.2, 0.7],\n [0.3, 1.1, 0.5, -0.4],\n [-0.6, 0.2, 1.4, 0.1],\n [0.8, -0.3, 0.2, 1.5],\n [0.1, 0.9, -0.7, 0.3],\n [-0.4, 0.6, 0.8, -0.2],\n], dtype=float)\nM = np.array([[2.0, 0.4, 0.1],[0.4, 1.5, -0.2],[0.1, -0.2, 1.2]])\nw = np.array([0.1, 0.2, 0.05, 0.25, 0.15, 0.25])\ndef flat(value):\n    return np.asarray(value, dtype=float).reshape(-1, order=\"F\").tolist()\n\ndef one():\n    return [wt_var(X[:,0], w)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

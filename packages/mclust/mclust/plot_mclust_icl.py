@@ -1,0 +1,112 @@
+"""Translation of ``plot.mclustICL`` (mclust 6.1.3, R/icl.R).
+
+R's ``plot.mclustICL(x, ylab = "ICL", ...)`` calls ``plot.mclustBIC`` with the
+ICL object. This module carries that drawing with Matplotlib: one ``type = "b"``
+line per model column, the model's symbol and colour, the x axis ticks at the
+component counts, and the legend. The object is the dict that
+``mclust.mclust_icl.mclustICL`` returns, with one row per G and one column per
+model name.
+
+``plot.mclustBIC`` itself is not translated here, so its body is written in
+this module. The drawing log (``Canvas``) records the same primitives as R's
+trace: the window, each ``plot.xy`` line and the axis ticks.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, Sequence
+
+import numpy as np
+
+from ._plot_common import Canvas, _marker
+from .mclust_options import mclust_options
+
+__all__ = ["plot_mclustICL", "plot_data"]
+
+
+def _get(x: Any, name: str, default: Any = None) -> Any:
+    if isinstance(x, Mapping):
+        return x.get(name, default)
+    return getattr(x, name, default)
+
+
+def plot_data(x: Any, G: Sequence[float] | None = None,
+              modelNames: Sequence[str] | None = None,
+              symbols: dict[str, Any] | None = None,
+              colors: dict[str, str] | None = None) -> dict[str, Any]:
+    """The data part of ``plot.mclustBIC``: the model columns, symbols, colours, y range and x values.
+
+    Nothing is drawn here. The timed call in the proof is this function.
+    """
+    values = np.atleast_2d(np.asarray(_get(x, "values", x), dtype=float))
+    n_rows, n_cols = values.shape
+    rows = _get(x, "G")
+    rows = np.arange(1, n_rows + 1, dtype=float) if rows is None else np.asarray(rows, dtype=float)
+    cols = _get(x, "modelNames")
+    cols = [str(i + 1) for i in range(n_cols)] if cols is None else [str(c) for c in cols]
+    if modelNames is None:
+        modelNames = cols
+    modelNames = [str(m) for m in modelNames]
+    G_arg = rows if G is None else np.asarray(G, dtype=float)
+
+    if symbols is None:
+        opt_sym = mclust_options("bicPlotSymbols")
+        symbols = {m: opt_sym[m] for m in modelNames}
+    if colors is None:
+        opt_col = mclust_options("bicPlotColors")
+        colors = {m: opt_col[m] for m in modelNames}
+
+    idx = [cols.index(m) for m in modelNames]
+    sub = values[:, idx]
+    finite = sub[~np.isnan(sub)]
+    ylim = (float(finite.min()), float(finite.max()))
+    return {
+        "x": rows,
+        "y": sub,
+        "xlim": (float(np.min(G_arg)), float(np.max(G_arg))),
+        "ylim": ylim,
+        "modelNames": modelNames,
+        "symbols": symbols,
+        "colors": colors,
+        "pch": [symbols[m] for m in modelNames],
+        "col": [colors[m] for m in modelNames],
+    }
+
+
+def plot_mclustICL(x: Any, ylab: str = "ICL", G: Sequence[float] | None = None,
+                   modelNames: Sequence[str] | None = None,
+                   symbols: dict[str, Any] | None = None,
+                   colors: dict[str, str] | None = None,
+                   xlab: str | None = None, legend: bool = True,
+                   ax: Any = None, canvas: Canvas | None = None) -> tuple[dict[str, Any], Canvas]:
+    """Plot the ICL values of each model against the number of components.
+
+    ``x`` is an ``mclustICL`` object (a mapping with ``values``, ``G`` and
+    ``modelNames``) or a matrix with the same layout. Returns the symbols used
+    for each model, as R returns them invisibly, and the canvas with the log.
+    """
+    canvas = canvas or Canvas()
+    if xlab is None:
+        xlab = "Number of components"
+    d = plot_data(x, G=G, modelNames=modelNames, symbols=symbols, colors=colors)
+
+    canvas.matplot(ax, d["x"], d["y"], d["pch"], d["col"], xlim=d["xlim"], ylim=d["ylim"])
+    canvas.value("axis1", d["x"])
+
+    if ax is not None:
+        ax.set_xticks(list(d["x"]))
+        ax.set_xlabel(xlab)
+        ax.set_ylabel(ylab)
+        if legend:
+            _draw_legend(ax, d["modelNames"], d["pch"], d["col"])
+    return d["symbols"], canvas
+
+
+def _draw_legend(ax: Any, labels: Sequence[str], pch: Sequence[Any], col: Sequence[Any]) -> None:
+    """The key glyphs of ``legend(x = "bottomright", ncol = 2)``. Not logged, as in R's trace."""
+    from matplotlib.lines import Line2D
+
+    handles = [Line2D([], [], marker=_marker(p), linestyle="none", color=str(c))
+               for p, c in zip(pch, col)]
+    ax.legend(handles, list(labels), loc="lower right", ncol=2, frameon=True)

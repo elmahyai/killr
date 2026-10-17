@@ -1,0 +1,1 @@
+`format(scientific = FALSE)` gives one width and one decimal count to the whole vector, so a tiny value pads every element. `formatC` pads Inf to `digits + 1`, and `%%` and `10^n` need R's own steps (`myfmod` with long double, `R_pow_di`).

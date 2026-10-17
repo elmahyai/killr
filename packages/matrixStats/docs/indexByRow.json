@@ -1,0 +1,44 @@
+{
+  "name": "indexByRow",
+  "title": "Translates matrix indices by rows into indices by columns",
+  "origin": {
+    "description": "Translates matrix indices by rows into indices by columns.",
+    "usage": "indexByRow(dim, idxs = NULL, ...)",
+    "arguments": [
+      {
+        "name": "dim",
+        "text": "A numeric vector of length two specifying the length of the \"template\" matrix."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "The current implementation does not support long-vector indices, because both input and output indices are of type integers. This means that the indices in argument idxs can only be in range [1,2^31-1]. Using a greater value will be coerced to NA_integer_. Moreover, returned indices can only be in the same range [1,2^31-1].",
+    "value": "Returns an integer vector of indices.",
+    "example": "dim <- c(5, 4)\nX <- matrix(NA_integer_, nrow = dim[1], ncol = dim[2])\nY <- t(X)\nidxs <- seq_along(X)\n\n# Assign by columns\nX[idxs] <- idxs\nprint(X)\n\n# Assign by rows\nY[indexByRow(dim(Y), idxs)] <- idxs\nprint(Y)\n\nstopifnot(X == t(Y))",
+    "output": "output/indexByRow-r.txt"
+  },
+  "translation": {
+    "description": "Translates matrix indices by rows into indices by columns.",
+    "usage": "indexByRow(dim, idxs=None)",
+    "arguments": [
+      {
+        "name": "dim",
+        "text": "Two numbers giving the template matrix, nrow then ncol. The matrix is stored column-major, as in R. A two-dimensional array is the defunct matrix form."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based indexes in row-major order. None visits every cell. Zero and negative values are errors. Numeric values are truncated toward zero. A value outside the 32-bit integer range becomes an integer NA, which the index check rejects."
+      }
+    ],
+    "details": "The indexbyrow crate ports matrixStats src/indexByRow.c. None walks the template in row-major order and returns the 1-based column-major position of each cell, in that visit order. A supplied idxs vector is the same row-major numbering and is returned in the same order, duplicates included. This routine does not call validateIndices, so a negative index is an error rather than an exclusion. Indexes and the returned positions stay inside [1, 2^31-1]. The product of dim is rejected when it is larger than 2^31-1; the message prints that product as a double, matching the C check.",
+    "value": "A one-dimensional int32 array of indexes, in the requested order.",
+    "example": "from matrixstats.indexbyrow import indexByRow\n\ndim = (5, 4)\nindexByRow(dim)",
+    "output": "output/indexByRow-python.txt"
+  }
+}

@@ -1,0 +1,44 @@
+import json
+import math
+import statistics
+import sys
+import time
+
+import numpy as np
+
+sys.path.insert(0, "/home/ahmed/killr_projects/killr/packages/pracma")
+from pracma.util_rand import *
+
+
+def as_text(value):
+    if value is None:
+        return "null"
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)) and (not value or isinstance(value[0], str)):
+        return "|".join(str(item) for item in value)
+    array = np.asarray(value)
+    if array.dtype.kind in "UOS":
+        return "|".join(str(item) for item in array.reshape(-1))
+    if array.ndim == 2:
+        array = np.real(array).reshape(-1, order="F")
+    else:
+        array = np.real(np.asarray(array, dtype=float)).reshape(-1)
+    parts = []
+    for number in array:
+        number = float(number)
+        parts.append("NA" if math.isnan(number) else format(number, ".16g"))
+    return "|".join(parts)
+
+
+def one():
+    return (lambda x=rands(5, N=2, r=3): (lambda rad=np.sqrt(np.sum(x**2, axis=1)): np.concatenate([np.array(x.shape, float), [1.0 if np.all(np.abs(rad - 3) < 1e-8) else 0.0]]))())()
+
+
+value = as_text(one())
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+print(json.dumps({"value": value, "median_ms": statistics.median(elapsed)}))

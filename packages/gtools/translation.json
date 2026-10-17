@@ -1,0 +1,1003 @@
+{
+  "name": "gtools",
+  "cran_version": "3.9.5",
+  "inventory": "complete",
+  "status": "in_progress",
+  "blocked_by": [],
+  "crate_claims": [
+    "roman2int"
+  ],
+  "resume": "Checked setTCPNoDelay, lastAdd, invalid, foldchange2logratio, odd and rdirichlet, logratio2foldchange, even, ddirichlet, permute, foldchange, quantcut, permutations, mixedorder, defmacro, logit, ASCIIfy, asc, assert, capwords, binsearch, baseOf, combinations, na, and inv.logit.replace, roman2int, stat_mode, mixedsort, running, sprint, split_path, stars.pval, chr. The other exports are listed and not translated. Reserved scat.",
+  "functions": [
+    {
+      "name": "ASCIIfy",
+      "translated": true,
+      "python": "gtools.asciiify.ASCIIfy",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces non-ASCII characters with hex or unicode escape codes from UTF-8 code units, with fallback and warnings when one-byte mode cannot encode a code point.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "City names with bytes 1 and 2, Greek athens, bulk vectors, and single-character edge cases",
+        "r_ms": 3.522515296936035,
+        "translated_ms": 0.19988799976999871,
+        "speedup": 17.622445074187645,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nflat <- function(x) {\n  paste(vapply(x, json_str, \"\"), collapse = \"|\")\n}\n\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\n\none <- function() {\n  cities1 <- ASCIIfy(c(\"S\\u00e3o Paulo\", \"Reykjav\\u00edk\"), 1)\n  cities2 <- ASCIIfy(c(\"S\\u00e3o Paulo\", \"Reykjav\\u00edk\"), 2)\n  athens <- ASCIIfy(\"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\")\n  bulk1 <- ASCIIfy(\n    c(\"a\", \"S\\u00e3o Paulo\", \"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\", \"caf\\u00e9\", \"z\\\\x\", \"\"),\n    bytes = 1\n  )\n  bulk2 <- ASCIIfy(\n    c(\"a\", \"S\\u00e3o Paulo\", \"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\", \"caf\\u00e9\", \"z\\\\x\", \"\"),\n    bytes = 2\n  )\n  singles <- c(\n    ASCIIfy(\"z\", 1),\n    ASCIIfy(\"\\u00e9\", 1),\n    ASCIIfy(\"\\u00e9\", 2),\n    ASCIIfy(\"\\u0391\", 1),\n    ASCIIfy(\"\\u0391\", 2),\n    ASCIIfy(\"\\u03fe\", 1),\n    ASCIIfy(\"\\u03fe\", 2)\n  )\n  c(cities1, cities2, athens, bulk1, bulk2, singles)\n}\n\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.asciiify import ASCIIfy\n\n\ndef json_str(text):\n    parts = []\n    for char in text:\n        cp = ord(char)\n        if cp == 34:\n            parts.append('\\\\\"')\n        elif cp == 92:\n            parts.append(\"\\\\\\\\\")\n        elif cp == 10:\n            parts.append(\"\\\\n\")\n        elif cp == 13:\n            parts.append(\"\\\\r\")\n        elif cp == 9:\n            parts.append(\"\\\\t\")\n        elif cp < 32 or cp == 127:\n            parts.append(f\"\\\\u{cp:04x}\")\n        else:\n            parts.append(char)\n    return '\"' + \"\".join(parts) + '\"'\n\n\ndef flat(values):\n    return \"|\".join(json_str(item) for item in values)\n\n\ndef one():\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        cities1 = ASCIIfy([\"S\\u00e3o Paulo\", \"Reykjav\\u00edk\"], 1)\n        cities2 = ASCIIfy([\"S\\u00e3o Paulo\", \"Reykjav\\u00edk\"], 2)\n        athens = ASCIIfy(\"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\")\n        bulk1 = ASCIIfy(\n            [\"a\", \"S\\u00e3o Paulo\", \"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\", \"caf\\u00e9\", \"z\\\\x\", \"\"],\n            bytes=1,\n        )\n        bulk2 = ASCIIfy(\n            [\"a\", \"S\\u00e3o Paulo\", \"\\u0391\\u03b8\\u03ae\\u03bd\\u03b1\", \"caf\\u00e9\", \"z\\\\x\", \"\"],\n            bytes=2,\n        )\n        singles = [\n            ASCIIfy(\"z\", 1),\n            ASCIIfy(\"\\u00e9\", 1),\n            ASCIIfy(\"\\u00e9\", 2),\n            ASCIIfy(\"\\u0391\", 1),\n            ASCIIfy(\"\\u0391\", 2),\n            ASCIIfy(\"\\u03fe\", 1),\n            ASCIIfy(\"\\u03fe\", 2),\n        ]\n    if isinstance(cities1, str):\n        cities1 = [cities1]\n    if isinstance(cities2, str):\n        cities2 = [cities2]\n    if isinstance(athens, str):\n        athens = [athens]\n    if isinstance(bulk1, str):\n        bulk1 = [bulk1]\n    if isinstance(bulk2, str):\n        bulk2 = [bulk2]\n    return [*cities1, *cities2, *athens, *bulk1, *bulk2, *singles]\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "asc",
+      "translated": true,
+      "python": "gtools.asc.asc",
+      "loads": [],
+      "uses": [],
+      "done": "Each string becomes integer UTF-8 byte values; equal lengths simplify to a vector or column-major matrix, otherwise a list of lists.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Letters, hello!, vowel vectors, an equal-length matrix, simplify true and false, UTF-8 cafe, empty and mixed lengths",
+        "r_ms": 1.033186912536621,
+        "translated_ms": 0.2551144998506061,
+        "speedup": 4.049894902648226,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.list(x)) return(unlist(lapply(x, flat), use.names = FALSE))\n  if (is.matrix(x)) return(as.numeric(x))\n  as.numeric(x)\n}\n\none <- function() {\n  c(\n    flat(asc(letters)),\n    flat(asc(\"hello!\")),\n    flat(asc(c(\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"))),\n    flat(asc(c(\"ae\", \"io\", \"uy\"))),\n    flat(asc(\"hello!\", simplify = FALSE)),\n    flat(asc(c(\"ae\", \"io\", \"uy\"), simplify = FALSE)),\n    flat(asc(c(\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"), simplify = FALSE)),\n    flat(asc(c(\"ae\", \"io\", \"uy\"), simplify = FALSE)),\n    flat(asc(\"caf\\u00e9\")),\n    flat(asc(c(\"\", \"a\"))),\n    flat(asc(c(\"\", \"\"))),\n    flat(asc(c(\"a\", \"hello\"))),\n    flat(asc(character(0)))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport string\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.asc import asc\n\n\ndef flat(value):\n    if isinstance(value, dict):\n        out = []\n        for key in value:\n            out.extend(flat(value[key]))\n        return out\n    if isinstance(value, np.ndarray):\n        return value.ravel(order=\"F\").astype(float).tolist()\n    if isinstance(value, list):\n        if not value:\n            return []\n        if isinstance(value[0], int):\n            return [float(item) for item in value]\n        out = []\n        for item in value:\n            out.extend(flat(item))\n        return out\n    return [float(value)]\n\n\ndef one():\n    parts = [\n        flat(asc(list(string.ascii_lowercase))),\n        flat(asc(\"hello!\")),\n        flat(asc([\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"])),\n        flat(asc([\"ae\", \"io\", \"uy\"])),\n        flat(asc(\"hello!\", simplify=False)),\n        flat(asc([\"ae\", \"io\", \"uy\"], simplify=False)),\n        flat(asc([\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"], simplify=False)),\n        flat(asc([\"ae\", \"io\", \"uy\"], simplify=False)),\n        flat(asc(\"caf\\u00e9\")),\n        flat(asc([\"\", \"a\"])),\n        flat(asc([\"\", \"\"])),\n        flat(asc([\"a\", \"hello\"])),\n        flat(asc([])),\n    ]\n    return [item for part in parts for item in part]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "ask",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. An interactive prompt is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "assert",
+      "translated": true,
+      "python": "gtools.defunct.assert",
+      "loads": [],
+      "uses": [],
+      "done": "A defunct synonym for stopifnot; every call fails with the gtools 3.9.5 defunct message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the defunct error",
+        "r_ms": 0.2650022506713867,
+        "translated_ms": 0.003961999937018845,
+        "speedup": 66.88598053607849,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\none <- function() {\n  paste0(tryCatch(assert(TRUE), error = function(e) conditionMessage(e)), \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nimport gtools.defunct as gtools_defunct\n\n\ndef one():\n    try:\n        getattr(gtools_defunct, \"assert\")(True)\n        return \"\\n\"\n    except RuntimeError as exc:\n        return str(exc) + \"\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "assignEdgewise",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. Edgewise assignment is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "baseOf",
+      "translated": true,
+      "python": "gtools.baseof.baseOf",
+      "loads": [],
+      "uses": [],
+      "done": "Converts integers to digits in a chosen base, aligning rows when several values are given.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Decimal, binary, octal, and hex expansions, zero-padded width, a four-value batch, two hex matrices, and empty input",
+        "r_ms": 0.912,
+        "translated_ms": 0.264,
+        "speedup": 3.4545454545454546,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (length(x) == 0) return(numeric(0))\n  if (is.matrix(x)) return(as.numeric(x))\n  as.numeric(x)\n}\n\none <- function() {\n  c(\n    flat(baseOf(123)),\n    flat(baseOf(123, base = 2)),\n    flat(baseOf(123, base = 8)),\n    flat(baseOf(123, base = 16)),\n    flat(baseOf(123, len = 5)),\n    flat(baseOf(c(0, 1, 255, 256), base = 2, len = 4)),\n    flat(baseOf(c(5, 123, 4096), base = 16)),\n    flat(baseOf(c(10, 1000), base = 10)),\n    flat(baseOf(integer(0)))\n  )\n}\n\none()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.baseof import baseOf\n\n\ndef flat(x):\n    array = np.asarray(x, dtype=np.int32)\n    if array.size == 0:\n        return []\n    if array.ndim == 2:\n        return array.reshape(-1, order=\"F\").astype(float).tolist()\n    return array.reshape(-1).astype(float).tolist()\n\n\ndef one():\n    out = []\n    out.extend(flat(baseOf(123)))\n    out.extend(flat(baseOf(123, base=2)))\n    out.extend(flat(baseOf(123, base=8)))\n    out.extend(flat(baseOf(123, base=16)))\n    out.extend(flat(baseOf(123, len=5)))\n    out.extend(flat(baseOf([0, 1, 255, 256], base=2, len=4)))\n    out.extend(flat(baseOf([5, 123, 4096], base=16)))\n    out.extend(flat(baseOf([10, 1000], base=10)))\n    out.extend(flat(baseOf(np.array([], dtype=np.int32))))\n    return out\n\n\none()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "binsearch",
+      "translated": true,
+      "python": "gtools.binsearch.binsearch",
+      "loads": [],
+      "uses": [],
+      "done": "Binary search with signed monotonic updates, boundary warnings, and R's list return.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Four searches: an exact zero, a value between elements, a found integer, and the upper boundary",
+        "r_ms": 0.3159046173095703,
+        "translated_ms": 0.11552150135685224,
+        "speedup": 2.7345958423248296,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat_result <- function(r) {\n  c(r$numiter, r$where, r$value)\n}\n\none <- function() {\n  fun <- function(X) {\n    ifelse(LETTERS[X] > \"M\", 1, ifelse(LETTERS[X] < \"M\", -1, 0))\n  }\n  c(\n    flat_result(binsearch(function(x) x - 10, range = c(0, 20))),\n    flat_result(binsearch(function(x) x - 10.1, range = c(0, 20))),\n    flat_result(binsearch(fun, range = 1:26)),\n    flat_result(suppressWarnings(binsearch(function(x) x - 25, range = c(0, 20))))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(format(value, digits = 17), collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport string\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.binsearch import binsearch\n\n\ndef flat_result(result):\n    where = result[\"where\"]\n    value = result[\"value\"]\n    if hasattr(where, \"__len__\") and not isinstance(where, (str, bytes)):\n        where_part = [float(x) for x in where]\n    else:\n        where_part = [float(where)]\n    if hasattr(value, \"__len__\") and not isinstance(value, (str, bytes)):\n        value_part = [float(x) for x in value]\n    else:\n        value_part = [float(value)]\n    return [float(result[\"numiter\"]), *where_part, *value_part]\n\n\ndef one():\n    letters = string.ascii_uppercase\n\n    def fun(x):\n        index = int(x)\n        letter = letters[index - 1]\n        if letter > \"M\":\n            return 1.0\n        if letter < \"M\":\n            return -1.0\n        return 0.0\n\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        return (\n            flat_result(binsearch(lambda x: x - 10, [0, 20]))\n            + flat_result(binsearch(lambda x: x - 10.1, [0, 20]))\n            + flat_result(binsearch(fun, list(range(1, 27))))\n            + flat_result(binsearch(lambda x: x - 25, [0, 20]))\n        )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "capture",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: R session output capture; the R session is Python per routing.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "capwords",
+      "translated": true,
+      "python": "gtools.capwords.capwords",
+      "loads": [],
+      "uses": [],
+      "done": "Capitalizes words the same way gtools 3.9.5 capwords does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seventeen strings covering the help examples plus empty input, doubled spaces, AP on and off, strict, onlyfirst, preserveMixed, and a custom separator",
+        "r_ms": 13.636469841003418,
+        "translated_ms": 1.0828594995473395,
+        "speedup": 12.593018620332352,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nflat <- function(x) {\n  paste(vapply(x, json_str, \"\"), collapse = \",\")\n}\n\none <- function() {\n  c(\n    capwords(\"a function to capitalize words in a title\"),\n    capwords(\"a function to capitalize words in a title\", AP = FALSE),\n    capwords(\"testing the iProduct for defects\"),\n    capwords(\"testing the iProduct for defects\", strict = TRUE),\n    capwords(\"testing the iProduct for defects\", onlyfirst = TRUE),\n    capwords(\"testing the iProduct for defects\", preserveMixed = TRUE),\n    capwords(\"title_using_underscores_as_separators\", sep = \"_\"),\n    capwords(\"\"),\n    capwords(\"AND\"),\n    capwords(\"a  b\"),\n    capwords(\"word With MixedCase Inside\"),\n    capwords(\"word With MixedCase Inside\", preserveMixed = TRUE),\n    capwords(\"to be Or not To Be\", AP = FALSE),\n    capwords(\"to be Or not To Be\"),\n    capwords(\"single\"),\n    capwords(\"iPhone starts mixed\", preserveMixed = TRUE),\n    capwords(\"iPhone starts mixed\", preserveMixed = FALSE)\n  )\n}\n\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.capwords import capwords\n\n\ndef one():\n    return [\n        capwords(\"a function to capitalize words in a title\"),\n        capwords(\"a function to capitalize words in a title\", AP=False),\n        capwords(\"testing the iProduct for defects\"),\n        capwords(\"testing the iProduct for defects\", strict=True),\n        capwords(\"testing the iProduct for defects\", onlyfirst=True),\n        capwords(\"testing the iProduct for defects\", preserveMixed=True),\n        capwords(\"title_using_underscores_as_separators\", sep=\"_\"),\n        capwords(\"\"),\n        capwords(\"AND\"),\n        capwords(\"a  b\"),\n        capwords(\"word With MixedCase Inside\"),\n        capwords(\"word With MixedCase Inside\", preserveMixed=True),\n        capwords(\"to be Or not To Be\", AP=False),\n        capwords(\"to be Or not To Be\"),\n        capwords(\"single\"),\n        capwords(\"iPhone starts mixed\", preserveMixed=True),\n        capwords(\"iPhone starts mixed\", preserveMixed=False),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "checkRVersion",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. The R version is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "chr",
+      "translated": true,
+      "python": "gtools.chr.chr",
+      "loads": [],
+      "uses": [],
+      "done": "Maps integer byte codes to strings, walking matrices element by element.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Codes 65 through 90, matrix and list round-trips, NA, empty input, and out-of-range codes.",
+        "r_ms": 1.2422800064086914,
+        "translated_ms": 0.6059755014575785,
+        "speedup": 2.050049883898908,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.list(x) && !is.character(x)) {\n    if (length(x) == 0) return(numeric(0))\n    return(unlist(lapply(x, flat), use.names = FALSE))\n  }\n  if (length(x) == 0) return(numeric(0))\n  as.numeric(charToRaw(paste(as.character(x), collapse = \"\")))\n}\n\none <- function() {\n  c(\n    flat(chr(65:90)),\n    flat(chr(asc(\"hello!\"))),\n    flat(chr(asc(\"hello!\", simplify = FALSE))),\n    flat(chr(asc(c(\"ae\", \"io\", \"uy\")))),\n    flat(chr(asc(c(\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"), simplify = FALSE))),\n    flat(chr(asc(c(\"ae\", \"io\", \"uy\"), simplify = FALSE))),\n    flat(chr(c(104, 101, 108, 108, 111, 33))),\n    flat(chr(65)),\n    flat(chr(c(NA_integer_, 65))),\n    flat(chr(integer(0))),\n    flat(chr(list(c(104, 101), 65))),\n    flat(chr(c(256, -1))),\n    flat(chr(asc(c(\"a\", \"hello\"))))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.asc import asc\nfrom gtools.chr import chr\nfrom gtools.na_replace import _NA_INT\n\n\ndef flat(value):\n    if isinstance(value, dict):\n        out = []\n        for key in value:\n            out.extend(flat(value[key]))\n        return out\n    if isinstance(value, list):\n        if not value:\n            return []\n        return [item for part in value for item in flat(part)]\n    if isinstance(value, np.ndarray):\n        if value.size == 0:\n            return []\n        if value.dtype == object:\n            out = []\n            for item in value.ravel(order=\"C\"):\n                out.extend(flat(str(item)))\n            return out\n        return value.ravel(order=\"F\").astype(float).tolist()\n    text = \"\" if value is None else str(value)\n    if not text:\n        return []\n    return list(text.encode(\"latin-1\"))\n\n\ndef one():\n    parts = [\n        flat(chr(np.arange(65, 91, dtype=np.int64))),\n        flat(chr(asc(\"hello!\"))),\n        flat(chr(asc(\"hello!\", simplify=False))),\n        flat(chr(asc([\"ae\", \"io\", \"uy\"]))),\n        flat(chr(asc([\"a\", \"e\", \"i\", \"o\", \"u\", \"y\"], simplify=False))),\n        flat(chr(asc([\"ae\", \"io\", \"uy\"], simplify=False))),\n        flat(chr([104, 101, 108, 108, 111, 33])),\n        flat(chr(65)),\n        flat(chr([int(_NA_INT), 65])),\n        flat(chr(np.array([], dtype=np.int64))),\n        flat(chr([[104, 101], 65])),\n        flat(chr([256, -1])),\n        flat(chr(asc([\"a\", \"hello\"]))),\n    ]\n    return [item for part in parts for item in part]\n\n\nchr(65)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "combinations",
+      "translated": true,
+      "python": "gtools.combinations.combinations",
+      "loads": [],
+      "uses": [],
+      "done": "Enumerates all r-combinations of the first n elements of v, with optional unique sort and optional repetition.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Column-major flatten of combinations(15,4), combinations(6,3,repeats.allowed=TRUE), and combinations(10,3) against gtools 3.9.5.",
+        "r_ms": 7.20524787902832,
+        "translated_ms": 7.078491000356735,
+        "speedup": 1.0179073306252981,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (length(x) == 0) return(numeric(0))\n  if (is.matrix(x)) return(as.numeric(x))\n  as.numeric(x)\n}\n\none <- function() {\n  c(\n    flat(combinations(15, 4)),\n    flat(combinations(6, 3, repeats.allowed = TRUE)),\n    flat(combinations(10, 3))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.combinations import combinations\n\n\ndef flat(x):\n    array = np.asarray(x)\n    if array.size == 0:\n        return []\n    if array.ndim == 2:\n        return array.reshape(-1, order=\"F\").astype(float).tolist()\n    return array.reshape(-1).astype(float).tolist()\n\n\ndef one():\n    out = []\n    out.extend(flat(combinations(15, 4)))\n    out.extend(flat(combinations(6, 3, repeats_allowed=True)))\n    out.extend(flat(combinations(10, 3)))\n    return out\n\n\none()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "ddirichlet",
+      "translated": true,
+      "python": "gtools.dirichlet.ddirichlet",
+      "loads": [],
+      "uses": [],
+      "done": "Dirichlet density on the simplex, with the log-gamma correction at a zero coordinate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Twenty simplex rows, a corner, an invalid row, and a per-row alpha matrix.",
+        "r_ms": 3.0983686447143555,
+        "translated_ms": 3.9008459989418043,
+        "speedup": 0.794281200938171,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.infinite(v)) return(if (v > 0) \"Inf\" else \"-Inf\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\none <- function() {\n  set.seed(4242)\n  x <- rdirichlet(20, c(1, 1, 1))\n  main <- ddirichlet(x, c(1, 1, 1))\n  extras <- c(\n    ddirichlet(c(0.25, 0.25, 0.5), c(2, 2, 2)),\n    ddirichlet(matrix(c(1, 0, 0), 1, 3), c(1, 2, 3)),\n    ddirichlet(matrix(c(0, 0.5, 0.5), 1, 3), c(1, 1, 1)),\n    ddirichlet(matrix(c(0.5, 0.6), 1, 2), c(2, 2)),\n    ddirichlet(matrix(c(-0.1, 0.6, 0.5), 1, 3), c(1, 1, 1)),\n    ddirichlet(matrix(c(0.5, 0.5), 1, 2), c(2, 2)),\n    ddirichlet(\n      matrix(c(0.3, 0.3, 0.4, 0.2, 0.5, 0.3), nrow = 2, byrow = TRUE),\n      matrix(c(2, 2, 2, 3, 3, 3), nrow = 2, byrow = TRUE)\n    )\n  )\n  c(main, extras)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.dirichlet import ddirichlet\n\n\ndef flat(x):\n    array = np.asarray(x, dtype=np.float64).reshape(-1)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(v)\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    return \"|\".join(fmt(v) for v in array)\n\n\ndef _x_matrix():\n    rows = [\n        [0.59191651718574978, 0.020643146941942438, 0.38744033587230781],\n        [0.0080828882746884125, 0.85049378237306883, 0.14142332935224264],\n        [0.58240337186657953, 0.35594157689718714, 0.061655051236233334],\n        [0.18237427895321912, 0.73651627096776429, 0.081109450079016432],\n        [0.53243110684827577, 0.25578967630823729, 0.21177921684348691],\n        [0.044748398434609843, 0.55221887506163125, 0.40303272650375893],\n        [0.22826616588009624, 0.68334105609708751, 0.088392778022816254],\n        [0.71558912072187419, 0.091499813858852044, 0.1929110654192738],\n        [0.23228643666411214, 0.031992958725614258, 0.73572060461027355],\n        [0.07510334331522063, 0.91423073708516867, 0.01066591959961064],\n        [0.27021039028529437, 0.11004787876908625, 0.61974173094561946],\n        [0.69946274100330852, 0.22213870692231333, 0.078398552074378083],\n        [0.45513809506851388, 0.40754193288911272, 0.13731997204237345],\n        [0.42111962092629207, 0.056968526222233057, 0.52191185285147479],\n        [0.069668034100463502, 0.64321396811899401, 0.28711799778054248],\n        [0.58364145355875363, 0.099789506010174805, 0.31656904043107154],\n        [0.15234185290754426, 0.37636848398195299, 0.47128966311050274],\n        [0.63278731992002135, 0.17536990411855641, 0.19184277596142219],\n        [0.013880104600768902, 0.87106800529141715, 0.11505189010781397],\n        [0.64826686619671092, 0.27442211281755496, 0.077311020985734002],\n    ]\n    return np.asarray(rows, dtype=np.float64)\n\n\ndef one():\n    x = _x_matrix()\n    main = ddirichlet(x, [1, 1, 1])\n    extras = np.concatenate(\n        [\n            ddirichlet([0.25, 0.25, 0.5], [2, 2, 2]),\n            ddirichlet([[1, 0, 0]], [1, 2, 3]),\n            ddirichlet([[0, 0.5, 0.5]], [1, 1, 1]),\n            ddirichlet([[0.5, 0.6]], [2, 2]),\n            ddirichlet([[-0.1, 0.6, 0.5]], [1, 1, 1]),\n            ddirichlet([[0.5, 0.5]], [2, 2]),\n            ddirichlet([[0.3, 0.3, 0.4], [0.2, 0.5, 0.3]], [[2, 2, 2], [3, 3, 3]]),\n        ]\n    )\n    return np.concatenate([main, extras])\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "defmacro",
+      "translated": true,
+      "python": "gtools.defmacro.defmacro",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a macro that substitutes arguments and evaluates the body in the caller frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "defmacro(a, b, expr = a * b) on (2, 3+4) and (i, j+k).",
+        "r_ms": 0.24807453155517578,
+        "translated_ms": 0.12412850082910154,
+        "speedup": 1.9985299902777485,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\none <- function() {\n  mul <- defmacro(a, b, expr = a * b)\n  i <- 2\n  j <- 3\n  k <- 4\n  as.numeric(c(mul(2, 3 + 4), mul(i, j + k)))\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(format(value, digits = 17), collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\n_ROOT = \"/home/ahmed/killr_projects/killr/packages\"\nfor _pkg in (\"evaluate\", \"rlang\", \"gtools\"):\n    sys.path.insert(0, f\"{_ROOT}/{_pkg}\")\n\nfrom rlang.as_label import Call  # noqa: E402\nfrom rlang.as_string import Symbol  # noqa: E402\n\nfrom gtools.defmacro import defmacro  # noqa: E402\n\n\ndef one():\n    mul = defmacro(\"a\", \"b\", expr=\"a * b\")\n    i, j, k = 2, 3, 4\n    return [\n        float(mul(2, Call(Symbol(\"+\"), 3, 4))),\n        float(mul(Symbol(\"i\"), Call(Symbol(\"+\"), Symbol(\"j\"), Symbol(\"k\")))),\n    ]\n\n\ninvisible = one()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "even",
+      "translated": true,
+      "python": "gtools.even.even",
+      "loads": [],
+      "uses": [],
+      "done": "Reports which numbers are even, with missing values where the input is not finite.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "even(4), even(1:10), half-integers, negatives, non-finite values, and an empty input.",
+        "r_ms": 0.1685619354248047,
+        "translated_ms": 0.3708219992404338,
+        "speedup": 0.454562932539265,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (v) \"TRUE\" else \"FALSE\"\n  }\n  if (length(x) == 0) return(character(0))\n  vapply(x, fmt, \"\")\n}\n\none <- function() {\n  c(\n    flat(even(4)),\n    flat(even(1:10)),\n    flat(even(1:10 + 0.5)),\n    flat(even(c(-4, -3, -2, -1, 0, 1, 2))),\n    flat(even(c(Inf, -Inf, NaN))),\n    flat(even(c(NA, 1, 2))),\n    flat(even(c(1L, 2L, 3L))),\n    flat(even(c(1.5, 2, 3, 4, NA, 0, -2))),\n    flat(even(integer(0))),\n    flat(even(c(TRUE, FALSE)))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(paste(value, collapse = \"|\")), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.even import _NA_LOGICAL, even\n\n\ndef fmt(v):\n    if isinstance(v, (np.integer, int)) and int(v) == int(_NA_LOGICAL):\n        return \"NA\"\n    if v is True or v is False or isinstance(v, (bool, np.bool_)):\n        return \"TRUE\" if bool(v) else \"FALSE\"\n    item = np.asarray(v).reshape(()).item()\n    if isinstance(item, (np.integer, int)) and int(item) == int(_NA_LOGICAL):\n        return \"NA\"\n    return \"TRUE\" if bool(item) else \"FALSE\"\n\n\ndef flat(x):\n    arr = np.asarray(x, dtype=np.int8).ravel(order=\"F\")\n    return [fmt(item) for item in arr]\n\n\ndef one():\n    parts = []\n    parts.extend(flat(even(4)))\n    parts.extend(flat(even(np.arange(1, 11, dtype=np.int32))))\n    parts.extend(flat(even(np.arange(1, 11, dtype=np.float64) + 0.5)))\n    parts.extend(flat(even(np.array([-4, -3, -2, -1, 0, 1, 2], dtype=np.float64))))\n    parts.extend(flat(even(np.array([np.inf, -np.inf, np.nan], dtype=np.float64))))\n    parts.extend(flat(even(np.array([np.nan, 1.0, 2.0], dtype=np.float64))))\n    parts.extend(flat(even(np.array([1, 2, 3], dtype=np.int32))))\n    parts.extend(\n        flat(\n            even(\n                np.array([1.5, 2.0, 3.0, 4.0, np.nan, 0.0, -2.0], dtype=np.float64)\n            )\n        )\n    )\n    parts.extend(flat(even(np.array([], dtype=np.int32))))\n    parts.extend(flat(even(np.array([True, False]))))\n    return parts\n\n\neven(4)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": \"|\".join(value), \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "foldchange",
+      "translated": true,
+      "python": "gtools.foldchange.foldchange",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the signed ratio of two numbers, negative when the numerator is smaller.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:21 against 21:1, missing values, zero over zero, matrices, and recycling.",
+        "r_ms": 0.9086132049560547,
+        "translated_ms": 0.8699985010025557,
+        "speedup": 1.0443847936622888,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (is.matrix(x)) {\n    return(paste(c(nrow(x), ncol(x), vapply(as.numeric(x), fmt, \"\")), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\n\none <- function() {\n  a <- 1:21\n  b <- 21:1\n  doc <- foldchange(a, b)\n  edge <- foldchange(c(1, 2, NA_real_, 0, 0), c(2, 1, 1, 0, 1))\n  mat <- as.numeric(foldchange(matrix(1:4, nrow = 2), matrix(4:1, nrow = 2)))\n  recycle <- foldchange(1:5, 3)\n  ints <- foldchange(c(1L, NA_integer_, 3L), c(2L, 1L, 3L))\n  c(doc, edge, mat, recycle, ints)\n}\n\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.foldchange import foldchange\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(np.real(v))\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    if array.ndim == 2:\n        data = [fmt(v) for v in array.reshape(-1, order=\"F\")]\n        return \"|\".join([str(int(array.shape[0])), str(int(array.shape[1])), *data])\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    doc = foldchange(np.arange(1, 22), np.arange(21, 0, -1))\n    edge = foldchange([1, 2, np.nan, 0, 0], [2, 1, 1, 0, 1])\n    mat = foldchange(np.array([[1, 3], [2, 4]]), np.array([[4, 2], [3, 1]]))\n    recycle = foldchange([1, 2, 3, 4, 5], 3)\n    ints = foldchange(\n        np.array([1, np.int32(-2147483648), 3], dtype=np.int32),\n        np.array([2, 1, 3], dtype=np.int32),\n    )\n    return np.concatenate(\n        [\n            np.asarray(doc, dtype=np.float64).reshape(-1),\n            np.asarray(edge, dtype=np.float64).reshape(-1),\n            np.asarray(mat, dtype=np.float64).ravel(order=\"F\"),\n            np.asarray(recycle, dtype=np.float64).reshape(-1),\n            np.asarray(ints, dtype=np.float64).reshape(-1),\n        ]\n    )\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "foldchange2logratio",
+      "translated": true,
+      "python": "gtools.foldchange2logratio.foldchange2logratio",
+      "loads": [],
+      "uses": [],
+      "done": "Converts a fold change to a log ratio.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A round trip, edges, a matrix, and a recycled base",
+        "r_ms": 0.16033649444580078,
+        "translated_ms": 1.397513000483741,
+        "speedup": 0.11472987685288168,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.infinite(v)) return(if (v > 0) \"Inf\" else \"-Inf\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (is.matrix(x)) {\n    return(paste(c(nrow(x), ncol(x), vapply(as.numeric(x), fmt, \"\")), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\n\none <- function() {\n  a <- 1:21\n  b <- 21:1\n  f <- foldchange(a, b)\n  doc <- logratio2foldchange(foldchange2logratio(f))\n  edge <- foldchange2logratio(c(-2, -1, 0, 0.5, 1, 2, NA_real_, -Inf, Inf))\n  above <- foldchange2logratio(c(2, 4, 8))\n  below <- foldchange2logratio(c(-2, -4, -8))\n  mat <- as.numeric(foldchange2logratio(matrix(c(-2, 0.5, 1, 2), nrow = 2)))\n  recycle <- foldchange2logratio(c(2, 4, 8), base = c(2, 2, 10))\n  ints <- foldchange2logratio(\n    c(2L, NA_integer_, -2L),\n    base = c(2L, 2L, 2L)\n  )\n  c(foldchange2logratio(f), doc, edge, above, below, mat, recycle, ints)\n}\n\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.foldchange import foldchange\nfrom gtools.foldchange2logratio import foldchange2logratio\nfrom gtools.logratio2foldchange import logratio2foldchange\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(np.real(v))\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    if array.ndim == 2:\n        data = [fmt(v) for v in array.reshape(-1, order=\"F\")]\n        return \"|\".join([str(int(array.shape[0])), str(int(array.shape[1])), *data])\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    a = np.arange(1, 22)\n    b = np.arange(21, 0, -1)\n    f = foldchange(a, b)\n    doc = logratio2foldchange(foldchange2logratio(f))\n    edge = foldchange2logratio(\n        np.array([-2.0, -1.0, 0.0, 0.5, 1.0, 2.0, np.nan, -np.inf, np.inf])\n    )\n    above = foldchange2logratio(np.array([2.0, 4.0, 8.0]))\n    below = foldchange2logratio(np.array([-2.0, -4.0, -8.0]))\n    mat = foldchange2logratio(np.array([-2.0, 0.5, 1.0, 2.0]).reshape(2, 2, order=\"F\"))\n    recycle = foldchange2logratio(np.array([2.0, 4.0, 8.0]), base=np.array([2.0, 2.0, 10.0]))\n    ints = foldchange2logratio(\n        np.array([2, np.int32(-2147483648), -2], dtype=np.int32),\n        base=np.array([2, 2, 2], dtype=np.int32),\n    )\n    return np.concatenate(\n        [\n            np.asarray(foldchange2logratio(f), dtype=np.float64).reshape(-1),\n            np.asarray(doc, dtype=np.float64).reshape(-1),\n            np.asarray(edge, dtype=np.float64).reshape(-1),\n            np.asarray(above, dtype=np.float64).reshape(-1),\n            np.asarray(below, dtype=np.float64).reshape(-1),\n            np.asarray(mat, dtype=np.float64).ravel(order=\"F\"),\n            np.asarray(recycle, dtype=np.float64).reshape(-1),\n            np.asarray(ints, dtype=np.float64).reshape(-1),\n        ]\n    )\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "getDependencies",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. Package dependencies are the R installation.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "inv.logit",
+      "translated": true,
+      "python": "gtools.inv_logit.inv_logit",
+      "loads": [],
+      "uses": [],
+      "done": "Inverse logit scaled to an interval, with the positive-infinity fix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A round trip through logit on a sequence, a recycled matrix, and infinite inputs.",
+        "r_ms": 0.1863241195678711,
+        "translated_ms": 1.0739804993136204,
+        "speedup": 0.17348929490521534,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.infinite(v)) return(if (v > 0) \"Inf\" else \"-Inf\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (is.matrix(x)) {\n    return(paste(c(nrow(x), ncol(x), vapply(as.numeric(x), fmt, \"\")), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\none <- function() {\n  x <- seq(0, 10, by = 0.25)\n  xt <- logit(x, min = 0, max = 10)\n  roundtrip <- inv.logit(xt, min = 0, max = 10)\n  close <- inv.logit(logit(c(1e-16, 1 - 1e-16, .Machine$double.eps, 1 - .Machine$double.eps, 0.5)))\n  mat <- as.numeric(\n    inv.logit(\n      logit(matrix(c(0.2, 0.8, 0.4, 0.6), nrow = 2), min = c(0, 0.1), max = 1),\n      min = c(0, 0.1),\n      max = 1\n    )\n  )\n  recycled <- inv.logit(\n    logit(c(0.2, 0.4, 0.6, 0.8), min = c(0, 0.1), max = 1),\n    min = c(0, 0.1),\n    max = 1\n  )\n  extremes <- inv.logit(c(-Inf, Inf, 1000, -1000))\n  c(roundtrip, close, mat, recycled, extremes)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.inv_logit import inv_logit\nfrom gtools.logit import logit\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(np.real(v))\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    if array.ndim == 2:\n        data = [fmt(v) for v in array.reshape(-1, order=\"F\")]\n        return \"|\".join([str(int(array.shape[0])), str(int(array.shape[1])), *data])\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    x = np.arange(41, dtype=np.float64) / 4.0\n    xt = logit(x, min=0, max=10)\n    roundtrip = inv_logit(xt, min=0, max=10)\n    eps = float(np.finfo(np.float64).eps)\n    close = inv_logit(\n        logit(np.array([1e-16, 1.0 - 1e-16, eps, 1.0 - eps, 0.5]))\n    )\n    mat = inv_logit(\n        logit(np.array([[0.2, 0.4], [0.8, 0.6]]), min=np.array([0.0, 0.1]), max=1),\n        min=np.array([0.0, 0.1]),\n        max=1,\n    )\n    recycled = inv_logit(\n        logit([0.2, 0.4, 0.6, 0.8], min=[0.0, 0.1], max=1),\n        min=[0.0, 0.1],\n        max=1,\n    )\n    extremes = inv_logit(np.array([-np.inf, np.inf, 1000.0, -1000.0]))\n    return np.concatenate(\n        [\n            np.asarray(roundtrip, dtype=np.float64).reshape(-1),\n            np.asarray(close, dtype=np.float64).reshape(-1),\n            np.asarray(mat, dtype=np.float64).ravel(order=\"F\"),\n            np.asarray(recycled, dtype=np.float64).reshape(-1),\n            np.asarray(extremes, dtype=np.float64).reshape(-1),\n        ]\n    )\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "invalid",
+      "translated": true,
+      "python": "gtools.invalid.invalid",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether a value is missing, empty, or a failed call.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "NULL, 42, an empty vector, NA, and a failed log",
+        "r_ms": 0.7483959197998047,
+        "translated_ms": 0.029701999665121548,
+        "speedup": 25.196819346767104,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nfmt <- function(v) if (isTRUE(v)) \"TRUE\" else \"FALSE\"\n\none <- function() {\n  failed <- try(log(\"A\"), silent = TRUE)\n  paste(\n    c(\n      fmt(invalid(NULL)),\n      fmt(invalid(42)),\n      fmt(invalid(numeric(0))),\n      fmt(invalid(NA)),\n      fmt(invalid(failed))\n    ),\n    collapse = \"|\"\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport statistics\nimport sys\nimport time\nimport types\n\nimport numpy as np\n\n_PKG = \"/home/ahmed/killr_projects/killr/packages/gtools/gtools\"\n\n\ndef _load_module(name: str, filename: str):\n    if \"gtools\" not in sys.modules:\n        sys.modules[\"gtools\"] = types.ModuleType(\"gtools\")\n    path = f\"{_PKG}/{filename}\"\n    spec = importlib.util.spec_from_file_location(f\"gtools.{name}\", path)\n    mod = importlib.util.module_from_spec(spec)\n    assert spec.loader is not None\n    sys.modules[f\"gtools.{name}\"] = mod\n    spec.loader.exec_module(mod)\n    return mod\n\n\n_load_module(\"na_replace\", \"na_replace.py\")\n_invalid_mod = _load_module(\"invalid\", \"invalid.py\")\ninvalid = _invalid_mod.invalid\nTryError = _invalid_mod.TryError\n\n\ndef fmt(v: bool) -> str:\n    return \"TRUE\" if v else \"FALSE\"\n\n\ndef one() -> str:\n    failed = TryError(\"non-numeric argument to mathematical function\")\n    parts = [\n        fmt(invalid(None)),\n        fmt(invalid(42)),\n        fmt(invalid(np.array([], dtype=np.float64))),\n        fmt(invalid(np.nan)),\n        fmt(invalid(failed)),\n    ]\n    return \"|\".join(parts)\n\n\ninvalid(None)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "keywords",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. Help keywords are the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lastAdd",
+      "translated": true,
+      "python": "gtools.last_add.lastAdd",
+      "loads": [],
+      "uses": [],
+      "done": "Runs a function as .Last, including a chain, a local function, and a stop.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help example exit messages, a captured .Last chain, a non-function .Last, a local .Last, and a fun that stops",
+        "r_ms": 0.744938850402832,
+        "translated_ms": 0.024663499971211422,
+        "speedup": 30.204101253770354,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nclear_last <- function() {\n  if (exists(\".Last\", envir = .GlobalEnv, inherits = FALSE)) {\n    rm(.Last, envir = .GlobalEnv)\n  }\n}\n\none <- function() {\n  on.exit(clear_last(), add = TRUE)\n  clear_last()\n  logs <- character()\n  bye <- function() {\n    logs <<- c(logs, \"bye\")\n    1\n  }\n  hello <- function() {\n    logs <<- c(logs, \"hello\")\n    2\n  }\n  early <- function() {\n    logs <<- c(logs, \"early\")\n    3\n  }\n\n  parts <- character()\n  f0 <- lastAdd(bye)\n  parts <- c(parts, if (identical(f0, bye)) \"SAME\" else \"DIFF\", as.character(f0()))\n\n  assign(\".Last\", bye, envir = .GlobalEnv)\n  f1 <- lastAdd(hello)\n  parts <- c(parts, if (identical(f1, hello)) \"SAME\" else \"WRAP\", as.character(f1(9)))\n\n  other <- function() {\n    logs <<- c(logs, \"other\")\n    9\n  }\n  assign(\".Last\", other, envir = .GlobalEnv)\n  parts <- c(parts, as.character(f1()))\n\n  assign(\".Last\", f1, envir = .GlobalEnv)\n  f2 <- lastAdd(early)\n  parts <- c(parts, as.character(f2()))\n\n  assign(\".Last\", 5, envir = .GlobalEnv)\n  parts <- c(parts, if (identical(lastAdd(hello), hello)) \"NUM_SAME\" else \"NUM_WRAP\")\n  assign(\".Last\", NULL, envir = .GlobalEnv)\n  parts <- c(parts, if (identical(lastAdd(hello), hello)) \"NULL_SAME\" else \"NULL_WRAP\")\n  assign(\".Last\", list(hello), envir = .GlobalEnv)\n  parts <- c(parts, if (identical(lastAdd(hello), hello)) \"LIST_SAME\" else \"LIST_WRAP\")\n\n  clear_last()\n  local_same <- local({\n    .Last <- function() 99\n    identical(lastAdd(hello), hello)\n  })\n  parts <- c(parts, if (isTRUE(local_same)) \"LOCAL_IGNORED\" else \"LOCAL_SEEN\")\n\n  hit <- 0\n  bad <- function() stop(\"boom\")\n  good <- function() {\n    hit <<- hit + 1\n    4\n  }\n  assign(\".Last\", good, envir = .GlobalEnv)\n  err <- tryCatch(lastAdd(bad)(), error = function(e) conditionMessage(e))\n  parts <- c(parts, err, as.character(hit))\n  parts <- c(\n    parts,\n    tryCatch(lastAdd(1), error = function(e) conditionMessage(e)),\n    tryCatch(lastAdd(NULL), error = function(e) conditionMessage(e)),\n    tryCatch(lastAdd(\"x\"), error = function(e) conditionMessage(e)),\n    tryCatch(lastAdd(list(hello)), error = function(e) conditionMessage(e))\n  )\n\n  clear_last()\n  helloWorld <- function() cat(\"\\nHello World!\\n\")\n  byeWorld <- function() cat(\"\\nGoodbye World!\\n\")\n  assign(\".Last\", lastAdd(byeWorld), envir = .GlobalEnv)\n  assign(\".Last\", lastAdd(helloWorld), envir = .GlobalEnv)\n  raw_con <- rawConnection(raw(0), open = \"w\")\n  sink(raw_con)\n  ex_val <- .Last()\n  sink()\n  printed <- rawToChar(rawConnectionValue(raw_con))\n  close(raw_con)\n  parts <- c(parts, if (is.null(ex_val)) \"NULL\" else as.character(ex_val), printed)\n  parts <- c(parts, paste(logs, collapse = \",\"))\n  paste(parts, collapse = \"|\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport io\nimport json\nimport statistics\nimport sys\nimport time\nfrom contextlib import redirect_stdout\n\n_PATH = \"/home/ahmed/killr_projects/killr/packages/gtools/gtools/last_add.py\"\n_spec = importlib.util.spec_from_file_location(\"gtools_last_add\", _PATH)\n_mod = importlib.util.module_from_spec(_spec)\nassert _spec.loader is not None\n_spec.loader.exec_module(_mod)\nlastAdd = _mod.lastAdd\nglobal_env = _mod.global_env\n\n\ndef one():\n    global_env.clear()\n    logs = []\n\n    def bye():\n        logs.append(\"bye\")\n        return 1\n\n    def hello():\n        logs.append(\"hello\")\n        return 2\n\n    def early():\n        logs.append(\"early\")\n        return 3\n\n    parts = []\n    f0 = lastAdd(bye)\n    parts.append(\"SAME\" if f0 is bye else \"DIFF\")\n    parts.append(str(f0()))\n\n    global_env[\".Last\"] = bye\n    f1 = lastAdd(hello)\n    parts.append(\"SAME\" if f1 is hello else \"WRAP\")\n    parts.append(str(f1(9)))\n\n    def other():\n        logs.append(\"other\")\n        return 9\n\n    global_env[\".Last\"] = other\n    parts.append(str(f1()))\n\n    global_env[\".Last\"] = f1\n    f2 = lastAdd(early)\n    parts.append(str(f2()))\n\n    global_env[\".Last\"] = 5\n    parts.append(\"NUM_SAME\" if lastAdd(hello) is hello else \"NUM_WRAP\")\n    global_env[\".Last\"] = None\n    parts.append(\"NULL_SAME\" if lastAdd(hello) is hello else \"NULL_WRAP\")\n    global_env[\".Last\"] = [hello]\n    parts.append(\"LIST_SAME\" if lastAdd(hello) is hello else \"LIST_WRAP\")\n\n    global_env.clear()\n\n    def local_case():\n        _Last = lambda: 99\n        return lastAdd(hello) is hello and _Last() == 99\n\n    parts.append(\"LOCAL_IGNORED\" if local_case() else \"LOCAL_SEEN\")\n\n    hit = {\"n\": 0}\n\n    def bad():\n        raise RuntimeError(\"boom\")\n\n    def good():\n        hit[\"n\"] += 1\n        return 4\n\n    global_env[\".Last\"] = good\n    try:\n        lastAdd(bad)()\n        err = \"\"\n    except RuntimeError as exc:\n        err = str(exc)\n    parts.append(err)\n    parts.append(str(hit[\"n\"]))\n\n    def message(value):\n        try:\n            lastAdd(value)\n        except ValueError as exc:\n            return str(exc)\n        return \"\"\n\n    parts.append(message(1))\n    parts.append(message(None))\n    parts.append(message(\"x\"))\n    parts.append(message([hello]))\n\n    global_env.clear()\n\n    def hello_world():\n        sys.stdout.write(\"\\nHello World!\\n\")\n\n    def bye_world():\n        sys.stdout.write(\"\\nGoodbye World!\\n\")\n\n    global_env[\".Last\"] = lastAdd(bye_world)\n    global_env[\".Last\"] = lastAdd(hello_world)\n    buf = io.StringIO()\n    with redirect_stdout(buf):\n        ex_val = global_env[\".Last\"]()\n    printed = buf.getvalue()\n    parts.append(\"NULL\" if ex_val is None else str(ex_val))\n    parts.append(printed)\n    parts.append(\",\".join(logs))\n    global_env.clear()\n    return \"|\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/lastAdd-r.txt"
+      },
+      "translation": {
+        "output": "output/lastAdd-python.txt"
+      }
+    },
+    {
+      "name": "loadedPackages",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. The search path is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "logit",
+      "translated": true,
+      "python": "gtools.logit.logit",
+      "loads": [],
+      "uses": [],
+      "done": "Generalized logit maps [min, max] through log(p / (1 - p)), with p = (x - min) / (max - min), infinite endpoints, and NaN outside the interval.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "logit(seq(0, 10, by = 0.25), min = 0, max = 10), five probabilities near 0 and 1, and a 2 by 2 matrix with min recycled",
+        "r_ms": 0.0756978988647461,
+        "translated_ms": 0.3968989999521,
+        "speedup": 0.1907233297989709,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) if (is.na(v)) \"NA\" else sprintf(\"%.16g\", as.numeric(v))\n  if (is.matrix(x)) return(paste(c(nrow(x), ncol(x), vapply(as.numeric(x), fmt, \"\")), collapse = \"|\"))\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\none <- function() {\n  x <- seq(0, 10, by = 0.25)\n  xt <- logit(x, min = 0, max = 10)\n  close <- logit(c(1e-16, 1 - 1e-16, .Machine$double.eps, 1 - .Machine$double.eps, 0.5))\n  mat <- as.numeric(logit(matrix(c(0.2, 0.8, 0.4, 0.6), nrow = 2), min = c(0, 0.1), max = 1))\n  recycled <- logit(c(0.2, 0.4, 0.6, 0.8), min = c(0, 0.1), max = 1)\n  c(xt, close, mat, recycled)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.logit import logit\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(np.real(v))\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    if array.ndim == 2:\n        data = [fmt(v) for v in array.reshape(-1, order=\"F\")]\n        return \"|\".join([str(int(array.shape[0])), str(int(array.shape[1])), *data])\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    x = np.arange(41, dtype=np.float64) / 4.0\n    xt = logit(x, min=0, max=10)\n    eps = float(np.finfo(np.float64).eps)\n    close = logit(np.array([1e-16, 1.0 - 1e-16, eps, 1.0 - eps, 0.5]))\n    mat = logit(np.array([[0.2, 0.4], [0.8, 0.6]]), min=np.array([0.0, 0.1]), max=1)\n    recycled = logit([0.2, 0.4, 0.6, 0.8], min=[0.0, 0.1], max=1)\n    return np.concatenate(\n        [\n            np.asarray(xt, dtype=np.float64).reshape(-1),\n            np.asarray(close, dtype=np.float64).reshape(-1),\n            np.asarray(mat, dtype=np.float64).ravel(order=\"F\"),\n            np.asarray(recycled, dtype=np.float64).reshape(-1),\n        ]\n    )\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "logratio2foldchange",
+      "translated": true,
+      "python": "gtools.logratio2foldchange.logratio2foldchange",
+      "loads": [],
+      "uses": [],
+      "done": "Fold change from a log ratio.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Round trip through foldchange, edges, and a matrix",
+        "r_ms": 0.20587444305419922,
+        "translated_ms": 0.7184999994933605,
+        "speedup": 0.286533671815405,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.infinite(v)) return(if (v > 0) \"Inf\" else \"-Inf\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (is.matrix(x)) {\n    return(paste(c(nrow(x), ncol(x), vapply(as.numeric(x), fmt, \"\")), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\n\none <- function() {\n  a <- 1:21\n  b <- 21:1\n  lr <- foldchange2logratio(foldchange(a, b))\n  doc <- logratio2foldchange(lr)\n  edge <- logratio2foldchange(c(-1, 0, 1, 2, NA_real_, -Inf, Inf))\n  half <- logratio2foldchange(0.5)\n  mat <- as.numeric(logratio2foldchange(matrix(c(-1, 0, 1, 2), nrow = 2)))\n  recycle <- logratio2foldchange(c(1, 2, 3), base = c(2, 2, 10))\n  ints <- logratio2foldchange(\n    c(1L, NA_integer_, -1L),\n    base = c(2L, 2L, 2L)\n  )\n  c(doc, edge, half, mat, recycle, ints)\n}\n\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.foldchange import foldchange\nfrom gtools.logratio2foldchange import logratio2foldchange\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(np.real(v))\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    if array.ndim == 2:\n        data = [fmt(v) for v in array.reshape(-1, order=\"F\")]\n        return \"|\".join([str(int(array.shape[0])), str(int(array.shape[1])), *data])\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    a = np.arange(1, 22)\n    b = np.arange(21, 0, -1)\n    f = foldchange(a, b)\n    # foldchange2logratio is not translated; mirror R for the doc round-trip only.\n    retval = np.where(f < 0, 1.0 / -f, f)\n    lr = np.log2(retval)\n    doc = logratio2foldchange(lr)\n    edge = logratio2foldchange(\n        np.array([-1.0, 0.0, 1.0, 2.0, np.nan, -np.inf, np.inf])\n    )\n    half = logratio2foldchange(0.5)\n    mat = logratio2foldchange(np.array([-1.0, 0.0, 1.0, 2.0]).reshape(2, 2, order=\"F\"))\n    recycle = logratio2foldchange(np.array([1.0, 2.0, 3.0]), base=np.array([2.0, 2.0, 10.0]))\n    ints = logratio2foldchange(\n        np.array([1, np.int32(-2147483648), -1], dtype=np.int32),\n        base=np.array([2, 2, 2], dtype=np.int32),\n    )\n    return np.concatenate(\n        [\n            np.asarray(doc, dtype=np.float64).reshape(-1),\n            np.asarray(edge, dtype=np.float64).reshape(-1),\n            np.asarray(half, dtype=np.float64).reshape(-1),\n            np.asarray(mat, dtype=np.float64).ravel(order=\"F\"),\n            np.asarray(recycle, dtype=np.float64).reshape(-1),\n            np.asarray(ints, dtype=np.float64).reshape(-1),\n        ]\n    )\n\n\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "mixedorder",
+      "translated": true,
+      "python": "gtools.mixedorder.mixedorder",
+      "loads": [],
+      "uses": [],
+      "done": "Orders strings by splitting decimal and roman tokens.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The reversed help-page dose labels, plus numeric, roman, and scientific-notation vectors.",
+        "r_ms": 27.83524990081787,
+        "translated_ms": 8.648129498396884,
+        "speedup": 3.2186439745123767,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.null(x)) return(numeric(0))\n  as.numeric(x)\n}\n\none <- function() {\n  x <- rev(c(\n    \"AA 0.50 ml\", \"AA 1.5 ml\", \"AA 500 ml\", \"AA 1500 ml\",\n    \"EXP 1\", \"AA 1e3 ml\", \"A A A\", \"1 2 3 A\", \"NA\", NA, \"1e2\",\n    \"\", \"-\", \"1A\", \"1 A\", \"100\", \"100A\", \"Inf\"\n  ))\n  chapters <- c(\n    \"V. Non Sequiturs\", \"II. More Nonsense\", \"I. Nonsense\",\n    \"IV. Nonesensical Citations\", \"III. Utter Nonsense\"\n  )\n  vals <- c(\"3E1\", \"2E3\", \"4e0\")\n  c(\n    flat(mixedorder(x)),\n    flat(mixedorder(x, decreasing = TRUE)),\n    flat(mixedorder(x, na.last = FALSE)),\n    flat(mixedorder(x, blank.last = TRUE)),\n    flat(mixedorder(c(3, 1, 2))),\n    flat(mixedorder(chapters, numeric.type = \"roman\")),\n    flat(mixedorder(vals)),\n    flat(mixedorder(vals, scientific = FALSE))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.mixedorder import mixedorder\n\n\ndef flat(value):\n    if value is None:\n        return []\n    return [float(x) for x in value.ravel(order=\"F\")]\n\n\ndef one():\n    x = list(reversed([\n        \"AA 0.50 ml\", \"AA 1.5 ml\", \"AA 500 ml\", \"AA 1500 ml\",\n        \"EXP 1\", \"AA 1e3 ml\", \"A A A\", \"1 2 3 A\", \"NA\", None, \"1e2\",\n        \"\", \"-\", \"1A\", \"1 A\", \"100\", \"100A\", \"Inf\",\n    ]))\n    chapters = [\n        \"V. Non Sequiturs\", \"II. More Nonsense\", \"I. Nonsense\",\n        \"IV. Nonesensical Citations\", \"III. Utter Nonsense\",\n    ]\n    vals = [\"3E1\", \"2E3\", \"4e0\"]\n    parts = [\n        flat(mixedorder(x)),\n        flat(mixedorder(x, decreasing=True)),\n        flat(mixedorder(x, na_last=False)),\n        flat(mixedorder(x, blank_last=True)),\n        flat(mixedorder([3, 1, 2])),\n        flat(mixedorder(chapters, numeric_type=\"roman\")),\n        flat(mixedorder(vals)),\n        flat(mixedorder(vals, scientific=False)),\n    ]\n    return [item for part in parts for item in part]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "mixedsort",
+      "translated": true,
+      "python": "gtools.mixedsort.mixedsort",
+      "loads": [],
+      "uses": [
+        "mixedorder"
+      ],
+      "done": "Returns x sorted with embedded numbers in numeric order by calling mixedorder and indexing with 1-based R order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help Treatment and complex x examples, plus decreasing, na.last, blank.last, a numeric vector, Roman chapters, lower-case Roman numerals, and scientific on decimal tokens.",
+        "r_ms": 30.15756607055664,
+        "translated_ms": 7.75327399969683,
+        "speedup": 3.889655656660124,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nfmt_one <- function(z) {\n  if (length(z) != 1) stop(\"expected length-1\")\n  if (is.character(z)) return(ifelse(is.na(z), \"NA\", z))\n  if (is.logical(z)) return(ifelse(is.na(z), \"NA\", ifelse(z, \"TRUE\", \"FALSE\")))\n  z <- as.numeric(z)\n  if (is.na(z)) \"NA\" else if (is.infinite(z)) {\n    if (z > 0) \"Inf\" else \"-Inf\"\n  } else {\n    sprintf(\"%.16g\", z)\n  }\n}\n\nflat <- function(x) {\n  if (is.null(x)) return(\"\")\n  paste(vapply(seq_along(x), function(i) fmt_one(x[[i]]), \"\"), collapse = \"|\")\n}\n\none <- function() {\n  treatment <- c(\n    \"Control\", \"Aspirin 10mg/day\", \"Aspirin 50mg/day\",\n    \"Aspirin 100mg/day\", \"Acetomycin 100mg/day\",\n    \"Acetomycin 1000mg/day\"\n  )\n  x <- rev(c(\n    \"AA 0.50 ml\", \"AA 1.5 ml\", \"AA 500 ml\", \"AA 1500 ml\",\n    \"EXP 1\", \"AA 1e3 ml\", \"A A A\", \"1 2 3 A\", \"NA\", NA, \"1e2\",\n    \"\", \"-\", \"1A\", \"1 A\", \"100\", \"100A\", \"Inf\"\n  ))\n  chapters <- c(\n    \"V. Non Sequiturs\", \"II. More Nonsense\", \"I. Nonsense\",\n    \"IV. Nonesensical Citations\", \"III. Utter Nonsense\"\n  )\n  vals <- c(\"3E1\", \"2E3\", \"4e0\")\n  roman_lower <- c(\n    \"xix\", \"xii\", \"mcv\", \"iii\", \"iv\", \"dcclxxii\", \"cdxcii\",\n    \"dcxcviii\", \"dcvi\", \"cci\"\n  )\n  paste(\n    flat(mixedsort(treatment)),\n    flat(mixedsort(x)),\n    flat(mixedsort(x, decreasing = TRUE)),\n    flat(mixedsort(x, na.last = FALSE)),\n    flat(mixedsort(x, blank.last = TRUE)),\n    flat(mixedsort(c(3, 1, 2))),\n    flat(mixedsort(chapters, numeric.type = \"roman\")),\n    flat(mixedsort(roman_lower, numeric.type = \"roman\", roman.case = \"lower\")),\n    flat(mixedsort(vals)),\n    flat(mixedsort(vals, scientific = FALSE)),\n    sep = \"|\"\n  )\n}\n\nmixedsort(c(\"A\", \"B\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.mixedsort import mixedsort\n\n\ndef fmt_one(z):\n    if isinstance(z, str):\n        return z\n    if isinstance(z, (bool, np.bool_)):\n        return \"TRUE\" if z else \"FALSE\"\n    if z is None:\n        return \"NA\"\n    if isinstance(z, float) and np.isnan(z):\n        return \"NA\"\n    value = float(np.real(z))\n    if math.isnan(value):\n        return \"NA\"\n    if math.isinf(value):\n        return \"Inf\" if value > 0 else \"-Inf\"\n    return format(value, \".16g\")\n\n\ndef flat(x):\n    if x is None:\n        return \"\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(fmt_one(item) for item in x)\n    array = np.asarray(x)\n    return \"|\".join(fmt_one(v) for v in array.reshape(-1))\n\n\ndef one():\n    treatment = [\n        \"Control\", \"Aspirin 10mg/day\", \"Aspirin 50mg/day\",\n        \"Aspirin 100mg/day\", \"Acetomycin 100mg/day\",\n        \"Acetomycin 1000mg/day\",\n    ]\n    x = list(reversed([\n        \"AA 0.50 ml\", \"AA 1.5 ml\", \"AA 500 ml\", \"AA 1500 ml\",\n        \"EXP 1\", \"AA 1e3 ml\", \"A A A\", \"1 2 3 A\", \"NA\", None, \"1e2\",\n        \"\", \"-\", \"1A\", \"1 A\", \"100\", \"100A\", \"Inf\",\n    ]))\n    chapters = [\n        \"V. Non Sequiturs\", \"II. More Nonsense\", \"I. Nonsense\",\n        \"IV. Nonesensical Citations\", \"III. Utter Nonsense\",\n    ]\n    vals = [\"3E1\", \"2E3\", \"4e0\"]\n    roman_lower = [\n        \"xix\", \"xii\", \"mcv\", \"iii\", \"iv\", \"dcclxxii\", \"cdxcii\",\n        \"dcxcviii\", \"dcvi\", \"cci\",\n    ]\n    parts = [\n        flat(mixedsort(treatment)),\n        flat(mixedsort(x)),\n        flat(mixedsort(x, decreasing=True)),\n        flat(mixedsort(x, na_last=False)),\n        flat(mixedsort(x, blank_last=True)),\n        flat(mixedsort([3, 1, 2])),\n        flat(mixedsort(chapters, numeric_type=\"roman\")),\n        flat(mixedsort(roman_lower, numeric_type=\"roman\", roman_case=\"lower\")),\n        flat(mixedsort(vals)),\n        flat(mixedsort(vals, scientific=False)),\n    ]\n    return \"|\".join(parts)\n\n\nmixedsort([\"A\", \"B\"])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "na.replace",
+      "translated": true,
+      "python": "gtools.na_replace.na_replace",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces missing values in a vector with a scalar, or with a function of the observed values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help examples 999 and median, plus integer, logical, character, matrix, complex, and NaN vectors.",
+        "r_ms": 0.3795623779296875,
+        "translated_ms": 0.4183769997325726,
+        "speedup": 0.9072257274475044,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nflat <- function(x) {\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.complex(v)) return(sprintf(\"%.16g+%.16gi\", Re(v), Im(v)))\n    if (is.logical(v)) return(if (v) \"TRUE\" else \"FALSE\")\n    if (is.character(v)) return(json_str(v))\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (is.matrix(x)) {\n    x <- as.vector(x)\n  }\n  if (length(x) == 0) {\n    return(character(0))\n  }\n  vapply(x, fmt, \"\")\n}\n\none <- function() {\n  x <- c(1, 2, 3, NA, 6, 7, 8, NA, NA)\n  c(\n    flat(na.replace(x, 999)),\n    flat(na.replace(x, median, na.rm = TRUE)),\n    flat(na.replace(c(1L, 2L, NA, 4L), 0L)),\n    flat(na.replace(c(TRUE, NA, FALSE), FALSE)),\n    flat(na.replace(c(\"a\", NA, \"c\"), \"999\")),\n    flat(na.replace(matrix(c(1, NA, 3, 4), 2, 2), 0)),\n    flat(na.replace(c(1 + 1i, NA), 0)),\n    flat(na.replace(c(1, NaN, 3), 0))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(paste(value, collapse = \"|\")), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.na_replace import NA, _NA_INT, _NA_LOGICAL, _NA_REAL, na_replace\n\n\ndef json_str(text):\n    parts = []\n    for char in text:\n        cp = ord(char)\n        if cp == 34:\n            parts.append('\\\\\"')\n        elif cp == 92:\n            parts.append(\"\\\\\\\\\")\n        elif cp == 10:\n            parts.append(\"\\\\n\")\n        elif cp == 13:\n            parts.append(\"\\\\r\")\n        elif cp == 9:\n            parts.append(\"\\\\t\")\n        elif cp < 32 or cp == 127:\n            parts.append(f\"\\\\u{cp:04x}\")\n        else:\n            parts.append(char)\n    return '\"' + \"\".join(parts) + '\"'\n\n\ndef fmt(v):\n    if v is NA:\n        return \"NA\"\n    if isinstance(v, complex) or (isinstance(v, np.complexfloating)):\n        re = float(np.real(v))\n        im = float(np.imag(v))\n        if np.isnan(re) or np.isnan(im):\n            return \"NA\"\n        return f\"{re:.16g}+{im:.16g}i\"\n    if isinstance(v, (bool, np.bool_)):\n        return \"TRUE\" if v else \"FALSE\"\n    if isinstance(v, str):\n        return json_str(v)\n    if isinstance(v, (np.integer, int)) and not isinstance(v, bool):\n        if np.int32(v) == _NA_INT:\n            return \"NA\"\n        return format(float(v), \".16g\")\n    if isinstance(v, (np.floating, float)):\n        if np.isnan(v):\n            return \"NA\"\n        return format(float(v), \".16g\")\n    if isinstance(v, np.int8):\n        code = int(v)\n        if code == int(_NA_LOGICAL):\n            return \"NA\"\n        return \"TRUE\" if code == 1 else \"FALSE\"\n    item = np.asarray(v).reshape(()).item()\n    return fmt(item)\n\n\ndef flat(x):\n    if isinstance(x, np.ndarray):\n        if x.ndim == 2:\n            items = x.reshape(-1, order=\"F\")\n        else:\n            items = x.ravel(order=\"F\")\n        return [fmt(item) for item in items]\n    if isinstance(x, list):\n        return [fmt(item) for item in x]\n    return [fmt(x)]\n\n\ndef r_median(x, na_rm=False):\n    arr = np.asarray(x, dtype=np.float64)\n    if na_rm:\n        arr = arr[~np.isnan(arr)]\n    return float(np.median(arr))\n\n\ndef one():\n    x = np.array([1.0, 2.0, 3.0, _NA_REAL, 6.0, 7.0, 8.0, _NA_REAL, _NA_REAL])\n    parts = []\n    parts.extend(flat(na_replace(x, 999)))\n    parts.extend(flat(na_replace(x, r_median, na_rm=True)))\n    parts.extend(flat(na_replace(np.array([1, 2, _NA_INT, 4], dtype=np.int32), np.int32(0))))\n    parts.extend(flat(na_replace([True, NA, False], False)))\n    parts.extend(flat(na_replace([ \"a\", NA, \"c\"], \"999\")))\n    parts.extend(flat(na_replace(np.array([[1.0, 3.0], [_NA_REAL, 4.0]]), 0)))\n    cx = np.array([1 + 1j, 0 + 0j], dtype=np.complex128)\n    cx[1] = complex(np.nan, 0.0)\n    parts.extend(flat(na_replace(cx, 0)))\n    nan_x = np.array([1.0, float(\"nan\"), 3.0])\n    parts.extend(flat(na_replace(nan_x, 0)))\n    return parts\n\n\nna_replace(np.array([1.0, 2.0]), 0)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": \"|\".join(value), \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "odd",
+      "translated": true,
+      "python": "gtools.odd.odd",
+      "loads": [],
+      "uses": [],
+      "done": "Reports which values are odd integers.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Integers, halves, negatives, missing values, and an empty input",
+        "r_ms": 0.13947486877441406,
+        "translated_ms": 0.35329499951330945,
+        "speedup": 0.3947830254222427,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (v) \"TRUE\" else \"FALSE\"\n  }\n  if (length(x) == 0) return(character(0))\n  vapply(x, fmt, \"\")\n}\n\none <- function() {\n  c(\n    flat(odd(4)),\n    flat(odd(1:10)),\n    flat(odd(1:10 + 0.5)),\n    flat(odd(c(-4, -3, -2, -1, 0, 1, 2))),\n    flat(odd(c(Inf, -Inf, NaN))),\n    flat(odd(c(NA, 1, 2))),\n    flat(odd(c(1L, 2L, 3L))),\n    flat(odd(c(1.5, 2, 3, 4, NA, 0, -2))),\n    flat(odd(integer(0))),\n    flat(odd(c(TRUE, FALSE)))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(paste(value, collapse = \"|\")), median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport json\nimport statistics\nimport time\n\nimport numpy as np\n\n_ODD_PATH = \"/home/ahmed/killr_projects/killr/packages/gtools/gtools/odd.py\"\n_spec = importlib.util.spec_from_file_location(\"gtools_odd\", _ODD_PATH)\n_mod = importlib.util.module_from_spec(_spec)\nassert _spec.loader is not None\n_spec.loader.exec_module(_mod)\nodd = _mod.odd\n_NA_LOGICAL = _mod._NA_LOGICAL\n\n\ndef fmt(v):\n    if isinstance(v, (np.integer, int)) and int(v) == int(_NA_LOGICAL):\n        return \"NA\"\n    if v is True or v is False or isinstance(v, (bool, np.bool_)):\n        return \"TRUE\" if bool(v) else \"FALSE\"\n    item = np.asarray(v).reshape(()).item()\n    if isinstance(item, (np.integer, int)) and int(item) == int(_NA_LOGICAL):\n        return \"NA\"\n    return \"TRUE\" if bool(item) else \"FALSE\"\n\n\ndef flat(x):\n    arr = np.asarray(x, dtype=np.int8).ravel(order=\"F\")\n    return [fmt(item) for item in arr]\n\n\ndef one():\n    parts = []\n    parts.extend(flat(odd(4)))\n    parts.extend(flat(odd(np.arange(1, 11, dtype=np.int32))))\n    parts.extend(flat(odd(np.arange(1, 11, dtype=np.float64) + 0.5)))\n    parts.extend(flat(odd(np.array([-4, -3, -2, -1, 0, 1, 2], dtype=np.float64))))\n    parts.extend(flat(odd(np.array([np.inf, -np.inf, np.nan], dtype=np.float64))))\n    parts.extend(flat(odd(np.array([np.nan, 1.0, 2.0], dtype=np.float64))))\n    parts.extend(flat(odd(np.array([1, 2, 3], dtype=np.int32))))\n    parts.extend(\n        flat(\n            odd(\n                np.array([1.5, 2.0, 3.0, 4.0, np.nan, 0.0, -2.0], dtype=np.float64)\n            )\n        )\n    )\n    parts.extend(flat(odd(np.array([], dtype=np.int32))))\n    parts.extend(flat(odd(np.array([True, False]))))\n    return parts\n\n\nodd(4)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": \"|\".join(value), \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "permutations",
+      "translated": true,
+      "python": "gtools.permutations.permutations",
+      "loads": [],
+      "uses": [],
+      "done": "Enumerates r-permutations, with or without repetition.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "permutations(8, 3), permutations(4, 3, repeats.allowed=TRUE), and permutations(10, 2).",
+        "r_ms": 1.1336803436279297,
+        "translated_ms": 2.0080824997421587,
+        "speedup": 0.5645586492454848,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (length(x) == 0) return(numeric(0))\n  if (is.matrix(x)) return(as.numeric(x))\n  as.numeric(x)\n}\n\none <- function() {\n  c(\n    flat(permutations(8, 3)),\n    flat(permutations(4, 3, repeats.allowed = TRUE)),\n    flat(permutations(10, 2))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(value, collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.permutations import permutations\n\n\ndef flat(x):\n    array = np.asarray(x)\n    if array.size == 0:\n        return []\n    if array.ndim == 2:\n        return array.reshape(-1, order=\"F\").astype(float).tolist()\n    return array.reshape(-1).astype(float).tolist()\n\n\ndef one():\n    out = []\n    out.extend(flat(permutations(8, 3)))\n    out.extend(flat(permutations(4, 3, repeats_allowed=True)))\n    out.extend(flat(permutations(10, 2)))\n    return out\n\n\npermutations(3, 2)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "permute",
+      "translated": true,
+      "python": "gtools.permute.permute",
+      "loads": [
+        "boot"
+      ],
+      "uses": [],
+      "done": "Draws a random permutation of a vector without replacement.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seeded permutations of 1:10, 1:100, five doubles, and twelve letters.",
+        "r_ms": 1.86,
+        "translated_ms": 7.02,
+        "speedup": 0.26495726495726496,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.character(v)) return(as.character(v))\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(x, fmt, \"\"), collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\none <- function() {\n  set.seed(1234)\n  a <- permute(1:10)\n  set.seed(5678)\n  b <- permute(1:100)\n  set.seed(9012)\n  c <- permute(c(1.5, 2.5, 3.5, 4.5, 5.5))\n  set.seed(3456)\n  d <- permute(letters[1:12])\n  c(as.numeric(a), as.numeric(b), sum(b), as.numeric(c), as.character(d))\n}\npermute(1:3)\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nfrom boot.rng import set_seed\nfrom gtools.permute import permute\n\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if isinstance(x, (list, tuple)):\n        parts = []\n        for v in x:\n            if isinstance(v, str):\n                parts.append(v)\n            else:\n                fv = float(v)\n                parts.append(\"NA\" if np.isnan(fv) else format(fv, \".16g\"))\n        return \"|\".join(parts)\n    array = np.asarray(x)\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        if isinstance(v, (str, bytes)):\n            return str(v)\n        value = float(np.real(v))\n        if np.isnan(value):\n            return \"NA\"\n        return format(value, \".16g\")\n\n    return \"|\".join(fmt(v) for v in array.reshape(-1))\n\n\ndef one():\n    set_seed(1234)\n    a = permute(np.arange(1, 11, dtype=np.int64))\n    set_seed(5678)\n    b = permute(np.arange(1, 101, dtype=np.int64))\n    set_seed(9012)\n    c = permute([1.5, 2.5, 3.5, 4.5, 5.5])\n    set_seed(3456)\n    d = permute(list(\"abcdefghijkl\"))\n    numeric = np.concatenate(\n        [\n            np.asarray(a, dtype=np.float64).reshape(-1),\n            np.asarray(b, dtype=np.float64).reshape(-1),\n            np.array([float(np.sum(b))], dtype=np.float64),\n            np.asarray(c, dtype=np.float64).reshape(-1),\n        ]\n    )\n    return list(numeric) + list(d)\n\n\npermute(np.arange(1, 4, dtype=np.int64))\nvalue = flat(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "quantcut",
+      "translated": true,
+      "python": "gtools.quantcut.quantcut",
+      "loads": [],
+      "uses": [],
+      "done": "Cuts a numeric vector at type-7 quantiles, including tied breaks.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seed 1234, 1000 normal draws at quartiles and deciles, plus a five-value vector with a missing entry.",
+        "r_ms": 14.164090156555176,
+        "translated_ms": 19.03517050050141,
+        "speedup": 0.7441010395038005,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (length(x) == 0) return(character(0))\n  vapply(x, function(v) if (is.na(v)) \"NA\" else as.character(v), \"\")\n}\n\none <- function() {\n  set.seed(1234)\n  x <- rnorm(1000)\n  quartiles <- as.character(quantcut(x))\n  deciles1 <- as.character(quantcut(x, 10))\n  deciles2 <- as.character(quantcut(x, seq(0, 1, by = 0.1)))\n  stopifnot(identical(deciles1, deciles2))\n  x2 <- round(x)\n  tied <- as.character(quantcut(x2, 10))\n  x3 <- c(1, 2, 3, NA, 5)\n  small <- as.character(quantcut(x3, 2))\n  c(flat(quartiles), flat(deciles1), flat(tied), flat(small))\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', paste0('\"', paste(value, collapse = \"|\"), '\"'), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/MASS\")\nfrom boot.rng import set_seed\nfrom gtools.quantcut import quantcut\nfrom mass._r_rng import norm_rand\n\n\ndef flat(factor):\n    return [label if label is not None else \"NA\" for label in factor.labels]\n\n\ndef one():\n    set_seed(1234)\n    x = np.array([norm_rand() for _ in range(1000)], dtype=np.float64)\n    quartiles = flat(quantcut(x))\n    deciles1 = flat(quantcut(x, 10))\n    deciles2 = flat(quantcut(x, np.arange(0.0, 1.1, 0.1)))\n    if deciles1 != deciles2:\n        raise RuntimeError(\"deciles mismatch\")\n    x2 = np.round(x)\n    tied = flat(quantcut(x2, 10))\n    x3 = [1.0, 2.0, 3.0, float(\"nan\"), 5.0]\n    small = flat(quantcut(x3, 2))\n    return quartiles + deciles1 + tied + small\n\n\nquantcut(np.array([1.0, 2.0]))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": \"|\".join(value), \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rdirichlet",
+      "translated": true,
+      "python": "gtools.rdirichlet.rdirichlet",
+      "loads": [
+        "extraDistr"
+      ],
+      "uses": [],
+      "done": "Dirichlet draws from normalized gamma variates.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seeds 4242 and 777, three alpha vectors",
+        "r_ms": 0.5487203598022461,
+        "translated_ms": 23.348390001046937,
+        "speedup": 0.023501421715914527,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  fmt <- function(v) {\n    if (is.na(v)) return(\"NA\")\n    if (is.infinite(v)) return(if (v > 0) \"Inf\" else \"-Inf\")\n    sprintf(\"%.16g\", as.numeric(v))\n  }\n  if (length(x) == 0) return(\"\")\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \"|\")\n}\n\none <- function() {\n  set.seed(4242)\n  main <- flat(rdirichlet(20, c(1, 1, 1)))\n  set.seed(4242)\n  wide <- flat(rdirichlet(5, c(0.5, 2, 4, 8)))\n  set.seed(777)\n  single <- flat(rdirichlet(1, c(3, 1, 1)))\n  paste(main, wide, single, sep = \"|\")\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nfrom boot.rng import set_seed\n\n_RDIRICHLET_PATH = \"/home/ahmed/killr_projects/killr/packages/gtools/gtools/rdirichlet.py\"\n_spec = importlib.util.spec_from_file_location(\"gtools_rdirichlet\", _RDIRICHLET_PATH)\n_mod = importlib.util.module_from_spec(_spec)\nassert _spec.loader is not None\n_spec.loader.exec_module(_mod)\nrdirichlet = _mod.rdirichlet\n\n\ndef flat(x):\n    array = np.asarray(x, dtype=np.float64).reshape(-1, order=\"F\")\n    if array.size == 0:\n        return \"\"\n\n    def fmt(v):\n        value = float(v)\n        if math.isnan(value):\n            return \"NA\"\n        if math.isinf(value):\n            return \"Inf\" if value > 0 else \"-Inf\"\n        return format(value, \".16g\")\n\n    return \"|\".join(fmt(v) for v in array)\n\n\ndef one():\n    set_seed(4242)\n    main = flat(rdirichlet(20, [1, 1, 1]))\n    set_seed(4242)\n    wide = flat(rdirichlet(5, [0.5, 2, 4, 8]))\n    set_seed(777)\n    single = flat(rdirichlet(1, [3, 1, 1]))\n    return \"|\".join([main, wide, single])\n\n\nset_seed(0)\nrdirichlet(1, [1.0])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "roman2int",
+      "translated": true,
+      "python": "gtools.roman2int.roman2int",
+      "loads": [],
+      "uses": [],
+      "done": "Trims and uppercases input, converts Roman numerals with the gtools C algorithm in the roman2int crate, and maps invalid or empty strings to NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Single-letter set I-M; MMXVI and mmxvi; MMMDCCCXCIX, MMMCM, MMMM; whitespace and case on iv; MCMLXXXIV; invalid, empty, and NA inputs; IXX; CDXLIV, CMXCIX, and MMCDXLIV.",
+        "r_ms": 1.8960237503051758,
+        "translated_ms": 0.15655550123483408,
+        "speedup": 12.110872727884088,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  fmt <- function(v) if (is.na(v)) \"NA\" else sprintf(\"%.16g\", as.numeric(v))\n  if (is.null(x)) return(character(0))\n  paste(vapply(as.numeric(x), fmt, \"\"), collapse = \",\")\n}\n\none <- function() {\n  val3899 <- \"MMMDCCCXCIX\"\n  val3900 <- \"MMMCM\"\n  val4000 <- \"MMMM\"\n  c(\n    flat(roman2int(c(\"I\", \"V\", \"X\", \"C\", \"L\", \"D\", \"M\"))),\n    flat(roman2int(\"MMXVI\")),\n    flat(roman2int(\"mmxvi\")),\n    flat(roman2int(val3899)),\n    flat(roman2int(val3900)),\n    flat(roman2int(val4000)),\n    flat(roman2int(c(\"  iv  \", \"MCMLXXXIV\", \"invalid\", \"\", NA, \"IXX\"))),\n    flat(roman2int(c(\"CDXLIV\", \"CMXCIX\", \"MMCDXLIV\")))\n  )\n}\n\nvalue <- paste(one(), collapse = \",\")\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.roman2int import roman2int\n\n\ndef flat(value) -> str:\n    if value is None:\n        return \"\"\n    arr = np.atleast_1d(np.asarray(value, dtype=np.float64))\n    parts = []\n    for item in arr.ravel(order=\"C\"):\n        if np.isnan(item):\n            parts.append(\"NA\")\n        else:\n            parts.append(f\"{float(item):.16g}\")\n    return \",\".join(parts)\n\n\ndef one() -> str:\n    val3899 = \"MMMDCCCXCIX\"\n    val3900 = \"MMMCM\"\n    val4000 = \"MMMM\"\n    parts = [\n        flat(roman2int([\"I\", \"V\", \"X\", \"C\", \"L\", \"D\", \"M\"])),\n        flat(roman2int(\"MMXVI\")),\n        flat(roman2int(\"mmxvi\")),\n        flat(roman2int(val3899)),\n        flat(roman2int(val3900)),\n        flat(roman2int(val4000)),\n        flat(roman2int([\"  iv  \", \"MCMLXXXIV\", \"invalid\", \"\", float(\"nan\"), \"IXX\"])),\n        flat(roman2int([\"CDXLIV\", \"CMXCIX\", \"MMCDXLIV\"])),\n    ]\n    return \",\".join(parts)\n\n\nroman2int(\"I\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "running",
+      "translated": true,
+      "python": "gtools.running.running",
+      "loads": [],
+      "uses": [],
+      "done": "Applies a function over fixed-width windows, with alignment, padding, and thinning.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Means on 1:20 with right, left, and center alignment, identity windows, by of 5 and 2, and padded mean, variance, and correlation on seeded normals.",
+        "r_ms": 15.821456909179688,
+        "translated_ms": 8.00099500156648,
+        "speedup": 1.9774361696366607,
+        "matches": true,
+        "max_abs_diff": 5.10702591327572e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat <- function(x) {\n  if (is.list(x) && !is.matrix(x)) {\n    parts <- character(0)\n    for (nm in names(x)) {\n      parts <- c(parts, nm, flat(x[[nm]]))\n    }\n    return(parts)\n  }\n  if (is.matrix(x)) {\n    return(c(nrow(x), ncol(x), as.numeric(x)))\n  }\n  if (length(x) == 0) return(numeric(0))\n  as.numeric(x)\n}\n\nsdfun <- function(x, sign = 1) mean(x) + sign * sqrt(var(x))\n\none <- function() {\n  x <- 1:20\n  parts <- list(\n    flat(running(x, width = 5)),\n    flat(running(x, width = 5, pad = TRUE)),\n    flat(running(x, width = 5, align = \"left\", pad = TRUE)),\n    flat(running(x, width = 5, align = \"center\", pad = TRUE)),\n    flat(running(x, width = 5, fun = function(v) v)),\n    flat(running(x, width = 5, fun = function(v) v, simplify = FALSE)),\n    flat(running(x, width = 5, by = 5)),\n    flat(running(x, width = 5, by = 2)),\n    flat(running(x, width = 5, allow.fewer = TRUE, pad = TRUE)),\n    flat(running(x, width = 5, allow.fewer = FALSE, pad = TRUE))\n  )\n  set.seed(42)\n  dat <- rnorm(40, sd = 1 + (1:40) / 40)\n  parts <- c(\n    parts,\n    flat(running(dat, width = 7, pad = TRUE, fun = mean)),\n    flat(running(dat, width = 7, pad = TRUE, fun = sdfun, sign = -1)),\n    flat(running(dat, width = 7, pad = TRUE, fun = sdfun, sign = 1))\n  )\n  sd.Y <- seq(0, 1, length.out = 30)\n  X <- rnorm(30)\n  Y <- rnorm(30, sd = sd.Y)\n  parts <- c(parts, flat(running(X, Y, width = 9, fun = cor, pad = TRUE)))\n  unlist(parts, use.names = FALSE)\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', paste(format(value, digits = 17), collapse = \",\"), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nimport importlib.util\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nfrom boot.rng import set_seed\nfrom gtools.running import running\n\n_rng_spec = importlib.util.spec_from_file_location(\n    \"mass_r_rng\",\n    \"/home/ahmed/killr_projects/killr/packages/MASS/mass/_r_rng.py\",\n)\n_rng_mod = importlib.util.module_from_spec(_rng_spec)\n_rng_spec.loader.exec_module(_rng_mod)\nnorm_rand = _rng_mod.norm_rand\n\n\ndef flat(x):\n    if isinstance(x, dict):\n        parts = []\n        for nm in x:\n            parts.append(nm)\n            parts.extend(flat(x[nm]))\n        return parts\n    if isinstance(x, np.ndarray) and x.ndim == 2:\n        data = x.reshape(-1, order=\"F\").astype(float)\n        return [float(x.shape[0]), float(x.shape[1]), *[float(v) for v in data]]\n    if isinstance(x, (list, tuple)):\n        if not x:\n            return []\n        return [float(v) for v in x]\n    array = np.asarray(x, dtype=float).reshape(-1)\n    if array.size == 0:\n        return []\n    return [float(v) for v in array]\n\n\ndef sdfun(x, sign=1):\n    x = np.asarray(x, dtype=float)\n    return float(np.mean(x) + sign * np.sqrt(np.var(x, ddof=1)))\n\n\ndef cor_r(xx, yy):\n    a = [float(v) for v in xx]\n    b = [float(v) for v in yy]\n    if len(a) < 2:\n        return math.nan\n    ma = sum(a) / len(a)\n    mb = sum(b) / len(b)\n    dx = [v - ma for v in a]\n    dy = [v - mb for v in b]\n    sxx = sum(v * v for v in dx)\n    syy = sum(v * v for v in dy)\n    if sxx == 0.0 or syy == 0.0:\n        return math.nan\n    return sum(x * y for x, y in zip(dx, dy)) / math.sqrt(sxx * syy)\n\n\ndef one():\n    x = np.arange(1, 21, dtype=float)\n    parts = [\n        flat(running(x, width=5)),\n        flat(running(x, width=5, pad=True)),\n        flat(running(x, width=5, align=\"left\", pad=True)),\n        flat(running(x, width=5, align=\"center\", pad=True)),\n        flat(running(x, width=5, fun=lambda v: v)),\n        flat(running(x, width=5, fun=lambda v: v, simplify=False)),\n        flat(running(x, width=5, by=5)),\n        flat(running(x, width=5, by=2)),\n        flat(running(x, width=5, allow_fewer=True, pad=True)),\n        flat(running(x, width=5, allow_fewer=False, pad=True)),\n    ]\n    set_seed(42)\n    dat = np.array(\n        [(1 + i / 40) * norm_rand() for i in range(1, 41)],\n        dtype=float,\n    )\n    parts.extend(\n        [\n            flat(running(dat, width=7, pad=True, fun=np.mean)),\n            flat(running(dat, width=7, pad=True, fun=sdfun, sign=-1)),\n            flat(running(dat, width=7, pad=True, fun=sdfun, sign=1)),\n        ]\n    )\n    sd_y = np.linspace(0, 1, 30)\n    xs = np.array([norm_rand() for _ in range(30)], dtype=float)\n    ys = []\n    for s in sd_y:\n        if s == 0.0:\n            ys.append(0.0)\n        else:\n            ys.append(s * norm_rand())\n    ys = np.array(ys, dtype=float)\n    parts.append(flat(running(xs, ys, width=9, fun=cor_r, pad=True)))\n    out = []\n    for part in parts:\n        out.extend(part)\n    return out\n\n\ninvisible = running(np.arange(1, 4, dtype=float), width=3)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "scat",
+      "translated": true,
+      "python": "gtools.scat.scat",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within the 1e-8 tolerance on the proof case.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Proof case from packages/gtools/proof",
+        "r_ms": 6.963,
+        "translated_ms": 0.1618,
+        "speedup": 43.0356,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "output": [
+          "packages/gtools/docs/output/scat-r.txt",
+          "packages/gtools/docs/output/scat-python.txt"
+        ]
+      }
+    },
+    {
+      "name": "script_file",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. The path of the running script is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "script_path",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. The path of the running script is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "setTCPNoDelay",
+      "translated": true,
+      "python": "gtools.set_tcp_no_delay.setTCPNoDelay",
+      "loads": [],
+      "uses": [],
+      "done": "Sets TCP_NODELAY on a connected socket.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Connected TCP socket toggled with logical and numeric values, then a bad descriptor.",
+        "r_ms": 1.8962621688842773,
+        "translated_ms": 0.073705499744392,
+        "speedup": 25.7275532417587,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nodir <- tempfile(\"nodelay\")\ndir.create(odir)\nwriteLines(c(\n  \"#include <R.h>\",\n  \"#include <errno.h>\",\n  \"#include <sys/socket.h>\",\n  \"#include <netinet/in.h>\",\n  \"#include <netinet/tcp.h>\",\n  \"\",\n  \"void zero_errno(void) { errno = 0; }\",\n  \"\",\n  \"void get_nodelay(int *fd, int *out, int *err) {\",\n  \"  int val = 0;\",\n  \"  socklen_t len = sizeof(val);\",\n  \"  int rc = getsockopt(*fd, IPPROTO_TCP, TCP_NODELAY, &val, &len);\",\n  \"  if (rc != 0) {\",\n  \"    *out = -1;\",\n  \"    *err = errno;\",\n  \"  } else {\",\n  \"    *out = val;\",\n  \"    *err = 0;\",\n  \"  }\",\n  \"}\"\n), file.path(odir, \"nodelay.c\"))\nwriteLines(c(\n  \"import socket, time, sys\",\n  \"s = socket.socket()\",\n  \"s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\",\n  \"s.bind(('127.0.0.1', 0))\",\n  \"s.listen(1)\",\n  \"s.settimeout(15)\",\n  \"sys.stdout.write(str(s.getsockname()[1]) + '\\\\n')\",\n  \"sys.stdout.flush()\",\n  \"c, _ = s.accept()\",\n  \"time.sleep(20)\",\n  \"c.close()\"\n), file.path(odir, \"listen.py\"))\nowd <- getwd()\nsetwd(odir)\nstatus <- system2(\n  file.path(R.home(\"bin\"), \"R\"),\n  c(\"CMD\", \"SHLIB\", \"nodelay.c\"),\n  stdout = \"/dev/null\",\n  stderr = \"/dev/null\"\n)\nsetwd(owd)\nif (status != 0) stop(\"helper compile failed\")\ndyn.load(file.path(odir, \"nodelay.so\"))\n\nnodelay <- function(fd) {\n  .C(\"get_nodelay\", fd = as.integer(fd), out = integer(1), err = integer(1))$out\n}\n\ncon <- pipe(paste(\"python3\", \"-u\", shQuote(file.path(odir, \"listen.py\"))), open = \"r\")\nport <- scan(con, n = 1, quiet = TRUE)\ncl <- make.socket(\"127.0.0.1\", port)\n\ninvisible(.C(\"zero_errno\"))\n\none <- function() {\n  bits <- c(\n    paste0(setTCPNoDelay(cl, TRUE), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, FALSE), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, 2), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, 0), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, -1), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, 0.9), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, 1.9), \"|\", nodelay(cl$socket)),\n    paste0(setTCPNoDelay(cl, c(FALSE, TRUE)), \"|\", nodelay(cl$socket))\n  )\n  paste(bits, collapse = \"|\")\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/gtools/docs/output\"\ndir.create(out_dir, showWarnings = FALSE, recursive = TRUE)\nex <- c(\n  capture.output(print(cl)),\n  capture.output(print(setTCPNoDelay(cl, TRUE)))\n)\nwriteLines(ex, file.path(out_dir, \"setTCPNoDelay-r.txt\"))\n\nbad <- list(socket = 99999L, \"x\", port = 1L)\nclass(bad) <- \"socket\"\nbad0 <- list(socket = 0L, \"x\", port = 1L)\nclass(bad0) <- \"socket\"\n\nerr <- function(expr) {\n  tryCatch(\n    {\n      force(expr)\n      stop(\"expected an error\")\n    },\n    error = function(e) conditionMessage(e)\n  )\n}\n\nstale_bad <- err(setTCPNoDelay(bad, TRUE))\nafter_bad <- paste0(setTCPNoDelay(cl, FALSE), \"|\", nodelay(cl$socket))\nstale_fd0 <- err(setTCPNoDelay(bad0, TRUE))\nafter_fd0 <- paste0(setTCPNoDelay(cl, TRUE), \"|\", nodelay(cl$socket))\nplain <- err(setTCPNoDelay(1L, TRUE))\nplain_list <- err(setTCPNoDelay(list(1), TRUE))\nna_msg <- err(setTCPNoDelay(cl, NA))\n\nwarns <- character()\nchar_msg <- tryCatch(\n  withCallingHandlers(\n    setTCPNoDelay(cl, \"yes\"),\n    warning = function(w) {\n      warns <<- c(warns, conditionMessage(w))\n      invokeRestart(\"muffleWarning\")\n    }\n  ),\n  error = function(e) conditionMessage(e)\n)\nchar_out <- paste(c(paste0(\"WARN:\", warns), paste0(\"ERR:\", char_msg)), collapse = \"|\")\n\nvalue <- paste(\n  c(value, stale_bad, after_bad, stale_fd0, after_fd0, plain, plain_list, na_msg, char_out),\n  collapse = \"|\"\n)\n\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\ninvisible(close.socket(cl))\ninvisible(close(con))\n",
+          "python": "import ctypes\nimport json\nimport socket\nimport statistics\nimport sys\nimport threading\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools/gtools\")\nfrom set_tcp_no_delay import Socket, setTCPNoDelay\n\nserver = socket.socket()\nserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\nserver.bind((\"127.0.0.1\", 0))\nserver.listen(1)\nport = server.getsockname()[1]\n\n\ndef _accept():\n    conn, _addr = server.accept()\n    time.sleep(20)\n    conn.close()\n\n\nthreading.Thread(target=_accept, daemon=True).start()\nclient = socket.create_connection((\"127.0.0.1\", port))\nctypes.set_errno(0)\n\n\ndef flag():\n    return client.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)\n\n\ndef one():\n    bits = [\n        f\"{setTCPNoDelay(client, True)}|{flag()}\",\n        f\"{setTCPNoDelay(client, False)}|{flag()}\",\n        f\"{setTCPNoDelay(client)}|{flag()}\",\n        f\"{setTCPNoDelay(client, 2)}|{flag()}\",\n        f\"{setTCPNoDelay(client, 0)}|{flag()}\",\n        f\"{setTCPNoDelay(client, -1)}|{flag()}\",\n        f\"{setTCPNoDelay(client, 0.9)}|{flag()}\",\n        f\"{setTCPNoDelay(client, 1.9)}|{flag()}\",\n        f\"{setTCPNoDelay(client, [False, True])}|{flag()}\",\n    ]\n    return \"|\".join(bits)\n\n\none()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_dir = \"/home/ahmed/killr_projects/killr/packages/gtools/docs/output\"\nshown = setTCPNoDelay(client, True)\nwith open(f\"{out_dir}/setTCPNoDelay-python.txt\", \"w\", encoding=\"utf-8\") as handle:\n    handle.write(shown + \"\\n\")\n\n\ndef err(func):\n    try:\n        func()\n    except RuntimeError as exc:\n        return str(exc)\n    raise RuntimeError(\"expected an error\")\n\n\nstale_bad = err(lambda: setTCPNoDelay(Socket(99999), True))\nafter_bad = f\"{setTCPNoDelay(client, False)}|{flag()}\"\nstale_fd0 = err(lambda: setTCPNoDelay(Socket(0), True))\nafter_fd0 = f\"{setTCPNoDelay(client, True)}|{flag()}\"\nplain = err(lambda: setTCPNoDelay(1, True))\nplain_list = err(lambda: setTCPNoDelay([1], True))\nna_msg = err(lambda: setTCPNoDelay(client, None))\n\nwith warnings.catch_warnings(record=True) as caught:\n    warnings.simplefilter(\"always\")\n    try:\n        setTCPNoDelay(client, \"yes\")\n        char_msg = \"SUCCESS\"\n    except RuntimeError as exc:\n        char_msg = str(exc)\nchar_out = \"|\".join(\n    [f\"WARN:{item.message}\" for item in caught] + [f\"ERR:{char_msg}\"]\n)\n\nvalue = \"|\".join(\n    [\n        value,\n        stale_bad,\n        after_bad,\n        stale_fd0,\n        after_fd0,\n        plain,\n        plain_list,\n        na_msg,\n        char_out,\n    ]\n)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\nclient.close()\nserver.close()\n"
+        }
+      },
+      "origin": {
+        "output": "output/setTCPNoDelay-r.txt"
+      },
+      "translation": {
+        "output": "output/setTCPNoDelay-python.txt"
+      }
+    },
+    {
+      "name": "smartbind",
+      "translated": true,
+      "python": "gtools.smartbind.smartbind",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly. Polars frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 1.8777,
+        "translated_ms": 0.3829,
+        "speedup": 4.9035,
+        "proof": {
+          "r": "packages/gtools/proof/smartbind-r.R",
+          "python": "packages/gtools/proof/smartbind-py.py"
+        }
+      }
+    },
+    {
+      "name": "split_path",
+      "translated": true,
+      "python": "gtools.split_path.split_path",
+      "loads": [],
+      "uses": [],
+      "done": "Splits a path into depth-first or reversed components with R dirname and basename semantics.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nineteen paths, absolute, relative, root, empty, NA, and both depth_first settings.",
+        "r_ms": 1.5878677368164062,
+        "translated_ms": 0.1015899997582892,
+        "speedup": 15.630157895406873,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\njson_str <- function(s) {\n  if (length(s) != 1) stop(\"scalar expected\")\n  if (is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nvec_json <- function(v) {\n  paste0(\"[\", paste(vapply(v, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  list(\n    vec_json(split_path(\"/home/user/file.txt\")),\n    vec_json(split_path(\"/home/user/file.txt\", depth_first = FALSE)),\n    vec_json(split_path(\"/home/user/\")),\n    vec_json(split_path(\"/home/user/\", depth_first = FALSE)),\n    vec_json(split_path(\"file.txt\")),\n    vec_json(split_path(\"./file.txt\")),\n    vec_json(split_path(\"../file.txt\")),\n    vec_json(split_path(\"../file.txt\", depth_first = FALSE)),\n    vec_json(split_path(\"/\")),\n    vec_json(split_path(\"a/b/c\")),\n    vec_json(split_path(\"a/b/c\", depth_first = FALSE)),\n    vec_json(split_path(\"a\")),\n    vec_json(split_path(\"\")),\n    vec_json(split_path(\"/a//b/c\")),\n    vec_json(split_path(\"relative/path/here\")),\n    vec_json(split_path(\"C:/Users/file\")),\n    vec_json(split_path(NA_character_)),\n    vec_json(split_path(\".\", depth_first = FALSE)),\n    vec_json(split_path(\"..\"))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(value, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.split_path import split_path\n\n\ndef vec_json(parts):\n    out = []\n    for part in parts:\n        if part is None:\n            out.append(None)\n        else:\n            out.append(part)\n    return out\n\n\ndef one():\n    return [\n        vec_json(split_path(\"/home/user/file.txt\")),\n        vec_json(split_path(\"/home/user/file.txt\", depth_first=False)),\n        vec_json(split_path(\"/home/user/\")),\n        vec_json(split_path(\"/home/user/\", depth_first=False)),\n        vec_json(split_path(\"file.txt\")),\n        vec_json(split_path(\"./file.txt\")),\n        vec_json(split_path(\"../file.txt\")),\n        vec_json(split_path(\"../file.txt\", depth_first=False)),\n        vec_json(split_path(\"/\")),\n        vec_json(split_path(\"a/b/c\")),\n        vec_json(split_path(\"a/b/c\", depth_first=False)),\n        vec_json(split_path(\"a\")),\n        vec_json(split_path(\"\")),\n        vec_json(split_path(\"/a//b/c\")),\n        vec_json(split_path(\"relative/path/here\")),\n        vec_json(split_path(\"C:/Users/file\")),\n        vec_json(split_path(None)),\n        vec_json(split_path(\".\", depth_first=False)),\n        vec_json(split_path(\"..\")),\n    ]\n\n\nsplit_path(\"/home/user/file.txt\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sprint",
+      "translated": true,
+      "python": "gtools.sprint.sprint",
+      "loads": [],
+      "uses": [],
+      "done": "Defunct stand-in for capture.output; every call raises the gtools 3.9.5 message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sprint(1) error message.",
+        "r_ms": 0.14281272888183594,
+        "translated_ms": 0.0011765005183406174,
+        "speedup": 121.38773137411332,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\none <- function() {\n  paste0(tryCatch(sprint(1), error = function(e) conditionMessage(e)), \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.sprint import sprint\n\n\ndef one():\n    try:\n        sprint(1)\n        return \"\\n\"\n    except RuntimeError as exc:\n        return str(exc) + \"\\n\"\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value, end=\"\")\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "stars.pval",
+      "translated": true,
+      "python": "gtools.stars_pval.stars_pval",
+      "loads": [],
+      "uses": [],
+      "done": "Maps p-values to significance stars with the same cutpoints and legend as R symnum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The example p-vector, cutpoint edges, a 2 by 2 matrix, and empty inputs.",
+        "r_ms": 1.2240409851074219,
+        "translated_ms": 0.1527974982309388,
+        "speedup": 8.010870591987056,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\nflat_stars <- function(x) {\n  paste(as.character(x), collapse = \"|\")\n}\n\none <- function() {\n  p <- c(\n    0.0004, 0.0015, 0.013, 0.044, 0.067, 0.24,\n    NA, 0, 0.001, 0.01, 0.05, 0.1, 1,\n    1e-10, 0.000999999, 0.0010000001, 0.009999999, 0.0100000001\n  )\n  ex <- gtools::stars.pval(p)\n  m <- matrix(c(0.001, 0.02, 0.06, 0.11), 2, 2)\n  mx <- gtools::stars.pval(m)\n  empty <- gtools::stars.pval(numeric(0))\n  empty_mat <- gtools::stars.pval(matrix(numeric(0), 0, 3))\n  c(\n    flat_stars(ex),\n    attr(ex, \"legend\"),\n    flat_stars(mx),\n    attr(mx, \"legend\"),\n    flat_stars(empty),\n    flat_stars(empty_mat),\n    as.character(length(empty_mat))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\npayload <- paste(value, collapse = \"§\")\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(payload), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nimport importlib.util\n\n_spec = importlib.util.spec_from_file_location(\n    \"stars_pval\",\n    \"/home/ahmed/killr_projects/killr/packages/gtools/gtools/stars_pval.py\",\n)\n_mod = importlib.util.module_from_spec(_spec)\n_spec.loader.exec_module(_mod)\nstars_pval = _mod.stars_pval\n\n\ndef flat_stars(result):\n    flat = result.values.ravel(order=\"F\")\n    return \"|\".join(flat)\n\n\ndef one():\n    p = np.array(\n        [\n            0.0004,\n            0.0015,\n            0.013,\n            0.044,\n            0.067,\n            0.24,\n            np.nan,\n            0.0,\n            0.001,\n            0.01,\n            0.05,\n            0.1,\n            1.0,\n            1e-10,\n            0.000999999,\n            0.0010000001,\n            0.009999999,\n            0.0100000001,\n        ],\n        dtype=float,\n    )\n    ex = stars_pval(p)\n    m = stars_pval(\n        np.array([0.001, 0.02, 0.06, 0.11], dtype=float).reshape(2, 2, order=\"F\")\n    )\n    empty = stars_pval(np.array([], dtype=float))\n    empty_mat = stars_pval(np.zeros((0, 3), dtype=float))\n    return \"§\".join(\n        [\n            flat_stars(ex),\n            ex.legend,\n            flat_stars(m),\n            m.legend,\n            flat_stars(empty),\n            flat_stars(empty_mat),\n            str(empty_mat.values.size),\n        ]\n    )\n\n\nstars_pval(np.array([0.5]))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "stat_mode",
+      "translated": true,
+      "python": "gtools.stat_mode.stat_mode",
+      "loads": [],
+      "uses": [],
+      "done": "Counts modes with R unique, match, and tabulate rules, including empty input and ties or na.rm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Character and numeric multi-mode vectors, na.rm and ties variants, logical ties, scalars, NA-only inputs, empty vectors, and integer and complex data.",
+        "r_ms": 1.6957521438598633,
+        "translated_ms": 2.4921214990172302,
+        "speedup": 0.6804452128552256,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(gtools))\nstopifnot(as.character(packageVersion(\"gtools\")) == \"3.9.5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nfmt <- function(v) {\n  if (length(v) == 0) return(\"\")\n  if (length(v) == 1) {\n    if (is.na(v)) return(\"NA\")\n    if (is.logical(v)) return(if (v) \"TRUE\" else \"FALSE\")\n    if (is.character(v)) return(json_str(v))\n    if (is.complex(v)) {\n      if (is.na(v)) return(\"NA\")\n      return(paste0(format(Re(v), digits = 16), \"+\", format(Im(v), digits = 16), \"i\"))\n    }\n    return(format(v, digits = 16))\n  }\n  paste(vapply(v, function(item) fmt(item), \"\"), collapse = \";\")\n}\n\nflat <- function(x) fmt(x)\n\none <- function() {\n  chr_vec <- c(\"a\", \"d\", \"d\", \"h\", \"h\", NA, NA)\n  num_vec <- c(2, 3, 3, 4, 4, NA, NA)\n  tie_num <- c(1, 1, 2, 2)\n  c(\n    flat(stat_mode(chr_vec)),\n    flat(stat_mode(chr_vec, na.rm = FALSE)),\n    flat(stat_mode(chr_vec, na.rm = FALSE, ties = \"first\")),\n    flat(stat_mode(chr_vec, na.rm = FALSE, ties = \"last\")),\n    flat(stat_mode(num_vec)),\n    flat(stat_mode(num_vec, na.rm = FALSE)),\n    flat(stat_mode(num_vec, na.rm = FALSE, ties = \"first\")),\n    flat(stat_mode(num_vec, na.rm = FALSE, ties = \"last\")),\n    flat(stat_mode(tie_num, ties = \"missing\")),\n    flat(stat_mode(tie_num, ties = \"first\")),\n    flat(stat_mode(tie_num, ties = \"last\")),\n    flat(stat_mode(tie_num, ties = \"all\")),\n    flat(stat_mode(c(TRUE, TRUE))),\n    flat(stat_mode(c(FALSE, FALSE, TRUE, TRUE))),\n    flat(stat_mode(c(NA_real_))),\n    flat(stat_mode(2)),\n    flat(stat_mode(NA)),\n    flat(stat_mode(\"a\")),\n    flat(stat_mode(c(NA, NA, NA))),\n    flat(stat_mode(double(0))),\n    flat(stat_mode(complex(0))),\n    flat(stat_mode(integer(0))),\n    flat(stat_mode(character(0))),\n    flat(stat_mode(c(1L, 2L, 2L))),\n    flat(stat_mode(c(1 + 1i, 2 + 2i, 2 + 2i)))\n  )\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(paste(value, collapse = \"|\")), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/gtools\")\nfrom gtools.na_replace import NA, _NA_INT, _NA_LOGICAL, _NA_REAL\nfrom gtools.stat_mode import stat_mode\n\n\ndef json_str(text):\n    parts = []\n    for char in text:\n        cp = ord(char)\n        if cp == 34:\n            parts.append('\\\\\"')\n        elif cp == 92:\n            parts.append(\"\\\\\\\\\")\n        elif cp == 10:\n            parts.append(\"\\\\n\")\n        elif cp == 13:\n            parts.append(\"\\\\r\")\n        elif cp == 9:\n            parts.append(\"\\\\t\")\n        elif cp < 32 or cp == 127:\n            parts.append(f\"\\\\u{cp:04x}\")\n        else:\n            parts.append(char)\n    return '\"' + \"\".join(parts) + '\"'\n\n\ndef fmt(v):\n    if v is NA:\n        return \"NA\"\n    if isinstance(v, (list, tuple)):\n        if len(v) == 0:\n            return \"\"\n        return \";\".join(fmt(item) for item in v)\n    if isinstance(v, np.ndarray):\n        if v.size == 0:\n            return \"\"\n        if v.size == 1:\n            return fmt(v.reshape(()).item())\n        return \";\".join(fmt(item) for item in v.ravel(order=\"F\"))\n    if isinstance(v, (bool, np.bool_)):\n        return \"TRUE\" if bool(v) else \"FALSE\"\n    if isinstance(v, str):\n        return json_str(v)\n    if isinstance(v, (complex, np.complexfloating)):\n        re = float(np.real(v))\n        im = float(np.imag(v))\n        if np.isnan(re) or np.isnan(im):\n            return \"NA\"\n        return f\"{re:.16g}+{im:.16g}i\"\n    if isinstance(v, (np.integer, int)) and not isinstance(v, bool):\n        if np.int32(v) == _NA_INT:\n            return \"NA\"\n        return format(float(v), \".16g\")\n    if isinstance(v, (np.floating, float)):\n        if np.isnan(v):\n            return \"NA\"\n        return format(float(v), \".16g\")\n    if isinstance(v, np.int8):\n        code = int(v)\n        if code == int(_NA_LOGICAL):\n            return \"NA\"\n        return \"TRUE\" if code == 1 else \"FALSE\"\n    return format(v)\n\n\ndef flat(x):\n    return fmt(x)\n\n\ndef one():\n    chr_vec = [\"a\", \"d\", \"d\", \"h\", \"h\", NA, NA]\n    num_vec = np.array([2.0, 3.0, 3.0, 4.0, 4.0, _NA_REAL, _NA_REAL], dtype=np.float64)\n    tie_num = np.array([1.0, 1.0, 2.0, 2.0], dtype=np.float64)\n    parts = [\n        flat(stat_mode(chr_vec)),\n        flat(stat_mode(chr_vec, na_rm=False)),\n        flat(stat_mode(chr_vec, na_rm=False, ties=\"first\")),\n        flat(stat_mode(chr_vec, na_rm=False, ties=\"last\")),\n        flat(stat_mode(num_vec)),\n        flat(stat_mode(num_vec, na_rm=False)),\n        flat(stat_mode(num_vec, na_rm=False, ties=\"first\")),\n        flat(stat_mode(num_vec, na_rm=False, ties=\"last\")),\n        flat(stat_mode(tie_num, ties=\"missing\")),\n        flat(stat_mode(tie_num, ties=\"first\")),\n        flat(stat_mode(tie_num, ties=\"last\")),\n        flat(stat_mode(tie_num, ties=\"all\")),\n        flat(stat_mode([True, True])),\n        flat(stat_mode([False, False, True, True])),\n        flat(stat_mode(np.array([_NA_REAL], dtype=np.float64))),\n        flat(stat_mode(2)),\n        flat(stat_mode(NA)),\n        flat(stat_mode(\"a\")),\n        flat(stat_mode(np.array([_NA_REAL, _NA_REAL, _NA_REAL], dtype=np.float64))),\n        flat(stat_mode(np.array([], dtype=np.float64))),\n        flat(stat_mode(np.array([], dtype=np.complex128))),\n        flat(stat_mode(np.array([], dtype=np.int32))),\n        flat(stat_mode([])),\n        flat(stat_mode(np.array([1, 2, 2], dtype=np.int32))),\n        flat(stat_mode(np.array([1 + 1j, 2 + 2j, 2 + 2j], dtype=np.complex128))),\n    ]\n    return parts\n\n\nstat_mode(np.array([2.0], dtype=np.float64))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": \"|\".join(value), \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "strmacro",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: R-language macro evaluation; not reproduced.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "unByteCode",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. Bytecode is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "unByteCodeAssign",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left. Bytecode is the R session.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ],
+  "strategy": "small-low"
+}

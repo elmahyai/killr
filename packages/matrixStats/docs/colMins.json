@@ -1,0 +1,76 @@
+{
+  "name": "colMins",
+  "title": "Gets the minimum of each column of a matrix",
+  "origin": {
+    "description": "Gets the minimum of each column of a matrix.",
+    "usage": "colMins(x, rows = NULL, cols = NULL, na.rm = FALSE, dim. = dim(x), ...,\n  useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when not a matrix. The argument is named with a period so it does not clash with dim."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "The installed function returns a vector of length K, one minimum per selected column, in the order of cols. Each column is scanned in the order of rows. When x is integer and every selected column has a non-missing value, the result stays integer. A column with no counted value makes the whole result double, and that column is +Inf. For doubles, R's NA stops that column. A plain NaN is stored and later finite values do not replace it.",
+    "value": "A vector of length K. The mode is integer when x is integer and every column counted a value, and double otherwise.",
+    "example": "x <- matrix(1:12, nrow = 4, ncol = 3)\ncolMins(x)",
+    "output": "output/colMins-r.txt"
+  },
+  "translation": {
+    "description": "Gets the minimum of each column of a matrix.",
+    "usage": "colMins(x, rows=None, cols=None, na_rm=False, dim=None, use_names=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. A 1-d vector is accepted when dim is set; it is filled column-major, as R stores a matrix. Integer values stay on the integer path. Floating values are computed as float64. Logical input is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and logical values are recycled. The scan walks the selected rows in this order."
+      },
+      {
+        "name": "cols",
+        "text": "1-based column subscripts. None selects every column. The result has one value per selected column, in this order."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm. False keeps R's NA and a plain NaN."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the number of rows and columns. This is dim. in R. None uses the shape of a 2-d x. A 1-d x is filled in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for the R argument useNames. It must be TRUE or FALSE. The result is a plain array, with no names attached."
+      }
+    ],
+    "details": "The scan lives in the Rust crate colranges, ported from matrixStats src/colRanges.c with what 0 and hasNA TRUE. R's NA is a NaN whose low 32 bits are 1954: that payload is copied and the rest of the column is skipped when na_rm is false. A plain NaN is stored, later finite values do not replace it, and a later NaN overwrites the minimum with its own payload. A column with no counted value is +Inf. Integer input returns int32 when every column counted a value. If any column counted nothing, the whole result is float64.",
+    "value": "A vector of length K. Floating input returns float64. Integer input returns int32 when every selected column has a non-missing value, and float64 otherwise.",
+    "example": "import numpy as np\nfrom matrixstats.colranges import colMins\n\nx = np.arange(1, 13).reshape((4, 3), order=\"F\")\ncolMins(x)",
+    "output": "output/colMins-python.txt"
+  }
+}

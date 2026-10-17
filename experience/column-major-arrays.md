@@ -1,0 +1,1 @@
+R `matrix`, `array`, and `as.vector` are column-major. Build with `reshape(..., order="F")` and flatten the same way. A tie that follows `which(..., arr.ind=TRUE)` follows that ravel, not `np.argwhere`. In nlme, R's lower.tri order is column-major, while NumPy's tril_indices is row-major, so the lower-triangle values must be reordered before comparison.

@@ -1,0 +1,92 @@
+{
+  "name": "rowVars",
+  "title": "Variance estimates for each row in a matrix",
+  "origin": {
+    "description": "Variance estimates for each row (column) in a matrix.",
+    "usage": "rowVars(x, rows = NULL, cols = NULL, na.rm = FALSE, refine = TRUE,\n  center = NULL, dim. = dim(x), ..., useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "refine",
+        "text": "If TRUE, center is NULL, and x is numeric, extra effort is used to calculate the average with greater numerical precision."
+      },
+      {
+        "name": "center",
+        "text": "Optional vector of length N. Pre-specified row means. NULL estimates them internally. A length-1 value is an error."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when not a matrix. The argument is named with a period so it does not clash with dim."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "With center NULL, the installed C routine returns the unbiased sample variance, sum((x - mean)^2) / (n - 1). For numeric x and refine TRUE it first corrects the mean by the mean of the residuals. Fewer than two values, or any missing value when na.rm is FALSE, is NA. A supplied center uses n/(n-1) * mean((x - center)^2). The other formula, mean(x^2) - center^2, is compared on the first call and then every 50.",
+    "value": "A numeric vector of length N.",
+    "example": "x <- matrix(1:12, nrow = 4, ncol = 3)\nrowVars(x)",
+    "output": "output/rowVars-r.txt"
+  },
+  "translation": {
+    "description": "Variance estimates for each row in a matrix.",
+    "usage": "rowVars(x, rows=None, cols=None, na_rm=False, refine=True,\n        center=None, dim=None, use_names=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. A 1-d vector is accepted when dim is set; it is filled column-major, as R stores a matrix. Integer values use the integer path, with R's integer NA equal to -2147483648. Floating values are computed as float64. Logical input is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and logical values are recycled."
+      },
+      {
+        "name": "cols",
+        "text": "1-based column subscripts. None selects every column. The scan walks the selected columns in this order."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, NaN values are excluded. This is na.rm. False stores R's NA when any value is missing. Double NA is NaN."
+      },
+      {
+        "name": "refine",
+        "text": "If True, center is omitted, and x is floating point, a second pass adds the mean of the residuals before the squared deviations. Integer arrays do not use that pass."
+      },
+      {
+        "name": "center",
+        "text": "Optional float vector of length N, the pre-specified row means. None estimates them with the C routine. A length-1 value is an error. On the first call, and then every 50, a center that is not the sample mean raises the installed formula error."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the number of rows and columns. This is dim. in R. None uses the shape of a 2-d x. A 1-d x is filled in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for the R argument useNames. It must be TRUE or FALSE. The result is a plain float64 vector, with no names attached."
+      }
+    ],
+    "details": "The scan lives in the Rust crate rowvars, ported from matrixStats src/rowVars.c. The result is sum((x - mean)^2) / (n - 1). refine matches the residual correction in that C code. A supplied center follows R/rowVars.R: n/(n-1) * mean((x - center)^2), with infinite centers written onto the row before the mean. R's NA is the NaN whose bits are 0x7ff00000000007a2.",
+    "value": "A float64 vector of length equal to the number of selected rows.",
+    "example": "import numpy as np\nfrom matrixstats.rowvars import rowVars\n\nx = np.arange(1, 13).reshape((4, 3), order=\"F\")\nrowVars(x)",
+    "output": "output/rowVars-python.txt"
+  }
+}

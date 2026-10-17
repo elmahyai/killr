@@ -1,0 +1,52 @@
+{
+ "name": "gsummary",
+ "title": "Summarize by Groups",
+ "origin": {
+  "description": "Summarize a data frame by the levels of a grouping factor, one row per group.",
+  "usage": "gsummary(object, FUN, omitGroupingFactor, form, level, groups, invariantsOnly, ...)",
+  "arguments": [
+   {
+    "name": "object",
+    "text": "a data frame"
+   },
+   {
+    "name": "FUN",
+    "text": "summary for numeric varying columns; a list may give numeric, ordered and factor functions"
+   },
+   {
+    "name": "omitGroupingFactor",
+    "text": "drop the grouping column from the result"
+   },
+   {
+    "name": "invariantsOnly",
+    "text": "keep only columns that do not vary within groups"
+   }
+  ],
+  "details": "Varying numeric columns use FUN (default mean with na.rm). Varying factors use the most frequent level. Invariant columns keep their first value within each group.",
+  "value": "A data frame with one row per group, or NULL when omitGroupingFactor leaves no columns.",
+  "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nlme))\ndf <- data.frame(\n  y = c(1, 2, 3, 4, 5, 7),\n  x = c(1, 2, 1, 2, 1, 2),\n  g = c(\"b\", \"b\", \"a\", \"a\", \"c\", \"c\"),\n  s = c(\"M\", \"M\", \"F\", \"F\", \"M\", \"M\")\n)\nprint(gsummary(df, form = y ~ x | g))\n",
+  "output": "output/gsummary-r.txt"
+ },
+ "translation": {
+  "description": "Summarize a DataFrame by group, with rows in the group factor level order.",
+  "usage": "gsummary(object, FUN=None, omitGroupingFactor=False, form=None, level=None, groups=None, invariantsOnly=False)",
+  "arguments": [
+   {
+    "name": "object",
+    "text": "a DataFrame with numeric and Factor columns"
+   },
+   {
+    "name": "FUN",
+    "text": "a callable for numeric columns, or a dict with numeric, ordered and factor keys"
+   },
+   {
+    "name": "form",
+    "text": "grouping formula such as 'y ~ x | g'; defaults to the object's formula attribute"
+   }
+  ],
+  "details": "Character columns raise an error as in R, because R has no default summary for them. Groups are taken from the formula with the same level rules as getGroups.",
+  "value": "A DataFrame with one row per group; row names are in attributes['row.names'].",
+  "example": "import numpy as np\n\nfrom nlme.groupeddata import DataFrame, Factor\nfrom nlme.gsummary import gsummary\n\ndf = DataFrame(\n    columns={\n        \"y\": np.array([1.0, 2.0, 3.0, 4.0, 5.0, 7.0]),\n        \"x\": np.array([1.0, 2.0, 1.0, 2.0, 1.0, 2.0]),\n        \"g\": Factor.from_values([\"b\", \"b\", \"a\", \"a\", \"c\", \"c\"]),\n        \"s\": Factor.from_values([\"M\", \"M\", \"F\", \"F\", \"M\", \"M\"], levels=(\"M\", \"F\")),\n    }\n)\nout = gsummary(df, form=\"y ~ x | g\")\nfor name, column in out.columns.items():\n    print(name, column.texts() if isinstance(column, Factor) else column.tolist())\nprint(\"row names\", out.attributes[\"row.names\"])\n",
+  "output": "output/gsummary-python.txt"
+ }
+}

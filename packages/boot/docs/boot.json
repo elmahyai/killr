@@ -1,0 +1,124 @@
+{
+  "name": "boot",
+  "title": "Bootstrap resampling",
+  "origin": {
+    "description": "Generate R bootstrap replicates of a statistic applied to data. Nonparametric resampling can be ordinary, balanced, antithetic, or a permutation, within strata when those are supplied. A parametric bootstrap uses a random generator supplied by the caller.",
+    "usage": "boot(data, statistic, R, sim = \"ordinary\", stype = c(\"i\", \"f\", \"w\"),\n     strata = rep(1,n), L = NULL, m = 0, weights = NULL,\n     ran.gen = function(d, p) d, mle = NULL, simple = FALSE, ...,\n     parallel = c(\"no\", \"multicore\", \"snow\"),\n     ncpus = getOption(\"boot.ncpus\", 1L), cl = NULL)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "The data as a vector, matrix, or data frame. Each row of a matrix or data frame is one observation."
+      },
+      {
+        "name": "statistic",
+        "text": "Function returning the statistic. For a nonparametric bootstrap its second argument is the index, frequency, or weight vector. For a parametric bootstrap it receives only the simulated data."
+      },
+      {
+        "name": "R",
+        "text": "Number of bootstrap replicates. For importance resampling with several weight rows, a vector of replicate counts, one per row."
+      },
+      {
+        "name": "sim",
+        "text": "Simulation type: \"ordinary\", \"parametric\", \"balanced\", \"permutation\", or \"antithetic\"."
+      },
+      {
+        "name": "stype",
+        "text": "What the second argument of statistic represents: \"i\" indices, \"f\" frequencies, or \"w\" weights. A unique prefix is accepted. Not used when sim is \"parametric\"."
+      },
+      {
+        "name": "strata",
+        "text": "Integer vector or factor of strata. Resampling is done inside each stratum. Ignored for a parametric bootstrap."
+      },
+      {
+        "name": "L",
+        "text": "Influence values, used only for antithetic resampling. If omitted they are calculated by the jackknife, or by the infinitesimal jackknife when stype is \"w\"."
+      },
+      {
+        "name": "m",
+        "text": "Number of extra prediction indices at each replicate. Only for sim = \"ordinary\". A vector gives a count per stratum."
+      },
+      {
+        "name": "weights",
+        "text": "Importance weights, a vector of length n or a matrix with one weight set per row. Ignored unless sim is \"ordinary\" or \"balanced\"."
+      },
+      {
+        "name": "ran.gen, mle",
+        "text": "For a parametric bootstrap, ran.gen(data, mle) returns one simulated data set."
+      },
+      {
+        "name": "simple",
+        "text": "If TRUE, and only for an ordinary index bootstrap with m = 0, each replicate is drawn on its own instead of building the whole index matrix first."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Parallel backends in R. The translation runs the serial path."
+      }
+    ],
+    "details": "The statistic is treated as a black box. Ordinary and balanced resampling can use importance weights. Antithetic resampling pairs each draw with the observation of opposite empirical influence. Permutation draws without replacement inside strata. The checked comparison is serial.",
+    "value": "An object of class \"boot\" with components t0, t, R, data, seed, statistic, sim, call, and, depending on sim, stype, strata, weights, pred.i, L, ran.gen, and mle.",
+    "example": "set.seed(1)\nstat <- function(d, i) mean(d[i])\nboot(1:10, stat, R = 50)",
+    "output": "output/boot-r.txt"
+  },
+  "translation": {
+    "description": "Generate bootstrap replicates of a statistic. Draws use boot.rng, which matches R set.seed. Index matrices are filled down the columns.",
+    "usage": "boot(data, statistic, R, sim=\"ordinary\", stype=\"i\", strata=None, L=None, m=0, weights=None, ran_gen=None, mle=None, simple=False, parallel=\"no\", ncpus=1, cl=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "Observations. A 1-d sequence is one observation per entry. A 2-d array uses rows as observations. A dict of equal-length columns is treated as a data frame."
+      },
+      {
+        "name": "statistic",
+        "text": "Function returning the statistic. For a nonparametric bootstrap the second argument is 1-based indices, frequencies, or weights. For a parametric bootstrap it receives only the simulated data."
+      },
+      {
+        "name": "R",
+        "text": "Number of replicates. A sequence gives one count per row of importance weights."
+      },
+      {
+        "name": "sim",
+        "text": "\"ordinary\", \"parametric\", \"balanced\", \"permutation\", or \"antithetic\"."
+      },
+      {
+        "name": "stype",
+        "text": "\"i\", \"f\", or \"w\". A unique prefix is accepted, as in match.arg."
+      },
+      {
+        "name": "strata",
+        "text": "One stratum label per observation. Labels are recoded to 1..k in sorted order before resampling, which is what tapply does in R."
+      },
+      {
+        "name": "L",
+        "text": "Influence values for antithetic resampling. If omitted, the delete-one jackknife is used, or the infinitesimal jackknife when stype is \"w\"."
+      },
+      {
+        "name": "m",
+        "text": "Extra prediction indices per replicate. Only for an ordinary bootstrap."
+      },
+      {
+        "name": "weights",
+        "text": "Importance weights. A vector has one weight per observation. A matrix has one weight set per row."
+      },
+      {
+        "name": "ran_gen, mle",
+        "text": "ran_gen(data, mle) returns one simulated data set when sim is \"parametric\". This is ran.gen in R."
+      },
+      {
+        "name": "simple",
+        "text": "Draw each ordinary index replicate separately. Ignored, with a warning, unless sim is \"ordinary\", stype is \"i\", and m is 0."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Accepted so they are not passed through to statistic. Resampling is serial."
+      },
+      {
+        "name": "kwargs",
+        "text": "Further arguments forwarded to statistic on every replicate."
+      }
+    ],
+    "details": "R's mean cannot be the statistic of a nonparametric bootstrap, because the index vector is passed as trim. Use a function of the data and the indices, such as the mean of d[i]. The returned object stores the generator state from the start of the call so boot_array can recreate the indices. parallel other than \"no\" is ignored after a warning.",
+    "value": "A BootResult with attributes t0, t, R, data, seed, statistic, sim, call, and the other components boot.return stores for that sim.",
+    "example": "from boot.resample import boot\nfrom boot.rng import set_seed\nimport numpy as np\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\nset_seed(1)\nprint(boot(np.arange(1, 11), stat, R=50), end=\"\")",
+    "output": "output/boot-python.txt"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "quadprog",
+  "cran_version": "1.5-8",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "resume": "Both exports match quadprog 1.5-8. solve.QP and solve.QP.compact use the Goldfarb-Idnani dual method in NumPy, including the active set and the two iteration counts. There is no crate.",
+  "functions": [
+    {
+      "name": "solve.QP",
+      "translated": true,
+      "python": "quadprog.solve_qp",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Goldfarb-Idnani dual method. The active set and the iteration counts follow the Fortran order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Minimize -d'x + 1/2 x'Dx subject to A'x >= b. The first meq constraints are equalities.",
+        "r_ms": 0.10120868682861328,
+        "translated_ms": 0.4957050005032215,
+        "speedup": 0.20417120409491518,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(quadprog))\nDmat <- diag(3)\ndvec <- c(0, 5, 0)\nAmat <- matrix(c(-4, -3, 0, 2, 1, 0, 0, -2, 1), 3, 3)\nbvec <- c(-8, 2, 0)\none <- function() {\n  res <- solve.QP(Dmat, dvec, Amat, bvec=bvec)\n  c(res$solution, res$value, res$unconstrained.solution, res$iterations, res$Lagrangian, res$iact)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom quadprog import solve_qp\nD = np.eye(3)\nd = np.array([0.0, 5.0, 0.0])\nA = np.array([-4, -3, 0, 2, 1, 0, 0, -2, 1], dtype=float).reshape((3, 3), order=\"F\")\nb = np.array([-8.0, 2.0, 0.0])\ndef one():\n    res = solve_qp(D, d, A, b)\n    return np.concatenate([res[\"solution\"], [res[\"value\"]], res[\"unconstrained_solution\"], res[\"iterations\"], res[\"Lagrangian\"], res[\"iact\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "solve.QP.compact",
+      "translated": true,
+      "python": "quadprog.solve_qp_compact",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Packed constraints are expanded with Aind, then solved by the same dual method.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same dual method with a packed constraint matrix. Aind gives the row numbers of the nonzero entries.",
+        "r_ms": 0.07724761962890625,
+        "translated_ms": 0.49152049905387685,
+        "speedup": 0.1571605248969259,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(quadprog))\nDmat <- diag(3)\ndvec <- c(0, 5, 0)\nAmat <- rbind(c(-4, 2, -2), c(-3, 1, 1))\nAind <- rbind(c(2, 2, 2), c(1, 1, 2), c(2, 2, 3))\nbvec <- c(-8, 2, 0)\none <- function() {\n  res <- solve.QP.compact(Dmat, dvec, Amat, Aind, bvec=bvec)\n  c(res$solution, res$value, res$unconstrained.solution, res$iterations, res$Lagrangian, res$iact)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\n\", sep=\"\")\ncat(\"MS\n\")\ncat(sprintf(\"%.17g\n\", median(elapsed) * 1000))\n",
+          "python": "import numpy as np\nfrom quadprog import solve_qp_compact\nD = np.eye(3)\nd = np.array([0.0, 5.0, 0.0])\nA = np.array([[-4.0, 2.0, -2.0], [-3.0, 1.0, 1.0]])\nAind = np.array([[2, 2, 2], [1, 1, 2], [2, 2, 3]])\nb = np.array([-8.0, 2.0, 0.0])\ndef one():\n    res = solve_qp_compact(D, d, A, Aind, b)\n    return np.concatenate([res[\"solution\"], [res[\"value\"]], res[\"unconstrained_solution\"], res[\"iterations\"], res[\"Lagrangian\"], res[\"iact\"]])\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\narr = __import__(\"numpy\").atleast_1d(__import__(\"numpy\").asarray(value, dtype=float))\nprint(\",\".join(\"%.17g\" % float(v) for v in arr))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    }
+  ]
+}

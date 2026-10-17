@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --bar: #2f6f4e;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 980px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0 0 0.25rem; }
+h2 { font-size: 1.25rem; margin: 2.25rem 0 0.75rem; }
+p.lead { color: var(--muted); margin-top: 0; }
+section.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.2rem;
+  margin-top: 1rem;
+}
+.coverage {
+  display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0;
+}
+.track {
+  flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden;
+}
+.fill { height: 100%; background: var(--bar); }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.note { color: var(--muted); }
+.rust { color: #9a3412; font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip {
+  color: #9a3412; font-weight: 700; font-size: 0.85rem;
+  background: #f4ebe4; border-radius: 99px; padding: 0.05rem 0.5rem;
+}
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span {
+  display: block; height: 8px; border-radius: 99px;
+}
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i {
+  display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem;
+}
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+a { color: inherit; }
+a:hover { color: var(--done); }
+ul.finished { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+ul.finished li { padding: 0.35rem 0; border-bottom: 1px solid var(--line); }
+ul.finished li p { margin: 0.15rem 0 0; }
+ul.wave {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 0.2rem 0.9rem; margin-top: 0.6rem;
+}
+.stats { display: flex; flex-wrap: nowrap; gap: 0.75rem; margin: 1.1rem 0 0.25rem; }
+.stats .stat, .stats button {
+  flex: 1 1 0; min-width: 0; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 0.7rem 0.8rem 0.85rem; text-align: left;
+}
+.stats button { font: inherit; cursor: pointer; }
+.stats button.active { background: var(--ink); border-color: var(--ink); }
+.stats strong { display: block; font-size: 1.6rem; line-height: 1.1; color: var(--done); }
+.stats span { color: var(--muted); font-size: 0.85rem; }
+.stats button.active strong, .stats button.active span { color: var(--paper); }
+.yield-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; align-items: start; }
+.yield-grid svg { width: 100%; height: auto; }
+.band { display: none; }
+.band.active { display: block; }
+#finished-search {
+  font: inherit; width: 100%; margin: 0.9rem 0 0.2rem; padding: 0.4rem 0.65rem;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink);
+}
+</style>
+</head>
+<body>
+<main>
+<h1>KillCRAN</h1>
+<p class="lead">CRAN functions are translated to Python. Fortran and numerical C are translated to Rust, and that is the part to notice. A package that is not translated is replaced by a named library, and that library is not a check against R.</p>
+<div class="stats" id="bands"><button type="button" data-band="queue" class="stat"><strong>70</strong><span>Downloaded, not started</span></button><button type="button" data-band="finished" class="stat"><strong>125</strong><span>Finished</span></button><button type="button" data-band="translating" class="stat active"><strong>14</strong><span>In progress</span></button><button type="button" data-band="crates" class="stat"><strong>35</strong><span>Using crates</span></button><button type="button" data-band="replaced" class="stat"><strong>266</strong><span>Replaced</span></button><button type="button" data-band="huge" class="stat"><strong>35</strong><span>Huge</span></button><button type="button" data-band="cost" class="stat"><strong>Cost</strong></button></div>
+<section class="band" id="band-queue"><h2>Next</h2>
+<p class="note">The first 20 that are ready. Order is last-month downloads on the RStudio CRAN mirror, saved in cran/importance.json. A dependency is opened before the package that needs it. A package with more than 200 exports is huge.</p>
+<ul class="finished wave">
+<li><strong>xfun</strong> <span class="note">0.62</span></li>
+<li><strong>systemfonts</strong> <span class="note">1.3.2</span></li>
+<li><strong>lazyeval</strong> <span class="note">0.2.3</span></li>
+<li><strong>carData</strong> <span class="note">3.0-6</span></li>
+<li><strong>Deriv</strong> <span class="note">4.3.5</span></li>
+<li><strong>sourcetools</strong> <span class="note">0.1.7-2</span></li>
+<li><strong>rbibutils</strong> <span class="note">2.4.1</span></li>
+<li><strong>QuickJSR</strong> <span class="note">1.11.0</span></li>
+<li><strong>inline</strong> <span class="note">0.3.21</span></li>
+<li><strong>MatrixModels</strong> <span class="note">0.5-4</span></li>
+<li><strong>bitops</strong> <span class="note">1.1-0</span></li>
+<li><strong>SparseM</strong> <span class="note">1.84-2</span></li>
+<li><strong>sp</strong> <span class="note">2.2-4</span></li>
+<li><strong>units</strong> <span class="note">1.0-1</span></li>
+<li><strong>classInt</strong> <span class="note">0.4-11</span></li>
+<li><strong>shape</strong> <span class="note">1.4.6.1</span></li>
+<li><strong>foreign</strong> <span class="note">0.8-91</span></li>
+<li><strong>downlit</strong> <span class="note">0.4.5</span></li>
+<li><strong>rdtools</strong> <span class="note">0.1.0</span></li>
+<li><strong>pROC</strong> <span class="note">1.19.1</span></li>
+</ul>
+<h2>Waiting</h2>
+<p class="note">Still waiting on a dependency. That dependency comes first.</p>
+<ul class="finished wave">
+<li><strong>textshaping</strong> <span class="note">1.0.5 · systemfonts not started</span></li>
+<li><strong>ragg</strong> <span class="note">1.5.2 · systemfonts not started, textshaping not started</span></li>
+<li><strong>loo</strong> <span class="note">2.10.1 · posterior not started</span></li>
+<li><strong>mgcv</strong> <span class="note">1.9-4 · nlme in progress</span></li>
+<li><strong>doBy</strong> <span class="note">4.7.2 · Deriv not started, forecast not started</span></li>
+<li><strong>pbkrtest</strong> <span class="note">0.5.5 · lme4 not started, doBy not started</span></li>
+<li><strong>crosstalk</strong> <span class="note">1.2.2 · lazyeval not started</span></li>
+<li><strong>s2</strong> <span class="note">1.1.13 · wk not started</span></li>
+<li><strong>psych</strong> <span class="note">2.6.9 · nlme in progress</span></li>
+<li><strong>future.apply</strong> <span class="note">1.21.0 · future not started</span></li>
+<li><strong>rstatix</strong> <span class="note">1.1.0 · car not started</span></li>
+<li><strong>Hmisc</strong> <span class="note">5.3-0 · foreign not started, htmlTable in progress</span></li>
+<li><strong>pkgdown</strong> <span class="note">2.2.1 · downlit not started, ragg not started</span></li>
+<li><strong>rstantools</strong> <span class="note">2.7.1 · QuickJSR not started</span></li>
+<li><strong>glmnet</strong> <span class="note">5.1 · shape not started</span></li>
+<li><strong>svglite</strong> <span class="note">2.2.2 · systemfonts not started, textshaping not started</span></li>
+<li><strong>gdtools</strong> <span class="note">0.5.2 · systemfonts not started</span></li>
+<li><strong>multcomp</strong> <span class="note">1.4-32 · TH.data not started</span></li>
+<li><strong>caTools</strong> <span class="note">1.18.4 · bitops not started</span></li>
+<li><strong>hardhat</strong> <span class="note">1.4.3 · sparsevctrs not started</span></li>
+<li><strong>prodlim</strong> <span class="note">2026.03.11 · lava not started</span></li>
+<li><strong>ipred</strong> <span class="note">0.9-16 · prodlim not started</span></li>
+<li><strong>ape</strong> <span class="note">5.8-1 · nlme in progress</span></li>
+<li><strong>gplots</strong> <span class="note">3.3.0 · gtools in progress, caTools not started</span></li>
+<li><strong>furrr</strong> <span class="note">0.4.0 · future not started</span></li>
+<li><strong>FactoMineR</strong> <span class="note">2.18 · car not started, emmeans not started, flashClust not started</span></li>
+<li><strong>lmerTest</strong> <span class="note">3.2-1 · lme4 not started, reformulas in progress</span></li>
+<li><strong>spatstat.data</strong> <span class="note">3.1-9 · spatstat.utils not started</span></li>
+<li><strong>spatstat.univar</strong> <span class="note">3.2-0 · spatstat.utils not started</span></li>
+<li><strong>spatstat.sparse</strong> <span class="note">3.2-0 · tensor not started, spatstat.utils not started</span></li>
+<li><strong>tailor</strong> <span class="note">0.1.0 · hardhat not started</span></li>
+<li><strong>splitfngr</strong> <span class="note">0.1.2 · lbfgs not started</span></li>
+<li><strong>mixopt</strong> <span class="note">0.1.3 · splitfngr not started</span></li>
+<li><strong>GauPro</strong> <span class="note">0.2.17 · mixopt not started, lbfgs not started</span></li>
+<li><strong>workflows</strong> <span class="note">1.3.0 · hardhat not started, modelenv not started, parsnip not started, recipes not started, sparsevctrs not started</span></li>
+<li><strong>workflowsets</strong> <span class="note">1.1.1 · hardhat not started, parsnip not started, rsample not started, tune not started, workflows not started</span></li>
+<li><strong>tidymodels</strong> <span class="note">1.5.0 · dials not started, hardhat not started, infer not started, modeldata not started, parsnip not started, recipes not started, rsample not started, tailor not started, tune not started, workflows not started, workflowsets not started, yardstick not started</span></li>
+<li><strong>ROCR</strong> <span class="note">1.0-12 · gplots not started</span></li>
+<li><strong>jomo</strong> <span class="note">2.7-6 · lme4 not started, ordinal in progress</span></li>
+<li><strong>mitml</strong> <span class="note">0.4-5 · jomo not started</span></li>
+<li><strong>mice</strong> <span class="note">3.19.0 · glmnet not started, mitml not started</span></li>
+<li><strong>sctransform</strong> <span class="note">0.4.3 · future.apply not started, future not started</span></li>
+<li><strong>pdftools</strong> <span class="note">3.9.1 · qpdf not started</span></li>
+<li><strong>spdep</strong> <span class="note">1.4-2 · units not started, s2 not started, sp not started</span></li>
+<li><strong>bbmle</strong> <span class="note">1.0.26 · bdsmatrix not started</span></li>
+<li><strong>cardx</strong> <span class="note">0.3.4 · cards not started</span></li>
+<li><strong>metafor</strong> <span class="note">5.2-1 · metadat not started, nlme in progress</span></li>
+<li><strong>glmmTMB</strong> <span class="note">1.1.15.2 · RTMB not started, TMB not started, lme4 not started, nlme in progress, mgcv not started, reformulas in progress, pbkrtest not started</span></li>
+<li><strong>ks</strong> <span class="note">1.15.3 · kernlab not started, mgcv not started, multicool not started</span></li>
+<li><strong>AER</strong> <span class="note">1.2-17 · car not started</span></li>
+</ul></section>
+<section class="band" id="band-finished"><input id="finished-search" type="search" placeholder="Find a package" aria-label="Find a finished package">
+<ul class="finished" id="finished-list">
+<li data-name="bb"><a href="packages/BB.html">BB</a> <span class="note">2026.1.0</span></li>
+<li data-name="deoptimr"><a href="packages/DEoptimR.html">DEoptimR</a> <span class="note">1.2-2</span></li>
+<li data-name="fnn"><a href="packages/FNN.html">FNN</a> <span class="note">1.1.4.1</span></li>
+<li data-name="formula"><a href="packages/Formula.html">Formula</a> <span class="note">1.2-6</span></li>
+<li data-name="gparotation"><a href="packages/GPArotation.html">GPArotation</a> <span class="note">2026.8-2</span></li>
+<li data-name="kernsmooth"><a href="packages/KernSmooth.html">KernSmooth</a> <span class="note">2.23-27</span></li>
+<li data-name="mass"><a href="packages/MASS.html">MASS</a> <span class="note">7.3-66</span></li>
+<li data-name="metrics"><a href="packages/Metrics.html">Metrics</a> <span class="note">0.1.4</span></li>
+<li data-name="rcolorbrewer"><a href="packages/RColorBrewer.html">RColorBrewer</a> <span class="note">1.1-3</span></li>
+<li data-name="rjsonio"><a href="packages/RJSONIO.html">RJSONIO</a> <span class="note">2.0.5</span></li>
+<li data-name="squarem"><a href="packages/SQUAREM.html">SQUAREM</a> <span class="note">2026.1</span></li>
+<li data-name="ttr"><a href="packages/TTR.html">TTR</a> <span class="note">0.24.4</span></li>
+<li data-name="abind"><a href="packages/abind.html">abind</a> <span class="note">1.4-8</span></li>
+<li data-name="askpass"><a href="packages/askpass.html">askpass</a> <span class="note">1.2.1</span></li>
+<li data-name="assertthat"><a href="packages/assertthat.html">assertthat</a> <span class="note">0.2.1</span></li>
+<li data-name="backports"><a href="packages/backports.html">backports</a> <span class="note">1.5.1</span></li>
+<li data-name="base64enc"><a href="packages/base64enc.html">base64enc</a> <span class="note">0.1-6</span></li>
+<li data-name="blob"><a href="packages/blob.html">blob</a> <span class="note">1.3.0</span></li>
+<li data-name="boot"><a href="packages/boot.html">boot</a> <span class="note">1.3-32</span></li>
+<li data-name="brio"><a href="packages/brio.html">brio</a> <span class="note">1.1.5</span></li>
+<li data-name="ca"><a href="packages/ca.html">ca</a> <span class="note">0.72</span></li>
+<li data-name="changepoint"><a href="packages/changepoint.html">changepoint</a> <span class="note">2.3</span></li>
+<li data-name="checkmate"><a href="packages/checkmate.html">checkmate</a> <span class="note">2.3.4</span></li>
+<li data-name="class"><a href="packages/class.html">class</a> <span class="note">7.3-24</span></li>
+<li data-name="clipr"><a href="packages/clipr.html">clipr</a> <span class="note">0.8.1</span></li>
+<li data-name="cluster"><a href="packages/cluster.html">cluster</a> <span class="note">2.1.8.3</span></li>
+<li data-name="coda"><a href="packages/coda.html">coda</a> <span class="note">0.19-4.1</span></li>
+<li data-name="collapse"><a href="packages/collapse.html">collapse</a> <span class="note">2.1.8</span></li>
+<li data-name="colorspace"><a href="packages/colorspace.html">colorspace</a> <span class="note">2.1-4</span></li>
+<li data-name="conflicted"><a href="packages/conflicted.html">conflicted</a> <span class="note">1.2.0</span></li>
+<li data-name="corpcor"><a href="packages/corpcor.html">corpcor</a> <span class="note">1.6.10</span></li>
+<li data-name="crayon"><a href="packages/crayon.html">crayon</a> <span class="note">1.5.3</span></li>
+<li data-name="desolve"><a href="packages/deSolve.html">deSolve</a> <span class="note">1.42</span></li>
+<li data-name="digest"><a href="packages/digest.html">digest</a> <span class="note">0.6.39</span></li>
+<li data-name="e1071"><a href="packages/e1071.html">e1071</a> <span class="note">1.7-17</span></li>
+<li data-name="ellipse"><a href="packages/ellipse.html">ellipse</a> <span class="note">0.5.0</span></li>
+<li data-name="estimability"><a href="packages/estimability.html">estimability</a> <span class="note">2.0.0</span></li>
+<li data-name="evaluate"><a href="packages/evaluate.html">evaluate</a> <span class="note">1.0.5</span></li>
+<li data-name="exactextractr"><a href="packages/exactextractr.html">exactextractr</a> <span class="note">0.10.1</span></li>
+<li data-name="extradistr"><a href="packages/extraDistr.html">extraDistr</a> <span class="note">1.10.0.5</span></li>
+<li data-name="fansi"><a href="packages/fansi.html">fansi</a> <span class="note">1.0.7</span></li>
+<li data-name="farver"><a href="packages/farver.html">farver</a> <span class="note">2.1.2</span></li>
+<li data-name="fastmap"><a href="packages/fastmap.html">fastmap</a> <span class="note">1.2.0</span></li>
+<li data-name="fastmatch"><a href="packages/fastmatch.html">fastmatch</a> <span class="note">1.1-8</span></li>
+<li data-name="filelock"><a href="packages/filelock.html">filelock</a> <span class="note">1.0.3</span></li>
+<li data-name="fontawesome"><a href="packages/fontawesome.html">fontawesome</a> <span class="note">0.5.3</span></li>
+<li data-name="fracdiff"><a href="packages/fracdiff.html">fracdiff</a> <span class="note">1.5-4</span></li>
+<li data-name="goftest"><a href="packages/goftest.html">goftest</a> <span class="note">1.2-3</span></li>
+<li data-name="gower"><a href="packages/gower.html">gower</a> <span class="note">1.0.2</span></li>
+<li data-name="haven"><a href="packages/haven.html">haven</a> <span class="note">2.5.5</span></li>
+<li data-name="hexbin"><a href="packages/hexbin.html">hexbin</a> <span class="note">1.28.6</span></li>
+<li data-name="ineq"><a href="packages/ineq.html">ineq</a> <span class="note">0.2-13</span></li>
+<li data-name="interp"><a href="packages/interp.html">interp</a> <span class="note">1.1-6</span></li>
+<li data-name="isoband"><a href="packages/isoband.html">isoband</a> <span class="note">0.3.0</span></li>
+<li data-name="jquerylib"><a href="packages/jquerylib.html">jquerylib</a> <span class="note">0.1.4</span></li>
+<li data-name="labeling"><a href="packages/labeling.html">labeling</a> <span class="note">0.4.3</span></li>
+<li data-name="leaps"><a href="packages/leaps.html">leaps</a> <span class="note">3.2</span></li>
+<li data-name="listenv"><a href="packages/listenv.html">listenv</a> <span class="note">1.1.0</span></li>
+<li data-name="lmom"><a href="packages/lmom.html">lmom</a> <span class="note">3.3</span></li>
+<li data-name="lmtest"><a href="packages/lmtest.html">lmtest</a> <span class="note">0.9-40</span></li>
+<li data-name="locfit"><a href="packages/locfit.html">locfit</a> <span class="note">1.5-9.12</span></li>
+<li data-name="lubridate"><a href="packages/lubridate.html">lubridate</a> <span class="note">1.9.5</span></li>
+<li data-name="magrittr"><a href="packages/magrittr.html">magrittr</a> <span class="note">2.0.5</span></li>
+<li data-name="mathjaxr"><a href="packages/mathjaxr.html">mathjaxr</a> <span class="note">2.0-0</span></li>
+<li data-name="matrixstats"><a href="packages/matrixStats.html">matrixStats</a> <span class="note">1.5.0</span></li>
+<li data-name="matrixcalc"><a href="packages/matrixcalc.html">matrixcalc</a> <span class="note">1.0-6</span></li>
+<li data-name="mclust"><a href="packages/mclust.html">mclust</a> <span class="note">6.1.3</span></li>
+<li data-name="mime"><a href="packages/mime.html">mime</a> <span class="note">0.13</span></li>
+<li data-name="minpack.lm"><a href="packages/minpack.lm.html">minpack.lm</a> <span class="note">1.2-4</span></li>
+<li data-name="minqa"><a href="packages/minqa.html">minqa</a> <span class="note">1.2.8</span></li>
+<li data-name="mitools"><a href="packages/mitools.html">mitools</a> <span class="note">2.7</span></li>
+<li data-name="mix"><a href="packages/mix.html">mix</a> <span class="note">1.0-13</span></li>
+<li data-name="modelr"><a href="packages/modelr.html">modelr</a> <span class="note">0.1.11</span></li>
+<li data-name="modeltools"><a href="packages/modeltools.html">modeltools</a> <span class="note">0.2-25</span></li>
+<li data-name="moments"><a href="packages/moments.html">moments</a> <span class="note">0.14.1</span></li>
+<li data-name="mvtnorm"><a href="packages/mvtnorm.html">mvtnorm</a> <span class="note">1.4-2</span></li>
+<li data-name="nloptr"><a href="packages/nloptr.html">nloptr</a> <span class="note">2.2.1</span></li>
+<li data-name="nnet"><a href="packages/nnet.html">nnet</a> <span class="note">7.3-21</span></li>
+<li data-name="nortest"><a href="packages/nortest.html">nortest</a> <span class="note">1.0-4</span></li>
+<li data-name="numderiv"><a href="packages/numDeriv.html">numDeriv</a> <span class="note">2016.8-1.1</span></li>
+<li data-name="otel"><a href="packages/otel.html">otel</a> <span class="note">0.2.0</span></li>
+<li data-name="pan"><a href="packages/pan.html">pan</a> <span class="note">2.0</span></li>
+<li data-name="pbivnorm"><a href="packages/pbivnorm.html">pbivnorm</a> <span class="note">0.6.0</span></li>
+<li data-name="permute"><a href="packages/permute.html">permute</a> <span class="note">0.9-10</span></li>
+<li data-name="pkgconfig"><a href="packages/pkgconfig.html">pkgconfig</a> <span class="note">2.0.3</span></li>
+<li data-name="png"><a href="packages/png.html">png</a> <span class="note">0.1-9</span></li>
+<li data-name="polynom"><a href="packages/polynom.html">polynom</a> <span class="note">1.4-1</span></li>
+<li data-name="pracma"><a href="packages/pracma.html">pracma</a> <span class="note">2.4.6</span></li>
+<li data-name="prettyunits"><a href="packages/prettyunits.html">prettyunits</a> <span class="note">1.2.0</span></li>
+<li data-name="progressr"><a href="packages/progressr.html">progressr</a> <span class="note">1.0.0</span></li>
+<li data-name="proxy"><a href="packages/proxy.html">proxy</a> <span class="note">0.4-29</span></li>
+<li data-name="pwr"><a href="packages/pwr.html">pwr</a> <span class="note">1.3-0</span></li>
+<li data-name="quadprog"><a href="packages/quadprog.html">quadprog</a> <span class="note">1.5-8</span></li>
+<li data-name="randomforest"><a href="packages/randomForest.html">randomForest</a> <span class="note">4.7-1.2</span></li>
+<li data-name="rappdirs"><a href="packages/rappdirs.html">rappdirs</a> <span class="note">0.3.4</span></li>
+<li data-name="readr"><a href="packages/readr.html">readr</a> <span class="note">2.2.0</span></li>
+<li data-name="remotes"><a href="packages/remotes.html">remotes</a> <span class="note">2.5.0</span></li>
+<li data-name="rootsolve"><a href="packages/rootSolve.html">rootSolve</a> <span class="note">1.8.2.4</span></li>
+<li data-name="rpart"><a href="packages/rpart.html">rpart</a> <span class="note">4.1.27</span></li>
+<li data-name="sandwich"><a href="packages/sandwich.html">sandwich</a> <span class="note">3.1-3</span></li>
+<li data-name="sass"><a href="packages/sass.html">sass</a> <span class="note">0.4.10</span></li>
+<li data-name="simpleboot"><a href="packages/simpleboot.html">simpleboot</a> <span class="note">1.1-8</span></li>
+<li data-name="slam"><a href="packages/slam.html">slam</a> <span class="note">0.1-56</span></li>
+<li data-name="snakecase"><a href="packages/snakecase.html">snakecase</a> <span class="note">0.11.1</span></li>
+<li data-name="statmod"><a href="packages/statmod.html">statmod</a> <span class="note">1.5.2</span></li>
+<li data-name="stringdist"><a href="packages/stringdist.html">stringdist</a> <span class="note">0.9.17</span></li>
+<li data-name="stringi"><a href="packages/stringi.html">stringi</a> <span class="note">1.8.9</span></li>
+<li data-name="stringr"><a href="packages/stringr.html">stringr</a> <span class="note">1.6.0</span></li>
+<li data-name="survival"><a href="packages/survival.html">survival</a> <span class="note">3.8-12</span></li>
+<li data-name="sys"><a href="packages/sys.html">sys</a> <span class="note">3.4.3</span></li>
+<li data-name="testthat"><a href="packages/testthat.html">testthat</a> <span class="note">3.3.2</span></li>
+<li data-name="timechange"><a href="packages/timechange.html">timechange</a> <span class="note">0.4.0</span></li>
+<li data-name="truncnorm"><a href="packages/truncnorm.html">truncnorm</a> <span class="note">1.0-9</span></li>
+<li data-name="tzdb"><a href="packages/tzdb.html">tzdb</a> <span class="note">0.5.0</span></li>
+<li data-name="ucminf"><a href="packages/ucminf.html">ucminf</a> <span class="note">1.2.3</span></li>
+<li data-name="urca"><a href="packages/urca.html">urca</a> <span class="note">1.3-4</span></li>
+<li data-name="utf8"><a href="packages/utf8.html">utf8</a> <span class="note">1.2.6</span></li>
+<li data-name="vars"><a href="packages/vars.html">vars</a> <span class="note">1.6-1</span></li>
+<li data-name="viridislite"><a href="packages/viridisLite.html">viridisLite</a> <span class="note">0.4.3</span></li>
+<li data-name="warp"><a href="packages/warp.html">warp</a> <span class="note">0.2.3</span></li>
+<li data-name="withr"><a href="packages/withr.html">withr</a> <span class="note">3.0.3</span></li>
+<li data-name="xml2"><a href="packages/xml2.html">xml2</a> <span class="note">1.6.0</span></li>
+<li data-name="xmlparsedata"><a href="packages/xmlparsedata.html">xmlparsedata</a> <span class="note">1.0.5</span></li>
+<li data-name="xts"><a href="packages/xts.html">xts</a> <span class="note">0.14.3</span></li>
+<li data-name="zoo"><a href="packages/zoo.html">zoo</a> <span class="note">1.9-1</span></li>
+</ul></section>
+<section class="band active" id="band-translating">
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/fitdistrplus.html">fitdistrplus</a> <span class="note">1.2-6</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json) after the user raised the medium cap to 8. Distribution fitting by maximum likelihood, moment and quantile matching: numerical Python (scipy.optimize, scipy.stats; native). Batches share an R file (strategy medium). 27 exported functions.</p>
+<p class="note">0 of 27 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/gtools.html">gtools</a> <span class="note">3.9.5</span> <span class="note">small-low</span> <span class="rust">Rust</span></h2>
+<p>Checked setTCPNoDelay, lastAdd, invalid, foldchange2logratio, odd and rdirichlet, logratio2foldchange, even, ddirichlet, permute, foldchange, quantcut, permutations, mixedorder, defmacro, logit, ASCIIfy, asc, assert, capwords, binsearch, baseOf, combinations, na, and inv.logit.replace, roman2int, stat_mode, mixedsort, running, sprint, split_path, stars.pval, chr. The other exports are listed and not translated. Reserved scat.</p>
+<p class="note">35 of 47 functions · 74.5% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:74.5%"></div></div><strong>74.5%</strong></div>
+<p class="note">R dependencies are finished or replaced.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/htmlTable.html">htmlTable</a> <span class="note">2.5.0</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json) after the user raised the medium cap to 8. HTML table builder. Pure R string building; HTML output is text. Batches share an R file (strategy medium). 24 exported functions.</p>
+<p class="note">0 of 24 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/janitor.html">janitor</a> <span class="note">2.2.1</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json). Data cleaning on data frames: Polars (Routing). Data-frame verbs use Polars. Batches share an R file (strategy medium). 39 exported functions.</p>
+<p class="note">0 of 39 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/labelled.html">labelled</a> <span class="note">2.16.1</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json) after the user raised the medium cap to 8. Labelled vectors and data frames (value labels, variable labels) on vctrs-style classes: NumPy for vectors and Polars for data frames (Routing). Batches share an R file (strategy medium). 54 exported functions.</p>
+<p class="note">0 of 54 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/logspline.html">logspline</a> <span class="note">2.1.22</span> <span class="note">medium-low</span> <span class="rust">Rust</span></h2>
+<p>Opened on user approval (the R package logspline was added to the registry). 22 exports. Kernel is Fortran (allpack.f, LINPACK) plus C (lsdall.c, nlsd.c); crate crates/logspline is assigned first.</p>
+<p class="note">0 of 22 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies · numpy, matplotlib native · logspline rust</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/nlme.html">nlme</a> <span class="note">3.1-171</span> <span class="note">medium-low</span> <span class="rust">Rust</span></h2>
+<p>Checked corLin, corRatio, and corSpher, phenoModel and quinModel, varPower, LDEsysMat, varIdent, pooledSD, varExp and gnlsControl, getResponseFormula, nlsList.formula, lmList.formula, simulate.lme, fdHess, asOneFormula, asTable, allCoef, ACF, balancedGrouped, corAR1, compareFits, corCAR1, corExp, corNatural, getVarCov, VarCorr, reStruct, pdMat, varComb, and getCovariateFormula, varConstPower, corIdent, pdFactor, corARMA, corGaus, corMatrix, corSpatial, corCompSymm, corSymm, corFactor, coef&lt;-, coefficients&lt;-, getData, getGroups, getResponse, and collapse. The other exports are listed and not translated. Reserved gsummary and glsApVar.</p>
+<p class="note">106 of 109 functions · 97.2% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:97.2%"></div></div><strong>97.2%</strong></div>
+<p class="note">R dependencies are finished or replaced.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/ordinal.html">ordinal</a> <span class="note">2026.7-26</span> <span class="note">small-low</span> <span class="rust">Rust</span></h2>
+<p>Checked nominal_test, rgumbel, condVar, scale_test. The link densities and the four control lists match ordinal 2026.7-26. rgumbel draws with runif. The cumulative models are still open: they call MASS::ginv, and clmm&#x27;s sparse path uses Matrix, which is not in the registry. Checked slice and drop.coef. Checked convergence.</p>
+<p class="note">23 of 28 functions · 82.1% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:82.1%"></div></div><strong>82.1%</strong></div>
+<p class="note">Dependencies · numpy, scipy native · ordinal_clmm rust</p><p class="note">R dependencies · nlme in progress</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/quantmod.html">quantmod</a> <span class="note">small</span></h2>
+<p>Added to the registry on user approval, as a reference for tseries get.hist.quote (its only use). Only getSymbols is inventoried. The Python port of get.hist.quote uses urllib directly (routing: HTTP requests), so getSymbols itself is not translated. The rest of quantmod is not opened. The installed R quantmod is a local stub (0.4.29, getSymbols not implemented). The real quantmod_0.4.29 tarball needs xts, TTR and curl, which are not in registry.json, so it is not installed.</p>
+<p class="note">0 of 1 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies · urllib native</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/quantreg.html">quantreg</a> <span class="note">6.1</span> <span class="note">large-low</span> <span class="rust">Rust</span></h2>
+<p>CRAN 6.1. 64 exports are checked. SciPy HiGHS is the simplex point estimate. Frisch-Newton, the constrained solver, and the xy, weighted, jack, and preprocessed bootstraps match R. Rank-inversion intervals, sparse rqss, nonlinear and dynamic fits, and censored regression are still open. SparseM, Matrix, MatrixModels, and survival are not in the registry. There is no crate yet.</p>
+<p class="note">128 of 154 functions · 83.1% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:83.1%"></div></div><strong>83.1%</strong></div>
+<p class="note">Dependencies · <a href="packages/boot.html">boot</a> translated · numpy, scipy native · quantreg_penalty rust</p><p class="note">R dependencies · SparseM not started, MatrixModels not started</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/reformulas.html">reformulas</a> <span class="note">0.4.4</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json). R formula utilities, pure R. Python formulas via formulaic (native). Batches share an R file (strategy medium). 32 exported functions.</p>
+<p class="note">0 of 32 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/rvest.html">rvest</a> <span class="note">1.0.5</span> <span class="note">medium</span></h2>
+<p>Opened on the importance order (cran/importance.json). Web scraping on xml2 (complete) and HTML selectors. HTTP through requests (Routing). Batches share an R file (strategy medium). 38 exported functions.</p>
+<p class="note">0 of 38 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">Dependencies: there are none.</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/slider.html">slider</a> <span class="note">0.3.3</span> <span class="note">small-low</span></h2>
+<p>Checked block, slide_period, pslide_period, pslide_period_dbl, slide_period2, pslide_period_int, pslide_period_chr, and slide_period2_dbl. The non-period windows on atomic vectors and lists are done, including the segment-tree summaries. Period windows and block() need warp. The data-frame binders need vctrs::vec_rbind and vec_cbind.</p>
+<p class="note">83 of 101 functions · 82.2% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:82.2%"></div></div><strong>82.2%</strong></div>
+<p class="note">Dependencies · numpy native</p>
+</section>
+
+
+<section class="card">
+<h2 style="margin-top:0"><a href="packages/tseries.html">tseries</a> <span class="note">0.10-63</span> <span class="note">small-low</span> <span class="rust">Rust</span></h2>
+<p>tseries 0.10-63. The unit-root, nonlinearity, bootstrap, surrogate, portfolio, irregular-series, and finance helpers match R. portfolio.optim calls quadprog.solve_qp. get.hist.quote waits on quantmod::getSymbols and zoo. arma waits on stats::optim, and garch waits on the PORT SUMSL routine. Checked arma. Reserved garch.</p>
+<p class="note">43 of 44 functions · 97.7% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:97.7%"></div></div><strong>97.7%</strong></div>
+<p class="note">Dependencies · <a href="packages/boot.html">boot</a>, <a href="packages/extraDistr.html">extraDistr</a>, <a href="packages/quadprog.html">quadprog</a> translated · matplotlib, numpy, scipy, zoneinfo native</p><p class="note">R dependencies · quantmod in progress</p>
+</section>
+</section>
+<section class="band" id="band-crates"><p class="note">35 packages use 132 Rust crates. One row is the R package, the crates made from it, and the stand-in when that package was also replaced.</p>
+<div class="card">
+<table>
+<thead><tr><th>R package</th><th>Crates</th><th>Replaced by</th></tr></thead>
+<tbody>
+<tr><td><a href="packages/data.table.html">data.table</a></td><td><div class="chips"><span class="chip">datatable</span></div></td><td>Polars</td></tr>
+<tr><td><a href="packages/deldir.html">deldir</a></td><td><div class="chips"><span class="chip">deldir</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/deSolve.html">deSolve</a></td><td><div class="chips"><span class="chip">aquaphy</span> <span class="chip">ccl4model</span> <span class="chip">daspk</span> <span class="chip">dede</span> <span class="chip">dlsoda</span> <span class="chip">dlsode</span> <span class="chip">dvode</span> <span class="chip">lagderiv</span> <span class="chip">lagvalue</span> <span class="chip">lsodar</span> <span class="chip">lsodes</span> <span class="chip">radau5</span> <span class="chip">rksolv</span> <span class="chip">scoc</span> <span class="chip">zvode</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/diffobj.html">diffobj</a></td><td><div class="chips"><span class="chip">myersmba</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/e1071.html">e1071</a></td><td><div class="chips"><span class="chip">cmeans</span> <span class="chip">cshell</span> <span class="chip">svm</span> <span class="chip">svmwrite</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/farver.html">farver</a></td><td><div class="chips"><span class="chip">farver</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/fastmap.html">fastmap</a></td><td><div class="chips"><span class="chip">fastmap</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/goftest.html">goftest</a></td><td><div class="chips"><span class="chip">goftest</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/gower.html">gower</a></td><td><div class="chips"><span class="chip">gower</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/gtools.html">gtools</a></td><td><div class="chips"><span class="chip">roman2int</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/haven.html">haven</a></td><td><div class="chips"><span class="chip">havenio</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/hexbin.html">hexbin</a></td><td><div class="chips"><span class="chip">hexbin</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/interp.html">interp</a></td><td><div class="chips"><span class="chip">interp</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/isoband.html">isoband</a></td><td><div class="chips"><span class="chip">isoband</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/KernSmooth.html">KernSmooth</a></td><td><div class="chips"><span class="chip">blkest</span> <span class="chip">cp</span> <span class="chip">lbtwod</span> <span class="chip">linbin</span> <span class="chip">linpack</span> <span class="chip">locpol</span> <span class="chip">rlbin</span> <span class="chip">sdiag</span> <span class="chip">sstdiag</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/leaps.html">leaps</a></td><td><div class="chips"><span class="chip">leaps</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/lmom.html">lmom</a></td><td><div class="chips"><span class="chip">lmom</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/lmtest.html">lmtest</a></td><td><div class="chips"><span class="chip">pan</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/locfit.html">locfit</a></td><td><div class="chips"><span class="chip">locfit</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/logspline.html">logspline</a></td><td><div class="chips"><span class="chip">logspline</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/matrixStats.html">matrixStats</a></td><td><div class="chips"><span class="chip">allocmatrix</span> <span class="chip">anymissing</span> <span class="chip">bincounts</span> <span class="chip">binmeans</span> <span class="chip">colcounts</span> <span class="chip">colorderstats</span> <span class="chip">colranges</span> <span class="chip">diff2</span> <span class="chip">indexbyrow</span> <span class="chip">logsumexp</span> <span class="chip">mean2</span> <span class="chip">product</span> <span class="chip">rowcounts</span> <span class="chip">rowcummaxs</span> <span class="chip">rowcummins</span> <span class="chip">rowcumprods</span> <span class="chip">rowcumsums</span> <span class="chip">rowdiffs</span> <span class="chip">rowlogsumexps</span> <span class="chip">rowmads</span> <span class="chip">rowmeans2</span> <span class="chip">rowmedians</span> <span class="chip">roworderstats</span> <span class="chip">rowranges</span> <span class="chip">rowranks</span> <span class="chip">rowsums2</span> <span class="chip">rowvars</span> <span class="chip">signtabulate</span> <span class="chip">sum2</span> <span class="chip">weightedmean</span> <span class="chip">weightedmedian</span> <span class="chip">xopy</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/mclust.html">mclust</a></td><td><div class="chips"><span class="chip">cvmclustda</span> <span class="chip">mclust</span> <span class="chip">mclustbootstraplrt</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/mime.html">mime</a></td><td><div class="chips"><span class="chip">mimeparse</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/minpack.lm.html">minpack.lm</a></td><td><div class="chips"><span class="chip">lmdif</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/minqa.html">minqa</a></td><td><div class="chips"><span class="chip">bobyqa</span> <span class="chip">newuoa</span> <span class="chip">uobyqa</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/mix.html">mix</a></td><td><div class="chips"><span class="chip">mix</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/mvtnorm.html">mvtnorm</a></td><td><div class="chips"><span class="chip">mvtdst</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/nlme.html">nlme</a></td><td><div class="chips"><span class="chip">gnlsfit</span> <span class="chip">nlcorarma</span> <span class="chip">nlme_mixedem</span> <span class="chip">nlme_pdsymm</span> <span class="chip">nlmegls</span> <span class="chip">nlmemixed</span> <span class="chip">nlmerecalc</span> <span class="chip">nlminb_port</span> <span class="chip">nlpdfactor</span> <span class="chip">onecomp</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/openssl.html">openssl</a></td><td><div class="chips"><span class="chip">bcryptpbkdf</span> <span class="chip">ecdhdh</span> <span class="chip">opensshfp</span> <span class="chip">opensslport</span> <span class="chip">pemwrite</span> <span class="chip">pkcs12parse</span> <span class="chip">readpubkey</span></div></td><td>cryptography <span class="rust">Rust</span></td></tr>
+<tr><td><a href="packages/ordinal.html">ordinal</a></td><td><div class="chips"><span class="chip">ordinal_clmm</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/pan.html">pan</a></td><td><div class="chips"><span class="chip">pan_ecme</span> <span class="chip">pan_mgibbs</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/pbivnorm.html">pbivnorm</a></td><td><div class="chips"><span class="chip">pbivnorm</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/quantreg.html">quantreg</a></td><td><div class="chips"><span class="chip">quantreg</span> <span class="chip">quantreg_br</span> <span class="chip">quantreg_penalty</span> <span class="chip">quantreg_rq0</span> <span class="chip">quantreg_sfnc</span> <span class="chip">rlbfgsb</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/randomForest.html">randomForest</a></td><td><div class="chips"><span class="chip">rfsub</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/readxl.html">readxl</a></td><td><div class="chips"><span class="chip">readxls</span></div></td><td>Polars and calamine <span class="rust">Rust</span></td></tr>
+<tr><td><a href="packages/sass.html">sass</a></td><td><div class="chips"><span class="chip">sass</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/survival.html">survival</a></td><td><div class="chips"><span class="chip">agexact</span> <span class="chip">agfit4</span> <span class="chip">coxfit6</span> <span class="chip">survconc</span> <span class="chip">survdiff2</span> <span class="chip">survfitaj</span> <span class="chip">survfitkm</span> <span class="chip">survreg6</span> <span class="chip">survreg7</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/tseries.html">tseries</a></td><td><div class="chips"><span class="chip">dsumsl</span> <span class="chip">sumsl</span> <span class="chip">tsarma</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/tzdb.html">tzdb</a></td><td><div class="chips"><span class="chip">tzdb</span></div></td><td>—</td></tr>
+<tr><td><a href="packages/ucminf.html">ucminf</a></td><td><div class="chips"><span class="chip">ucminf</span></div></td><td>—</td></tr>
+<tr><td>—</td><td><div class="chips"><span class="chip">pyears3b</span></div></td><td>—</td></tr>
+</tbody>
+</table>
+</div></section>
+<section class="band" id="band-replaced"><p class="note">A named library stands in. It is not a check against R. Rust is marked.</p>
+<div class="card">
+<table>
+<thead><tr><th>Library</th><th>Where</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Polars</td><td>dplyr · 2 of 284 · 0.7% · between, near<br>tidyr · 1 of 70 · 1.4% · full_seq<br>tibble · 4 of 45 · 8.9% · has_name, new_tibble, repair_names, tibble<br>tidyselect · 6 of 29 · 20.7% · all_of, any_of, ends_with, everything, last_col, starts_with<br>reshape2 · 3 of 6 · 50.0% · colsplit, dcast, melt<br>data.table · 54 of 141 · 38.3% · %between%, %chin%, %flike%, %ilike%, %like%, %notin%, %plike%, as.IDate, and 46 more<br>plyr · 4 of 75 · 5.3% · arrange, count, join, rbind.fill<br>pillar · 44 of 46 · 95.7% · align, char, colonnade, ctl_new_pillar, ctl_new_pillar_list, ctl_new_rowid_pillar, dim_desc, expect_known_display, and 36 more</td><td>A table is a Polars frame. Select, filter, join, reshape, group, and aggregate go there, and plyr&#x27;s split-apply goes there too. A frame prints through Polars. Polars does not reproduce a dplyr join, a data.table update by reference, tidyselect&#x27;s order, or pillar&#x27;s shafts. The package is not ported, and Polars is not a check against it.</td></tr>
+<tr><td>Matplotlib and Seaborn</td><td>ggplot2 · 5 of 643 · 0.8% · cut_interval, mean_cl_normal, mean_se, median_hilow, resolution<br>scales · 6 of 213 · 2.8% · censor, number, rescale, rescale_mid, squish, zero_range<br>gridExtra · 0 of 16 · 0.0%<br>lattice · 24 of 147 · 16.3% · as.factorOrShingle, as.shingle, banking, bwplot, current.column, do.breaks, equal.count, is.shingle, and 16 more</td><td>A chart is Matplotlib. A statistical chart that Matplotlib does not draw in a few lines may use Seaborn. A chart that is its own function, and that Matplotlib does not have, is added once in killplot. Geoms, scale training, grid arrangements, and trellis graphics are not ported. Neither library is a check against ggplot2 or lattice.</td></tr>
+<tr><td>Dash</td><td>shiny · 5 of 284 · 1.8% · isTruthy, need, parseQueryString, req, validateCssUnit<br>htmltools · 4 of 77 · 5.2% · HTML, htmlDependency, htmlEscape, tagList<br>shinyjs · not opened</td><td>A dashboard is a Dash layout and callbacks. Tags are Dash HTML components. Show, hide, and delay from shinyjs are a Dash clientside callback or ordinary browser JavaScript. A Dash callback is not a Shiny reactive. The packages are not ported, and Dash is not a check against them.</td></tr>
+<tr><td>Rayon <span class="rust">Rust</span></td><td>foreach · 0 of 23 · 0.0%<br>iterators · 6 of 16 · 37.5% · iter, nextElem, isplit, irunif, icount, idiv<br>doParallel · 0 of 2 · 0.0%</td><td>A parallel loop is Rayon. foreach, iterators, and doParallel are not ported. Rayon is the Rust work-stealing library, and it is not a check against those packages.</td></tr>
+<tr><td>GeoPandas</td><td>sf · 4 of 157 · 2.5% · st_bbox, st_coordinates, st_crs, st_is_longlat</td><td>A table of geometries is a GeoPandas frame. GEOS stays the geometry kernel. GeoPandas does not reproduce sf&#x27;s geography. sf is not ported, and GeoPandas is not a check against it.</td></tr>
+<tr><td>python-igraph</td><td>igraph · 3 of 841 · 0.4% · gorder, is_directed, is_named</td><td>A graph uses the Python binding of the igraph C library. The R wrappers are not ported one by one. The binding is not a check against those wrappers.</td></tr>
+<tr><td>requests</td><td>httr · 5 of 91 · 5.5% · add_headers, http_date, http_status, parse_http_date, status_code<br>httr2 · 4 of 155 · 2.6% · example_url, is_online, url_build, url_parse<br>curl · 37 of 44 · 84.1% · curl_escape, curl_unescape, parse_headers, curl_parse_url, curl_options, curl_version, curl_fetch_memory, curl_fetch_disk, and 29 more</td><td>An HTTP client is requests. URL helpers that were already checked stay, including the curl helpers already checked. requests does not reproduce a libcurl handle, so it is not a check against httr, httr2, or curl.</td></tr>
+<tr><td>SciPy</td><td>Matrix · 0 of 1 · 0.0%</td><td>A sparse matrix is a SciPy sparse array. Matrix&#x27;s S4 methods are not ported. SciPy sparse is not a check against Matrix.</td></tr>
+<tr><td>itertools</td><td>purrr · 3 of 184 · 1.6% · compact, flatten, prepend</td><td>Mapping, filtering, and chaining use Python and itertools. purrr is not ported. itertools does not drop empty values the way purrr does, so it is not a check against purrr.</td></tr>
+<tr><td>rasterio</td><td>terra · not opened<br>raster · not opened</td><td>A raster grid is read and written with rasterio. terra and raster are not ported. rasterio does not reproduce their classes, and it is not a check against them.</td></tr>
+<tr><td>Quarto</td><td>rmarkdown · not opened<br>xtable · 22 of 29 · 75.9% · caption&lt;-, caption, label, label&lt;-, align&lt;-, align, digits&lt;-, digits, and 14 more</td><td>A report is rendered with Quarto. rmarkdown and xtable are not ported. Quarto does not reproduce a knit pipeline or an xtable print method, and it is not a check against them.</td></tr>
+<tr><td>SQLAlchemy</td><td>DBI · not opened</td><td>A database connection is SQLAlchemy. DBI is not ported. SQLAlchemy does not reproduce its driver interface, and it is not a check against it.</td></tr>
+<tr><td>Python</td><td>rlang · 59 of 447 · 13.2% · %||%, abort, seq2, set_names, names2, is_string, is_installed, check_installed, and 51 more<br>generics · 23 of 39 · 59.0% · accuracy, as.difftime, as.factor, as.ordered, augment, calculate, compile, components, and 15 more<br>tools · 68 of 136 · 50.0% · .print.via.format, Adobe_glyphs, analyze_license, as.Rconcordance, assertCondition, assertError, assertWarning, base_aliases_db, and 60 more<br>utils · 29 of 264 · 11.0% · .AtNames, .DollarNames, .S3methods, .romans, URLdecode, URLencode, alarm, apropos, and 21 more<br>rstudioapi · 3 of 130 · 2.3% · as.document_position, as.document_range, isAvailable<br>pbapply · 17 of 26 · 65.4% · pbapply, pbsapply, pblapply, pbreplicate, pbmapply, pb.mapply, pbtapply, pbwalk, and 9 more</td><td>The R session is Python. A call, a dict, and an exception stand in for tidy eval and environments. An S3 generic with no method is an ordinary function. Help, the search path, the profiler, package checking, and the RStudio IDE are not ported. A loop is Python, and a parallel loop is Rayon. Checked helpers stay on disk. The C in rlang implements the evaluator, so it is not rewritten in Rust.</td></tr>
+<tr><td>NumPy and Polars</td><td>vctrs · 5 of 200 · 2.5% · vec_recycle_common, list_unchop, list_sizes, vec_size, vec_slice</td><td>A vector is NumPy and a table is Polars. vctrs&#x27;s ptype, size, and cast exist for R&#x27;s vector types. That C is not a numerical kernel and is not rewritten in Rust. vctrs is not ported, and NumPy is not a check against it.</td></tr>
+<tr><td>libxml2</td><td>XML · 71 of 173 · 41.0% · libxmlVersion, supportsLibxml, supportsExpat, libxmlFeatures, xmlParse, xmlTreeParse, xmlInternalTreeParse, xmlNativeTreeParse, and 63 more</td><td>An XML or HTML document uses the system libxml2 through ctypes, the same library the finished xml2 package already calls. The rest of the R package XML, including SAX, schemas, and DTDs, is not ported. lxml is not the stand-in: its wheel ships another libxml2, and building it needs libxslt headers this machine does not have. Checked XML functions stay on disk. libxml2 is not a check against the rest of XML.</td></tr>
+<tr><td>Polars and calamine <span class="rust">Rust</span></td><td>readxl · 9 of 13 · 69.2% · anchored, cell_cols, cell_limits, cell_rows, excel_format, format_from_ext, format_from_signature, readxl_example, and 1 more</td><td>An Excel sheet is read with Polars read_excel. That reader calls the Rust calamine library. readxl&#x27;s C++ cell API is not ported, and calamine is not a check against it. Helpers already written stay on disk.</td></tr>
+<tr><td>Plotly</td><td>plotly · not opened</td><td>An interactive chart uses the Python Plotly package, which drives the same plotly.js. The R plotly API is not ported. A static chart stays Matplotlib. Plotly Python is not a check against the R package.</td></tr>
+<tr><td>cryptography <span class="rust">Rust</span></td><td>openssl · 46 of 79 · 58.2% · sha256, base64_encode, base64_decode, aes_ctr_encrypt, aes_ctr_decrypt, rand_bytes, rsa_keygen, aes_cbc_decrypt, and 38 more</td><td>Hashes stay in hashlib. AES, RSA, Ed25519, X25519, and random bytes stay in the opensslport crate, which calls libssl. Certificates, PKCS#7, PKCS#12, PEM, and the remaining signatures use the Python cryptography package, which links the same OpenSSL. Those R wrappers are not ported. Checked functions stay on disk. An agent that already holds one function finishes that function only. cryptography is not a check against the R package.</td></tr>
+<tr><td>cmdstanpy</td><td>rstan · not opened</td><td>A model stays a Stan program. Python sends it to the Stan program already on the machine through cmdstanpy, which runs CmdStan. The Stan language and the compiler are not translated. cmdstanpy is not a check against rstan.</td></tr>
+<tr><td>—</td><td>aplot · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>archdata · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>arrow · not opened</td><td>The R arrow package wraps Arrow C++. pyarrow wraps the same system from Python (approved).</td></tr>
+<tr><td>—</td><td>AsioHeaders · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>babynames · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>BH · not opened</td><td>Boost headers for packages that compile C++.</td></tr>
+<tr><td>—</td><td>bigD · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>BiocManager · not opened</td><td>Bioconductor installer. Not needed; out of scope.</td></tr>
+<tr><td>—</td><td>bit · not opened</td><td>NumPy boolean arrays and packbits are the stand-in for the bit vector class.</td></tr>
+<tr><td>—</td><td>bit64 · not opened</td><td>NumPy int64 is the stand-in for 64-bit integers.</td></tr>
+<tr><td>—</td><td>bookdown · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>brew · not opened</td><td>Template engine for R text. Python string.Template (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>broom · not opened</td><td>Tidy model summaries. pandas and statsmodels cover the same role.</td></tr>
+<tr><td>—</td><td>bslib · not opened</td><td>Bootstrap themes are the Dash layer. Dash is the stand-in for shiny styling.</td></tr>
+<tr><td>—</td><td>cachem · not opened</td><td>A Python dict and pickle files are the stand-in for the memory and disk caches.</td></tr>
+<tr><td>—</td><td>callr · not opened</td><td>Python subprocess is the stand-in for running a child session in a separate process.</td></tr>
+<tr><td>—</td><td>cellranger · not opened</td><td>Spreadsheet cell address helpers. Python re and openpyxl utilities cover it once a spreadsheet library is chosen.</td></tr>
+<tr><td>—</td><td>chromote · not opened</td><td>Web server or browser automation. Python asyncio and the approved Dash stack cover this role.</td></tr>
+<tr><td>—</td><td>cli · 240 of 240 · 100.0% · __cli_update_due, ansi_align, ansi_chartr, ansi_collapse, ansi_columns, ansi_grep, ansi_grepl, ansi_has_any, and 232 more</td><td>rich is the stand-in for styled terminal output. Agreed by the user.</td></tr>
+<tr><td>—</td><td>clock · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>codetools · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>colourpicker · not opened</td><td>Dash is the stand-in for Shiny colour inputs.</td></tr>
+<tr><td>—</td><td>combinat · not opened</td><td>Python itertools and math are the stand-in for combinations and permutations.</td></tr>
+<tr><td>—</td><td>commonmark · not opened</td><td>CommonMark parser. Not a numerical role; out of scope for this project.</td></tr>
+<tr><td>—</td><td>config · not opened</td><td>PyYAML is the stand-in for reading YAML configuration.</td></tr>
+<tr><td>—</td><td>corrplot · not opened</td><td>Charts are Matplotlib.</td></tr>
+<tr><td>—</td><td>covr · not opened</td><td>Code coverage for R packages. coverage.py covers Python coverage.</td></tr>
+<tr><td>—</td><td>cowplot · not opened</td><td>Charts are Matplotlib. cowplot arranges ggplot2 charts, which are not ported.</td></tr>
+<tr><td>—</td><td>cpp11 · not opened</td><td>Compiles C++ into R. It is not a library of R functions.</td></tr>
+<tr><td>—</td><td>credentials · not opened</td><td>Git and SSH credential helpers. A developer tool, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>data.tree · not opened</td><td>Python classes are the stand-in. data.tree is a tree object system built on R6 classes, as R6 is.</td></tr>
+<tr><td>—</td><td>datawizard · not opened</td><td>Data wrangling helpers. pandas and Polars cover it.</td></tr>
+<tr><td>—</td><td>dbplyr · not opened</td><td>SQL backend for dplyr. Polars and SQL cover the query role.</td></tr>
+<tr><td>—</td><td>deldir · 0 of 2 · 0.0%</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>dendextend · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>DEoptim · not opened</td><td>scipy.optimize.differential_evolution is the stand-in.</td></tr>
+<tr><td>—</td><td>desc · not opened</td><td>The Python email parser reads and writes DESCRIPTION files (DCF format), which is the stand-in.</td></tr>
+<tr><td>—</td><td>devtools · not opened</td><td>R package development tools. Python packaging (pip, build, pytest) covers this role.</td></tr>
+<tr><td>—</td><td>diagram · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>diffobj · 60 of 60 · 100.0% · AlignThreshold, Pager, PagerBrowser, PagerOff, PagerSystem, PagerSystemLess, PaletteOfStyles, Rdiff_chr, and 52 more</td><td>Side-by-side diff rendering. Python difflib covers the same role.</td></tr>
+<tr><td>—</td><td>dotCall64 · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>dqrng · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>DT · not opened</td><td>Interactive HTML tables. Plotly and Dash (approved) cover interactive HTML output.</td></tr>
+<tr><td>—</td><td>dtplyr · not opened</td><td>data.table backend for dplyr. Polars covers the data-frame role.</td></tr>
+<tr><td>—</td><td>dygraphs · not opened</td><td>Interactive time-series plots. Plotly (approved) covers it.</td></tr>
+<tr><td>—</td><td>ellipsis · not opened</td><td>Argument dots checks in R. Python *args and **kwargs cover it.</td></tr>
+<tr><td>—</td><td>expm · not opened</td><td>scipy.linalg.expm is the stand-in for the matrix exponential.</td></tr>
+<tr><td>—</td><td>factoextra · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>fastDummies · not opened</td><td>Polars to_dummies is the stand-in for dummy columns (Polars is the data-frame library).</td></tr>
+<tr><td>—</td><td>flextable · not opened</td><td>Interactive tables or document output. Dash (approved) and Quarto cover this role.</td></tr>
+<tr><td>—</td><td>fontBitstreamVera · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>fontLiberation · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>fontquiver · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>forcats · not opened</td><td>Polars categorical columns are the stand-in for factor helpers (Polars is the data-frame library).</td></tr>
+<tr><td>—</td><td>formatR · not opened</td><td>R code reformatter. Python black or stdlib tools cover it.</td></tr>
+<tr><td>—</td><td>fs · 69 of 69 · 100.0% · path, path_wd, path_real, path_tidy, path_split, path_join, path_abs, path_norm, and 61 more</td><td>Python pathlib, os, and shutil are the stand-in for file system paths and operations.</td></tr>
+<tr><td>—</td><td>futile.logger · not opened</td><td>Logging framework. Python logging (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>futile.options · not opened</td><td>Option handling for futile.logger. Python logging (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>gapminder · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>gargle · not opened</td><td>Google API authentication. A service SDK, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>gert · not opened</td><td>Git interface. A developer tool, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>GGally · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggdist · not opened</td><td>Distribution plots for ggplot2. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggforce · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggfun · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggiraph · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggnewscale · not opened</td><td>Charts are Matplotlib. ggnewscale extends ggplot2, which is not ported.</td></tr>
+<tr><td>—</td><td>ggplotify · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggpubr · not opened</td><td>Publication plots and statistical tests for ggplot2. Matplotlib (approved) and scipy.stats cover the used parts.</td></tr>
+<tr><td>—</td><td>ggraph · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggrastr · not opened</td><td>Rasterized ggplot2 layers. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggrepel · not opened</td><td>Non-overlapping text labels for ggplot2. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggridges · not opened</td><td>Ridgeline plots for ggplot2. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggsci · not opened</td><td>Scientific color palettes for ggplot2. Matplotlib (approved) palettes cover it.</td></tr>
+<tr><td>—</td><td>ggsignif · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggstats · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggtext · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>ggthemes · not opened</td><td>Themes for ggplot2. Matplotlib (approved) styles cover it.</td></tr>
+<tr><td>—</td><td>gh · not opened</td><td>GitHub API client. A service SDK, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>gitcreds · not opened</td><td>Git credential helpers. A developer tool, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>globals · not opened</td><td>Finds global variables in R functions. Python inspect (stdlib) covers the role.</td></tr>
+<tr><td>—</td><td>glue · 16 of 16 · 100.0% · glue, glue_data, glue_safe, glue_data_safe, glue_col, glue_data_col, glue_sql, glue_data_sql, and 8 more</td><td>Python f-strings and str.format are the stand-in for string interpolation.</td></tr>
+<tr><td>—</td><td>googledrive · not opened</td><td>Google Drive API client. A service SDK, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>googlesheets4 · not opened</td><td>Google Sheets API client. A service SDK, not a numerical package; out of scope.</td></tr>
+<tr><td>—</td><td>gridGraphics · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>gridtext · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>gtable · not opened</td><td>Grid layout is a graphics system. Charts are Matplotlib, and grid is not ported.</td></tr>
+<tr><td>—</td><td>here · not opened</td><td>Python pathlib is the stand-in, as for rprojroot.</td></tr>
+<tr><td>—</td><td>highr · not opened</td><td>Syntax highlighting for R code. Not a numerical role; out of scope.</td></tr>
+<tr><td>—</td><td>hms · not opened</td><td>Python datetime.time and timedelta are the stand-in for the time of day class.</td></tr>
+<tr><td>—</td><td>htmlwidgets · not opened</td><td>Dash is the stand-in for HTML widgets (dashboards are Dash).</td></tr>
+<tr><td>—</td><td>httpuv · not opened</td><td>Web server and websocket runtime. Python asyncio (stdlib) covers the event loop and sockets.</td></tr>
+<tr><td>—</td><td>ids · not opened</td><td>Random identifier generation. Python uuid and secrets (stdlib) cover it.</td></tr>
+<tr><td>—</td><td>ini · not opened</td><td>Config file parsing. Python configparser (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>insight · not opened</td><td>Model information helpers for R objects. Python introspection covers it; out of scope.</td></tr>
+<tr><td>—</td><td>irlba · not opened</td><td>scipy.sparse.linalg.svds is the stand-in for partial SVD.</td></tr>
+<tr><td>—</td><td>jose · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>jpeg · not opened</td><td>JPEG reading and writing. Pillow (approved) covers the same role in Python.</td></tr>
+<tr><td>—</td><td>jsonlite · 23 of 23 · 100.0% · base64_enc, base64_dec, base64url_enc, base64url_dec, validate, prettify, minify, toJSON, and 15 more</td><td>Python json is the stand-in for JSON reading and writing. Agreed by the user.</td></tr>
+<tr><td>—</td><td>juicyjuice · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>kableExtra · not opened</td><td>Interactive tables or document output. Dash (approved) and Quarto cover this role.</td></tr>
+<tr><td>—</td><td>knitr · 6 of 133 · 4.5% · all_labels, all_patterns, asis_output, combine_words, current_input, fig_chunk</td><td>The knit engine is not ported. A notebook exporter does not weave it.</td></tr>
+<tr><td>—</td><td>Lahman · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>lambda.r · not opened</td><td>Pattern-matching function definitions for R. Python functools.singledispatch covers it.</td></tr>
+<tr><td>—</td><td>later · not opened</td><td>Callback scheduler for the event loop. Python asyncio (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>leaflet · not opened</td><td>Interactive maps. Plotly (approved) and Dash cover interactive HTML output.</td></tr>
+<tr><td>—</td><td>leaflet.providers · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>lifecycle · 16 of 16 · 100.0% · badge, deprecated, is_present, deprecate_warn, deprecate_soft, deprecate_stop, expect_defunct, expect_deprecated, and 8 more</td><td>The Python warnings module is the stand-in for deprecation messages.</td></tr>
+<tr><td>—</td><td>lintr · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>litedown · not opened</td><td>Lightweight Markdown rendering. Not a numerical role; out of scope for this project.</td></tr>
+<tr><td>—</td><td>logger · not opened</td><td>Python logging is the stand-in for loggers.</td></tr>
+<tr><td>—</td><td>lpSolve · not opened</td><td>scipy.optimize.linprog and milp are the stand-in for linear programming.</td></tr>
+<tr><td>—</td><td>magic · not opened</td><td>NumPy is the stand-in for magic squares and matrices.</td></tr>
+<tr><td>—</td><td>mapdata · not opened</td><td>A data bundle with no functions to call.</td></tr>
+<tr><td>—</td><td>maps · not opened</td><td>Charts are Matplotlib with map data.</td></tr>
+<tr><td>—</td><td>markdown · not opened</td><td>Markdown to HTML rendering. Not a numerical role; out of scope for this project.</td></tr>
+<tr><td>—</td><td>memoise · 12 of 12 · 100.0% · memoise, memoize, forget, has_cache, drop_cache, is.memoised, is.memoized, timeout, and 4 more</td><td>functools.lru_cache is the stand-in for memoisation.</td></tr>
+<tr><td>—</td><td>microbenchmark · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>miniUI · not opened</td><td>Dash is the stand-in for Shiny gadgets.</td></tr>
+<tr><td>—</td><td>mnormt · not opened</td><td>NumPy and scipy.stats.multivariate_normal are the stand-in.</td></tr>
+<tr><td>—</td><td>mockery · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>multcompView · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>nleqslv · not opened</td><td>scipy.optimize.root is the stand-in for nonlinear equations.</td></tr>
+<tr><td>—</td><td>nnls · not opened</td><td>scipy.optimize.nnls is the stand-in for non-negative least squares.</td></tr>
+<tr><td>—</td><td>nycflights13 · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>odbc · not opened</td><td>Database driver. SQLAlchemy (approved) covers database connections.</td></tr>
+<tr><td>—</td><td>officer · not opened</td><td>Interactive tables or document output. Dash (approved) and Quarto cover this role.</td></tr>
+<tr><td>—</td><td>openxlsx · not opened</td><td>Excel reading and writing. openpyxl (approved) covers the same role in Python.</td></tr>
+<tr><td>—</td><td>optimx · not opened</td><td>scipy.optimize is the stand-in for the optimiser wrapper.</td></tr>
+<tr><td>—</td><td>pak · not opened</td><td>R package installer. pip and uv cover package installation.</td></tr>
+<tr><td>—</td><td>palmerpenguins · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>parallelly · not opened</td><td>Python multiprocessing and os are the stand-in for worker detection.</td></tr>
+<tr><td>—</td><td>patchwork · not opened</td><td>Charts are Matplotlib. patchwork arranges ggplot2 charts, which are not ported.</td></tr>
+<tr><td>—</td><td>pheatmap · not opened</td><td>Charts are Matplotlib.</td></tr>
+<tr><td>—</td><td>pkgbuild · not opened</td><td>R package build tools. Python build covers this role.</td></tr>
+<tr><td>—</td><td>pkgload · not opened</td><td>R package loader for development. Python import machinery covers it.</td></tr>
+<tr><td>—</td><td>plotrix · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>plumber · not opened</td><td>Web server or browser automation. Python asyncio and the approved Dash stack cover this role.</td></tr>
+<tr><td>—</td><td>praise · not opened</td><td>Random praise messages for the console. Not a numerical role; Python random and rich cover it.</td></tr>
+<tr><td>—</td><td>processx · not opened</td><td>Python subprocess is the stand-in for running and managing child processes.</td></tr>
+<tr><td>—</td><td>profvis · not opened</td><td>Profiling visualizer. cProfile (stdlib) covers profiling.</td></tr>
+<tr><td>—</td><td>progress · not opened</td><td>Console progress bars. rich (approved) covers progress bars.</td></tr>
+<tr><td>—</td><td>promises · not opened</td><td>Asynchronous promise objects. Python asyncio futures cover it.</td></tr>
+<tr><td>—</td><td>ps · not opened</td><td>psutil is the stand-in for process listing, status, and signals. Agreed by the user.</td></tr>
+<tr><td>—</td><td>quarto · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>R.methodsS3 · not opened</td><td>R S3 method helpers. Python classes and functools.singledispatch cover it.</td></tr>
+<tr><td>—</td><td>R.oo · not opened</td><td>R object-oriented programming classes. Python classes cover it.</td></tr>
+<tr><td>—</td><td>R.utils · not opened</td><td>R utility functions over R.oo. Python stdlib covers the used parts.</td></tr>
+<tr><td>—</td><td>R6 · 0 of 3 · 0.0%</td><td>Python classes are the stand-in. R6 is a class system: fields, methods, inheritance, active bindings, and clone map to Python classes, properties, and copy.</td></tr>
+<tr><td>—</td><td>rcmdcheck · not opened</td><td>R package check runner. pytest and tox cover checking.</td></tr>
+<tr><td>—</td><td>Rcpp · not opened</td><td>Compiles C++ into R. It is not a library of R functions.</td></tr>
+<tr><td>—</td><td>RcppAnnoy · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>RcppArmadillo · not opened</td><td>Links the Armadillo C++ library into R.</td></tr>
+<tr><td>—</td><td>RcppEigen · not opened</td><td>Links the Eigen C++ library into R.</td></tr>
+<tr><td>—</td><td>RcppParallel · not opened</td><td>Parallel backend for compiling C++ into R.</td></tr>
+<tr><td>—</td><td>RCurl · not opened</td><td>libcurl wrapper for HTTP. Python urllib (stdlib) covers the requests.</td></tr>
+<tr><td>—</td><td>Rdpack · 0 of 110 · 0.0%</td><td>Rd manuals are not ported.</td></tr>
+<tr><td>—</td><td>reactable · not opened</td><td>Interactive tables or document output. Dash (approved) and Quarto cover this role.</td></tr>
+<tr><td>—</td><td>reactR · not opened</td><td>Interactive tables or document output. Dash (approved) and Quarto cover this role.</td></tr>
+<tr><td>—</td><td>rematch · not opened</td><td>Regex match extraction helpers. Python re covers it.</td></tr>
+<tr><td>—</td><td>rematch2 · 8 of 8 · 100.0% · $.rematch_allrecords, $.rematch_records, bind_re_match, bind_re_match_, re_exec, re_exec_all, re_match, re_match_all</td><td>Regex match extraction helpers. Python re covers it.</td></tr>
+<tr><td>—</td><td>rentrez · not opened</td><td>HTTP API client for a service. requests covers the HTTP role.</td></tr>
+<tr><td>—</td><td>renv · not opened</td><td>R dependency lock tool. pip and uv lock files cover it.</td></tr>
+<tr><td>—</td><td>repr · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>reprex · not opened</td><td>Reproducible example generator for R. A developer tool; out of scope.</td></tr>
+<tr><td>—</td><td>repurrrsive · not opened</td><td>Data bundle with no functions to call. Not translated.</td></tr>
+<tr><td>—</td><td>reshape · not opened</td><td>Polars melt and pivot are the stand-in for wide and long reshaping (Polars is the data-frame library).</td></tr>
+<tr><td>—</td><td>restfulr · not opened</td><td>HTTP API client for a service. requests covers the HTTP role.</td></tr>
+<tr><td>—</td><td>reticulate · not opened</td><td>R to Python bridge. Not needed in a Python project.</td></tr>
+<tr><td>—</td><td>rex · not opened</td><td>Regex helpers. Python re covers it.</td></tr>
+<tr><td>—</td><td>rgl · not opened</td><td>3D interactive graphics. Plotly (approved) covers 3D output.</td></tr>
+<tr><td>—</td><td>rjson · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>rlist · not opened</td><td>Python lists and dicts are the stand-in for list manipulation.</td></tr>
+<tr><td>—</td><td>rnaturalearthdata · not opened</td><td>A data bundle with no functions to call.</td></tr>
+<tr><td>—</td><td>roxygen2 · not opened</td><td>R documentation generator. Sphinx or pdoc cover Python documentation.</td></tr>
+<tr><td>—</td><td>RPostgres · not opened</td><td>Database driver. SQLAlchemy (approved) covers database connections.</td></tr>
+<tr><td>—</td><td>rprojroot · 0 of 37 · 0.0%</td><td>Python pathlib and os are the stand-in. Finding a project root is walking up from a directory until a marker file or directory is found, and the script path comes from the running Python file (NATIVE.md).</td></tr>
+<tr><td>—</td><td>rsconnect · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>RSpectra · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>RSQLite · not opened</td><td>SQLite database driver. Python sqlite3 (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>rversions · not opened</td><td>R release history lookup. A developer tool; out of scope.</td></tr>
+<tr><td>—</td><td>S7 · not opened</td><td>Python classes are the stand-in. S7 is a class system, as R6 is.</td></tr>
+<tr><td>—</td><td>scatterplot3d · not opened</td><td>Charts are Matplotlib.</td></tr>
+<tr><td>—</td><td>selectr · not opened</td><td>CSS selector to XPath translation. Python xml.etree covers the XML selection role.</td></tr>
+<tr><td>—</td><td>servr · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>sessioninfo · not opened</td><td>Session information report. Python sys and platform (stdlib) cover it.</td></tr>
+<tr><td>—</td><td>shinyBS · not opened</td><td>Dash is the stand-in for Shiny Bootstrap components.</td></tr>
+<tr><td>—</td><td>shinycssloaders · not opened</td><td>Dash is the stand-in for Shiny UI helpers.</td></tr>
+<tr><td>—</td><td>shinystan · not opened</td><td>Interactive Bayesian model browser built on Shiny. Dash (approved) covers the interactive layer.</td></tr>
+<tr><td>—</td><td>shinythemes · not opened</td><td>Dash is the stand-in for Shiny themes.</td></tr>
+<tr><td>—</td><td>showtext · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>showtextdb · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>sitmo · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>snow · not opened</td><td>Simple cluster parallelism. Python multiprocessing (stdlib) covers it.</td></tr>
+<tr><td>—</td><td>spData · not opened</td><td>A data bundle with no functions to call.</td></tr>
+<tr><td>—</td><td>spelling · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>StanHeaders · not opened</td><td>C++ headers for the Stan program. The compiler is not R, and there is no stand-in library.</td></tr>
+<tr><td>—</td><td>styler · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>sysfonts · not opened</td><td>Font files and font loading for graphics. Matplotlib (approved) handles fonts in figures.</td></tr>
+<tr><td>—</td><td>tensorA · not opened</td><td>Tensor products and einsum-style contraction. numpy.einsum covers it.</td></tr>
+<tr><td>—</td><td>tensorflow · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>threejs · not opened</td><td>3D interactive HTML plots. Plotly (approved) covers 3D output.</td></tr>
+<tr><td>—</td><td>tidytree · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>tidyverse · not opened</td><td>Meta-package for tidy data science. Polars and pandas cover the data-frame role.</td></tr>
+<tr><td>—</td><td>timeDate · not opened</td><td>Calendars, time zones, and date arithmetic. Python datetime, zoneinfo, and pandas cover it.</td></tr>
+<tr><td>—</td><td>tinytest · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>tinytex · not opened</td><td>LaTeX installation helper. Not a numerical role; out of scope.</td></tr>
+<tr><td>—</td><td>tweenr · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>urlchecker · not opened</td><td>Link checker for docs. Python requests-based tools cover it; out of scope.</td></tr>
+<tr><td>—</td><td>usethis · not opened</td><td>R project setup helpers. Python packaging templates cover it.</td></tr>
+<tr><td>—</td><td>uuid · not opened</td><td>Python uuid is the stand-in.</td></tr>
+<tr><td>—</td><td>V8 · not opened</td><td>JavaScript engine binding. py_mini_racer (approved) embeds V8 in Python.</td></tr>
+<tr><td>—</td><td>vcd · not opened</td><td>Graphics. Matplotlib (approved) covers the figures.</td></tr>
+<tr><td>—</td><td>vdiffr · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>viridis · not opened</td><td>Charts are Matplotlib. viridis wraps ggplot2 colour scales; the palettes are viridisLite, already translated.</td></tr>
+<tr><td>—</td><td>vroom · not opened</td><td>Polars read_csv is the stand-in for delimited file reading (Polars is the data-frame library).</td></tr>
+<tr><td>—</td><td>waldo · not opened</td><td>Object comparison and diff output. Python difflib and dataclass comparison cover it.</td></tr>
+<tr><td>—</td><td>websocket · not opened</td><td>Web server or browser automation. Python asyncio and the approved Dash stack cover this role.</td></tr>
+<tr><td>—</td><td>whisker · not opened</td><td>Mustache templates. Python string.Template (stdlib) covers the simple uses.</td></tr>
+<tr><td>—</td><td>writexl · not opened</td><td>Excel writing. xlsxwriter (approved) covers the same role in Python.</td></tr>
+<tr><td>—</td><td>xopen · not opened</td><td>R developer or documentation tooling. Out of scope for a numerical port.</td></tr>
+<tr><td>—</td><td>yaml · 6 of 6 · 100.0% · as.yaml, read_yaml, verbatim_logical, write_yaml, yaml.load, yaml.load_file</td><td>PyYAML is the stand-in for YAML reading and writing. Agreed by the user.</td></tr>
+<tr><td>—</td><td>yulab.utils · not opened</td><td>Covered by a native Python or Rust library: numpy.random, scipy.sparse.linalg, timeit, json, datetime, scipy.spatial, or a graphics-only helper.</td></tr>
+<tr><td>—</td><td>zip · not opened</td><td>Python zipfile is the stand-in for zip archives.</td></tr>
+</tbody>
+</table>
+</div><h2>Agreed native libraries</h2>
+<div class="card">
+<table>
+<thead><tr><th>Library</th><th>Role</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>numpy</td><td>arrays, sample variance, and the FFT</td><td>bkde&#x27;s FFT is R, and numpy.fft matches that role. This is the array library for later packages too. pracma conv and ifft use that FFT, and std_err uses the sample variance. Checked against pracma 2.4.6. modelr uses that variance, the type-7 quantile, and the median. Its bootstrap and permutation draws use numpy.random; the check is the partition, not R&#x27;s sample. data.table stores columns as arrays. Checked against data.table 1.18.6.1. corpcor uses it for the shrinkage covariance, the symmetric eigendecomposition, and the economy SVD. Checked against corpcor 1.6.10. numDeriv stores the Richardson table as an array. Checked against numDeriv 2016.8-1.1. FNN stores points as arrays. The kd-tree and the brute scan use those arrays, and digamma of a positive integer is -euler_gamma plus the harmonic number. Checked against FNN 1.1.4.1. polynom&#x27;s roots are eigenvalues of the companion matrix, and poly.orth uses the QR of the Vandermonde. Checked against polynom 1.4-1. rootSolve stores the gradient and the Jacobian as arrays. Checked against rootSolve 1.8.2.4. cluster stores the daisy rows as an array, and the mean absolute deviation is the mean of absolute deviations from the mean. Checked against cluster 2.1.8.3. randomForest fills missing entries with the median and scales the outlier score by the median absolute deviation times 1.4826. Checked against randomForest 4.7-1.2. BB stores the parameter vector as an array, and quadprog stores D, the constraint matrix, and the solution as arrays. Checked against BB 2026.1.0 and quadprog 1.5-8. slam stores triplet indexes and values as arrays. Checked against slam 0.1-56. slider stores each window summary in a fanout-16 segment tree and accumulates the sum in long double. Checked against slider 0.3.3. fracdiff&#x27;s fractional difference is the FFT convolution, and the periodogram regression is a least-squares fit. Checked against fracdiff 1.5-4. lmtest stores the regressors as arrays. The Durbin-Watson matrix eigenvalues are the largest n-k. Checked against lmtest 0.9-40. urca&#x27;s Dickey-Fuller, KPSS, and Phillips-Perron regressions are least squares. Checked against urca 1.3-4. ucminf stores the packed inverse Hessian as an array. Checked against ucminf 1.2.3. warp stores each distance and each boundary column as an array. Checked against warp 0.2.3. vars stores the series, the lag design, and the coefficient rows as arrays. The Johansen moment matrices are arrays too. Checked against vars 1.6-1 and urca 1.3-4. tseries stores the regression design as an array. The White scores are the economy SVD, and the surrogate inverse FFT is the length times ifft because R&#x27;s inverse transform is unnormalized. Checked against tseries 0.10-63. ordinal stores the link densities and the control numbers as arrays. Checked against ordinal 2026.7-26. MASS ginv, Null, kde2d, and bandwidth.nrd store matrices and samples as arrays. Checked against MASS 7.3-66. mvtnorm stores the packed lower triangles, the correlation, and the draws as arrays. The symmetric square root is the eigendecomposition with the values reversed to decreasing order. Checked against mvtnorm 1.4-2. survival stores the response and the Wald matrix as arrays. Checked against survival 3.8-12. changepoint stores the series and the PELT cost sums as arrays, and a regression segment uses the least-squares solver. Checked against changepoint 2.3. nnet stores the design and the Hessian as arrays. Checked against nnet 7.3-21. randomForest stores the votes, the proximity, and the importance columns as arrays. Checked against randomForest 4.7-1.2.</td></tr>
+<tr><td>matplotlib</td><td>figures that can be drawn in a few lines</td><td>A chart Matplotlib can draw in one to three lines is called directly. A chart function Matplotlib does not have is added once in killplot. pracma draws ezplot, fplot, polar, quiver, and the other Matlab-style charts with it. Checked against pracma 2.4.6. pwr draws the sample-size power curve with a line, points, and a vertical mark. Checked against pwr 1.3-0. polynom draws one polynomial curve and a dashed grid. Checked against polynom 1.4-1. vars draws the forecast fan through killplot.fan, which fills one polygon per interval. Checked against vars 1.6-1. tseries draws the open-high-low-close bars with vlines and hlines, and seqplot.ts with two line calls. Checked against tseries 0.10-63. xts draws the series as a line on the index and data limits. Checked against xts 0.14.3. rootSolve draws a steady1D profile as a line and a steady2D or steady3D field with imshow. Checked against rootSolve 1.8.2.4. changepoint draws the series, the fitted step, and the penalty diagnostic with a line plot. Checked against changepoint 2.3. lattice draws the trellis panels with it. Checked against lattice 0.23-1.</td></tr>
+<tr><td>json</td><td>JSON tokens for jsonlite and RJSONIO</td><td>The Python standard library parses and emits objects, arrays, strings, numbers, true, false, and null. jsonlite&#x27;s data-frame, factor, date, and NA mapping stays a port of the R methods. Checked against jsonlite 2.0.0. RJSONIO strips comments and turns an empty array slot into null before that parser, and the type mapping stays a port of the R methods. Checked against RJSONIO 2.0.5.</td></tr>
+<tr><td>base64</td><td>base64 and base64url for jsonlite</td><td>The Python standard library encodes and decodes RFC 4648 base64. The URL form uses - and _ and drops the padding. Checked against jsonlite 2.0.0.</td></tr>
+<tr><td>gzip</td><td>gzipped JSON for jsonlite</td><td>The Python standard library gzips and gunzips. A gzip header stores a timestamp, so the check is the JSON after gunzip. Checked against jsonlite 2.0.0. readr uses the same module for RDS written with compress gz, and the check is the serialization after gunzip. tools::checkRdaFiles reads a gzip rda through it and reports version 3. Checked against tools 4.5.0.</td></tr>
+<tr><td>pickle</td><td>filesystem cache values for memoise</td><td>cache_filesystem stores each result in a file and reads it back. pickle is the standard-library form of that. The check is the value read back. Checked against memoise 2.0.1.</td></tr>
+<tr><td>urllib</td><td>S3 and Cloud Storage requests for memoise</td><td>cache_s3 and cache_gcs store a serialized value with the same HTTP paths the R clients use. The check reads the value back from a local stand-in. Checked against memoise 2.0.1.</td></tr>
+<tr><td>hashlib</td><td>MD5 and SHA-256 digests for tools</td><td>The Python standard library&#x27;s hex digest matches tools::md5sum and tools::sha256sum, including a raw vector. A missing file stays NA. Checked against tools 4.5.0.</td></tr>
+<tr><td>signal</td><td>POSIX signal numbers for tools</td><td>The Python standard library exposes the host signal numbers. They match the SIG* constants tools exports, and os.kill is pskill. Checked against tools 4.5.0.</td></tr>
+<tr><td>pyyaml</td><td>YAML 1.1 parser for the R package yaml</td><td>CRAN yaml is libyaml. PyYAML is the Python binding of that parser, so yes, no, and octal integers stay YAML 1.1. The Python package is r_yaml because PyYAML already owns the import name yaml. as.yaml&#x27;s quoting and yes/no logicals stay a port of the R emitter.</td></tr>
+<tr><td>regex</td><td>Unicode grapheme clusters for cli</td><td>cli splits text with its own grapheme breaker. The regex module&#x27;s \X matched those clusters, including ZWJ emoji and flags. Display width still uses cli&#x27;s charwidth table, because wcwidth does not. Checked against cli 3.6.6.</td></tr>
+<tr><td>subprocess</td><td>process execution for the R package sys</td><td>sys starts a program, pipes its output, and reports the wait status. subprocess is the Python standard library for that. windows_quote stays a port of the libuv rules, and a signalled child is the signal number while exit 1 is 256. Checked against sys 3.4.3. tools::Rcmd runs R CMD through it, and tools::Rdiff runs diff -bw through it. Checked against tools 4.5.0.</td></tr>
+<tr><td>getpass</td><td>password prompt for askpass</td><td>askpass reads a password without echoing it. getpass is the Python standard library for that prompt. A non-interactive session returns None, matching R. Checked against askpass 1.2.1.</td></tr>
+<tr><td>termios</td><td>terminal echo for askpass</td><td>askpass turns echo off with stty before readline. termios is the Python standard library for that terminal flag, and it restores the previous settings when the prompt returns. Checked against askpass 1.2.1.</td></tr>
+<tr><td>subprocess</td><td>the Windows and macOS askpass dialog</td><td>On those platforms askpass runs the bundled helper through r_sys.exec_internal. That uses subprocess and keeps the helper&#x27;s stdout. Checked against askpass 1.2.1.</td></tr>
+<tr><td>PyICU</td><td>ICU regex, collation, break iteration, case mapping, and transliteration for stringi</td><td>stringi 1.8.9 links to system ICU 76.1. PyICU imports as icu and calls that same library, so search, collation, and boundaries match the installed package. The regex module stays the grapheme splitter for cli. stockSymbols sorts with that collator, which is R&#x27;s order() for en_US. Checked against TTR 0.24.4.</td></tr>
+<tr><td>scipy</td><td>cdfs and densities for extraDistr, nortest, pwr, and moments, the quantile regression linear program for quantreg, and the univariate margins for mvtnorm, and the banded solve and LSODA for rootSolve</td><td>extraDistr calls R&#x27;s qnorm, pbeta, pgamma, pt, ppois, pbinom, and besselI. SciPy 1.18 matches those R 4.5 values inside 1e-15. pnorm stays math.erf. Random draws stay on boot&#x27;s Mersenne-Twister, not SciPy&#x27;s generator. truncnorm&#x27;s mean uses SciPy&#x27;s normal log cdf, which stays finite where log(erf) underflows. Checked against truncnorm 1.0-9. quantreg&#x27;s Barrodale-Roberts point estimate is the quantile regression linear program, and scipy.optimize.linprog with HiGHS matches rq.fit.br coefficients, residuals, and the dual (equality multiplier plus tau). Checked against quantreg 6.1. nortest calls log_ndtr, qnorm, and pchisq. Checked against nortest 1.0-4. pwr uses qnorm, qt, pt with a noncentrality, qf, pf with a noncentrality, qchisq, and pchisq with a noncentrality. pnorm stays erfc. Checked against pwr 1.3-0. moments::jarque.test uses the chi-square cdf with 2 degrees of freedom. The normal tail stays erfc. Checked against moments 0.14.1. fracdiff&#x27;s confidence interval uses the normal quantile. Checked against fracdiff 1.5-4. lmtest&#x27;s F, chi-square, and t tails use SciPy. The Cox normal tail stays math.erf. Checked against lmtest 0.9-40. urca&#x27;s pivoted Cholesky is scipy.linalg.lapack.dpstrf. Checked against urca 1.3-4. vars uses the chi-square and F tails, the normal quantile for forecast intervals, and the column-pivoted QR for the Granger covariance. Checked against vars 1.6-1. tseries uses the chi-square tail for Jarque-Bera, White, and Teraesvirta, and the F tail for the F form of those tests. pnorm stays math.erf. Checked against tseries 0.10-63. ordinal&#x27;s log-gamma cdf and density use the gamma cdf, the normal cdf, and the log-gamma function. Checked against ordinal 2026.7-26. mvtnorm uses qnorm, pt, qt, the noncentral t, the chi-square quantile, and the Cauchy cdf for the Genz–Bretz margins and the equicoordinate quantiles. pnorm stays math.erf. Checked against mvtnorm 1.4-2. rootSolve&#x27;s banded Newton step is scipy.linalg.solve_banded, and runsteady integrates with LSODA until the mean absolute derivative crosses stol. Checked against rootSolve 1.8.2.4. randomForest&#x27;s classical scaling of the proximity uses the symmetric eigensolver eigen() calls. Checked against randomForest 4.7-1.2.</td></tr>
+<tr><td>fcntl</td><td>POSIX record locks for filelock</td><td>filelock places fcntl locks on an open descriptor. Python&#x27;s fcntl.lockf is that call. Rust File::lock is flock, and flock does not contend with fcntl, so it is not used. Checked against filelock 1.0.3.</td></tr>
+<tr><td>zoneinfo</td><td>system zoneinfo for timechange</td><td>timechange reads the same zoneinfo files CCTZ reads, through the Python standard library. Fold 0 and fold 1 are the two civil times in a repeated hour. A skipped civil time is the pair of offsets around the gap. Checked against timechange 0.4.0. readr uses the same database for locale time zones and datetime offsets. tseries uses it for irregular-series weekdays and seconds after midnight. GMT and UTC are timezone.utc. Checked against tseries 0.10-63.</td></tr>
+<tr><td>ctypes</td><td>system libxml2 for xml2</td><td>xml2 1.6.0 links libxml2 2.9.14. ctypes calls that library, so parser flags, XPath, schema checks, and URL functions match the installed package. The lxml wheel bundles libxml2 2.14, and building lxml needs libxslt headers this machine does not have. Checked against xml2 1.6.0. XML parses, queries, and serializes with that same libxml2. A document dump passes a NULL encoding. Checked against XML 3.99-0.25.</td></tr>
+<tr><td>urllib</td><td>URL downloads for xml2</td><td>download_xml reads a URL into a file. urllib is the Python standard library for that request. A curl handle is accepted and unused. Checked against xml2 1.6.0.</td></tr>
+<tr><td>urllib</td><td>NASDAQ and Yahoo downloads for TTR</td><td>stockSymbols and getYahooData read those sites. urllib is the standard-library transfer. xts is not in the registry, and zoo is already in translation, so the indicators stay on numeric arrays. Checked against TTR 0.24.4.</td></tr>
+<tr><td>nlopt</td><td>NLopt algorithms for nloptr</td><td>nloptr 2.2.1 builds NLopt 2.10.0 and calls it from C. The Python package nlopt 2.10.0 is that library, so the same algorithm and stopping test return the same point. Finite differences and the option list stay a port of the R wrappers. Checked against nloptr 2.2.1.</td></tr>
+<tr><td>libcurl</td><td>URL, options, and fetches for the R package curl</td><td>curl links libcurl 8.14.1. ctypes calls libcurl.so.4. The libcurl headers are not installed, so a Rust curl crate cannot be built. Escape, the URL parser, option ids, and file fetches match the installed package. Checked against curl 6.2.1 linked to libcurl 8.14.1.</td></tr>
+<tr><td>openssl</td><td>AES, RSA, Ed25519, and X25519 for the R package openssl</td><td>The Rust crate opensslport calls libssl 3.5.7, the same library the R package links. AES-CTR, AES-CBC, and AES-GCM ciphertext match. The R package does not store the GCM tag, so decrypt keeps the updated bytes. Keccak uses EVP_Q_digest. MD4 needs the legacy provider. An RSA key is random, so the check is the DER byte 0x30. Ed25519 signs in one shot on OpenSSL 3, and a fixed seed matches R. X25519 agreement matches R. fips_mode and openssl_config read libcrypto. SHA-2, SHA-3, BLAKE2, and RIPEMD-160 stay in hashlib. Base64 and bignums stay in the standard library. Certificates, PKCS, and PEM are not ported further; they use the Python cryptography package. Checked against openssl 2.4.2.</td></tr>
+<tr><td>socket</td><td>hostname lookup for the R package curl</td><td>nslookup resolves a hostname with getaddrinfo and keeps the first address of each family. The check is localhost, which is ::1 and 127.0.0.1. Checked against curl 6.2.1.</td></tr>
+<tr><td>os</td><td>uname and os-release for utils</td><td>osVersion reads uname and /etc/os-release. os.uname and that file return the same string R stores. Checked against utils 4.5.0.</td></tr>
+<tr><td>zlib</td><td>zlib lazy-load records for utils</td><td>R compression code 3 can store a record whose type byte is 1. That payload is zlib, not gzip. zlib is the Python standard library for that stream. The datasets shipped with R use type Z, and that path is the one checked.</td></tr>
+<tr><td>bz2</td><td>bzip2 RDS for readr</td><td>readr write_rds compress bz2 and read_rds open a bzip2 stream. bz2 is the Python standard library for that. The check is the data frame after the stream is opened. Checked against readr 2.2.0.</td></tr>
+<tr><td>lzma</td><td>xz RDS for readr</td><td>readr write_rds compress xz and read_rds open an xz stream. lzma is the Python standard library for that. The check is the data frame after the stream is opened. Checked against readr 2.2.0. utils::data reads datasets lazy-load records whose type byte is Z: raw LZMA2 at preset 6, after a 4-byte uncompressed length. Checked against utils 4.5.0.</td></tr>
+<tr><td>geos</td><td>polygon and cell geometry for exactextractr</td><td>exactextractr 0.10.1 links GEOS (&gt;= 3.5.0). ctypes calls libgeos_c.so.1, GEOS 3.13.1, for WKT, prepared contains, and coordinate sequences. The cell-coverage walk stays a port of the C++. raster, sf, and terra are not opened. A grid is an extent and a resolution, and a polygon is WKT. Checked against exactextractr 0.10.1.</td></tr>
+<tr><td>csv</td><td>delimited tables for zoo</td><td>read.zoo and the read.table wrappers split fields with the Python standard library. A comma decimal and a semicolon or tab stay in the reader. The check is the date index and the two numeric columns. Checked against zoo 1.9-1.</td></tr>
+<tr><td>zoneinfo</td><td>IANA time zones for warp</td><td>A POSIXct year, month, or day is the civil date in the vector&#x27;s time zone. The default origin in that zone is local midnight at the epoch, read from the zone&#x27;s offset. zoneinfo is the Python standard library for those IANA zones. Hour and finer stay groups of absolute seconds. Checked against warp 0.2.3.</td></tr>
+<tr><td>colorsys</td><td>HSV colors for e1071</td><td>hsv_palette builds R hsv() colors. colorsys is the Python standard library for that conversion, and the hex colors match. Checked against e1071 1.7-17.</td></tr>
+<tr><td>re</td><td>cell references for readxl</td><td>A1 and R1C1 ranges are matched with the Python standard library. The check is the upper-left and lower-right corners. Checked against readxl 1.5.0.1.</td></tr>
+<tr><td>zipfile</td><td>xlsx package parts for readxl</td><td>An xlsx file is a zip archive. zipfile is the Python standard library that reads those parts. The check is the sheet names and the cells. Checked against readxl 1.5.0.1.</td></tr>
+<tr><td>xml.etree</td><td>spreadsheet XML for readxl</td><td>Worksheet, workbook, and shared-string XML are parsed with the Python standard library. Namespace prefixes are ignored, matching RapidXML strip-namespaces. Checked against readxl 1.5.0.1.</td></tr>
+<tr><td>rayon</td><td>parallel loops in place of foreach, iterators, and doParallel</td><td>Those packages are not ported. A parallel loop is Rayon. Rayon does not reproduce the R functions, and this entry is not a check.</td></tr>
+<tr><td>polars</td><td>data frames in place of dplyr, tidyr, tibble, tidyselect, reshape2, data.table, plyr, and readxl</td><td>Those packages are not ported. A data frame is a Polars frame. An Excel sheet is Polars read_excel, which calls the Rust calamine reader. readxl&#x27;s C++ cell API is not ported. Polars does not reproduce the R functions, and this entry is not a check.</td></tr>
+<tr><td>dash</td><td>dashboards in place of shiny, htmltools, and shinyjs</td><td>Shiny&#x27;s application framework is not ported. Dash is the dashboard library chosen for that job. shinyjs show, hide, and delay are a Dash clientside callback or ordinary browser JavaScript. A Dash callback is not a Shiny reactive, and this entry is not a check against shiny.</td></tr>
+<tr><td>requests</td><td>HTTP in place of curl, httr, and httr2</td><td>Those clients are not ported further. A request uses the requests library. URL helpers already checked stay. requests does not reproduce a libcurl handle, and this entry is not a check.</td></tr>
+<tr><td>plotly</td><td>interactive charts in place of the R package plotly</td><td>The R plotly API is not ported. An interactive chart uses the Python Plotly package, which drives the same plotly.js. A static chart stays Matplotlib. This entry is not a check against the R package.</td></tr>
+<tr><td>cryptography</td><td>certificates, PKCS, and PEM in place of the rest of the R package openssl</td><td>The remaining R wrappers are not ported. Certificates, PKCS#7, PKCS#12, PEM, and the remaining signatures use the Python cryptography package, which links the same OpenSSL. Hashes stay in hashlib. AES, RSA, Ed25519, and X25519 stay in the opensslport crate. This entry is not a check against the R package.</td></tr>
+<tr><td>libxml2</td><td>XML and HTML in place of the rest of the R package XML</td><td>The rest of the R package XML is not ported. A document uses the system libxml2 through ctypes, the same library the finished xml2 package already calls. lxml is not used: its wheel ships another libxml2, and building it needs libxslt headers this machine does not have. Checked XML functions stay. This entry is not a check against the rest of XML.</td></tr>
+<tr><td>rasterio</td><td>raster grids in place of terra and raster</td><td>Those packages are not ported. A raster grid is read and written with rasterio. rasterio does not reproduce terra or raster, and this entry is not a check.</td></tr>
+<tr><td>quarto</td><td>documents in place of rmarkdown</td><td>The document engine is not ported. Quarto renders the report. Quarto does not reproduce rmarkdown, and this entry is not a check.</td></tr>
+<tr><td>sqlalchemy</td><td>database connections in place of DBI</td><td>The database interface is not ported. A connection is SQLAlchemy. SQLAlchemy does not reproduce DBI, and this entry is not a check.</td></tr>
+<tr><td>tkinter</td><td>Tcl/Tk progress window for progressr</td><td>handler_tkprogressbar opens a ttk progress bar. tkinter is the Python standard library for Tcl/Tk. The check is the window title, the label, the percent, and the size, and clear TRUE destroys the window. Checked against progressr 1.0.0.</td></tr>
+<tr><td>formulaic</td><td>R-style formulas and design matrices for survreg</td><td>R terms, model.frame, and model.matrix are not ported. formulaic parses the ~ formula and builds the design matrix that survreg and survreg.fit need. Agreed by the owner. Each function that uses it is checked against R on its own proof.</td></tr>
+<tr><td>psutil</td><td>process information (ps)</td><td>Stand-in for the ps package: process listing, status, memory, children, and signals. Agreed by the user.</td></tr>
+<tr><td>PyYAML</td><td>YAML reading and writing (yaml)</td><td>Stand-in for the yaml package: load and dump of YAML documents. Agreed by the user.</td></tr>
+<tr><td>rich</td><td>terminal UI (cli)</td><td>Stand-in for the cli package: styled terminal output, rules, and progress. Agreed by the user as the mature Python alternative to cli.</td></tr>
+<tr><td>libsass</td><td>C++ Sass compiler, wrapped from a Rust crate for sass</td><td>The R sass package only wraps libsass; per the wrapping rule we wrap the C++ system instead of rebuilding it.</td></tr>
+<tr><td>pyarrow</td><td>Apache Arrow for arrow (wraps the Arrow C++ system)</td><td>The R arrow package wraps Arrow C++. pyarrow is the Python binding to the same system.</td></tr>
+<tr><td>openpyxl</td><td>Excel reading and writing for openxlsx</td><td>openxlsx is an Excel reader and writer; openpyxl covers the same role in Python.</td></tr>
+<tr><td>xlsxwriter</td><td>Excel writing for writexl</td><td>writexl writes Excel files; xlsxwriter covers the same role in Python.</td></tr>
+<tr><td>py_mini_racer</td><td>JavaScript engine (V8) for V8</td><td>The R V8 package wraps V8; py_mini_racer embeds V8 in Python.</td></tr>
+<tr><td>Pillow</td><td>JPEG image reading and writing for jpeg</td><td>jpeg reads and writes JPEG; Pillow covers the same role in Python.</td></tr>
+<tr><td>SQLAlchemy</td><td>Database connections (Routing: DBI and withr with_db_connection)</td><td>Database connections are SQLAlchemy by the Routing rule.</td></tr>
+<tr><td>pyo3</td><td>Rust-to-Python binding for the crates in crates/ (built with maturin)</td><td>Every Rust crate exposes its kernels to Python through pyo3; agreed by the user.</td></tr>
+<tr><td>libblas</td><td>BLAS dnrm2, ddot and daxpy (OpenBLAS 0.3.29) called by the dqrdc2 kernel in crates/nlmegls</td><td>R&#x27;s dqrdc2 calls these BLAS routines from the system library, so reproducing R&#x27;s bits needs the same library. The nlme glsApVar path matches R with max abs diff 0 once dnrm2, ddot and daxpy call it through FFI (R 3.97 ms, Python 1.80 ms). Checked against nlme glsApVar and a dqrdc2 proof over 150 random cases.</td></tr>
+<tr><td>PORT</td><td>nlminb optimizer routines (drmnf, drmng, drmnfb, drmnh and helpers) vendored from R 4.5.0 src/library/stats/src/portsrc.f (netlib PORT), built with gfortran in crates/nlminb_port</td><td>R&#x27;s nlminb (used by nlme lme, lmeOpt, and gls) runs the PORT library. A Python optimizer cannot reproduce its step sequence, so lme and glmmPQL cannot match R to 1e-8 without it. Agreed by the user on 2026-10-17 (AskQuestion: vendor PORT).</td></tr>
+<tr><td>cairosvg</td><td>SVG to PNG rendering for fontawesome fa_png</td><td>Agreed by the user. The R package rsvg is not in the registry and is not created; cairosvg renders the same SVG to PNG through cairo.</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Plotting</h2>
+<div class="card">
+<p>If a chart can be drawn almost natively in Matplotlib, in one to three lines, call Matplotlib. If the chart is a specific function that does not exist in Matplotlib, add that function once in killplot. Do not translate graphics, ggplot2, lattice, or grid as packages. Do not wrap a Matplotlib one-liner in killplot.</p>
+<p class="note">killplot extends matplotlib. Charts Matplotlib can draw in a few lines call Matplotlib directly.</p>
+<table>
+<thead><tr><th>killplot functions</th></tr></thead>
+<tbody>
+<tr><td>fan</td></tr>
+<tr><td>statefig</td></tr>
+<tr><td>pairs_grid</td></tr>
+<tr><td>parcoord</td></tr>
+<tr><td>lmrd_diagram</td></tr>
+<tr><td>extreme_value_plot</td></tr>
+<tr><td>residual_fitted_plot</td></tr>
+</tbody>
+</table>
+</div></section>
+<section class="band" id="band-huge"><p class="note">More than 200 exports. A stand-in has not been asked yet. A task force waits until that check says there is no stand-in.</p>
+<ul class="finished">
+<li>lme4 <span class="note">2.0-6</span></li>
+<li>distributional <span class="note">0.9.0</span></li>
+<li>posterior <span class="note">1.7.0</span></li>
+<li>forecast <span class="note">9.0.2</span></li>
+<li>car <span class="note">3.1-5</span></li>
+<li>future <span class="note">1.80.0</span></li>
+<li>wk <span class="note">0.9.5</span></li>
+<li>bayesplot <span class="note">1.16.0</span></li>
+<li>emmeans <span class="note">2.0.4</span></li>
+<li>vegan <span class="note">2.7-6</span></li>
+<li>lava <span class="note">1.9.3</span></li>
+<li>recipes <span class="note">1.4.0</span></li>
+<li>gt <span class="note">1.4.0</span></li>
+<li>caret <span class="note">7.0-1</span></li>
+<li>bayestestR <span class="note">0.20.0</span></li>
+<li>performance <span class="note">0.18.2</span></li>
+<li>survey <span class="note">4.5</span></li>
+<li>spatstat.geom <span class="note">3.8-3</span></li>
+<li>parameters <span class="note">0.30.0</span></li>
+<li>spatstat.random <span class="note">3.5-2</span></li>
+<li>dials <span class="note">1.4.4</span></li>
+<li>parsnip <span class="note">1.6.1</span></li>
+<li>rsample <span class="note">1.3.2</span></li>
+<li>yardstick <span class="note">1.4.0</span></li>
+<li>tune <span class="note">2.1.0</span></li>
+<li>spatstat.explore <span class="note">3.8-3</span></li>
+<li>DescTools <span class="note">0.99.60</span></li>
+<li>effectsize <span class="note">1.0.3</span></li>
+<li>clue <span class="note">0.3-68</span></li>
+<li>tidygraph <span class="note">1.3.1</span></li>
+<li>SeuratObject <span class="note">5.4.0</span></li>
+<li>Seurat <span class="note">5.6.0</span></li>
+<li>gtsummary <span class="note">2.6.1</span></li>
+<li>stars <span class="note">0.7-3</span></li>
+<li>RTMB <span class="note">2.0</span></li>
+</ul></section>
+<section class="band" id="band-cost"><h2>Cost</h2><p class="note">Each chart is one model. Higher is better. A heavier model counts as more minutes, so the same lines sit lower, and a proof that fails pulls that model's line down. Green is the share that matched.</p><table class="model-totals"><thead><tr><th>Model</th><th>Batches</th><th>R lines attempted</th><th>R lines translated</th><th>Line success</th><th>Function success</th><th>R lines per minute</th></tr></thead><tbody><tr><td>luna</td><td>23</td><td>4685</td><td>3347</td><td>71%</td><td>76%</td><td>33.5</td></tr><tr><td>composer</td><td>30</td><td>2519</td><td>2519</td><td>100%</td><td>100%</td><td>8.5</td></tr><tr><td>haiku-th</td><td>13</td><td>2574</td><td>1956</td><td>76%</td><td>94%</td><td>23.6</td></tr><tr><td>grok</td><td>14</td><td>1163</td><td>1163</td><td>100%</td><td>100%</td><td>7.2</td></tr><tr><td>claude</td><td>1</td><td>52</td><td>52</td><td>100%</td><td>100%</td><td>3.7</td></tr><tr><td><strong>All models</strong></td><td><strong>81</strong></td><td><strong>10993</strong></td><td><strong>9037</strong></td><td><strong>82%</strong></td><td><strong>86%</strong></td><td><strong>15.2</strong></td></tr></tbody></table><div class="yield-grid"><div><h3>composer</h3><svg viewBox="0 0 480 260" role="img" aria-label="composer R lines per minute over time"><text fill="#5c564e" font-size="12" text-anchor="middle" transform="translate(16, 113) rotate(-90)">R lines per minute</text><line x1="78" y1="18" x2="78" y2="208" stroke="#5c564e"/><line x1="78" y1="208" x2="452" y2="208" stroke="#5c564e"/><line x1="74" y1="208.0" x2="78" y2="208.0" stroke="#5c564e"/><text x="70" y="212.0" fill="#5c564e" font-size="11" text-anchor="end">1.7</text><line x1="74" y1="113.0" x2="78" y2="113.0" stroke="#5c564e"/><text x="70" y="117.0" fill="#5c564e" font-size="11" text-anchor="end">8.6</text><line x1="74" y1="18.0" x2="78" y2="18.0" stroke="#5c564e"/><text x="70" y="22.0" fill="#5c564e" font-size="11" text-anchor="end">15.5</text><polyline fill="none" stroke="#2f6f4e" stroke-width="2" points="78.0,186.1 90.9,140.0 103.8,71.2 116.7,108.2 129.6,115.1 142.5,128.1 155.4,129.7 168.3,134.8 181.2,123.9 194.1,98.2 207.0,90.3 219.9,107.1 232.8,77.9 245.7,39.9 258.6,80.8 271.4,104.9 284.3,109.4 297.2,119.5 310.1,119.5 323.0,131.5 335.9,139.5 348.8,140.9 361.7,142.1 374.6,145.7 387.5,151.3 400.4,157.8 413.3,162.2 426.2,166.8 439.1,169.8 452.0,173.1"/><text x="78" y="224" fill="#5c564e" font-size="11">10-17 09:47</text><text x="452" y="224" fill="#5c564e" font-size="11" text-anchor="end">10-17 12:02</text><text x="265" y="252" fill="#5c564e" font-size="12" text-anchor="middle">Time</text></svg><h3>grok</h3><svg viewBox="0 0 480 260" role="img" aria-label="grok R lines per minute over time"><text fill="#5c564e" font-size="12" text-anchor="middle" transform="translate(16, 113) rotate(-90)">R lines per minute</text><line x1="78" y1="18" x2="78" y2="208" stroke="#5c564e"/><line x1="78" y1="208" x2="452" y2="208" stroke="#5c564e"/><line x1="74" y1="208.0" x2="78" y2="208.0" stroke="#5c564e"/><text x="70" y="212.0" fill="#5c564e" font-size="11" text-anchor="end">0.5</text><line x1="74" y1="113.0" x2="78" y2="113.0" stroke="#5c564e"/><text x="70" y="117.0" fill="#5c564e" font-size="11" text-anchor="end">1.6</text><line x1="74" y1="18.0" x2="78" y2="18.0" stroke="#5c564e"/><text x="70" y="22.0" fill="#5c564e" font-size="11" text-anchor="end">2.7</text><polyline fill="none" stroke="#2f6f4e" stroke-width="2" points="78.0,186.1 106.8,167.3 135.5,165.7 164.3,158.8 193.1,168.5 221.8,153.4 250.6,41.8 279.4,71.2 308.2,95.5 336.9,75.5 365.7,86.3 394.5,60.4 423.2,39.9 452.0,45.0"/><text x="78" y="224" fill="#5c564e" font-size="11">10-17 10:05</text><text x="452" y="224" fill="#5c564e" font-size="11" text-anchor="end">10-17 11:54</text><text x="265" y="252" fill="#5c564e" font-size="12" text-anchor="middle">Time</text></svg><h3>luna</h3><svg viewBox="0 0 480 260" role="img" aria-label="luna R lines per minute over time"><text fill="#5c564e" font-size="12" text-anchor="middle" transform="translate(16, 113) rotate(-90)">R lines per minute</text><line x1="78" y1="18" x2="78" y2="208" stroke="#5c564e"/><line x1="78" y1="208" x2="452" y2="208" stroke="#5c564e"/><line x1="74" y1="208.0" x2="78" y2="208.0" stroke="#5c564e"/><text x="70" y="212.0" fill="#5c564e" font-size="11" text-anchor="end">3.6</text><line x1="74" y1="113.0" x2="78" y2="113.0" stroke="#5c564e"/><text x="70" y="117.0" fill="#5c564e" font-size="11" text-anchor="end">15.1</text><line x1="74" y1="18.0" x2="78" y2="18.0" stroke="#5c564e"/><text x="70" y="22.0" fill="#5c564e" font-size="11" text-anchor="end">26.6</text><polyline fill="none" stroke="#2f6f4e" stroke-width="2" points="78.0,160.0 95.0,152.5 112.0,186.1 129.0,150.4 146.0,158.2 163.0,132.5 180.0,135.8 197.0,117.9 214.0,121.5 231.0,126.0 248.0,124.2 265.0,117.9 282.0,122.1 299.0,120.6 316.0,118.0 333.0,119.7 350.0,123.7 367.0,122.5 384.0,118.3 401.0,117.6 418.0,108.9 435.0,90.7 452.0,39.9"/><text x="78" y="224" fill="#5c564e" font-size="11">10-17 11:34</text><text x="452" y="224" fill="#5c564e" font-size="11" text-anchor="end">10-17 15:59</text><text x="265" y="252" fill="#5c564e" font-size="12" text-anchor="middle">Time</text></svg><h3>claude</h3><svg viewBox="0 0 480 260" role="img" aria-label="claude R lines per minute over time"><text fill="#5c564e" font-size="12" text-anchor="middle" transform="translate(16, 113) rotate(-90)">R lines per minute</text><line x1="78" y1="18" x2="78" y2="208" stroke="#5c564e"/><line x1="78" y1="208" x2="452" y2="208" stroke="#5c564e"/><line x1="74" y1="208.0" x2="78" y2="208.0" stroke="#5c564e"/><text x="70" y="212.0" fill="#5c564e" font-size="11" text-anchor="end">0</text><line x1="74" y1="113.0" x2="78" y2="113.0" stroke="#5c564e"/><text x="70" y="117.0" fill="#5c564e" font-size="11" text-anchor="end">2.5</text><line x1="74" y1="18.0" x2="78" y2="18.0" stroke="#5c564e"/><text x="70" y="22.0" fill="#5c564e" font-size="11" text-anchor="end">5</text><circle cx="265.0" cy="67.3" r="5" fill="#2f6f4e"/><text x="273.0" y="59.3" fill="#1c1915" font-size="12">3.7</text><text x="78" y="224" fill="#5c564e" font-size="11">10-17 11:56</text><text x="452" y="224" fill="#5c564e" font-size="11" text-anchor="end">10-17 11:56</text><text x="265" y="252" fill="#5c564e" font-size="12" text-anchor="middle">Time</text></svg><h3>haiku-th</h3><svg viewBox="0 0 480 260" role="img" aria-label="haiku-th R lines per minute over time"><text fill="#5c564e" font-size="12" text-anchor="middle" transform="translate(16, 113) rotate(-90)">R lines per minute</text><line x1="78" y1="18" x2="78" y2="208" stroke="#5c564e"/><line x1="78" y1="208" x2="452" y2="208" stroke="#5c564e"/><line x1="74" y1="208.0" x2="78" y2="208.0" stroke="#5c564e"/><text x="70" y="212.0" fill="#5c564e" font-size="11" text-anchor="end">7.8</text><line x1="74" y1="113.0" x2="78" y2="113.0" stroke="#5c564e"/><text x="70" y="117.0" fill="#5c564e" font-size="11" text-anchor="end">12.8</text><line x1="74" y1="18.0" x2="78" y2="18.0" stroke="#5c564e"/><text x="70" y="22.0" fill="#5c564e" font-size="11" text-anchor="end">17.9</text><polyline fill="none" stroke="#2f6f4e" stroke-width="2" points="78.0,39.9 109.2,80.4 140.3,84.5 171.5,136.3 202.7,166.5 233.8,183.9 265.0,154.9 296.2,141.4 327.3,162.8 358.5,168.6 389.7,174.0 420.8,181.9 452.0,186.1"/><text x="78" y="224" fill="#5c564e" font-size="11">10-17 12:03</text><text x="452" y="224" fill="#5c564e" font-size="11" text-anchor="end">10-17 15:59</text><text x="265" y="252" fill="#5c564e" font-size="12" text-anchor="middle">Time</text></svg></div><div><svg viewBox="0 0 440 168" role="img" aria-label="R lines per minute by model"><text x="88" y="14" fill="#5c564e" font-size="12">R lines per minute</text><text x="0" y="36" fill="#1c1915" font-size="12">luna</text><rect x="88" y="24" width="220" height="14" rx="7" fill="#efe8dc"/><rect x="88" y="24" width="220.0" height="14" rx="7" fill="#e4ddd2"/><rect x="88" y="24" width="168.3" height="14" rx="7" fill="#2f6f4e"/><text x="316" y="36" fill="#5c564e" font-size="11">23.9</text><text x="0" y="64" fill="#1c1915" font-size="12">haiku-th</text><rect x="88" y="52" width="220" height="14" rx="7" fill="#efe8dc"/><rect x="88" y="52" width="154.7" height="14" rx="7" fill="#e4ddd2"/><rect x="88" y="52" width="144.8" height="14" rx="7" fill="#2f6f4e"/><text x="316" y="64" fill="#5c564e" font-size="11">8.9</text><text x="0" y="92" fill="#1c1915" font-size="12">composer</text><rect x="88" y="80" width="220" height="14" rx="7" fill="#efe8dc"/><rect x="88" y="80" width="55.6" height="14" rx="7" fill="#e4ddd2"/><rect x="88" y="80" width="55.6" height="14" rx="7" fill="#2f6f4e"/><text x="316" y="92" fill="#5c564e" font-size="11">4.2</text><text x="0" y="120" fill="#1c1915" font-size="12">claude</text><rect x="88" y="108" width="220" height="14" rx="7" fill="#efe8dc"/><rect x="88" y="108" width="24.4" height="14" rx="7" fill="#e4ddd2"/><rect x="88" y="108" width="24.4" height="14" rx="7" fill="#2f6f4e"/><text x="316" y="120" fill="#5c564e" font-size="11">3.7</text><text x="0" y="148" fill="#1c1915" font-size="12">grok</text><rect x="88" y="136" width="220" height="14" rx="7" fill="#efe8dc"/><rect x="88" y="136" width="47.3" height="14" rx="7" fill="#e4ddd2"/><rect x="88" y="136" width="47.3" height="14" rx="7" fill="#2f6f4e"/><text x="316" y="148" fill="#5c564e" font-size="11">2.4 set aside</text></svg></div></div></section>
+</main>
+<script>
+const bands = ["queue", "finished", "translating", "crates", "replaced", "huge", "cost"];
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  selectBand(bands.includes(name) ? name : "translating");
+}
+function selectBand(band) {
+  for (const button of document.querySelectorAll("#bands button")) {
+    button.classList.toggle("active", button.dataset.band === band);
+  }
+  for (const section of document.querySelectorAll(".band")) {
+    section.classList.toggle("active", section.id === "band-" + band);
+  }
+}
+for (const button of document.querySelectorAll("#bands button")) {
+  button.addEventListener("click", () => {
+    const band = button.dataset.band;
+    if (location.hash === "#" + band) selectBand(band);
+    else location.hash = band;
+  });
+}
+function bindListSearch(inputId, listId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+    for (const item of document.querySelectorAll("#" + listId + " li")) {
+      item.hidden = Boolean(query) && !item.dataset.name.includes(query);
+    }
+  });
+}
+bindListSearch("finished-search", "finished-list");
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

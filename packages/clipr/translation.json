@@ -1,0 +1,184 @@
+{
+  "name": "clipr",
+  "cran_version": "0.8.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All seven exports are done. Clipboard access calls xclip, then xsel, then wl-copy. Tables follow write.table and read.table. write_last_clip takes the value as an argument because Python has no .Last.value. clipr has no compiled code, so there is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "clear_clip",
+      "translated": true,
+      "python": "clipr.clear_clip",
+      "loads": [],
+      "uses": [],
+      "done": "Writes an empty string through write_clip.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "clear_clip() after writing \"to-clear\"",
+        "r_ms": 21.289706230163574,
+        "translated_ms": 11.963580502197146,
+        "speedup": 1.7795430244527262,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\nwrite_clip(\"to-clear\")\n\none <- function() clear_clip()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nemptied <- read_clip()\ncat(sprintf(\n  \"{\\\"value\\\":\\\"\\\",\\\"empty\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  if (is.null(emptied)) \"true\" else \"false\",\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nimport warnings\n\nfrom clipr import clear_clip, read_clip, write_clip\n\nwrite_clip(\"to-clear\")\n\n\ndef one():\n    return clear_clip()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nwith warnings.catch_warnings():\n    warnings.simplefilter(\"ignore\")\n    emptied = read_clip()\n\nprint(json.dumps({\n    \"value\": value,\n    \"empty\": emptied is None,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "clipr_available",
+      "translated": true,
+      "python": "clipr.clipr_available",
+      "loads": [],
+      "uses": [],
+      "done": "Returns false in a non-interactive session unless CLIPR_ALLOW is true. Otherwise reads the clipboard and writes that value back.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "CLIPR_ALLOW=TRUE with xclip owning the clipboard",
+        "r_ms": 43.692708015441895,
+        "translated_ms": 20.680789499238017,
+        "speedup": 2.112719536991165,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\none <- function() clipr_available()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  if (isTRUE(value)) \"true\" else \"false\",\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import clipr_available\n\n\ndef one():\n    return clipr_available()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "dr_clipr",
+      "translated": true,
+      "python": "clipr.dr_clipr",
+      "loads": [],
+      "uses": [],
+      "done": "Prints the access message, or the write error when the clipboard cannot be used.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "CLIPR_ALLOW=TRUE with xclip owning the clipboard",
+        "r_ms": 46.803832054138184,
+        "translated_ms": 21.252940001431853,
+        "speedup": 2.202228588185207,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none <- function() dr_clipr()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import dr_clipr\n\n\ndef one():\n    return dr_clipr()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_clip",
+      "translated": true,
+      "python": "clipr.read_clip",
+      "loads": [],
+      "uses": [],
+      "done": "Reads the clipboard and splits on newlines, including blank lines. Empty text returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "clipboard holds c(\"Write\", \"to\", \"clipboard\")",
+        "r_ms": 21.469593048095703,
+        "translated_ms": 9.879639997961931,
+        "speedup": 2.1731149163860892,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\nwrite_clip(c(\"Write\", \"to\", \"clipboard\"))\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x <- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  x <- gsub(\"\\t\", \"\\\\t\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none <- function() read_clip()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(vapply(value, json_escape, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import read_clip, write_clip\n\nwrite_clip([\"Write\", \"to\", \"clipboard\"])\n\n\ndef one():\n    return read_clip()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_clip_tbl",
+      "translated": true,
+      "python": "clipr.read_clip_tbl",
+      "loads": [],
+      "uses": [],
+      "done": "Parses lines with the clipr read.table defaults, including a leading tab as row names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "c(\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\")",
+        "r_ms": 0.6138086318969727,
+        "translated_ms": 0.027307500204187818,
+        "speedup": 22.477657321516393,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\nx <- c(\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\")\none <- function() read_clip_tbl(x)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncolumns <- lapply(value, function(column) {\n  if (is.character(column)) {\n    paste0(\"[\", paste(vapply(column, json_escape, \"\"), collapse = \",\"), \"]\")\n  } else {\n    paste0(\"[\", paste(format(column, trim = TRUE, scientific = FALSE), collapse = \",\"), \"]\")\n  }\n})\ncat(sprintf(\n  \"{\\\"columns\\\":{%s},\\\"row_names\\\":null,\\\"median_ms\\\":%.17g}\\n\",\n  paste(paste0(json_escape(names(value)), \":\", columns), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import read_clip_tbl\n\nrows = [\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\"]\n\n\ndef one():\n    return read_clip_tbl(rows)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\n    \"columns\": value.columns,\n    \"row_names\": value.row_names,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_clip",
+      "translated": true,
+      "python": "clipr.write_clip",
+      "loads": [],
+      "uses": [],
+      "done": "Renders text and tables the way write.table does, then writes them with xclip, xsel, or wl-copy.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "data.frame(a = c(1, 2, 3), b = c(4, 5, 6)), return_new = TRUE",
+        "r_ms": 22.048354148864746,
+        "translated_ms": 11.541633000888396,
+        "speedup": 1.9103322854892038,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x <- gsub(\"\\r\", \"\\\\r\", x, fixed = TRUE)\n  x <- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  x <- gsub(\"\\t\", \"\\\\t\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none <- function() {\n  write_clip(data.frame(a = c(1, 2, 3), b = c(4, 5, 6)), return_new = TRUE)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import write_clip\n\n\ndef one():\n    return write_clip(\n        {\"a\": [1, 2, 3], \"b\": [4, 5, 6]},\n        return_new=True,\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_last_clip",
+      "translated": true,
+      "python": "clipr.write_last_clip",
+      "loads": [],
+      "uses": [],
+      "done": "Writes the caller-supplied value. Python has no .Last.value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": ".Last.value is \"Write to clipboard\"; Python passes that string",
+        "r_ms": 21.09670639038086,
+        "translated_ms": 11.102653499619919,
+        "speedup": 1.9001499408319886,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x <- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none <- function() write_last_clip(return_new = TRUE)\nelapsed <- numeric(20)\ninvisible(\"Write to clipboard\")\nvalue <- one()\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom clipr import write_last_clip\n\n\ndef one():\n    return write_last_clip(\"Write to clipboard\", return_new=True)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

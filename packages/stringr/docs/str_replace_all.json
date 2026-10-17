@@ -1,0 +1,48 @@
+{
+  "name": "str_replace_all",
+  "title": "Replace every match with new text",
+  "origin": {
+    "description": "Replaces every match of a pattern in each string.",
+    "usage": "str_replace_all(string, pattern, replacement)",
+    "arguments": [
+      {
+        "name": "string",
+        "text": "Input vector. Either a character vector, or something coercible to one."
+      },
+      {
+        "name": "pattern",
+        "text": "Pattern to look for. A regular expression by default. A named vector, such as c(one = \"1\"), replaces each name with its value, in order. fixed() compares literal text and coll() uses collation. A boundary, including the empty string, is an error when replacement is text."
+      },
+      {
+        "name": "replacement",
+        "text": "Usually one string, or a vector the same length as string or pattern. It is ignored when pattern is named. \\1, \\2, and so on insert capture groups. A function receives every match in one vector and must return character text of that same length."
+      }
+    ],
+    "details": "Every non-overlapping match is replaced. A named pattern is applied one pair at a time. A function sees the matches flattened into one vector; a missing value in its return makes that whole string missing. On the function path an empty pattern matches characters.",
+    "value": "A character vector the same length as string, pattern, or replacement.",
+    "example": "fruits <- c(\"one apple\", \"two pears\", \"three bananas\")\nwriteLines(c(\n  str_replace_all(fruits, \"[aeiou]\", \"-\"),\n  str_replace_all(fruits, \"[aeiou]\", toupper),\n  str_replace_all(fruits, \"b\", NA_character_),\n  str_replace_all(paste(fruits, collapse = \"---\"), c(one = \"1\", two = \"2\", three = \"3\"))\n))",
+    "output": "output/str_replace_all-r.txt"
+  },
+  "translation": {
+    "description": "Replaces every match of a pattern in each string.",
+    "usage": "str_replace_all(string, pattern, replacement)",
+    "arguments": [
+      {
+        "name": "string",
+        "text": "A string, or a list of strings and stringi._na.NA. NULL is an empty list."
+      },
+      {
+        "name": "pattern",
+        "text": "A string or list is an ICU regular expression. A dict, or a vector with a names attribute, is a sequence of pattern and replacement pairs. fixed, coll, and regex come from stringr.pattern."
+      },
+      {
+        "name": "replacement",
+        "text": "A string or a list of strings. It is unused when pattern is a dict or has names, and can be omitted in that case. A callable receives every match as one list and must return character text of that length."
+      }
+    ],
+    "details": "Text replacement calls stringi's all-replace functions. A callable flattens the matches with vctrs.list_unchop, cuts the result with 1-based ranges, and writes them with stri_sub_replace_all. A missing piece makes the whole string missing.",
+    "value": "A list of strings. Names on the input are kept when the pattern length is 1 or equals the string length.",
+    "example": "from stringi._na import NA\nfrom stringr.replace import str_replace_all\n\ndef toupper(match):\n    return [NA if item is NA else item.upper() for item in match]\n\nfruits = [\"one apple\", \"two pears\", \"three bananas\"]\nrows = []\nrows.extend(str_replace_all(fruits, \"[aeiou]\", \"-\"))\nrows.extend(str_replace_all(fruits, \"[aeiou]\", toupper))\nrows.extend(str_replace_all(fruits, \"b\", NA))\nrows.extend(str_replace_all(\"---\".join(fruits), {\"one\": \"1\", \"two\": \"2\", \"three\": \"3\"}))\nfor item in rows:\n    print(item)",
+    "output": "output/str_replace_all-python.txt"
+  }
+}

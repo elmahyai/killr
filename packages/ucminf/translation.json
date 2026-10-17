@@ -1,0 +1,57 @@
+{
+  "name": "ucminf",
+  "cran_version": "1.2.3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    {
+      "name": "ucminf",
+      "origin": "ucminf src/fortran.f",
+      "loaded_by": [
+        "ucminf"
+      ],
+      "assigned": ""
+    }
+  ],
+  "resume": "ucminf 1.2.3 is one export. The quasi-Newton search is the Fortran routine, ported in the ucminf crate. hessian = 1 calls the translated numDeriv hessian. NumPy holds the inverse-Hessian triangle.",
+  "dependencies": {
+    "translated": [
+      "numDeriv"
+    ],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "ucminf"
+    ]
+  },
+  "functions": [
+    {
+      "name": "ucminf",
+      "translated": true,
+      "python": "ucminf.ucminf",
+      "loads": [
+        "numDeriv"
+      ],
+      "uses": [],
+      "done": "Quasi-Newton minimization with BFGS updates of the inverse Hessian.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock from c(2, 0.5) with the analytic gradient",
+        "r_ms": 0.22101402282714844,
+        "translated_ms": 0.6029444975865772,
+        "speedup": 0.3665578236667014,
+        "matches": true,
+        "max_abs_diff": 2.0028423364237824e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(ucminf))\n\none <- function() {\n  fR <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  gR <- function(x) c(-400 * x[1] * (x[2] - x[1] * x[1]) - 2 * (1 - x[1]),\n                      200 * (x[2] - x[1] * x[1]))\n  fit <- ucminf(par = c(2, 0.5), fn = fR, gr = gR)\n  as.numeric(c(fit$par, fit$value, fit$convergence, fit$info, fit$invhessian.lt))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom ucminf import ucminf\n\n\ndef one():\n    def fR(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n\n    def gR(x):\n        return np.array(\n            [\n                -400 * x[0] * (x[1] - x[0] * x[0]) - 2 * (1 - x[0]),\n                200 * (x[1] - x[0] * x[0]),\n            ]\n        )\n\n    fit = ucminf(np.array([2.0, 0.5]), fR, gR)\n    info = fit.info\n    return np.concatenate(\n        [\n            fit.par,\n            [fit.value, fit.convergence, info[\"maxgradient\"], info[\"laststep\"], info[\"stepmax\"], info[\"neval\"]],\n            fit.invhessian_lt,\n        ]\n    )\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(part) for part in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    }
+  ]
+}

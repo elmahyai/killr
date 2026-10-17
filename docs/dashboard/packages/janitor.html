@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>janitor · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>janitor</h1>
+<p class="note">CRAN 2.2.1</p>
+<p>Opened on the importance order (cran/importance.json). Data cleaning on data frames: Polars (Routing). Data-frame verbs use Polars. Batches share an R file (strategy medium). 39 exported functions.</p>
+<p class="note">0 of 39 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#adorn_ns">adorn_ns</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_pct_formatting">adorn_pct_formatting</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_percentages">adorn_percentages</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_rounding">adorn_rounding</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_title">adorn_title</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_totals">adorn_totals</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#as_tabyl">as_tabyl</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#untabyl">untabyl</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#clean_names">clean_names</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#compare_df_cols">compare_df_cols</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#compare_df_cols_same">compare_df_cols_same</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#describe_class">describe_class</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#convert_to_date">convert_to_date</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#convert_to_datetime">convert_to_datetime</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#excel_numeric_to_date">excel_numeric_to_date</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#get_dupes">get_dupes</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#get_one_to_one">get_one_to_one</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#add_totals_col">add_totals_col</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#add_totals_row">add_totals_row</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#adorn_crosstab">adorn_crosstab</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#convert_to_NA">convert_to_NA</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#crosstab">crosstab</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#remove_empty_cols">remove_empty_cols</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#remove_empty_rows">remove_empty_rows</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#use_first_valid_of">use_first_valid_of</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#make_clean_names">make_clean_names</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#remove_constant">remove_constant</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#remove_empty">remove_empty</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#round_half_up">round_half_up</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#signif_half_up">signif_half_up</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#round_to_fraction">round_to_fraction</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#find_header">find_header</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#row_to_names">row_to_names</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#sas_numeric_to_date">sas_numeric_to_date</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#single_value">single_value</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#chisq.test">chisq.test</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#fisher.test">fisher.test</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#tabyl">tabyl</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+<tr><td><a href="#top_levels">top_levels</a></td><td><span class='yes'>ready</span></td><td><span class='no'>working</span></td><td>none</td><td></td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td colspan='8'>None have been compared yet.</td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="dplyr.html">dplyr</a> <span class="note">>= 1.0.0 · replaced</span></p><p>hms <span class="note">replaced</span></p><p><a href="lifecycle.html">lifecycle</a> <span class="note">replaced</span></p><p><a href="lubridate.html">lubridate</a> <span class="note">finished</span></p><p><a href="magrittr.html">magrittr</a> <span class="note">finished</span></p><p><a href="purrr.html">purrr</a> <span class="note">replaced</span></p><p><a href="rlang.html">rlang</a> <span class="note">replaced</span></p><p><a href="stringi.html">stringi</a> <span class="note">finished</span></p><p><a href="stringr.html">stringr</a> <span class="note">finished</span></p><p><a href="snakecase.html">snakecase</a> <span class="note">>= 0.9.2 · finished</span></p><p><a href="tidyselect.html">tidyselect</a> <span class="note">>= 1.0.0 · replaced</span></p><p><a href="tidyr.html">tidyr</a> <span class="note">>= 0.7.0 · replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "adorn_ns", "translated": false, "not_done": "", "title": "adorn_ns", "origin": null, "translation": null}, {"name": "adorn_pct_formatting", "translated": false, "not_done": "", "title": "adorn_pct_formatting", "origin": null, "translation": null}, {"name": "adorn_percentages", "translated": false, "not_done": "", "title": "adorn_percentages", "origin": null, "translation": null}, {"name": "adorn_rounding", "translated": false, "not_done": "", "title": "adorn_rounding", "origin": null, "translation": null}, {"name": "adorn_title", "translated": false, "not_done": "", "title": "adorn_title", "origin": null, "translation": null}, {"name": "adorn_totals", "translated": false, "not_done": "", "title": "adorn_totals", "origin": null, "translation": null}, {"name": "as_tabyl", "translated": false, "not_done": "", "title": "as_tabyl", "origin": null, "translation": null}, {"name": "untabyl", "translated": false, "not_done": "", "title": "untabyl", "origin": null, "translation": null}, {"name": "clean_names", "translated": false, "not_done": "", "title": "clean_names", "origin": null, "translation": null}, {"name": "compare_df_cols", "translated": false, "not_done": "", "title": "compare_df_cols", "origin": null, "translation": null}, {"name": "compare_df_cols_same", "translated": false, "not_done": "", "title": "compare_df_cols_same", "origin": null, "translation": null}, {"name": "describe_class", "translated": false, "not_done": "", "title": "describe_class", "origin": null, "translation": null}, {"name": "convert_to_date", "translated": false, "not_done": "", "title": "convert_to_date", "origin": null, "translation": null}, {"name": "convert_to_datetime", "translated": false, "not_done": "", "title": "convert_to_datetime", "origin": null, "translation": null}, {"name": "excel_numeric_to_date", "translated": false, "not_done": "", "title": "excel_numeric_to_date", "origin": null, "translation": null}, {"name": "get_dupes", "translated": false, "not_done": "", "title": "get_dupes", "origin": null, "translation": null}, {"name": "get_one_to_one", "translated": false, "not_done": "", "title": "get_one_to_one", "origin": null, "translation": null}, {"name": "add_totals_col", "translated": false, "not_done": "", "title": "add_totals_col", "origin": null, "translation": null}, {"name": "add_totals_row", "translated": false, "not_done": "", "title": "add_totals_row", "origin": null, "translation": null}, {"name": "adorn_crosstab", "translated": false, "not_done": "", "title": "adorn_crosstab", "origin": null, "translation": null}, {"name": "convert_to_NA", "translated": false, "not_done": "", "title": "convert_to_NA", "origin": null, "translation": null}, {"name": "crosstab", "translated": false, "not_done": "", "title": "crosstab", "origin": null, "translation": null}, {"name": "remove_empty_cols", "translated": false, "not_done": "", "title": "remove_empty_cols", "origin": null, "translation": null}, {"name": "remove_empty_rows", "translated": false, "not_done": "", "title": "remove_empty_rows", "origin": null, "translation": null}, {"name": "use_first_valid_of", "translated": false, "not_done": "", "title": "use_first_valid_of", "origin": null, "translation": null}, {"name": "make_clean_names", "translated": false, "not_done": "", "title": "make_clean_names", "origin": null, "translation": null}, {"name": "remove_constant", "translated": false, "not_done": "", "title": "remove_constant", "origin": null, "translation": null}, {"name": "remove_empty", "translated": false, "not_done": "", "title": "remove_empty", "origin": null, "translation": null}, {"name": "round_half_up", "translated": false, "not_done": "", "title": "round_half_up", "origin": null, "translation": null}, {"name": "signif_half_up", "translated": false, "not_done": "", "title": "signif_half_up", "origin": null, "translation": null}, {"name": "round_to_fraction", "translated": false, "not_done": "", "title": "round_to_fraction", "origin": null, "translation": null}, {"name": "find_header", "translated": false, "not_done": "", "title": "find_header", "origin": null, "translation": null}, {"name": "row_to_names", "translated": false, "not_done": "", "title": "row_to_names", "origin": null, "translation": null}, {"name": "sas_numeric_to_date", "translated": false, "not_done": "", "title": "sas_numeric_to_date", "origin": null, "translation": null}, {"name": "single_value", "translated": false, "not_done": "", "title": "single_value", "origin": null, "translation": null}, {"name": "chisq.test", "translated": false, "not_done": "", "title": "chisq.test", "origin": null, "translation": null}, {"name": "fisher.test", "translated": false, "not_done": "", "title": "fisher.test", "origin": null, "translation": null}, {"name": "tabyl", "translated": false, "not_done": "", "title": "tabyl", "origin": null, "translation": null}, {"name": "top_levels", "translated": false, "not_done": "", "title": "top_levels", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

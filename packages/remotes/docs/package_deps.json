@@ -1,0 +1,56 @@
+{
+  "name": "package_deps",
+  "title": "Find all dependencies of a CRAN or dev package",
+  "origin": {
+    "description": "Find the dependencies of a package and whether each one is ahead of or behind CRAN.",
+    "usage": "package_deps(packages, dependencies = NA, repos = getOption(\"repos\"), type = getOption(\"pkgType\"))",
+    "arguments": [
+      {
+        "name": "packages",
+        "text": "A character vector of package names."
+      },
+      {
+        "name": "dependencies",
+        "text": "Which dependency fields to walk. A length-1 logical NA, the default, selects Depends, Imports, and LinkingTo. TRUE adds Suggests. FALSE returns no rows. soft means TRUE and hard means NA."
+      },
+      {
+        "name": "repos",
+        "text": "Repository URLs. @CRAN@ is replaced with https://cloud.r-project.org."
+      },
+      {
+        "name": "type",
+        "text": "Package type passed to available.packages. source reads src/contrib."
+      }
+    ],
+    "details": "The source index is filtered the way available.packages filters it: the running R version, the operating system, the sub-architecture, and duplicate versions. Dependencies are the names tools::package_dependencies extracts, which are a letter followed by letters, digits, and dots, except the name R. The install order is unique(rev(c(packages, direct, recursive))). Installed packages whose Priority is base or recommended are removed. diff is -2 when the package is not installed, -1 when it is behind CRAN, 0 when the versions match, 1 when the installed version is newer, and 2 when the package is not on CRAN. Versions compare as package_version.",
+    "value": "A data frame with columns package, installed, available, diff, and is_cran.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nx <- package_deps(\"remotes\", repos = \"https://cloud.r-project.org\", type = \"source\")\nrow <- x[1, ]\ncat(paste0(\n  \"package_deps(\\\"remotes\\\") returns \", row$package,\n  \", installed \", row$installed,\n  \", available \", row$available,\n  \", diff \", row$diff,\n  \", cran \", if (isTRUE(row$is_cran)) \"TRUE\" else \"FALSE\",\n  \".\\n\"\n))",
+    "output": "output/package_deps-r.txt"
+  },
+  "translation": {
+    "description": "Find the dependencies of a package and whether each one is ahead of or behind CRAN.",
+    "usage": "package_deps(packages, dependencies=NA, repos=None, type=\"source\")",
+    "arguments": [
+      {
+        "name": "packages",
+        "text": "A package name, or a list of package names."
+      },
+      {
+        "name": "dependencies",
+        "text": "The NA object selects Depends, Imports, and LinkingTo. True adds Suggests. False returns no rows. A string or a list of strings keeps the known names in that order."
+      },
+      {
+        "name": "repos",
+        "text": "A repository URL, a list of URLs, or a dict of names to URLs. None uses https://cloud.r-project.org. The string @CRAN@ is replaced with that mirror."
+      },
+      {
+        "name": "type",
+        "text": "source reads src/contrib/PACKAGES.gz, then PACKAGES. Another type raises invalid 'type'."
+      }
+    ],
+    "details": "The source index drops packages whose Depends field does not accept the installed R, packages whose OS_type is not this operating system, and older duplicate versions. Dependency names are a letter followed by letters, digits, and dots, except the name R. The order is the reversed unique list of the package, its direct dependencies, and their recursive dependencies. Installed packages whose Priority is base or recommended are removed. The scan reads DESCRIPTION files under ~/R/library and the rest of R's library paths. diff is -2 when the package is not installed, -1 when it is behind CRAN, 0 when the versions match, 1 when the installed version is newer, and 2 when the package is not on CRAN. Missing versions are None. Versions compare as package_version, so trailing zeros are equal and 1.2-3 equals 1.2.3.",
+    "value": "A list of dicts with keys package, installed, available, diff, and is_cran, in install order.",
+    "example": "from remotes.deps import package_deps\n\nrows = package_deps(\"remotes\", repos=\"https://cloud.r-project.org\", type=\"source\")\nrow = rows[0]\ncran = \"TRUE\" if row[\"is_cran\"] else \"FALSE\"\nprint(\n    \"package_deps(\\\"remotes\\\") returns \"\n    + row[\"package\"]\n    + \", installed \"\n    + row[\"installed\"]\n    + \", available \"\n    + row[\"available\"]\n    + \", diff \"\n    + str(row[\"diff\"])\n    + \", cran \"\n    + cran\n    + \".\"\n)",
+    "output": "output/package_deps-python.txt"
+  }
+}

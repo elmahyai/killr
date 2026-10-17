@@ -1,0 +1,48 @@
+{
+  "name": "saddle",
+  "title": "Saddlepoint Approximations for Bootstrap Statistics",
+  "origin": {
+    "description": "Saddlepoint approximation to the distribution of a linear combination of W at one point u. W may be multinomial, Poisson, or binary. Another distribution is allowed when the adjusted cumulant generating function and its second derivative are supplied. Conditional approximations, for Poisson or binary W, give the distribution of one linear combination given the others.",
+    "usage": "saddle(A = NULL, u = NULL, wdist = \"m\", type = \"simp\", d = NULL,\n       d1 = 1, init = rep(0.1, d), mu = rep(0.5, n), LR = FALSE,\n       strata = NULL, K.adj = NULL, K2 = NULL)",
+    "arguments": [
+      {"name": "A", "text": "Known coefficients of the linear combinations of W. Required unless K.adj and K2 are supplied."},
+      {"name": "u", "text": "Point at which the approximation is required. Required unless K.adj and K2 are supplied."},
+      {"name": "wdist", "text": "Distribution of W: \"m\" multinomial, \"p\" Poisson, \"b\" binary, or \"o\" other. K.adj forces \"o\"."},
+      {"name": "type", "text": "\"simp\" for a simple saddlepoint, \"cond\" for a conditional one. \"m\" and \"o\" are forced to \"simp\"."},
+      {"name": "d", "text": "Dimension of the statistic. Required only for wdist \"o\", where it defaults to 1. Otherwise ncol(A)."},
+      {"name": "d1", "text": "Dimension of the statistic of interest when type is \"cond\". Must be less than length(u). A cdf is returned only when d1 is 1."},
+      {"name": "init", "text": "Starting values for the multinomial or other saddlepoint equation. The default is rep(0.1, d)."},
+      {"name": "mu", "text": "Parameters of W. Length nrow(A). The default makes every element 0.5."},
+      {"name": "LR", "text": "If TRUE, the cdf uses the Lugannani-Rice approximation. Otherwise it uses Barndorff-Nielsen's r*."},
+      {"name": "strata", "text": "Strata for stratified data."},
+      {"name": "K.adj", "text": "Adjusted cumulant generating function K(zeta) - u %*% zeta, used when wdist is \"o\"."},
+      {"name": "K2", "text": "Second-derivative matrix of K(zeta). Required when K.adj is supplied, and called once at the solution."}
+    ],
+    "details": "For multinomial and other distributions the saddlepoint equation is solved by nlmin, minimizing K.adj. For Poisson and binary distributions a glm is fitted so that the coefficients solve the equation. The response satisfies t(A) %*% y = u and is found by simplex. The covariate matrix of the glm is A.",
+    "value": "A list with spa, the density and cdf approximations, and zeta.hat, the solution of the saddlepoint equation. When type is \"cond\", zeta2.hat is the solution for the denominator.",
+    "example": "saddle(A = aircondit$hours/12, u = 80)\nsaddle(A = cbind(aircondit$hours/12, 1), u = c(80, 12), wdist = \"p\", type = \"cond\")\nsaddle(A = cbind(aircondit$hours/12, 1), u = c(80, 12), wdist = \"p\", type = \"cond\", LR = TRUE)\ncity.sp1 <- saddle(A = city$x - 1.25*city$u, u = 0)\njacobian <- function(dat, t, zeta) {\n  p <- exp(zeta*(dat$x - t*dat$u))\n  abs(sum(dat$u*p)/sum(p))\n}\ncity.sp1$spa[1] <- jacobian(city, 1.25, city.sp1$zeta.hat) * city.sp1$spa[1]\ncity.sp1",
+    "output": "output/saddle-r.txt"
+  },
+  "translation": {
+    "description": "Saddlepoint approximation to the distribution of a linear combination of W at one point u.",
+    "usage": "saddle(A=None, u=None, wdist=\"m\", type=\"simp\", d=None, d1=1, init=None, mu=None, LR=False, strata=None, k_adj=None, k2=None)",
+    "arguments": [
+      {"name": "A", "text": "Known coefficients. A matrix sets d to its column count. Required unless k_adj and k2 are supplied."},
+      {"name": "u", "text": "Point at which the approximation is required."},
+      {"name": "wdist", "text": "\"m\", \"p\", \"b\", or \"o\". k_adj forces \"o\" and type \"simp\"."},
+      {"name": "type", "text": "\"simp\" or \"cond\". \"m\" and \"o\" are forced to \"simp\"."},
+      {"name": "d", "text": "Dimension. Used when wdist is \"o\" and A is omitted. Defaults to 1."},
+      {"name": "d1", "text": "Dimension of the statistic of interest for a conditional approximation. The cdf is missing when d1 is not 1."},
+      {"name": "init", "text": "Start for the multinomial or other equation. None becomes a vector of 0.1 of length d."},
+      {"name": "mu", "text": "Parameters of W. None becomes a vector of 0.5 of length n."},
+      {"name": "LR", "text": "If true, the cdf is the Lugannani-Rice approximation."},
+      {"name": "strata", "text": "Strata for a stratified multinomial. Group sums follow the sorted level order, and the variance loop compares strata with 1, 2, ..."},
+      {"name": "k_adj", "text": "Adjusted cumulant generating function of one vector argument. This is K.adj."},
+      {"name": "k2", "text": "Second-derivative function of one vector argument. This is K2."}
+    ],
+    "details": "Multinomial and other distributions minimize k_adj with the same Nelder-Mead steps as R's default optim, and the returned zeta is the last vertex. Poisson and binary conditional approximations call simplex, then a log-link or logit glm with the offset and starting value R's glm.fit uses. The density formulas are copied as written, including the different powers of 2*pi and the sign in the Lugannani-Rice term.",
+    "value": "A dict with spa, a length-2 array of the density and cdf, and zeta.hat. type \"cond\" also returns zeta2.hat.",
+    "example": "import numpy as np\nfrom boot.data_sets import aircondit, city\nfrom boot.saddle import saddle\n\nhours = aircondit()[1][:, 0]\nprint(saddle(A=hours / 12, u=80))\nA = np.column_stack([hours / 12, np.ones(len(hours))])\nprint(saddle(A=A, u=np.array([80.0, 12.0]), wdist=\"p\", type=\"cond\"))\nprint(saddle(A=A, u=np.array([80.0, 12.0]), wdist=\"p\", type=\"cond\", LR=True))\ndata = city()[1]\nsp = saddle(A=data[:, 1] - 1.25 * data[:, 0], u=0)\np = np.exp(sp[\"zeta.hat\"][0] * (data[:, 1] - 1.25 * data[:, 0]))\nsp[\"spa\"] = np.array(sp[\"spa\"], dtype=float)\nsp[\"spa\"][0] *= abs(np.sum(data[:, 0] * p) / np.sum(p))\nprint(sp)",
+    "output": "output/saddle-python.txt"
+  }
+}

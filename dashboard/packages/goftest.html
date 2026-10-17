@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goftest · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>goftest</h1>
+<p class="note">CRAN 1.2-3</p>
+<p>Exports: 7. Crate crates/goftest built: Anderson-Darling kernels match R goftest 1.2-3 (17 cases, max abs diff 0). Python wrappers pending. goftest 1.2-3 has no C for Cramer-von Mises, so there is no CvM kernel to port.</p>
+<p class="note">7 of 7 functions · 100.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#ad.test">ad.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#pAD">pAD</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#qAD">qAD</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#cvm.test">cvm.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#pCvM">pCvM</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#qCvM">qCvM</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#recogniseCdf">recogniseCdf</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<table>
+<thead><tr><th>Crate</th><th>Fortran origin</th><th>Blocked</th></tr></thead>
+<tbody>
+<tr><td>goftest</td><td>goftest 1.2-3 compiled source (src/)</td><td>—</td></tr>
+</tbody>
+</table></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>ad.test</td><td>ad.test fixed inputs, R goftest 1.2-3</td><td>1.24</td><td>0.37</td><td><button type="button" class="proof-toggle" data-name="ad.test"><span class='yes'>+235%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>2.27e-13</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:29.8%'></span></div></td></tr>
+<tr><td>pAD</td><td>pAD fixed inputs, R goftest 1.2-3</td><td>1.72</td><td>0.43</td><td><button type="button" class="proof-toggle" data-name="pAD"><span class='yes'>+300%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:25.0%'></span></div></td></tr>
+<tr><td>qAD</td><td>qAD fixed inputs, R goftest 1.2-3</td><td>5.59</td><td>7.14</td><td><button type="button" class="proof-toggle" data-name="qAD"><span class='slower'>-22%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:78.3%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>cvm.test</td><td>cvm.test fixed inputs, R goftest 1.2-3</td><td>1.05</td><td>0.35</td><td><button type="button" class="proof-toggle" data-name="cvm.test"><span class='yes'>+200%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>6.04e-14</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:33.3%'></span></div></td></tr>
+<tr><td>pCvM</td><td>pCvM fixed inputs, R goftest 1.2-3</td><td>69.4</td><td>88.1</td><td><button type="button" class="proof-toggle" data-name="pCvM"><span class='slower'>-21%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>2.11e-15</td><td><div class='bars'><span class='r' style='width:78.8%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>qCvM</td><td>qCvM fixed inputs, R goftest 1.2-3</td><td>326</td><td>672</td><td><button type="button" class="proof-toggle" data-name="qCvM"><span class='slower'>-51%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>3.07e-13</td><td><div class='bars'><span class='r' style='width:48.5%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>recogniseCdf</td><td>recogniseCdf fixed inputs, R goftest 1.2-3</td><td>0.4</td><td>0.014</td><td><button type="button" class="proof-toggle" data-name="recogniseCdf"><span class='yes'>+2757%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.5%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "ad.test", "r": "## ad.test from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/ad-test-r.R\n## Writes packages/goftest/docs/output/ad-test-r.tsv, read by ad-test-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\nGOLDEN \u003c- 0.6180339887498949\nmake_sample \u003c- function(n, family) {\n  i \u003c- seq_len(n)\n  u \u003c- if (family == \"uniform\") (i * GOLDEN) %% 1 else (i / (n + 1))^2\n  sort(u)\n}\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nres \u003c- list()\nfor (fam in c(\"uniform\", \"skewed\")) {\n  for (n in c(5, 50, 1000)) {\n    u \u003c- make_sample(n, fam)\n    z \u003c- ad.test(u)\n    res[[sprintf(\"stat|%s|%g|punif\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|punif\", fam, n)]] \u003c- unname(z$p.value)\n    z \u003c- ad.test(u, \"pnorm\", mean = 0.5, sd = 0.2)\n    res[[sprintf(\"stat|%s|%g|pnorm\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|pnorm\", fam, n)]] \u003c- unname(z$p.value)\n    set.seed(7)\n    z \u003c- ad.test(u, estimated = TRUE)\n    res[[sprintf(\"stat|%s|%g|estimated\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|estimated\", fam, n)]] \u003c- unname(z$p.value)\n  }\n}\n\nu_big \u003c- make_sample(10000, \"uniform\")\nms \u003c- time_ms(function() ad.test(u_big))\nwrite_out(res, ms, \"ad-test\")\n", "python": "\"\"\"ad.test from goftest 1.2-3 on the fixed inputs in ad-test-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/ad-test-r.R\n    .venv/bin/python packages/goftest/proof/ad-test-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom boot.rng import set_seed  # noqa: E402\nfrom goftest.ad_test import ad_test  # noqa: E402\n\nGOLDEN = 0.6180339887498949\n\n\ndef make_sample(n, family):\n    i = np.arange(1, n + 1, dtype=float)\n    if family == \"uniform\":\n        u = (i * GOLDEN) % 1.0\n    else:\n        t = i / (n + 1)\n        u = t * t\n    return np.sort(u)\n\n\ndef values():\n    res = {}\n    for fam in (\"uniform\", \"skewed\"):\n        for n in (5, 50, 1000):\n            u = make_sample(n, fam)\n            z = ad_test(u)\n            res[f\"stat|{fam}|{n}|punif\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|punif\"] = [z.p_value]\n            z = ad_test(u, \"pnorm\", mean=0.5, sd=0.2)\n            res[f\"stat|{fam}|{n}|pnorm\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|pnorm\"] = [z.p_value]\n            set_seed(7)\n            z = ad_test(u, estimated=True)\n            res[f\"stat|{fam}|{n}|estimated\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|estimated\"] = [z.p_value]\n    return res\n\n\nu_big = make_sample(10000, \"uniform\")\n\n\ndef timed():\n    ad_test(u_big)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"ad-test\", values(), timed, \"ad.test (goftest 1.2-3, R) vs goftest.ad_test (Python)\"))\n"}, {"name": "pAD", "r": "## pAD from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/pAD-r.R\n## Writes packages/goftest/docs/output/pAD-r.tsv, read by pAD-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nGRID \u003c- 0.05 + 0.1 * (0:59)\nBIG_GRID \u003c- 0.05 + 0.0005 * (0:9999)\nSPECIAL \u003c- c(-Inf, -1, 0, 1e-3, 0.5, 2, 10, 50, Inf, NaN)\n\nres \u003c- list()\nres[[\"grid|Inf|fast\"]] \u003c- pAD(GRID)\nres[[\"grid|Inf|exact\"]] \u003c- pAD(GRID, fast = FALSE)\nres[[\"grid|Inf|upper\"]] \u003c- pAD(GRID, lower.tail = FALSE)\nres[[\"grid|5\"]] \u003c- pAD(GRID, n = 5)\nres[[\"grid|50\"]] \u003c- pAD(GRID, n = 50)\nres[[\"grid|1000\"]] \u003c- pAD(GRID, n = 1000)\nres[[\"grid|50|upper\"]] \u003c- pAD(GRID, n = 50, lower.tail = FALSE)\nres[[\"special|Inf|fast\"]] \u003c- pAD(SPECIAL)\nres[[\"special|50\"]] \u003c- pAD(SPECIAL, n = 50)\n\nms \u003c- time_ms(function() pAD(BIG_GRID))\nwrite_out(res, ms, \"pAD\")\n", "python": "\"\"\"pAD from goftest 1.2-3 on the fixed inputs in pAD-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/pAD-r.R\n    .venv/bin/python packages/goftest/proof/pAD-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.pAD import pAD  # noqa: E402\n\nGRID = 0.05 + 0.1 * np.arange(60, dtype=float)\nBIG_GRID = 0.05 + 0.0005 * np.arange(10000, dtype=float)\nSPECIAL = np.array([-np.inf, -1.0, 0.0, 1e-3, 0.5, 2.0, 10.0, 50.0, np.inf, np.nan])\n\n\ndef values():\n    return {\n        \"grid|Inf|fast\": list(pAD(GRID)),\n        \"grid|Inf|exact\": list(pAD(GRID, fast=False)),\n        \"grid|Inf|upper\": list(pAD(GRID, lower_tail=False)),\n        \"grid|5\": list(pAD(GRID, n=5)),\n        \"grid|50\": list(pAD(GRID, n=50)),\n        \"grid|1000\": list(pAD(GRID, n=1000)),\n        \"grid|50|upper\": list(pAD(GRID, n=50, lower_tail=False)),\n        \"special|Inf|fast\": list(pAD(SPECIAL)),\n        \"special|50\": list(pAD(SPECIAL, n=50)),\n    }\n\n\ndef timed():\n    pAD(BIG_GRID)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"pAD\", values(), timed, \"pAD (goftest 1.2-3, R) vs goftest.pAD (Python, goftest_kernels)\"))\n"}, {"name": "qAD", "r": "## qAD from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/qAD-r.R\n## Writes packages/goftest/docs/output/qAD-r.tsv, read by qAD-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nP \u003c- c(0, 0.001, 0.05 + 0.05 * (0:18), 0.99, 0.999, 1)\n\nres \u003c- list()\nres[[\"Inf|fast|lower\"]] \u003c- qAD(P)\nres[[\"Inf|exact|lower\"]] \u003c- qAD(P, fast = FALSE)\nres[[\"Inf|fast|upper\"]] \u003c- qAD(P, lower.tail = FALSE)\nres[[\"5|fast|lower\"]] \u003c- qAD(P, n = 5)\nres[[\"50|fast|lower\"]] \u003c- qAD(P, n = 50)\nres[[\"1000|fast|lower\"]] \u003c- qAD(P, n = 1000)\n\nms \u003c- time_ms(function() qAD(0.05 + 0.05 * (0:18), n = 50))\nwrite_out(res, ms, \"qAD\")\n", "python": "\"\"\"qAD from goftest 1.2-3 on the fixed inputs in qAD-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/qAD-r.R\n    .venv/bin/python packages/goftest/proof/qAD-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.qAD import qAD  # noqa: E402\n\nP = np.concatenate(([0.0, 0.001], 0.05 + 0.05 * np.arange(19, dtype=float), [0.99, 0.999, 1.0]))\nTIMED_P = 0.05 + 0.05 * np.arange(19, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|fast|lower\": list(qAD(P)),\n        \"Inf|exact|lower\": list(qAD(P, fast=False)),\n        \"Inf|fast|upper\": list(qAD(P, lower_tail=False)),\n        \"5|fast|lower\": list(qAD(P, n=5)),\n        \"50|fast|lower\": list(qAD(P, n=50)),\n        \"1000|fast|lower\": list(qAD(P, n=1000)),\n    }\n\n\ndef timed():\n    qAD(TIMED_P, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"qAD\", values(), timed, \"qAD (goftest 1.2-3, R) vs goftest.qAD (Python, uniroot port)\"))\n"}, {"name": "cvm.test", "r": "## cvm.test from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/cvm-test-r.R\n## Writes packages/goftest/docs/output/cvm-test-r.tsv, read by cvm-test-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\nGOLDEN \u003c- 0.6180339887498949\nmake_sample \u003c- function(n, family) {\n  i \u003c- seq_len(n)\n  u \u003c- if (family == \"uniform\") (i * GOLDEN) %% 1 else (i / (n + 1))^2\n  sort(u)\n}\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nres \u003c- list()\nfor (fam in c(\"uniform\", \"skewed\")) {\n  for (n in c(5, 50, 1000)) {\n    u \u003c- make_sample(n, fam)\n    z \u003c- cvm.test(u)\n    res[[sprintf(\"stat|%s|%g|punif\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|punif\", fam, n)]] \u003c- unname(z$p.value)\n    z \u003c- cvm.test(u, \"pnorm\", mean = 0.5, sd = 0.2)\n    res[[sprintf(\"stat|%s|%g|pnorm\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|pnorm\", fam, n)]] \u003c- unname(z$p.value)\n    set.seed(7)\n    z \u003c- cvm.test(u, estimated = TRUE)\n    res[[sprintf(\"stat|%s|%g|estimated\", fam, n)]] \u003c- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|estimated\", fam, n)]] \u003c- unname(z$p.value)\n  }\n}\n\nu_big \u003c- make_sample(10000, \"uniform\")\nms \u003c- time_ms(function() cvm.test(u_big))\nwrite_out(res, ms, \"cvm-test\")\n", "python": "\"\"\"cvm.test from goftest 1.2-3 on the fixed inputs in cvm-test-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/cvm-test-r.R\n    .venv/bin/python packages/goftest/proof/cvm-test-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom boot.rng import set_seed  # noqa: E402\nfrom goftest.cvm_test import cvm_test  # noqa: E402\n\nGOLDEN = 0.6180339887498949\n\n\ndef make_sample(n, family):\n    i = np.arange(1, n + 1, dtype=float)\n    if family == \"uniform\":\n        u = (i * GOLDEN) % 1.0\n    else:\n        t = i / (n + 1)\n        u = t * t\n    return np.sort(u)\n\n\ndef values():\n    res = {}\n    for fam in (\"uniform\", \"skewed\"):\n        for n in (5, 50, 1000):\n            u = make_sample(n, fam)\n            z = cvm_test(u)\n            res[f\"stat|{fam}|{n}|punif\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|punif\"] = [z.p_value]\n            z = cvm_test(u, \"pnorm\", mean=0.5, sd=0.2)\n            res[f\"stat|{fam}|{n}|pnorm\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|pnorm\"] = [z.p_value]\n            set_seed(7)\n            z = cvm_test(u, estimated=True)\n            res[f\"stat|{fam}|{n}|estimated\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|estimated\"] = [z.p_value]\n    return res\n\n\nu_big = make_sample(10000, \"uniform\")\n\n\ndef timed():\n    cvm_test(u_big)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"cvm-test\", values(), timed, \"cvm.test (goftest 1.2-3, R) vs goftest.cvm_test (Python)\"))\n"}, {"name": "pCvM", "r": "## pCvM from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/pCvM-r.R\n## Writes packages/goftest/docs/output/pCvM-r.tsv, read by pCvM-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nQ \u003c- c(0, 1 / 12, 0.02 + 0.02 * (0:29), 0.9, 1.5, 2.5, 5, 10, 20, 33, 34)\nBIG_Q \u003c- 0.001 + 0.001 * (0:1999)\n\nres \u003c- list()\nres[[\"Inf|lower\"]] \u003c- pCvM(Q)\nres[[\"5|lower\"]] \u003c- pCvM(Q, n = 5)\nres[[\"50|lower\"]] \u003c- pCvM(Q, n = 50)\nres[[\"1000|lower\"]] \u003c- pCvM(Q, n = 1000)\nres[[\"Inf|upper\"]] \u003c- pCvM(Q, lower.tail = FALSE)\nres[[\"50|upper\"]] \u003c- pCvM(Q, n = 50, lower.tail = FALSE)\n\nms \u003c- time_ms(function() pCvM(BIG_Q, n = 50))\nwrite_out(res, ms, \"pCvM\")\n", "python": "\"\"\"pCvM from goftest 1.2-3 on the fixed inputs in pCvM-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/pCvM-r.R\n    .venv/bin/python packages/goftest/proof/pCvM-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.pCvM import pCvM  # noqa: E402\n\nQ = np.concatenate(([0.0, 1 / 12], 0.02 + 0.02 * np.arange(30, dtype=float), [0.9, 1.5, 2.5, 5.0, 10.0, 20.0, 33.0, 34.0]))\nBIG_Q = 0.001 + 0.001 * np.arange(2000, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|lower\": list(pCvM(Q)),\n        \"5|lower\": list(pCvM(Q, n=5)),\n        \"50|lower\": list(pCvM(Q, n=50)),\n        \"1000|lower\": list(pCvM(Q, n=1000)),\n        \"Inf|upper\": list(pCvM(Q, lower_tail=False)),\n        \"50|upper\": list(pCvM(Q, n=50, lower_tail=False)),\n    }\n\n\ndef timed():\n    pCvM(BIG_Q, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"pCvM\", values(), timed, \"pCvM (goftest 1.2-3, R) vs goftest.pCvM (Python, SciPy kv)\"))\n"}, {"name": "qCvM", "r": "## qCvM from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/qCvM-r.R\n## Writes packages/goftest/docs/output/qCvM-r.tsv, read by qCvM-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nP \u003c- c(0, 0.001, 0.05 + 0.05 * (0:18), 0.99, 0.999, 1)\n\nres \u003c- list()\nres[[\"Inf|lower\"]] \u003c- qCvM(P)\nres[[\"5|lower\"]] \u003c- qCvM(P, n = 5)\nres[[\"50|lower\"]] \u003c- qCvM(P, n = 50)\nres[[\"Inf|upper\"]] \u003c- qCvM(P, lower.tail = FALSE)\n\nms \u003c- time_ms(function() qCvM(0.05 + 0.05 * (0:18), n = 50))\nwrite_out(res, ms, \"qCvM\")\n", "python": "\"\"\"qCvM from goftest 1.2-3 on the fixed inputs in qCvM-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/qCvM-r.R\n    .venv/bin/python packages/goftest/proof/qCvM-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.qCvM import qCvM  # noqa: E402\n\nP = np.concatenate(([0.0, 0.001], 0.05 + 0.05 * np.arange(19, dtype=float), [0.99, 0.999, 1.0]))\nTIMED_P = 0.05 + 0.05 * np.arange(19, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|lower\": list(qCvM(P)),\n        \"5|lower\": list(qCvM(P, n=5)),\n        \"50|lower\": list(qCvM(P, n=50)),\n        \"Inf|upper\": list(qCvM(P, lower_tail=False)),\n    }\n\n\ndef timed():\n    qCvM(TIMED_P, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"qCvM\", values(), timed, \"qCvM (goftest 1.2-3, R) vs goftest.qCvM (Python, uniroot port)\"))\n"}, {"name": "recogniseCdf", "r": "## recogniseCdf from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/recogniseCdf-r.R\n## Writes packages/goftest/docs/output/recogniseCdf-r.tsv, read by recogniseCdf-py.py.\n\nlib \u003c- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms \u003c- function(f, reps = 20) {\n  f()\n  t \u003c- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 \u003c- Sys.time()\n    f()\n    t[k] \u003c- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out \u003c- function(res, ms, name) {\n  out \u003c- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con \u003c- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v \u003c- res[[nm]]\n    for (i in seq_along(v)) {\n      s \u003c- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nCASES \u003c- list(\"punif\", \"pnorm\", \"norm\", \"t\", \"pt\", \"chisq\", \"unif\", \"AD\", \"pAD\", \"CvM\",\n              \"pCvM\", \"wilcox\", \"pwilcox\", \"p\", \"\", \"foo\", \"pfoo\", \"beta\", \"binom\",\n              \"birthday\", \"tukey\", \"weibull\", \"nbinom\", \"logis\", \"lnorm\", \"gamma\", \"f\",\n              \"geom\", \"hyper\", \"exp\", \"pois\", \"cauchy\", \"pexp\", \"pAD \", 1)\n\nres \u003c- list()\nfor (i in seq_along(CASES)) {\n  r \u003c- recogniseCdf(CASES[[i]])\n  res[[paste0(\"s|\", i)]] \u003c- if (is.null(r)) \"NULL\" else r\n}\n\nms \u003c- time_ms(function() for (s in CASES) recogniseCdf(s))\nwrite_out(res, ms, \"recogniseCdf\")\n", "python": "\"\"\"recogniseCdf from goftest 1.2-3 on the fixed inputs in recogniseCdf-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/recogniseCdf-r.R\n    .venv/bin/python packages/goftest/proof/recogniseCdf-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.recogniseCdf import recogniseCdf  # noqa: E402\n\nCASES = [\"punif\", \"pnorm\", \"norm\", \"t\", \"pt\", \"chisq\", \"unif\", \"AD\", \"pAD\", \"CvM\",\n         \"pCvM\", \"wilcox\", \"pwilcox\", \"p\", \"\", \"foo\", \"pfoo\", \"beta\", \"binom\",\n         \"birthday\", \"tukey\", \"weibull\", \"nbinom\", \"logis\", \"lnorm\", \"gamma\", \"f\",\n         \"geom\", \"hyper\", \"exp\", \"pois\", \"cauchy\", \"pexp\", \"pAD \", 1]\n\n\ndef _name(s):\n    r = recogniseCdf(s)\n    return \"NULL\" if r is None else r\n\n\ndef values():\n    return {f\"s|{i}\": [_name(s)] for i, s in enumerate(CASES, start=1)}\n\n\ndef timed():\n    for s in CASES:\n        recogniseCdf(s)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"recogniseCdf\", values(), timed, \"recogniseCdf (goftest 1.2-3, R) vs goftest.recogniseCdf (Python)\"))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>stats</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Packages</h3><p><a href="boot.html">boot</a> <span class="note">finished</span></p><h3>Native</h3><p>numpy</p><h3>Crates</h3><p>goftest</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "ad.test", "translated": true, "not_done": "", "title": "ad.test", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.ad_test.ad_test", "output_blocks": []}}, {"name": "pAD", "translated": true, "not_done": "", "title": "pAD", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.pAD.pAD", "output_blocks": []}}, {"name": "qAD", "translated": true, "not_done": "", "title": "qAD", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.qAD.qAD", "output_blocks": []}}, {"name": "cvm.test", "translated": true, "not_done": "", "title": "cvm.test", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.cvm_test.cvm_test", "output_blocks": []}}, {"name": "pCvM", "translated": true, "not_done": "", "title": "pCvM", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.pCvM.pCvM", "output_blocks": []}}, {"name": "qCvM", "translated": true, "not_done": "", "title": "qCvM", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.qCvM.qCvM", "output_blocks": []}}, {"name": "recogniseCdf", "translated": true, "not_done": "", "title": "recogniseCdf", "origin": null, "translation": {"description": "Checked.", "usage": "goftest.recogniseCdf.recogniseCdf", "output_blocks": []}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

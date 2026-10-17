@@ -1,0 +1,232 @@
+{
+  "name": "digest",
+  "cran_version": "0.6.39",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All nine exports are done, including ascii serialization. utils is not a package here: packageVersion is the string 0.6.39, and head and tail only drop PKCS padding. There is no crate. Binary hashes skip the 14-byte header. Ascii hashes skip through the fourth newline.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "digest",
+      "translated": true,
+      "python": "digest.digest",
+      "loads": [],
+      "uses": [],
+      "done": "Hashes a serialized R object or raw bytes. Version 2 serialization skips the 14-byte header. ascii=TRUE writes the same objects as text and skips through the fourth newline. md5, sha1, sha256, and sha512 use hashlib. crc32 uses zlib. The other algorithms are written in Python.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "digest(list(LETTERS, data.frame(a=letters[1:5], b=matrix(1:10,ncol=2))))",
+        "r_ms": 0.064969062805175781,
+        "translated_ms": 0.091497500307013979,
+        "speedup": 0.7100638005101371,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\nobj <- list(LETTERS, data.frame(a = letters[1:5], b = matrix(1:10, ncol = 2)))\none <- function() digest(obj)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest import character, data_frame, digest, integer_matrix\n\nobj = [\n    character(list(\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\")),\n    data_frame(\n        a=character(list(\"abcde\")),\n        b=integer_matrix(list(range(1, 11)), ncol=2),\n    ),\n]\n\n\ndef one():\n    return digest(obj)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "digest2int",
+      "translated": true,
+      "python": "digest.digest2int",
+      "loads": [],
+      "uses": [],
+      "done": "Jenkins one-at-a-time hash of each string. A byte above 127 is a signed char, a zero byte ends the key, and the uint32 result is a signed 32-bit int. None is NA_character_ and hashes as the bytes of \"NA\".",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "digest2int(\"The quick brown fox jumps over the lazy dog\", 0L)",
+        "r_ms": 0.0082254409790039062,
+        "translated_ms": 0.033437499951105565,
+        "speedup": 0.24599449692804989,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\nx <- \"The quick brown fox jumps over the lazy dog\"\ninvisible(digest2int(x, 0L))\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- Sys.time()\n  result <- digest2int(x, 0L)\n  elapsed[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\"))\n}\nmed <- median(elapsed)\ncat(sprintf(\"r_ms %.17g\\n\", med * 1000))\ncat(sprintf(\"result %d\\n\", result))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.digest2int import digest2int\n\nx = \"The quick brown fox jumps over the lazy dog\"\ndigest2int(x, 0)\nelapsed = []\nresult = None\nfor _ in range(20):\n    t0 = time.perf_counter()\n    result = digest2int(x, 0)\n    elapsed.append(time.perf_counter() - t0)\nmed = statistics.median(elapsed)\nprint(f\"py_ms {med * 1000:.17g}\")\nprint(f\"result {result[0]}\")\n"
+        }
+      }
+    },
+    {
+      "name": "getVDigest",
+      "translated": true,
+      "python": "digest.getVDigest",
+      "loads": [],
+      "uses": ["digest"],
+      "done": "Returns a function that hashes each element through digest. raw is always off. An integer vector is hashed one value at a time. warn returns NA and silent returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getVDigest(algo='sha1')(letters)",
+        "r_ms": 0.90658664703369141,
+        "translated_ms": 0.31842099997447804,
+        "speedup": 2.8471320896120411,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\nsha1 <- getVDigest(algo = \"sha1\")\none <- function() sha1(letters)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(value, collapse = \"\\n\"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nfrom digest.vdigest import getVDigest\n\nletters = list(\"abcdefghijklmnopqrstuvwxyz\")\nsha1 = getVDigest(algo=\"sha1\")\n\n\ndef one():\n    return sha1(letters)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\nprint(\"%.17g\" % (statistics.median(elapsed) * 1000))\nprint(\"\\n\".join(value))\n"
+        }
+      }
+    },
+    {
+      "name": "sha1",
+      "translated": true,
+      "python": "digest.sha1",
+      "loads": [],
+      "uses": ["digest"],
+      "done": "Hashes after num2hex so the result does not depend on word size. Attributes are kept and srcref is dropped, matching package version 0.6.39. A repeated symbol is a four-byte reference.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sha1(c(1, 2, 3))",
+        "r_ms": 0.57351589202880859,
+        "translated_ms": 0.16608100031589856,
+        "speedup": 3.4532299958329862,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\none <- function() sha1(c(1, 2, 3))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.serialize import real\nfrom digest.sha1 import sha1\n\n\ndef one():\n    return sha1(real([1, 2, 3]))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "sha1_attr_digest",
+      "translated": true,
+      "python": "digest.sha1_attr_digest",
+      "loads": [],
+      "uses": ["digest"],
+      "done": "Attaches the digest::sha1 attribute, then calls digest. The attribute records class, digits, and zapsmall.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sha1_attr_digest(\"hello\")",
+        "r_ms": 0.10216236114501953,
+        "translated_ms": 0.10560850023466628,
+        "speedup": 0.96736873374785848,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\none <- function() sha1_attr_digest(\"hello\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.sha1 import sha1_attr_digest\n\n\ndef one():\n    return sha1_attr_digest(\"hello\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "sha1_digest",
+      "translated": true,
+      "python": "digest.sha1_digest",
+      "loads": [],
+      "uses": ["digest"],
+      "done": "Calls digest without attaching an attribute. digits and zapsmall are ignored. None is NULL.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sha1_digest(NULL)",
+        "r_ms": 0.10836124420166016,
+        "translated_ms": 0.016020499060687143,
+        "speedup": 6.7639118975743306,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\none <- function() sha1_digest(NULL)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.sha1 import sha1_digest\n\n\ndef one():\n    return sha1_digest(None)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "hmac",
+      "translated": true,
+      "python": "digest.hmac",
+      "loads": [],
+      "uses": ["digest", "makeRaw"],
+      "done": "RFC 2104 HMAC. The key is padded to 64 bytes, 4 for crc32 and 128 for sha512, then digest is called twice. A prefix such as sha5 is resolved after the block size is chosen, so that call still uses a 64-byte block. A crc32 key longer than 4 bytes keeps the first byte of the raw digest.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "hmac(\"Jefe\", \"what do ya want for nothing?\", \"md5\")",
+        "r_ms": 0.32544136047363281,
+        "translated_ms": 0.21729850050178356,
+        "speedup": 1.4976696098782403,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\none <- function() hmac(\"Jefe\", \"what do ya want for nothing?\", \"md5\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%s\\n%.17g\\n\", value, median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.hmac import hmac\n\n\ndef one():\n    return hmac(\"Jefe\", \"what do ya want for nothing?\", \"md5\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "makeRaw",
+      "translated": true,
+      "python": "digest.makeRaw",
+      "loads": [],
+      "uses": [],
+      "done": "charToRaw for a string, identity for bytes, hex pairs for a digest, and as.raw for numbers. A character vector longer than one warns and keeps the first string. hmac calls make_raw_digest on the hex hash.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "makeRaw(\"1234567890ABCDE\")",
+        "r_ms": 0.00762939453125,
+        "translated_ms": 0.00072749980972730555,
+        "speedup": 10.487142991982068,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(digest))\none <- function() makeRaw(\"1234567890ABCDE\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(as.integer(value), collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.makeraw import makeRaw\n\n\ndef one():\n    return makeRaw(\"1234567890ABCDE\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(str(byte) for byte in value))\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "AES",
+      "translated": true,
+      "python": "digest.AES",
+      "loads": [],
+      "uses": [],
+      "done": "AES-128, AES-192, and AES-256 in ECB, CBC, CFB, and CTR. PKCS#7 padding is only allowed in CBC. CTR adds one to the IV as a 128-bit big-endian integer after copying it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "FIPS-197 AES-128 encrypt of 00112233445566778899aabbccddeeff",
+        "r_ms": 0.10764598846435547,
+        "translated_ms": 0.27387850013838033,
+        "speedup": 0.3930428580920593,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(digest))\nstopifnot(as.character(packageVersion(\"digest\")) == \"0.6.39\")\nhextextToRaw <- function(text) {\n  vals <- matrix(as.integer(as.hexmode(strsplit(text, \"\")[[1]])), ncol=2, byrow=TRUE)\n  vals <- vals %*% c(16, 1)\n  as.raw(vals)\n}\nplaintext <- hextextToRaw(\"00112233445566778899aabbccddeeff\")\nkey <- hextextToRaw(\"000102030405060708090a0b0c0d0e0f\")\none <- function() {\n  aes <- AES(key)\n  aes$encrypt(plaintext)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"hex\":\"%s\",\"median_ms\":%.17g}\\n', paste(sprintf(\"%02x\", as.integer(value)), collapse=\"\"), median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom digest.aes import AES\n\nkey = bytes.fromhex(\"000102030405060708090a0b0c0d0e0f\")\nplaintext = bytes.fromhex(\"00112233445566778899aabbccddeeff\")\n\n\ndef one():\n    return AES(key).encrypt(plaintext)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint('{\"hex\":\"%s\",\"median_ms\":%.17g}' % (value.hex(), statistics.median(elapsed)))\n"
+        }
+      }
+    }
+  ]
+}

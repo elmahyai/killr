@@ -1,0 +1,40 @@
+{
+  "name": "remote_download",
+  "title": "Download a remote source bundle",
+  "origin": {
+    "description": "S3 generic that downloads or copies the source bundle for a remote.",
+    "usage": "remote_download(x, quiet = FALSE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A remote object."
+      },
+      {
+        "name": "quiet",
+        "text": "If TRUE, suppress output. Default FALSE."
+      }
+    ],
+    "details": "A local remote copies the directory into a new temporary directory. file.copy nests the source directory under that temporary directory, and the return value is the first entry there. A GitHub remote downloads repos/{user}/{repo}/tarball/{ref} to a temporary .tar.gz file. quiet suppresses the GitHub download message.",
+    "value": "Path to the copied directory or the downloaded archive.",
+    "example": "path <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\nbundle <- remotes:::remote_download(remotes:::local_remote(path))\nname <- read.dcf(file.path(bundle, \"DESCRIPTION\"))[1, \"Package\"]\ncat(paste0(\"remote_download on a local directory copies a directory whose DESCRIPTION says Package: \", name, \".\\n\"))",
+    "output": "output/remote_download-r.txt"
+  },
+  "translation": {
+    "description": "S3 generic that downloads or copies the source bundle for a remote.",
+    "usage": "remote_download(x, quiet=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A local_remote or github_remote."
+      },
+      {
+        "name": "quiet",
+        "text": "If True, suppress the GitHub download message. Default False. The local method accepts it and does not print."
+      }
+    ],
+    "details": "A local remote copies the directory into a new temporary directory and returns that copy. Compare the Package field of its DESCRIPTION with the source, not the temporary path. A GitHub remote saves the tarball from repos/{user}/{repo}/tarball/{ref}. ref is URL-encoded with reserved characters encoded. The request uses urllib. The token is the remote's auth_token.",
+    "value": "Path to the copied directory or the downloaded .tar.gz file.",
+    "example": "import os\nimport tempfile\nfrom remotes.remote import local_remote, remote_download\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\nbundle = remote_download(local_remote(path))\nwith open(os.path.join(bundle, \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    name = next(line.split(\":\", 1)[1].strip() for line in handle if line.startswith(\"Package:\"))\nprint(\"remote_download on a local directory copies a directory whose DESCRIPTION says Package: \" + name + \".\")",
+    "output": "output/remote_download-python.txt"
+  }
+}

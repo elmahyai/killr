@@ -1,0 +1,3 @@
+from rstudioapi.is_available import isAvailable
+from rstudioapi.as_document_position import as_document_position
+from rstudioapi.as_document_range import as_document_range

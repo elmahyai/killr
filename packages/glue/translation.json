@@ -1,0 +1,400 @@
+{
+  "name": "glue",
+  "cran_version": "1.8.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All sixteen exports are done. Braces are Python expressions, and glue_safe only looks up a name. glue_sql quotes text the way RSQLite does and does not send a query. glue_col applies crayon's ANSI codes. The compiled code is C, so there is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "glue",
+      "translated": true,
+      "python": "glue.glue",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates each brace as a Python expression and recycles the pieces to one length.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "name Fred and age 50 in {name} and {age + 1}",
+        "r_ms": 0.32269954681396484,
+        "translated_ms": 0.1762064998729329,
+        "speedup": 1.8313714139187367,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  name <- \"Fred\"\n  age <- 50\n  glue(\"My name is {name}, my age next year is {age + 1}.\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    name = \"Fred\"\n    age = 50\n    return glue(\"My name is {name}, my age next year is {age + 1}.\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_data",
+      "translated": true,
+      "python": "glue.glue_data",
+      "loads": [],
+      "uses": [],
+      "done": "Reads names from the dict before the surrounding names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Species and Petal.Length from a two-row dict",
+        "r_ms": 0.3437995910644531,
+        "translated_ms": 0.0573819997953251,
+        "speedup": 5.991418777504203,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_data(list(Species = c(\"setosa\", \"versicolor\"), Petal.Length = c(1.4, 4.7)), \"This {Species} has a petal length of {Petal.Length}\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_data({\"Species\": [\"setosa\", \"versicolor\"], \"Petal.Length\": [1.4, 4.7]}, \"This {Species} has a petal length of {Petal.Length}\", envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_safe",
+      "translated": true,
+      "python": "glue.glue_safe",
+      "loads": [],
+      "uses": [],
+      "done": "Looks up the brace text as a single name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the name 1 + 1 is 5 and is not evaluated",
+        "r_ms": 0.2105236053466797,
+        "translated_ms": 0.031778499760548584,
+        "speedup": 6.6247181878621655,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_safe(\"{1 + 1}\", `1 + 1` = 5)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_safe(\"{1 + 1}\", **{\"1 + 1\": 5})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_data_safe",
+      "translated": true,
+      "python": "glue.glue_data_safe",
+      "loads": [],
+      "uses": [],
+      "done": "Looks up braces as names, using the dict first.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "name Fred looked up from a dict",
+        "r_ms": 0.18894672393798828,
+        "translated_ms": 0.017683999885775847,
+        "speedup": 10.684614632347282,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_data_safe(list(name = \"Fred\"), \"{name}\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_data_safe({\"name\": \"Fred\"}, \"{name}\", envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_col",
+      "translated": true,
+      "python": "glue.glue_col",
+      "loads": [],
+      "uses": [],
+      "done": "Colors text with the ANSI open and close codes crayon uses.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "{blue foo} and a nested red/green phrase",
+        "r_ms": 1.5007257461547852,
+        "translated_ms": 0.15268849983840482,
+        "speedup": 9.82867568771094,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_col(\"{red This is a {green serious} problem}\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_col(\"{red This is a {green serious} problem}\", envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_data_col",
+      "translated": true,
+      "python": "glue.glue_data_col",
+      "loads": [],
+      "uses": [],
+      "done": "Colors values taken from a dict.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "gear 3 and 4 each wrapped by blue",
+        "r_ms": 0.9473562240600586,
+        "translated_ms": 0.108361499314924,
+        "speedup": 8.742553674961792,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_data_col(list(gear = c(3, 4)), \"A {blue {gear}}\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_data_col({\"gear\": [3, 4]}, \"A {blue {gear}}\", envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_sql",
+      "translated": true,
+      "python": "glue.glue_sql",
+      "loads": [],
+      "uses": [],
+      "done": "Quotes strings in single quotes and backtick names the way RSQLite does. No query is sent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "quote a string, a backtick identifier, and an IN list for RSQLite",
+        "r_ms": 4.145026206970215,
+        "translated_ms": 0.08189999971364159,
+        "speedup": 50.6108207748846,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\ncon <- DBI::dbConnect(RSQLite::SQLite(), \":memory:\")\none <- function() glue_sql(\"SELECT {var} FROM {`tbl`} WHERE species IN ({vals*})\", .con = con, var = \"setosa\", tbl = \"iris\", vals = c(\"setosa\", \"versicolor\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_sql(\"SELECT {var} FROM {`tbl`} WHERE species IN ({vals*})\", con=sqlite, var=\"setosa\", tbl=\"iris\", vals=[\"setosa\", \"versicolor\"], envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_data_sql",
+      "translated": true,
+      "python": "glue.glue_data_sql",
+      "loads": [],
+      "uses": [],
+      "done": "SQL-quotes names taken from a dict.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "quote O'Malley from a dict",
+        "r_ms": 2.1392107009887695,
+        "translated_ms": 0.057844000366458204,
+        "speedup": 36.982412824774585,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\ncon <- DBI::dbConnect(RSQLite::SQLite(), \":memory:\")\none <- function() glue_data_sql(list(name = \"O'Malley\"), \"INSERT {name}\", .con = con)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_data_sql({\"name\": \"O'Malley\"}, \"INSERT {name}\", con=sqlite, envir={})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_collapse",
+      "translated": true,
+      "python": "glue.glue_collapse",
+      "loads": [],
+      "uses": [],
+      "done": "Joins a vector and can put a different separator before the last item.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:4 joined by comma with and before the last",
+        "r_ms": 0.0553131103515625,
+        "translated_ms": 0.01169600045614061,
+        "speedup": 4.7292329167550715,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_collapse(1:4, \", \", last = \" and \")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_collapse([1, 2, 3, 4], \", \", last=\" and \")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glue_sql_collapse",
+      "translated": true,
+      "python": "glue.glue_sql_collapse",
+      "loads": [],
+      "uses": [],
+      "done": "Collapses like glue_collapse and marks the string as SQL.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a and b joined by a comma and marked SQL",
+        "r_ms": 0.4481077194213867,
+        "translated_ms": 0.004317000275477767,
+        "speedup": 103.80071596631858,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() glue_sql_collapse(c(\"a\", \"b\"), sep = \", \")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return glue_sql_collapse([\"a\", \"b\"], sep=\", \")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "as_glue",
+      "translated": true,
+      "python": "glue.as_glue",
+      "loads": [],
+      "uses": [],
+      "done": "Marks a character vector as glue. Addition concatenates the two sides.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "c(\"abc\", quote-backslash, newline)",
+        "r_ms": 0.01049041748046875,
+        "translated_ms": 0.0025324998205178417,
+        "speedup": 4.1423171664129415,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() as_glue(c(\"abc\", \"\\\"\\\\\", \"\\n\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return as_glue([\"abc\", '\"\\\\', \"\\n\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "identity_transformer",
+      "translated": true,
+      "python": "glue.identity_transformer",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates the brace text as Python.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "age + 1 with age 50",
+        "r_ms": 0.06699562072753906,
+        "translated_ms": 0.02422500028842478,
+        "speedup": 2.7655570662490763,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() identity_transformer(\"age + 1\", envir = list2env(list(age = 50), parent = baseenv()))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return identity_transformer(\"age + 1\", {\"age\": 50})\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "single_quote",
+      "translated": true,
+      "python": "glue.single_quote",
+      "loads": [],
+      "uses": [],
+      "done": "Wraps each element in single quotes using encodeString rules.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:5 wrapped in single quotes",
+        "r_ms": 0.048160552978515625,
+        "translated_ms": 0.009785499969439115,
+        "speedup": 4.9216241509299286,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() single_quote(1:5)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return single_quote([1, 2, 3, 4, 5])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "double_quote",
+      "translated": true,
+      "python": "glue.double_quote",
+      "loads": [],
+      "uses": [],
+      "done": "Wraps each element in double quotes using encodeString rules.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "b'c wrapped in double quotes",
+        "r_ms": 0.025987625122070312,
+        "translated_ms": 0.0030039996090636123,
+        "speedup": 8.651008157145203,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() double_quote(\"b'c\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return double_quote(\"b'c\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "backtick",
+      "translated": true,
+      "python": "glue.backtick",
+      "loads": [],
+      "uses": [],
+      "done": "Wraps each element in backticks using encodeString rules.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a wrapped in backticks",
+        "r_ms": 0.02384185791015625,
+        "translated_ms": 0.002548500106058782,
+        "speedup": 9.355250899725224,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() backtick(\"a\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return backtick(\"a\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "trim",
+      "translated": true,
+      "python": "glue.trim",
+      "loads": [],
+      "uses": [],
+      "done": "Removes the common indent and joins lines continued with a backslash.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a three-line indented template",
+        "r_ms": 0.017523765563964844,
+        "translated_ms": 0.037602999782393454,
+        "speedup": 0.4660204150034289,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(crayon.enabled = TRUE)\nsuppressPackageStartupMessages(library(glue))\nsuppressPackageStartupMessages(library(crayon))\nsuppressPackageStartupMessages(library(DBI))\nsuppressPackageStartupMessages(library(RSQLite))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.numeric(x) && length(x) == 1) return(sprintf(\"%.17g\", x))\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() trim(\"\\n    A formatted string\\n    Can have multiple lines\\n      with additional indentation preserved\\n    \")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue import (\n    Id,\n    SQL,\n    as_glue,\n    backtick,\n    double_quote,\n    glue,\n    glue_col,\n    glue_collapse,\n    glue_data,\n    glue_data_col,\n    glue_data_safe,\n    glue_data_sql,\n    glue_safe,\n    glue_sql,\n    glue_sql_collapse,\n    identity_transformer,\n    single_quote,\n    sqlite,\n    trim,\n)\nfrom glue.interpolate import plain\n\ndef one():\n    return trim(\"\\n    A formatted string\\n    Can have multiple lines\\n      with additional indentation preserved\\n    \")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nshown = plain(value) if not isinstance(value, (int, float, str)) else value\nprint(json.dumps({\"value\": shown, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+suppressPackageStartupMessages(library(statmod))
+if (as.character(packageVersion("statmod")) != "1.5.2") stop("expected statmod 1.5.2")
+suppressPackageStartupMessages(library(MASS))
+data(petrol)
+out <- randomizedBlock(Y ~ SG + VP + V10 + EP, random = No, data = petrol)
+print(cbind(varcomp = out$varcomp, se = out$se.varcomp))

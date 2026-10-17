@@ -1,0 +1,1 @@
+`mclustBootstrapLRT` calls `mclustBIC`, `sim`, `em`, and `hc` when `G > 1`. Standalone Fortran needs `i1mach`, `d1mach`, and `intpr` if it is not linked through libR. `MclustSSC` passes `n`, `p`, and `G` by reference. `logsumexp` and `softmax` call `logsumexp_` and `softmax_` on `libmclust_fortran.so`.

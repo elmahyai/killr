@@ -1,0 +1,196 @@
+{
+  "name": "nnet",
+  "cran_version": "7.3-21",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 7 exports match nnet 7.3-21. The fit is the C optimiser. The design and the Hessian use NumPy. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "which.is.max",
+      "translated": true,
+      "python": "nnet.which_is_max",
+      "loads": [],
+      "uses": [],
+      "done": "1-based index of the unique maximum. Several maxima keep the smallest index; R draws one.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the maximum of 1, 4, and 2",
+        "r_ms": 0.013113021850585938,
+        "translated_ms": 0.0014739998732693493,
+        "speedup": 8.896216402991337,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  which.is.max(c(1, 4, 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nfrom nnet import class_ind, which_is_max\n\ndef one():\n    return [which_is_max([1, 4, 2])]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "class.ind",
+      "translated": true,
+      "python": "nnet.class_ind",
+      "loads": [],
+      "uses": [],
+      "done": "Indicator columns in factor order. The check is the column-major matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "labels b, a, and b",
+        "r_ms": 0.1169443130493164,
+        "translated_ms": 0.003532499249558896,
+        "speedup": 33.10526196542555,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  as.numeric(class.ind(c(\"b\", \"a\", \"b\")))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nfrom nnet import class_ind, which_is_max\n\ndef one():\n    return class_ind(['b', 'a', 'b'])[0]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "multinom",
+      "translated": true,
+      "python": "nnet.multinom",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Three-class fit with the zero start. rang stays 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y ~ x",
+        "r_ms": 2.189159393310547,
+        "translated_ms": 8.945783499996196,
+        "speedup": 0.24471410394757237,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none <- function() {\n  df <- data.frame(y=factor(c(\"a\",\"b\",\"a\",\"c\",\"b\",\"c\")), x=c(0, 1, 0.2, 0.8, 0.4, 0.9))\n  fit <- multinom(y ~ x, df, maxit=40, trace=FALSE)\n  c(fit$wts, fit$deviance, fit$AIC)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nwarnings.filterwarnings(\"ignore\")\nfrom nnet import multinom, nnet, nnet_default, nnet_formula, nnet_hess\n\ndef one():\n    data = {\"y\": [\"a\", \"b\", \"a\", \"c\", \"b\", \"c\"], \"x\": [0.0, 1, 0.2, 0.8, 0.4, 0.9]}\n    fit = multinom(\"y ~ x\", data, maxit=40, trace=False)\n    return [float(v) for v in fit[\"wts\"]] + [float(fit[\"deviance\"]), float(fit[\"AIC\"])]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "nnet",
+      "translated": true,
+      "python": "nnet.nnet",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Softmax network with the same 12 starting weights.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two classes, size 2",
+        "r_ms": 0.3012418746948242,
+        "translated_ms": 7.103433499992207,
+        "speedup": 0.0424079249415307,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none <- function() {\n  x <- matrix(c(0,1, 1,0, 0.5,0.5, 1,1, 0.2,0.8), ncol=2, byrow=TRUE)\n  y <- matrix(c(1,0, 0,1, 1,0, 0,1, 1,0), ncol=2, byrow=TRUE)\n  as.numeric(nnet(x, y, size=2, softmax=TRUE, decay=0.01, Wts=rep(0.1, 12), maxit=20, trace=FALSE)$wts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nwarnings.filterwarnings(\"ignore\")\nfrom nnet import multinom, nnet, nnet_default, nnet_formula, nnet_hess\n\ndef one():\n    x = [[0, 1], [1, 0], [0.5, 0.5], [1, 1], [0.2, 0.8]]\n    y = [[1, 0], [0, 1], [1, 0], [0, 1], [1, 0]]\n    fit = nnet(x, y, size=2, softmax=True, decay=0.01, Wts=[0.1] * 12, maxit=20, trace=False)\n    return [float(v) for v in fit[\"wts\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "nnetHess",
+      "translated": true,
+      "python": "nnet.nnet_hess",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Hessian of the linear fit at the trained weights.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the nine-by-nine Hessian",
+        "r_ms": 0.3637075424194336,
+        "translated_ms": 6.9914764999907675,
+        "speedup": 0.05202156403156241,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none <- function() {\n  w <- c(0.1, -0.2, 0.3, 0, 0.4, -0.1, 0.2, 0.5, -0.3)\n  x <- matrix(c(0,1, 1,0, 0.5,0.5, 1,1), ncol=2, byrow=TRUE)\n  y <- c(0.2, 0.8, 0.4, 0.9)\n  fit <- nnet.default(x, y, size=2, linout=TRUE, decay=0.01, Wts=w, maxit=30, trace=FALSE)\n  as.numeric(nnetHess(fit, x, y))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nwarnings.filterwarnings(\"ignore\")\nfrom nnet import multinom, nnet, nnet_default, nnet_formula, nnet_hess\n\ndef one():\n    w = [0.1, -0.2, 0.3, 0.0, 0.4, -0.1, 0.2, 0.5, -0.3]\n    x = [[0.0, 1.0], [1.0, 0.0], [0.5, 0.5], [1.0, 1.0]]\n    y = [[0.2], [0.8], [0.4], [0.9]]\n    fit = nnet_default(x, y, size=2, linout=True, decay=0.01, Wts=w, maxit=30, trace=False)\n    return [float(v) for v in np.asarray(nnet_hess(fit, x, y), dtype=float).ravel(order=\"F\")]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "nnet.default",
+      "translated": true,
+      "python": "nnet.nnet_default",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Linear outputs, decay 0.01, and the same nine starting weights.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "four rows, size 2",
+        "r_ms": 0.27310848236083984,
+        "translated_ms": 6.236202500019772,
+        "speedup": 0.043794036893441794,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none <- function() {\n  w <- c(0.1, -0.2, 0.3, 0, 0.4, -0.1, 0.2, 0.5, -0.3)\n  x <- matrix(c(0,1, 1,0, 0.5,0.5, 1,1), ncol=2, byrow=TRUE)\n  y <- c(0.2, 0.8, 0.4, 0.9)\n  fit <- nnet.default(x, y, size=2, linout=TRUE, decay=0.01, Wts=w, maxit=30, trace=FALSE)\n  c(fit$wts, fit$value, fit$fitted.values)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nwarnings.filterwarnings(\"ignore\")\nfrom nnet import multinom, nnet, nnet_default, nnet_formula, nnet_hess\n\ndef one():\n    w = [0.1, -0.2, 0.3, 0.0, 0.4, -0.1, 0.2, 0.5, -0.3]\n    x = [[0.0, 1.0], [1.0, 0.0], [0.5, 0.5], [1.0, 1.0]]\n    y = [[0.2], [0.8], [0.4], [0.9]]\n    fit = nnet_default(x, y, size=2, linout=True, decay=0.01, Wts=w, maxit=30, trace=False)\n    fitted = [float(v) for v in np.asarray(fit[\"fitted.values\"]).ravel()]\n    return [float(v) for v in fit[\"wts\"]] + [float(fit[\"value\"])] + fitted\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "nnet.formula",
+      "translated": true,
+      "python": "nnet.nnet_formula",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The same linear fit from a formula.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y ~ x1 + x2",
+        "r_ms": 2.031683921813965,
+        "translated_ms": 7.507908999997426,
+        "speedup": 0.2706058267108274,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nnet))\nif (packageDescription(\"nnet\")$Version != \"7.3-21\") stop(\"expected nnet 7.3-21\")\njson_num <- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none <- function() {\n  w <- c(0.1, -0.2, 0.3, 0, 0.4, -0.1, 0.2, 0.5, -0.3)\n  df <- data.frame(y=c(0.2, 0.8, 0.4, 0.9), x1=c(0, 1, 0.5, 1), x2=c(1, 0, 0.5, 1))\n  as.numeric(nnet(y ~ x1 + x2, df, size=2, linout=TRUE, decay=0.01, Wts=w, maxit=30, trace=FALSE)$wts)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/nnet\"]\nwarnings.filterwarnings(\"ignore\")\nfrom nnet import multinom, nnet, nnet_default, nnet_formula, nnet_hess\n\ndef one():\n    w = [0.1, -0.2, 0.3, 0.0, 0.4, -0.1, 0.2, 0.5, -0.3]\n    data = {\"y\": [0.2, 0.8, 0.4, 0.9], \"x1\": [0, 1, 0.5, 1], \"x2\": [1, 0, 0.5, 1]}\n    fit = nnet_formula(\"y ~ x1 + x2\", data, size=2, linout=True, decay=0.01, Wts=w, maxit=30, trace=False)\n    return [float(v) for v in fit[\"wts\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

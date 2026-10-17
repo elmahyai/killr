@@ -1,0 +1,100 @@
+{
+  "name": "jack.after.boot",
+  "title": "Jackknife-after-bootstrap plots",
+  "origin": {
+    "description": "Estimate jackknife influence values from a bootstrap object and plot the jackknife-after-bootstrap diagnostic.",
+    "usage": "jack.after.boot(boot.out, index = 1, t = NULL, L = NULL,\n                useJ = TRUE, stinf = TRUE, alpha = NULL,\n                main = \"\", ylab = NULL, ...)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A nonparametric bootstrap object. R should be reasonably large."
+      },
+      {
+        "name": "index",
+        "text": "Which statistic to use from boot.out$t. Only the first element is used."
+      },
+      {
+        "name": "t",
+        "text": "Replicates of the statistic of interest. The default is boot.out$t[, index]."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values, used only when useJ is FALSE. If supplied they are treated as infinitesimal jackknife values."
+      },
+      {
+        "name": "useJ",
+        "text": "If TRUE, the default, the influence values are the scaled difference between the mean of replicates that omit each point and the mean of those means."
+      },
+      {
+        "name": "stinf",
+        "text": "If TRUE, divide the jackknife values by their standard error before plotting."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantiles to plot. The default is c(0.05, 0.1, 0.16, 0.5, 0.84, 0.9, 0.95)."
+      },
+      {
+        "name": "main, ylab",
+        "text": "Title and y-axis label. With the default alpha and no ylab, the label names those percentiles."
+      },
+      {
+        "name": "...",
+        "text": "Passed to empinf when useJ is FALSE and L is omitted."
+      }
+    ],
+    "details": "For each observation the function keeps the replicates in which that observation did not appear, and plots the centred quantiles of those replicates against the jackknife value. Horizontal dashed lines are the centred quantiles of all replicates. Observation numbers are printed in five staggered rows.",
+    "value": "There is no returned value. A plot is drawn.",
+    "example": "frets.fun <- function(data, i) {\n    pcorr <- function(x) {\n         v <- cor(x)\n         v.d <- diag(var(x))\n         iv <- solve(v)\n         iv.d <- sqrt(diag(iv))\n         iv <- - diag(1/iv.d) %*% iv %*% diag(1/iv.d)\n         q <- NULL\n         n <- nrow(v)\n         for (i in 1:(n-1))\n              q <- rbind( q, c(v[i, 1:i], iv[i,(i+1):n]) )\n         q <- rbind( q, v[n, ] )\n         diag(q) <- round(diag(q))\n         q\n    }\n    d <- data[i, ]\n    v <- pcorr(d)\n    c(v[1,], v[2,], v[3,], v[4,])\n}\nfrets.boot <- boot(log(as.matrix(frets)), frets.fun, R = 999)\njack.after.boot(frets.boot, useJ = FALSE, stinf = FALSE, index = 7)",
+    "output": "output/jack.after.boot-r.txt"
+  },
+  "translation": {
+    "description": "Draw the jackknife-after-bootstrap diagnostic with Matplotlib and return the coordinates of the curves.",
+    "usage": "jack_after_boot(boot_out, index=1, t=None, L=None, useJ=True, stinf=True, alpha=None, main=\"\", ylab=None, ax=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "A nonparametric BootResult."
+      },
+      {
+        "name": "index",
+        "text": "1-based column of t. Only the first element is used."
+      },
+      {
+        "name": "t",
+        "text": "Replicates to diagnose. The default is column index of boot_out.t."
+      },
+      {
+        "name": "L",
+        "text": "Influence values used when useJ is false. Supplied values are treated as infinitesimal jackknife values."
+      },
+      {
+        "name": "useJ",
+        "text": "If true, influence values are (n - 1) times the difference between the mean of the omit-one means and each omit-one mean."
+      },
+      {
+        "name": "stinf",
+        "text": "If true, divide the jackknife values by their sample standard deviation."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantiles to plot. The default is 0.05, 0.1, 0.16, 0.5, 0.84, 0.9, 0.95. Quantiles are R type 7."
+      },
+      {
+        "name": "main, ylab",
+        "text": "Title and y-axis label. With the default alpha and no ylab, the label names those percentiles."
+      },
+      {
+        "name": "ax",
+        "text": "Axes to draw on. None opens a new figure."
+      },
+      {
+        "name": "kwargs",
+        "text": "Passed to the influence calculation when useJ is false and L is omitted."
+      }
+    ],
+    "details": "Frequencies come from boot_array. For each observation the centred quantiles of replicates that omit it are plotted against the sorted jackknife values. Dashed horizontal lines are the centred quantiles of all finite replicates. Observation numbers are drawn in five staggered rows. Matplotlib draws the lines, the markers, and the labels.",
+    "value": "A dict with the sorted jackknife values J, the percentile curves, the horizontal levels, and the observation-number labels. R returns NULL.",
+    "example": "from boot.resample import boot, jack_after_boot\nfrom boot.rng import set_seed\nimport numpy as np\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\nset_seed(1)\nresult = boot(np.arange(1, 11), stat, R=50)\nseries = jack_after_boot(result)\nprint(series[\"J\"])",
+    "output": ["output/jack.after.boot-python.txt", "output/jack.after.boot.svg"]
+  }
+}

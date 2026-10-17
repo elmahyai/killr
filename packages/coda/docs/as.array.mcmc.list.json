@@ -1,0 +1,44 @@
+{
+  "name": "as.array.mcmc.list",
+  "title": "Coerce mcmc.list to array",
+  "origin": {
+    "description": "These are methods for the generic functions as.matrix(), as.array() and as.mcmc(). mcmc.list objects can be coerced to 3-dimensional arrays with the as.array() function.",
+    "usage": "as.array(x, drop, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An mcmc or mcmc.list object"
+      },
+      {
+        "name": "drop",
+        "text": "logical flag: if TRUE the result is coerced to the lowest possible dimension"
+      },
+      {
+        "name": "...",
+        "text": "optional arguments to the various methods"
+      }
+    ],
+    "details": "For as.array.mcmc.list, the result is an array with dimensions iteration, variable, and chain. Each chain fills one slice. When drop is TRUE, dimensions of extent one are removed.",
+    "value": "A numeric array (or matrix when drop removes the chain dimension).",
+    "example": "data(line)\ndim(as.array(line))\ncat(paste(format(as.array(line)[1, , 1], digits = 5), collapse = \" \"), \"\\n\")",
+    "output": "output/as.array.mcmc.list-r.txt"
+  },
+  "translation": {
+    "description": "Stack chains from an mcmc.list into a NumPy array with dimensions iteration, variable, and chain.",
+    "usage": "as_array_mcmc_list(x, drop=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A non-empty list or tuple of chains. Each chain is a vector or a matrix with iterations in rows."
+      },
+      {
+        "name": "drop",
+        "text": "When True, remove length-one dimensions after stacking, matching R drop()."
+      }
+    ],
+    "details": "For as.array.mcmc.list, the result is an array with dimensions iteration, variable, and chain. Each chain fills one slice. When drop is TRUE, dimensions of extent one are removed.",
+    "value": "A float64 ndarray. With one chain and drop=True, the result is two-dimensional.",
+    "example": "import json\nfrom pathlib import Path\nfrom types import SimpleNamespace\n\nimport numpy as np\n\nfrom coda.as_array_mcmc_list import as_array_mcmc_list\n\nroot = Path(__file__).resolve().parents[1]\nchains_raw = json.loads((root / \"proof\" / \"line-chains.json\").read_text())\nchains = [\n    SimpleNamespace(\n        data=np.array(entry[\"data\"], dtype=float).reshape(-1, len(entry[\"cols\"]), order=\"F\"),\n        colnames=entry[\"cols\"],\n    )\n    for entry in chains_raw\n]\narr = as_array_mcmc_list(chains)\nprint(\" \".join(str(x) for x in arr.shape))\nprint(\" \".join(f\"{x:.5f}\" for x in arr[0, :, 0]))",
+    "output": "output/as.array.mcmc.list-python.txt"
+  }
+}

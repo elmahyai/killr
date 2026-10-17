@@ -1,0 +1,48 @@
+{
+  "name": "Lc",
+  "title": "Empirical Lorenz Curve",
+  "origin": {
+    "description": "Builds the empirical Lorenz curve of a numeric vector, in both the ordinary form and the generalized form.",
+    "usage": "Lc(x, n = rep(1,length(x)), plot = FALSE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "Numeric vector. Entries are expected to be non-negative."
+      },
+      {
+        "name": "n",
+        "text": "Frequencies, one per entry of x. The default is a vector of ones as long as x."
+      },
+      {
+        "name": "plot",
+        "text": "If TRUE, draw the empirical Lorenz curve."
+      }
+    ],
+    "details": "Lc(x) returns the ordinary empirical Lorenz curve together with the generalized curve, which is the ordinary curve scaled by the mean of x. Read as shares, p*100 percent of the population holds L(p)*100 percent of the total. When n is not left at the default, x is treated as class means and n as class counts, and the curve is the lower bound that assumes equality inside every class. The matching upper bound is Lc.mehran.",
+    "value": "A list of class \"Lc\" with components p (population shares), L (ordinary Lorenz ordinates), and L.general (generalized Lorenz ordinates).",
+    "example": "## Load and attach income (and metadata) set from Ilocos, Philippines\ndata(Ilocos)\nattach(Ilocos)\n## extract and rescale income for the provinces \"Pangasinan\" und \"La Union\"\nincome.p <- income[province==\"Pangasinan\"]/10000\nincome.u <- income[province==\"La Union\"]/10000\n\n## compute the Lorenz curves\nLc.p <- Lc(income.p)\nLc.u <- Lc(income.u)\n## it can be seen the the inequality in La Union is higher than in\n## Pangasinan because the respective Lorenz curve takes smaller values.\nplot(Lc.p)\nlines(Lc.u, col=2)\n## the picture becomes even clearer with generalized Lorenz curves\nplot(Lc.p, general=TRUE)\nlines(Lc.u, general=TRUE, col=2)\n## inequality measures emphasize these results, e.g. Atkinson's measure\nineq(income.p, type=\"Atkinson\")\nineq(income.u, type=\"Atkinson\")\n## or Theil's entropy measure\nineq(income.p, type=\"Theil\", parameter=0)\nineq(income.u, type=\"Theil\", parameter=0)\n\n# income distribution of the USA in 1968 (in 10 classes)\n# x vector of class means, n vector of class frequencies\nx <- c(541, 1463, 2445, 3438, 4437, 5401, 6392, 8304, 11904, 22261)\nn <- c(482, 825, 722, 690, 661, 760, 745, 2140, 1911, 1024)\n\n# compute minimal Lorenz curve (= no inequality in each group)\nLc.min <- Lc(x, n=n)\n# compute maximal Lorenz curve (limits of Mehran)\nLc.max <- Lc.mehran(x,n)\n# plot both Lorenz curves in one plot\nplot(Lc.min)\nlines(Lc.max, col=4)\n\n# add the theoretic Lorenz curve of a Lognormal-distribution with variance 0.78\nlines(Lc.lognorm, parameter=0.78)\n# add the theoretic Lorenz curve of a Dagum-distribution\nlines(Lc.dagum, parameter=c(3.4,2.6))",
+    "output": "output/Lc-r.txt"
+  },
+  "translation": {
+    "description": "Builds the empirical Lorenz curve of a numeric sample, in both the ordinary form and the generalized form.",
+    "usage": "Lc(x, n=None, plot=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "One-dimensional numeric sample. Missing values are dropped. Entries are expected to be non-negative."
+      },
+      {
+        "name": "n",
+        "text": "Frequencies aligned with x. None uses a one for every original entry, including positions that are later dropped because x is missing. A supplied vector must have the same length as x."
+      },
+      {
+        "name": "plot",
+        "text": "If true, draw the curve by calling plot_lc from ineq.plots. The default leaves the curve unplotted."
+      }
+    ],
+    "details": "Observations are ordered from smallest to largest, with ties keeping their original order. Each value is then replaced by frequency times value. Population shares are cumulative frequencies over the total frequency, and ordinary Lorenz ordinates are cumulative amounts over the total amount, both starting at zero. The generalized ordinates multiply the ordinary curve by mean(x) / mean(n) after that frequency scaling, which is the mean of the underlying observations. Passing frequencies treats x as class means and returns the lower curve that assumes no inequality inside a class. The upper curve for the same grouping is lc_mehran.",
+    "value": "A dict with NumPy arrays p, L, and L.general.",
+    "example": "from ineq.lorenz import Lc\n\nx = [541, 1463, 2445, 3438, 4437, 5401, 6392, 8304, 11904, 22261]\nn = [482, 825, 722, 690, 661, 760, 745, 2140, 1911, 1024]\ncurve = Lc(x, n=n)\nprint(curve[\"p\"])\nprint(curve[\"L\"])\nprint(curve[\"L.general\"])",
+    "output": "output/Lc-python.txt"
+  }
+}

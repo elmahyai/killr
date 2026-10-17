@@ -1,0 +1,123 @@
+{
+  "name": "minqa",
+  "cran_version": "1.2.8",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    {
+      "name": "bobyqa",
+      "origin": "minqa src/bobyqa.f src/bobyqb.f src/altmov.f src/prelim.f src/rescue.f src/trsbox.f src/updatebobyqa.f",
+      "loaded_by": [
+        "minqa"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "newuoa",
+      "origin": "minqa src/newuoa.f src/newuob.f src/biglag.f src/bigden.f src/trsapp.f src/update.f",
+      "loaded_by": [
+        "minqa"
+      ],
+      "assigned": ""
+    },
+    {
+      "name": "uobyqa",
+      "origin": "minqa src/uobyqa.f src/uobyqb.f src/lagmax.f src/trstep.f",
+      "loaded_by": [
+        "minqa"
+      ],
+      "assigned": ""
+    }
+  ],
+  "resume": "minqa 1.2.8 is translated. Rcpp is the R compile bridge and is not loaded. bobyqa, newuoa, and uobyqa are the ports of Powell's Fortran. The Python wrappers keep the R control checks and remap the Fortran ierr codes.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": [
+      "bobyqa",
+      "newuoa",
+      "uobyqa"
+    ]
+  },
+  "functions": [
+    {
+      "name": "bobyqa",
+      "translated": true,
+      "python": "minqa.optim",
+      "loads": [],
+      "uses": [
+        "bobyqa"
+      ],
+      "done": "Box-constrained quadratic model. The search is the bobyqa crate. Control, bounds, and the ierr remap stay in Python.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bobyqa(c(1, 2), fr, lower = c(0, 0), upper = c(4, 4))",
+        "r_ms": 1.9350051879882812,
+        "translated_ms": 1.438752498870599,
+        "speedup": 1.3449187330741275,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minqa))\nfr <- function(x) 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2\none <- function() bobyqa(c(1, 2), fr, lower = c(0, 0), upper = c(4, 4))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(sprintf(\"%.17g\\n\", c(value$par, value$fval)))\ncat(value$feval, \"\\n\", sep = \"\")\ncat(value$ierr, \"\\n\", sep = \"\")\ncat(value$msg, \"\\n\", sep = \"\")\ncat(\"<<<END>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nfrom minqa import bobyqa\n\n\ndef fr(x):\n    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2\n\n\ndef one():\n    return bobyqa([1, 2], fr, lower=[0, 0], upper=[4, 4])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(f\"{value.par[0]:.17g}\\n{value.par[1]:.17g}\\n{value.fval:.17g}\\n\")\nsys.stdout.write(f\"{value.feval}\\n{value.ierr}\\n{value.msg}\\n\")\nsys.stdout.write(\"<<<END>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "newuoa",
+      "translated": true,
+      "python": "minqa.optim",
+      "loads": [],
+      "uses": [
+        "newuoa"
+      ],
+      "done": "Unconstrained NEWUOA search. The search is the newuoa crate. Control and the ierr remap stay in Python.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "newuoa(c(1, 2), fr)",
+        "r_ms": 1.1543035507202148,
+        "translated_ms": 0.8688924990565283,
+        "speedup": 1.3284768276554293,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minqa))\nfr <- function(x) 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2\none <- function() newuoa(c(1, 2), fr)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(sprintf(\"%.17g\\n\", c(value$par, value$fval)))\ncat(value$feval, \"\\n\", sep = \"\")\ncat(value$ierr, \"\\n\", sep = \"\")\ncat(value$msg, \"\\n\", sep = \"\")\ncat(\"<<<END>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nfrom minqa import newuoa\n\n\ndef fr(x):\n    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2\n\n\ndef one():\n    return newuoa([1, 2], fr)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(f\"{value.par[0]:.17g}\\n{value.par[1]:.17g}\\n{value.fval:.17g}\\n\")\nsys.stdout.write(f\"{value.feval}\\n{value.ierr}\\n{value.msg}\\n\")\nsys.stdout.write(\"<<<END>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "uobyqa",
+      "translated": true,
+      "python": "minqa.optim",
+      "loads": [],
+      "uses": [
+        "uobyqa"
+      ],
+      "done": "Unconstrained UOBYQA search. The search is the uobyqa crate. npt may warn and is then ignored, as in R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "uobyqa(c(1, 2), fr)",
+        "r_ms": 0.40602684020996094,
+        "translated_ms": 0.23324099856836256,
+        "speedup": 1.7408039011244205,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minqa))\nfr <- function(x) 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2\none <- function() uobyqa(c(1, 2), fr)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(\"VALUE\\n\")\ncat(sprintf(\"%.17g\\n\", c(value$par, value$fval)))\ncat(value$feval, \"\\n\", sep = \"\")\ncat(value$ierr, \"\\n\", sep = \"\")\ncat(value$msg, \"\\n\", sep = \"\")\ncat(\"<<<END>>>\\n\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nfrom minqa import uobyqa\n\n\ndef fr(x):\n    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2\n\n\ndef one():\n    return uobyqa([1, 2], fr)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nsys.stdout.write(\"VALUE\\n\")\nsys.stdout.write(f\"{value.par[0]:.17g}\\n{value.par[1]:.17g}\\n{value.fval:.17g}\\n\")\nsys.stdout.write(f\"{value.feval}\\n{value.ierr}\\n{value.msg}\\n\")\nsys.stdout.write(\"<<<END>>>\\n\")\nsys.stdout.write(f\"MS {statistics.median(elapsed):.17g}\\n\")\n"
+        }
+      }
+    }
+  ]
+}

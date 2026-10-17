@@ -1,0 +1,48 @@
+{
+  "name": "str_like",
+  "title": "Detect a pattern the way SQL LIKE does",
+  "origin": {
+    "description": "Match the whole string the way SQL LIKE does. _ matches one character, % matches any number of characters, and a backslash escapes those two. str_like is case sensitive.",
+    "usage": "str_like(string, pattern, ignore_case = deprecated())",
+    "arguments": [
+      {
+        "name": "string",
+        "text": "Input vector. Either a character vector, or something coercible to one."
+      },
+      {
+        "name": "pattern",
+        "text": "A character vector of SQL LIKE patterns. A stringr modifier is an error. % and _ inside brackets, and a backslash before either character, stay literal."
+      },
+      {
+        "name": "ignore_case",
+        "text": "Deprecated in stringr 1.6.0. Supplying it warns. TRUE forwards to str_ilike. FALSE keeps the case-sensitive match. The default is the deprecated sentinel, which means the argument was not supplied."
+      }
+    ],
+    "details": "Before stringr 1.6.0, str_like was incorrectly case-insensitive. The pattern is rewritten to an anchored regular expression: % becomes .*, _ becomes ., and the result is wrapped with ^ and $. A missing pattern is pasted as the letters NA, so the expression is ^NA$. The match itself is stri_detect_regex with case sensitivity left on.",
+    "value": "A logical vector the same length as string and pattern.",
+    "example": "fruit <- c(\"apple\", \"banana\", \"pear\", \"pineapple\")\nresult <- str_like(fruit, \"app%\")\nwriteLines(paste0('str_like(c(\"apple\", \"banana\", \"pear\", \"pineapple\"), \"app%\") returns ', paste(result, collapse = \", \"), '.'))",
+    "output": "output/str_like-r.txt"
+  },
+  "translation": {
+    "description": "Match the whole string the way SQL LIKE does. The match is case sensitive.",
+    "usage": "str_like(string, pattern, ignore_case=deprecated())",
+    "arguments": [
+      {
+        "name": "string",
+        "text": "A string, stringi._na.NA, or a list of those. A list may carry names."
+      },
+      {
+        "name": "pattern",
+        "text": "A plain string or list of SQL LIKE patterns. A Pattern from fixed, coll, regex, or boundary is rejected with cli_abort."
+      },
+      {
+        "name": "ignore_case",
+        "text": "Defaults to lifecycle.deprecated(). If lifecycle.is_present is true, lifecycle.deprecate_warn runs. True then calls str_ilike."
+      }
+    ],
+    "details": "like_to_regex uses stri_replace_all_regex for the percent and underscore rules, then anchors the expression. A missing pattern becomes the letters NA inside ^ and $, because paste0 does that. The anchored text is passed through regex(ignore_case=False) and stri_detect_regex. Lengths are checked before the character check, so a size mismatch is a RecycleError.",
+    "value": "A list of bools. A missing result is NA.",
+    "example": "from stringr.detect import str_like\nfruit = [\"apple\", \"banana\", \"pear\", \"pineapple\"]\nresult = str_like(fruit, \"app%\")\nwords = \", \".join(\"TRUE\" if item else \"FALSE\" for item in result)\nprint('str_like(c(\"apple\", \"banana\", \"pear\", \"pineapple\"), \"app%\") returns ' + words + '.')",
+    "output": "output/str_like-python.txt"
+  }
+}

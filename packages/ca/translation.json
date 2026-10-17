@@ -1,0 +1,259 @@
+{
+  "name": "ca",
+  "cran_version": "0.72",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Exports: 10. Translated and matched: ca, cacoord, caconv, mjca, iterate.mjca. Five plotting exports are gaps (pchlist, plot.ca, plot3d.ca, plot.mjca, multilines). All exports translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "strategy": "small",
+  "functions": [
+    {
+      "name": "ca",
+      "translated": true,
+      "python": "ca.ca.ca",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (NumPy).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 3.552713678800501e-15,
+        "r_ms": 0.703811645507812,
+        "translated_ms": 0.1827590003813384,
+        "speedup": 3.851036852025146,
+        "case": "Correspondence analysis of a 4 by 3 table; matches R (signs aligned).",
+        "proof": {
+          "r": "dir.create(\"packages/ca/docs/output\", recursive = TRUE, showWarnings = FALSE)\nsuppressPackageStartupMessages(library(ca))\nwrite_vals <- function(name, x) {\n  x <- as.numeric(x)\n  write.table(x, file = paste0(\"packages/ca/docs/output/\", name, \"-r-values.csv\"),\n              row.names = FALSE, col.names = FALSE, sep = \",\")\n}\ntab <- matrix(c(12, 5, 3, 4, 11, 6, 2, 7, 13, 8, 4, 9), 4, 3, byrow=TRUE)\nf <- function() ca(tab)\nt <- numeric(20); f()\nfor (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\nz <- f()\nwrite_vals(\"ca\", c(z$sv, z$rowmass, z$colmass, z$rowcoord, z$colcoord))\nwrite.table(median(t), \"packages/ca/docs/output/ca-r-ms.txt\", row.names=FALSE, col.names=FALSE)\nwrite_vals(\"cacoord\", c(cacoord(z, \"principal\")$rows, cacoord(z, \"principal\")$columns))\nwrite_vals(\"caconv\", c(caconv(tab, \"freq\", \"ind\"), caconv(tab, \"freq\", \"Burt\")))\ndat <- data.frame(a=factor(c(\"x\",\"y\",\"x\",\"z\",\"y\")), b=factor(c(\"u\",\"u\",\"v\",\"v\",\"u\")))\nm <- mjca(dat, lambda=\"indicator\")\nwrite_vals(\"mjca\", c(m$sv, m$rowcoord, m$colcoord))\nb <- caconv(dat, \"rpm\", \"Burt\")\nit <- iterate.mjca(b, c(3,2), nd=2)\nwrite_vals(\"iterate_mjca\", c(it[[1]], it$crit))\ntimed <- function(name, f) {\n  f()\n  t <- numeric(20)\n  for (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\n  write.table(median(t), paste0(\"packages/ca/docs/output/\", name, \"-r-ms.txt\"),\n              row.names=FALSE, col.names=FALSE)\n}\ntimed(\"cacoord\", function() cacoord(z, \"principal\"))\ntimed(\"caconv\", function() caconv(tab, \"freq\", \"ind\"))\ntimed(\"mjca\", function() mjca(dat, lambda=\"indicator\"))\ntimed(\"iterate_mjca\", function() iterate.mjca(b, c(3,2), nd=2))\n",
+          "python": "import sys\nimport time\nfrom pathlib import Path\nimport numpy as np\n\nsys.path.insert(0, \"packages/ca\")\nfrom ca import ca, cacoord, caconv, iterate_mjca, mjca\n\nOUT = Path(\"packages/ca/docs/output\")\ntab = np.array([[12, 5, 3], [4, 11, 6], [2, 7, 13], [8, 4, 9]], float)\n\n\ndef rvalues(name):\n    return np.loadtxt(OUT / f\"{name}-r-values.csv\", ndmin=1)\n\n\ndef align(a, b):\n    a, b = np.asarray(a, float), np.asarray(b, float)\n    if a.shape != b.shape:\n        return np.inf\n    if a.ndim == 2:\n        signs = np.where(np.sum(a * b, axis=0) < 0, -1, 1)\n        a = a * signs\n    return np.max(np.abs(a - b), initial=0)\n\n\ndef bench(fn):\n    fn()\n    times = []\n    for _ in range(20):\n        start = time.perf_counter()\n        fn()\n        times.append((time.perf_counter() - start) * 1000)\n    return float(np.median(times))\n\n\nz = ca(tab)\nvals = np.r_[z[\"sv\"], z[\"rowmass\"], z[\"colmass\"],\n             z[\"rowcoord\"].ravel(order=\"F\"), z[\"colcoord\"].ravel(order=\"F\")]\nprint(\"ca\", align(vals, rvalues(\"ca\")), np.loadtxt(OUT/\"ca-r-ms.txt\"), bench(lambda: ca(tab)))\nprincipal = cacoord(z, \"principal\")\nvals = np.r_[principal[\"rows\"].ravel(order=\"F\"), principal[\"columns\"].ravel(order=\"F\")]\nprint(\"cacoord\", np.max(np.abs(vals-rvalues(\"cacoord\"))), \"-\", bench(lambda: cacoord(z, \"principal\")))\nind = caconv(tab, \"freq\", \"ind\")\nburt = caconv(tab, \"freq\", \"Burt\")\nvals = np.r_[ind.ravel(order=\"F\"), burt.ravel(order=\"F\")]\nprint(\"caconv\", np.max(np.abs(vals-rvalues(\"caconv\"))), \"-\", bench(lambda: caconv(tab, \"freq\", \"ind\")))\ndat = np.array([[\"x\", \"u\"], [\"y\", \"u\"], [\"x\", \"v\"], [\"z\", \"v\"], [\"y\", \"u\"]], object)\nm = mjca(dat, lambda_=\"indicator\")\nvals = np.r_[m[\"sv\"], m[\"rowcoord\"].ravel(order=\"F\"), m[\"colcoord\"].ravel(order=\"F\")]\nprint(\"mjca\", align(vals, rvalues(\"mjca\")), \"-\", bench(lambda: mjca(dat, lambda_=\"indicator\")))\nb = caconv(dat, \"rpm\", \"Burt\")\nit = iterate_mjca(b, [3, 2], nd=2)\nvals = np.r_[it[\"B.star\"].ravel(order=\"F\"), it[\"crit\"]]\nprint(\"iterate_mjca\", align(vals, rvalues(\"iterate_mjca\")), \"-\", bench(lambda: iterate_mjca(b, [3, 2], nd=2)))\n"
+        }
+      }
+    },
+    {
+      "name": "iterate.mjca",
+      "translated": true,
+      "python": "ca.iterate_mjca.iterate_mjca",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (max abs diff 1.4e-14) after fixing a shared coord accumulator and eigenvalue filtering.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 1.4433e-14,
+        "r_ms": 10.240912437439,
+        "translated_ms": 2.34,
+        "speedup": 4.376458306597864,
+        "case": "Adjusted Burt matrix, dims (3,2), nd=2.",
+        "proof": {
+          "r": "dir.create(\"packages/ca/docs/output\", recursive = TRUE, showWarnings = FALSE)\nsuppressPackageStartupMessages(library(ca))\nwrite_vals <- function(name, x) {\n  x <- as.numeric(x)\n  write.table(x, file = paste0(\"packages/ca/docs/output/\", name, \"-r-values.csv\"),\n              row.names = FALSE, col.names = FALSE, sep = \",\")\n}\ntab <- matrix(c(12, 5, 3, 4, 11, 6, 2, 7, 13, 8, 4, 9), 4, 3, byrow=TRUE)\nf <- function() ca(tab)\nt <- numeric(20); f()\nfor (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\nz <- f()\nwrite_vals(\"ca\", c(z$sv, z$rowmass, z$colmass, z$rowcoord, z$colcoord))\nwrite.table(median(t), \"packages/ca/docs/output/ca-r-ms.txt\", row.names=FALSE, col.names=FALSE)\nwrite_vals(\"cacoord\", c(cacoord(z, \"principal\")$rows, cacoord(z, \"principal\")$columns))\nwrite_vals(\"caconv\", c(caconv(tab, \"freq\", \"ind\"), caconv(tab, \"freq\", \"Burt\")))\ndat <- data.frame(a=factor(c(\"x\",\"y\",\"x\",\"z\",\"y\")), b=factor(c(\"u\",\"u\",\"v\",\"v\",\"u\")))\nm <- mjca(dat, lambda=\"indicator\")\nwrite_vals(\"mjca\", c(m$sv, m$rowcoord, m$colcoord))\nb <- caconv(dat, \"rpm\", \"Burt\")\nit <- iterate.mjca(b, c(3,2), nd=2)\nwrite_vals(\"iterate_mjca\", c(it[[1]], it$crit))\ntimed <- function(name, f) {\n  f()\n  t <- numeric(20)\n  for (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\n  write.table(median(t), paste0(\"packages/ca/docs/output/\", name, \"-r-ms.txt\"),\n              row.names=FALSE, col.names=FALSE)\n}\ntimed(\"cacoord\", function() cacoord(z, \"principal\"))\ntimed(\"caconv\", function() caconv(tab, \"freq\", \"ind\"))\ntimed(\"mjca\", function() mjca(dat, lambda=\"indicator\"))\ntimed(\"iterate_mjca\", function() iterate.mjca(b, c(3,2), nd=2))\n",
+          "python": "import sys\nimport time\nfrom pathlib import Path\nimport numpy as np\n\nsys.path.insert(0, \"packages/ca\")\nfrom ca import ca, cacoord, caconv, iterate_mjca, mjca\n\nOUT = Path(\"packages/ca/docs/output\")\ntab = np.array([[12, 5, 3], [4, 11, 6], [2, 7, 13], [8, 4, 9]], float)\n\n\ndef rvalues(name):\n    return np.loadtxt(OUT / f\"{name}-r-values.csv\", ndmin=1)\n\n\ndef align(a, b):\n    a, b = np.asarray(a, float), np.asarray(b, float)\n    if a.shape != b.shape:\n        return np.inf\n    if a.ndim == 2:\n        signs = np.where(np.sum(a * b, axis=0) < 0, -1, 1)\n        a = a * signs\n    return np.max(np.abs(a - b), initial=0)\n\n\ndef bench(fn):\n    fn()\n    times = []\n    for _ in range(20):\n        start = time.perf_counter()\n        fn()\n        times.append((time.perf_counter() - start) * 1000)\n    return float(np.median(times))\n\n\nz = ca(tab)\nvals = np.r_[z[\"sv\"], z[\"rowmass\"], z[\"colmass\"],\n             z[\"rowcoord\"].ravel(order=\"F\"), z[\"colcoord\"].ravel(order=\"F\")]\nprint(\"ca\", align(vals, rvalues(\"ca\")), np.loadtxt(OUT/\"ca-r-ms.txt\"), bench(lambda: ca(tab)))\nprincipal = cacoord(z, \"principal\")\nvals = np.r_[principal[\"rows\"].ravel(order=\"F\"), principal[\"columns\"].ravel(order=\"F\")]\nprint(\"cacoord\", np.max(np.abs(vals-rvalues(\"cacoord\"))), \"-\", bench(lambda: cacoord(z, \"principal\")))\nind = caconv(tab, \"freq\", \"ind\")\nburt = caconv(tab, \"freq\", \"Burt\")\nvals = np.r_[ind.ravel(order=\"F\"), burt.ravel(order=\"F\")]\nprint(\"caconv\", np.max(np.abs(vals-rvalues(\"caconv\"))), \"-\", bench(lambda: caconv(tab, \"freq\", \"ind\")))\ndat = np.array([[\"x\", \"u\"], [\"y\", \"u\"], [\"x\", \"v\"], [\"z\", \"v\"], [\"y\", \"u\"]], object)\nm = mjca(dat, lambda_=\"indicator\")\nvals = np.r_[m[\"sv\"], m[\"rowcoord\"].ravel(order=\"F\"), m[\"colcoord\"].ravel(order=\"F\")]\nprint(\"mjca\", align(vals, rvalues(\"mjca\")), \"-\", bench(lambda: mjca(dat, lambda_=\"indicator\")))\nb = caconv(dat, \"rpm\", \"Burt\")\nit = iterate_mjca(b, [3, 2], nd=2)\nvals = np.r_[it[\"B.star\"].ravel(order=\"F\"), it[\"crit\"]]\nprint(\"iterate_mjca\", align(vals, rvalues(\"iterate_mjca\")), \"-\", bench(lambda: iterate_mjca(b, [3, 2], nd=2)))\n"
+        }
+      }
+    },
+    {
+      "name": "mjca",
+      "translated": true,
+      "python": "ca.mjca.mjca",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (NumPy).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 7.105427357601002e-15,
+        "r_ms": 3.87823581695557,
+        "translated_ms": 0.15119200179469772,
+        "speedup": 25.651064678816756,
+        "case": "Multiple correspondence analysis on a 5 by 2 factor table; matches R (signs aligned).",
+        "proof": {
+          "r": "dir.create(\"packages/ca/docs/output\", recursive = TRUE, showWarnings = FALSE)\nsuppressPackageStartupMessages(library(ca))\nwrite_vals <- function(name, x) {\n  x <- as.numeric(x)\n  write.table(x, file = paste0(\"packages/ca/docs/output/\", name, \"-r-values.csv\"),\n              row.names = FALSE, col.names = FALSE, sep = \",\")\n}\ntab <- matrix(c(12, 5, 3, 4, 11, 6, 2, 7, 13, 8, 4, 9), 4, 3, byrow=TRUE)\nf <- function() ca(tab)\nt <- numeric(20); f()\nfor (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\nz <- f()\nwrite_vals(\"ca\", c(z$sv, z$rowmass, z$colmass, z$rowcoord, z$colcoord))\nwrite.table(median(t), \"packages/ca/docs/output/ca-r-ms.txt\", row.names=FALSE, col.names=FALSE)\nwrite_vals(\"cacoord\", c(cacoord(z, \"principal\")$rows, cacoord(z, \"principal\")$columns))\nwrite_vals(\"caconv\", c(caconv(tab, \"freq\", \"ind\"), caconv(tab, \"freq\", \"Burt\")))\ndat <- data.frame(a=factor(c(\"x\",\"y\",\"x\",\"z\",\"y\")), b=factor(c(\"u\",\"u\",\"v\",\"v\",\"u\")))\nm <- mjca(dat, lambda=\"indicator\")\nwrite_vals(\"mjca\", c(m$sv, m$rowcoord, m$colcoord))\nb <- caconv(dat, \"rpm\", \"Burt\")\nit <- iterate.mjca(b, c(3,2), nd=2)\nwrite_vals(\"iterate_mjca\", c(it[[1]], it$crit))\ntimed <- function(name, f) {\n  f()\n  t <- numeric(20)\n  for (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\n  write.table(median(t), paste0(\"packages/ca/docs/output/\", name, \"-r-ms.txt\"),\n              row.names=FALSE, col.names=FALSE)\n}\ntimed(\"cacoord\", function() cacoord(z, \"principal\"))\ntimed(\"caconv\", function() caconv(tab, \"freq\", \"ind\"))\ntimed(\"mjca\", function() mjca(dat, lambda=\"indicator\"))\ntimed(\"iterate_mjca\", function() iterate.mjca(b, c(3,2), nd=2))\n",
+          "python": "import sys\nimport time\nfrom pathlib import Path\nimport numpy as np\n\nsys.path.insert(0, \"packages/ca\")\nfrom ca import ca, cacoord, caconv, iterate_mjca, mjca\n\nOUT = Path(\"packages/ca/docs/output\")\ntab = np.array([[12, 5, 3], [4, 11, 6], [2, 7, 13], [8, 4, 9]], float)\n\n\ndef rvalues(name):\n    return np.loadtxt(OUT / f\"{name}-r-values.csv\", ndmin=1)\n\n\ndef align(a, b):\n    a, b = np.asarray(a, float), np.asarray(b, float)\n    if a.shape != b.shape:\n        return np.inf\n    if a.ndim == 2:\n        signs = np.where(np.sum(a * b, axis=0) < 0, -1, 1)\n        a = a * signs\n    return np.max(np.abs(a - b), initial=0)\n\n\ndef bench(fn):\n    fn()\n    times = []\n    for _ in range(20):\n        start = time.perf_counter()\n        fn()\n        times.append((time.perf_counter() - start) * 1000)\n    return float(np.median(times))\n\n\nz = ca(tab)\nvals = np.r_[z[\"sv\"], z[\"rowmass\"], z[\"colmass\"],\n             z[\"rowcoord\"].ravel(order=\"F\"), z[\"colcoord\"].ravel(order=\"F\")]\nprint(\"ca\", align(vals, rvalues(\"ca\")), np.loadtxt(OUT/\"ca-r-ms.txt\"), bench(lambda: ca(tab)))\nprincipal = cacoord(z, \"principal\")\nvals = np.r_[principal[\"rows\"].ravel(order=\"F\"), principal[\"columns\"].ravel(order=\"F\")]\nprint(\"cacoord\", np.max(np.abs(vals-rvalues(\"cacoord\"))), \"-\", bench(lambda: cacoord(z, \"principal\")))\nind = caconv(tab, \"freq\", \"ind\")\nburt = caconv(tab, \"freq\", \"Burt\")\nvals = np.r_[ind.ravel(order=\"F\"), burt.ravel(order=\"F\")]\nprint(\"caconv\", np.max(np.abs(vals-rvalues(\"caconv\"))), \"-\", bench(lambda: caconv(tab, \"freq\", \"ind\")))\ndat = np.array([[\"x\", \"u\"], [\"y\", \"u\"], [\"x\", \"v\"], [\"z\", \"v\"], [\"y\", \"u\"]], object)\nm = mjca(dat, lambda_=\"indicator\")\nvals = np.r_[m[\"sv\"], m[\"rowcoord\"].ravel(order=\"F\"), m[\"colcoord\"].ravel(order=\"F\")]\nprint(\"mjca\", align(vals, rvalues(\"mjca\")), \"-\", bench(lambda: mjca(dat, lambda_=\"indicator\")))\nb = caconv(dat, \"rpm\", \"Burt\")\nit = iterate_mjca(b, [3, 2], nd=2)\nvals = np.r_[it[\"B.star\"].ravel(order=\"F\"), it[\"crit\"]]\nprint(\"iterate_mjca\", align(vals, rvalues(\"iterate_mjca\")), \"-\", bench(lambda: iterate_mjca(b, [3, 2], nd=2)))\n"
+        }
+      }
+    },
+    {
+      "name": "pchlist",
+      "translated": true,
+      "python": "ca.pchlist.pchlist",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pchlist, 7 of 7 cases",
+        "r_ms": 0.0553,
+        "translated_ms": 0.0285,
+        "speedup": 1.94,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/ca/proof/pchlist-r.R",
+          "python": "packages/ca/proof/pchlist-py.py"
+        }
+      }
+    },
+    {
+      "name": "plot3d.ca",
+      "translated": true,
+      "python": "ca.plot3d_ca.plot3d_ca",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Compares the recorded rgl calls, not pixels. arrows=TRUE not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "plot3d.ca, 197 compared keys (rgl calls recorded; R rgl had no display)",
+        "r_ms": 1.484,
+        "translated_ms": 0.576,
+        "speedup": 2.58,
+        "matches": true,
+        "max_abs_diff": 3.82e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/ca/proof/plot3d-ca-r.R",
+          "python": "packages/ca/proof/plot3d-ca-py.py"
+        }
+      }
+    },
+    {
+      "name": "plot.ca",
+      "translated": true,
+      "python": "ca.plot_ca.plot_ca",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "arrows=TRUE is not translated (raises NotImplementedError).",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "plot.ca, 88 compared keys",
+        "r_ms": 1.279,
+        "translated_ms": 0.369,
+        "speedup": 3.47,
+        "matches": true,
+        "max_abs_diff": 1.11e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/ca/proof/plot-ca-r.R",
+          "python": "packages/ca/proof/plot-ca-py.py"
+        }
+      }
+    },
+    {
+      "name": "plot.mjca",
+      "translated": true,
+      "python": "ca.plot_mjca.plot_mjca",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Adjusted lambda and JCA need lambda and inertia_e, which the translated mjca does not return. contrib=\"relative\" needs row and column inertia (not returned). arrows=TRUE not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "plot.mjca, 78 compared keys",
+        "r_ms": 0.69,
+        "translated_ms": 0.356,
+        "speedup": 1.94,
+        "matches": true,
+        "max_abs_diff": 4.44e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/ca/proof/plot-mjca-r.R",
+          "python": "packages/ca/proof/plot-mjca-py.py"
+        }
+      }
+    },
+    {
+      "name": "cacoord",
+      "translated": true,
+      "python": "ca.cacoord.cacoord",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (NumPy).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 4.996003610813204e-16,
+        "r_ms": 0.14793872833252,
+        "translated_ms": 0.008095499651972204,
+        "speedup": 18.274193649860706,
+        "case": "Principal row and column coordinates; matches R.",
+        "proof": {
+          "r": "dir.create(\"packages/ca/docs/output\", recursive = TRUE, showWarnings = FALSE)\nsuppressPackageStartupMessages(library(ca))\nwrite_vals <- function(name, x) {\n  x <- as.numeric(x)\n  write.table(x, file = paste0(\"packages/ca/docs/output/\", name, \"-r-values.csv\"),\n              row.names = FALSE, col.names = FALSE, sep = \",\")\n}\ntab <- matrix(c(12, 5, 3, 4, 11, 6, 2, 7, 13, 8, 4, 9), 4, 3, byrow=TRUE)\nf <- function() ca(tab)\nt <- numeric(20); f()\nfor (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\nz <- f()\nwrite_vals(\"ca\", c(z$sv, z$rowmass, z$colmass, z$rowcoord, z$colcoord))\nwrite.table(median(t), \"packages/ca/docs/output/ca-r-ms.txt\", row.names=FALSE, col.names=FALSE)\nwrite_vals(\"cacoord\", c(cacoord(z, \"principal\")$rows, cacoord(z, \"principal\")$columns))\nwrite_vals(\"caconv\", c(caconv(tab, \"freq\", \"ind\"), caconv(tab, \"freq\", \"Burt\")))\ndat <- data.frame(a=factor(c(\"x\",\"y\",\"x\",\"z\",\"y\")), b=factor(c(\"u\",\"u\",\"v\",\"v\",\"u\")))\nm <- mjca(dat, lambda=\"indicator\")\nwrite_vals(\"mjca\", c(m$sv, m$rowcoord, m$colcoord))\nb <- caconv(dat, \"rpm\", \"Burt\")\nit <- iterate.mjca(b, c(3,2), nd=2)\nwrite_vals(\"iterate_mjca\", c(it[[1]], it$crit))\ntimed <- function(name, f) {\n  f()\n  t <- numeric(20)\n  for (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\n  write.table(median(t), paste0(\"packages/ca/docs/output/\", name, \"-r-ms.txt\"),\n              row.names=FALSE, col.names=FALSE)\n}\ntimed(\"cacoord\", function() cacoord(z, \"principal\"))\ntimed(\"caconv\", function() caconv(tab, \"freq\", \"ind\"))\ntimed(\"mjca\", function() mjca(dat, lambda=\"indicator\"))\ntimed(\"iterate_mjca\", function() iterate.mjca(b, c(3,2), nd=2))\n",
+          "python": "import sys\nimport time\nfrom pathlib import Path\nimport numpy as np\n\nsys.path.insert(0, \"packages/ca\")\nfrom ca import ca, cacoord, caconv, iterate_mjca, mjca\n\nOUT = Path(\"packages/ca/docs/output\")\ntab = np.array([[12, 5, 3], [4, 11, 6], [2, 7, 13], [8, 4, 9]], float)\n\n\ndef rvalues(name):\n    return np.loadtxt(OUT / f\"{name}-r-values.csv\", ndmin=1)\n\n\ndef align(a, b):\n    a, b = np.asarray(a, float), np.asarray(b, float)\n    if a.shape != b.shape:\n        return np.inf\n    if a.ndim == 2:\n        signs = np.where(np.sum(a * b, axis=0) < 0, -1, 1)\n        a = a * signs\n    return np.max(np.abs(a - b), initial=0)\n\n\ndef bench(fn):\n    fn()\n    times = []\n    for _ in range(20):\n        start = time.perf_counter()\n        fn()\n        times.append((time.perf_counter() - start) * 1000)\n    return float(np.median(times))\n\n\nz = ca(tab)\nvals = np.r_[z[\"sv\"], z[\"rowmass\"], z[\"colmass\"],\n             z[\"rowcoord\"].ravel(order=\"F\"), z[\"colcoord\"].ravel(order=\"F\")]\nprint(\"ca\", align(vals, rvalues(\"ca\")), np.loadtxt(OUT/\"ca-r-ms.txt\"), bench(lambda: ca(tab)))\nprincipal = cacoord(z, \"principal\")\nvals = np.r_[principal[\"rows\"].ravel(order=\"F\"), principal[\"columns\"].ravel(order=\"F\")]\nprint(\"cacoord\", np.max(np.abs(vals-rvalues(\"cacoord\"))), \"-\", bench(lambda: cacoord(z, \"principal\")))\nind = caconv(tab, \"freq\", \"ind\")\nburt = caconv(tab, \"freq\", \"Burt\")\nvals = np.r_[ind.ravel(order=\"F\"), burt.ravel(order=\"F\")]\nprint(\"caconv\", np.max(np.abs(vals-rvalues(\"caconv\"))), \"-\", bench(lambda: caconv(tab, \"freq\", \"ind\")))\ndat = np.array([[\"x\", \"u\"], [\"y\", \"u\"], [\"x\", \"v\"], [\"z\", \"v\"], [\"y\", \"u\"]], object)\nm = mjca(dat, lambda_=\"indicator\")\nvals = np.r_[m[\"sv\"], m[\"rowcoord\"].ravel(order=\"F\"), m[\"colcoord\"].ravel(order=\"F\")]\nprint(\"mjca\", align(vals, rvalues(\"mjca\")), \"-\", bench(lambda: mjca(dat, lambda_=\"indicator\")))\nb = caconv(dat, \"rpm\", \"Burt\")\nit = iterate_mjca(b, [3, 2], nd=2)\nvals = np.r_[it[\"B.star\"].ravel(order=\"F\"), it[\"crit\"]]\nprint(\"iterate_mjca\", align(vals, rvalues(\"iterate_mjca\")), \"-\", bench(lambda: iterate_mjca(b, [3, 2], nd=2)))\n"
+        }
+      }
+    },
+    {
+      "name": "caconv",
+      "translated": true,
+      "python": "ca.caconv.caconv",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within 1e-8 (NumPy).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.646233558654785,
+        "translated_ms": 0.0929729994822992,
+        "speedup": 6.950765945523992,
+        "case": "Frequency to indicator and Burt conversions; matches R exactly.",
+        "proof": {
+          "r": "dir.create(\"packages/ca/docs/output\", recursive = TRUE, showWarnings = FALSE)\nsuppressPackageStartupMessages(library(ca))\nwrite_vals <- function(name, x) {\n  x <- as.numeric(x)\n  write.table(x, file = paste0(\"packages/ca/docs/output/\", name, \"-r-values.csv\"),\n              row.names = FALSE, col.names = FALSE, sep = \",\")\n}\ntab <- matrix(c(12, 5, 3, 4, 11, 6, 2, 7, 13, 8, 4, 9), 4, 3, byrow=TRUE)\nf <- function() ca(tab)\nt <- numeric(20); f()\nfor (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\nz <- f()\nwrite_vals(\"ca\", c(z$sv, z$rowmass, z$colmass, z$rowcoord, z$colcoord))\nwrite.table(median(t), \"packages/ca/docs/output/ca-r-ms.txt\", row.names=FALSE, col.names=FALSE)\nwrite_vals(\"cacoord\", c(cacoord(z, \"principal\")$rows, cacoord(z, \"principal\")$columns))\nwrite_vals(\"caconv\", c(caconv(tab, \"freq\", \"ind\"), caconv(tab, \"freq\", \"Burt\")))\ndat <- data.frame(a=factor(c(\"x\",\"y\",\"x\",\"z\",\"y\")), b=factor(c(\"u\",\"u\",\"v\",\"v\",\"u\")))\nm <- mjca(dat, lambda=\"indicator\")\nwrite_vals(\"mjca\", c(m$sv, m$rowcoord, m$colcoord))\nb <- caconv(dat, \"rpm\", \"Burt\")\nit <- iterate.mjca(b, c(3,2), nd=2)\nwrite_vals(\"iterate_mjca\", c(it[[1]], it$crit))\ntimed <- function(name, f) {\n  f()\n  t <- numeric(20)\n  for (i in 1:20) { a <- Sys.time(); f(); t[i] <- as.numeric(Sys.time()-a)*1000 }\n  write.table(median(t), paste0(\"packages/ca/docs/output/\", name, \"-r-ms.txt\"),\n              row.names=FALSE, col.names=FALSE)\n}\ntimed(\"cacoord\", function() cacoord(z, \"principal\"))\ntimed(\"caconv\", function() caconv(tab, \"freq\", \"ind\"))\ntimed(\"mjca\", function() mjca(dat, lambda=\"indicator\"))\ntimed(\"iterate_mjca\", function() iterate.mjca(b, c(3,2), nd=2))\n",
+          "python": "import sys\nimport time\nfrom pathlib import Path\nimport numpy as np\n\nsys.path.insert(0, \"packages/ca\")\nfrom ca import ca, cacoord, caconv, iterate_mjca, mjca\n\nOUT = Path(\"packages/ca/docs/output\")\ntab = np.array([[12, 5, 3], [4, 11, 6], [2, 7, 13], [8, 4, 9]], float)\n\n\ndef rvalues(name):\n    return np.loadtxt(OUT / f\"{name}-r-values.csv\", ndmin=1)\n\n\ndef align(a, b):\n    a, b = np.asarray(a, float), np.asarray(b, float)\n    if a.shape != b.shape:\n        return np.inf\n    if a.ndim == 2:\n        signs = np.where(np.sum(a * b, axis=0) < 0, -1, 1)\n        a = a * signs\n    return np.max(np.abs(a - b), initial=0)\n\n\ndef bench(fn):\n    fn()\n    times = []\n    for _ in range(20):\n        start = time.perf_counter()\n        fn()\n        times.append((time.perf_counter() - start) * 1000)\n    return float(np.median(times))\n\n\nz = ca(tab)\nvals = np.r_[z[\"sv\"], z[\"rowmass\"], z[\"colmass\"],\n             z[\"rowcoord\"].ravel(order=\"F\"), z[\"colcoord\"].ravel(order=\"F\")]\nprint(\"ca\", align(vals, rvalues(\"ca\")), np.loadtxt(OUT/\"ca-r-ms.txt\"), bench(lambda: ca(tab)))\nprincipal = cacoord(z, \"principal\")\nvals = np.r_[principal[\"rows\"].ravel(order=\"F\"), principal[\"columns\"].ravel(order=\"F\")]\nprint(\"cacoord\", np.max(np.abs(vals-rvalues(\"cacoord\"))), \"-\", bench(lambda: cacoord(z, \"principal\")))\nind = caconv(tab, \"freq\", \"ind\")\nburt = caconv(tab, \"freq\", \"Burt\")\nvals = np.r_[ind.ravel(order=\"F\"), burt.ravel(order=\"F\")]\nprint(\"caconv\", np.max(np.abs(vals-rvalues(\"caconv\"))), \"-\", bench(lambda: caconv(tab, \"freq\", \"ind\")))\ndat = np.array([[\"x\", \"u\"], [\"y\", \"u\"], [\"x\", \"v\"], [\"z\", \"v\"], [\"y\", \"u\"]], object)\nm = mjca(dat, lambda_=\"indicator\")\nvals = np.r_[m[\"sv\"], m[\"rowcoord\"].ravel(order=\"F\"), m[\"colcoord\"].ravel(order=\"F\")]\nprint(\"mjca\", align(vals, rvalues(\"mjca\")), \"-\", bench(lambda: mjca(dat, lambda_=\"indicator\")))\nb = caconv(dat, \"rpm\", \"Burt\")\nit = iterate_mjca(b, [3, 2], nd=2)\nvals = np.r_[it[\"B.star\"].ravel(order=\"F\"), it[\"crit\"]]\nprint(\"iterate_mjca\", align(vals, rvalues(\"iterate_mjca\")), \"-\", bench(lambda: iterate_mjca(b, [3, 2], nd=2)))\n"
+        }
+      }
+    },
+    {
+      "name": "multilines",
+      "translated": true,
+      "python": "ca.multilines.multilines",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Only type l, p and o are drawn. A which value below 1 raises an error; R negative indices are not handled.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "multilines, 35 of 35 cases",
+        "r_ms": 2.579,
+        "translated_ms": 1.421,
+        "speedup": 1.82,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/ca/proof/multilines-r.R",
+          "python": "packages/ca/proof/multilines-py.py"
+        }
+      }
+    }
+  ]
+}

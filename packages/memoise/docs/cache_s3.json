@@ -1,0 +1,48 @@
+{
+  "name": "cache_s3",
+  "title": "S3 cache",
+  "origin": {
+    "description": "Keep cached values in a remote bucket.",
+    "usage": "cache_s3(cache_name, algo='sha512', compress=False)",
+    "arguments": [
+      {
+        "name": "cache_name",
+        "text": "Bucket name."
+      },
+      {
+        "name": "algo",
+        "text": "Hash used as the object name when memoise uses this cache."
+      },
+      {
+        "name": "compress",
+        "text": "FALSE, \"gzip\", \"bzip2\", or \"xz\"."
+      }
+    ],
+    "details": "Stores a serialized value in the bucket and reads it back. Dropping a key deletes the bucket, because both arguments of delete_bucket are the bucket name.",
+    "value": "A cache with set, get, has_key, drop_key, reset, keys, and digest.",
+    "example": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cloudyr.aws.default_region = \"\", cloudyr.aws.allow_empty_region = TRUE)\nSys.setenv(\n  AWS_ACCESS_KEY_ID = \"testing\",\n  AWS_SECRET_ACCESS_KEY = \"testing\",\n  AWS_DEFAULT_REGION = \"\",\n  PYTHONPATH = \"/home/ahmed/killr_projects/killr/packages/memoise\"\n)\nready <- tempfile(\"s3ready\")\nsystem2(\n  \"/home/ahmed/killr_projects/killr/.venv/bin/python\",\n  c(\"-m\", \"memoise._s3mock\", ready),\n  wait = FALSE, stdout = FALSE, stderr = FALSE\n)\nfor (i in 1:100) {\n  if (file.exists(ready) && file.info(ready)$size > 0) break\n  Sys.sleep(0.05)\n}\ninfo <- jsonlite::fromJSON(paste(readLines(ready, warn = FALSE), collapse = \"\"))\nSys.setenv(\n  AWS_S3_ENDPOINT = paste0(\"127.0.0.1:\", info$port),\n  SSL_CERT_FILE = info$cert,\n  CURL_CA_BUNDLE = info$cert\n)\nhttr::set_config(httr::config(cainfo = info$cert))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\none <- function() {\n  name <- paste0(\"bkt\", sprintf(\"%08d\", sample.int(1e8, 1)))\n  s3 <- cache_s3(name)\n  s3$set(\"abc\", 4)\n  got <- s3$get(\"abc\")\n  has <- s3$has_key(\"abc\")\n  nkeys <- length(s3$keys())\n  s3$drop_key(\"abc\")\n  has2 <- s3$has_key(\"abc\")\n  c(got, as.integer(has), nkeys, as.integer(has2))\n}\ncat(paste(one(), collapse = \" \"), \"\\n\", sep = \"\")\n",
+    "output": "output/cache_s3-r.txt"
+  },
+  "translation": {
+    "description": "Keep cached values in a bucket.",
+    "usage": "cache_s3(cache_name, algo='sha512', compress=False)",
+    "arguments": [
+      {
+        "name": "cache_name",
+        "text": "Bucket name."
+      },
+      {
+        "name": "algo",
+        "text": "Hash used as the object name when memoise uses this cache."
+      },
+      {
+        "name": "compress",
+        "text": "False, \"gzip\", \"bzip2\", or \"xz\"."
+      }
+    ],
+    "details": "Stores a serialized value in the bucket and reads it back. Dropping a key deletes the bucket, because both arguments of delete_bucket are the bucket name.",
+    "value": "A cache with set, get, has_key, drop_key, reset, keys, and digest.",
+    "example": "\nimport json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nready = Path(tempfile.mktemp(prefix=\"s3ready\"))\nsubprocess.Popen(\n    [sys.executable, \"-m\", \"memoise._s3mock\", str(ready)],\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nfor _ in range(100):\n    if ready.exists() and ready.stat().st_size:\n        break\n    time.sleep(0.05)\ninfo = json.loads(ready.read_text())\nos.environ[\"AWS_S3_ENDPOINT\"] = f\"127.0.0.1:{info['port']}\"\nos.environ[\"SSL_CERT_FILE\"] = info[\"cert\"]\nos.environ[\"CURL_CA_BUNDLE\"] = info[\"cert\"]\n\nfrom memoise import cache_s3\n\ndef one():\n    name = f\"bkt{os.urandom(4).hex()}\"\n    store = cache_s3(name)\n    store.set(\"abc\", 4)\n    got = store.get(\"abc\")\n    has = store.has_key(\"abc\")\n    nkeys = len(store.keys())\n    store.drop_key(\"abc\")\n    has2 = store.has_key(\"abc\")\n    return [got, int(has), nkeys, int(has2)]\n\nprint(*one())\n",
+    "output": "output/cache_s3-python.txt"
+  }
+}

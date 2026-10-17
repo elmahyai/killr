@@ -1,0 +1,408 @@
+{
+  "name": "tidyselect",
+  "cran_version": "1.2.1",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked all_of, any_of, everything, last_col, starts_with, ends_with. The rest is left unfinished. A data frame is Polars, and that is not a check.",
+  "functions": [
+    {
+      "name": "all_of",
+      "translated": true,
+      "python": "tidyselect.helpers_vector.all_of",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the 1-based position of each name in order, and errors if any name is missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "all_of of v10000 through v1 on names v1 through v10000",
+        "r_ms": 1.0935068130493164,
+        "translated_ms": 10.528291499213083,
+        "speedup": 0.10386365281879292,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"v\", seq_len(10000))\nwanted <- paste0(\"v\", seq(10000, 1))\npoke_vars(vars)\none <- function() {\n  all_of(wanted)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\niris <- c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")\nexample <- with_vars(iris, all_of(c(\"Sepal.Length\", \"Sepal.Width\")))\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/all_of-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"with_vars(c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\", \\\"Petal.Length\\\", \\\"Petal.Width\\\", \\\"Species\\\"), all_of(c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\"))) returns \",\n    paste(example, collapse = \", \"),\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", paste(value, collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.helpers_vector import all_of\n\nvars = [f\"v{i}\" for i in range(1, 10001)]\nwanted = [f\"v{i}\" for i in range(10000, 0, -1)]\n\n\ndef one():\n    return all_of(wanted, vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\niris = [\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"]\nexample = all_of([\"Sepal.Length\", \"Sepal.Width\"], iris)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"all_of-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'with_vars(c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"), all_of(c(\"Sepal.Length\", \"Sepal.Width\"))) returns '\n    + \", \".join(str(item) for item in example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + \",\".join(str(item) for item in value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "any_of",
+      "translated": true,
+      "python": "tidyselect.helpers_vector.any_of",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the 1-based position of each distinct name that exists, in order, and drops names that are missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "any_of of v10000 through v1, repeated, plus missing1 through missing100, on names v1 through v10000",
+        "r_ms": 2.777576446533203,
+        "translated_ms": 37.50631299953966,
+        "speedup": 0.07405623812096097,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"v\", seq_len(10000))\nrev <- paste0(\"v\", seq(10000, 1))\nwanted <- c(rev, rev, paste0(\"missing\", seq_len(100)))\npoke_vars(vars)\none <- function() {\n  any_of(wanted)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\niris <- c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")\nexample <- with_vars(iris, any_of(c(\"Sepal.Length\", \"not_there\", \"Sepal.Width\")))\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/any_of-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"with_vars(c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\", \\\"Petal.Length\\\", \\\"Petal.Width\\\", \\\"Species\\\"), any_of(c(\\\"Sepal.Length\\\", \\\"not_there\\\", \\\"Sepal.Width\\\"))) returns \",\n    paste(example, collapse = \", \"),\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", paste(value, collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.helpers_vector import any_of\n\nvars = [f\"v{i}\" for i in range(1, 10001)]\nrev = [f\"v{i}\" for i in range(10000, 0, -1)]\nwanted = rev + rev + [f\"missing{i}\" for i in range(1, 101)]\n\n\ndef one():\n    return any_of(wanted, vars=vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\niris = [\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"]\nexample = any_of([\"Sepal.Length\", \"not_there\", \"Sepal.Width\"], vars=iris)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"any_of-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'with_vars(c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"), any_of(c(\"Sepal.Length\", \"not_there\", \"Sepal.Width\"))) returns '\n    + \", \".join(str(item) for item in example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + \",\".join(str(item) for item in value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "contains",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "ends_with",
+      "translated": true,
+      "python": "tidyselect.ends_with.ends_with",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the 1-based position of each name that ends with a literal suffix, once per suffix and in suffix order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ends_with of suffixes 00 and 99 on names Var1 through Var10000",
+        "r_ms": 7.9212188720703125,
+        "translated_ms": 8.42563099996596,
+        "speedup": 0.9401336080469598,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"Var\", seq_len(10000))\none <- function() {\n  ends_with(c(\"00\", \"99\"), vars = vars)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\niris <- c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")\nexample <- ends_with(\"Width\", vars = iris)\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/ends_with-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"ends_with(\\\"Width\\\", vars = c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\", \\\"Petal.Length\\\", \\\"Petal.Width\\\", \\\"Species\\\")) returns \",\n    paste(example, collapse = \", \"),\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", paste(value, collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.ends_with import ends_with\n\nvars = [f\"Var{i}\" for i in range(1, 10001)]\n\n\ndef one():\n    return ends_with([\"00\", \"99\"], vars=vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\niris = [\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"]\nexample = ends_with(\"Width\", vars=iris)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"ends_with-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'ends_with(\"Width\", vars = c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")) returns '\n    + \", \".join(str(item) for item in example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + \",\".join(str(item) for item in value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "enquo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "eval_relocate",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "eval_rename",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "eval_select",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "everything",
+      "translated": true,
+      "python": "tidyselect.helpers_misc.everything",
+      "loads": [],
+      "uses": [],
+      "done": "Returns every variable position from 1 through the length of vars.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "everything() on names v1 through v10000",
+        "r_ms": 0.007867813110351562,
+        "translated_ms": 0.3269320004619658,
+        "speedup": 0.02406559498377057,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"v\", seq_len(10000))\none <- function() {\n  everything(vars)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\niris <- c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")\nexample <- everything(iris)\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/everything-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"everything(c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\", \\\"Petal.Length\\\", \\\"Petal.Width\\\", \\\"Species\\\")) returns \",\n    paste(example, collapse = \", \"),\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", paste(value, collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.helpers_misc import everything\n\nvars = [f\"v{i}\" for i in range(1, 10001)]\n\n\ndef one():\n    return everything(vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\niris = [\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"]\nexample = everything(iris)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"everything-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'everything(c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")) returns '\n    + \", \".join(str(item) for item in example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + \",\".join(str(item) for item in value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "last_col",
+      "translated": true,
+      "python": "tidyselect.helpers_misc.last_col",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the position offset places before the last variable.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "last_col(5) on names v1 through v10000",
+        "r_ms": 0.01049041748046875,
+        "translated_ms": 0.0033340002119075507,
+        "speedup": 3.1464957449617708,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"v\", seq_len(10000))\none <- function() {\n  last_col(5, vars)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nnames <- c(\"mpg\", \"cyl\", \"disp\", \"hp\", \"drat\", \"wt\", \"qsec\", \"vs\", \"am\", \"gear\", \"carb\")\nexample <- last_col(5, names)\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/last_col-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"last_col(5, c(\\\"mpg\\\", \\\"cyl\\\", \\\"disp\\\", \\\"hp\\\", \\\"drat\\\", \\\"wt\\\", \\\"qsec\\\", \\\"vs\\\", \\\"am\\\", \\\"gear\\\", \\\"carb\\\")) returns \",\n    example,\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", value, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.helpers_misc import last_col\n\nvars = [f\"v{i}\" for i in range(1, 10001)]\n\n\ndef one():\n    return last_col(5, vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nnames = [\"mpg\", \"cyl\", \"disp\", \"hp\", \"drat\", \"wt\", \"qsec\", \"vs\", \"am\", \"gear\", \"carb\"]\nexample = last_col(5, names)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"last_col-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'last_col(5, c(\"mpg\", \"cyl\", \"disp\", \"hp\", \"drat\", \"wt\", \"qsec\", \"vs\", \"am\", \"gear\", \"carb\")) returns '\n    + str(example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + str(value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "matches",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "num_range",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "one_of",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "peek_data",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "peek_vars",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "poke_vars",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "quo",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "quo_name",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "quos",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "scoped_vars",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "starts_with",
+      "translated": true,
+      "python": "tidyselect.starts_with.starts_with",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the 1-based positions of names that start with each prefix, in prefix order, repeating a name that matches more than one prefix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "starts_with of V1, v2, zz, and V99 on names v1 through v10000",
+        "r_ms": 15.568971633911133,
+        "translated_ms": 18.264184001964168,
+        "speedup": 0.8524318213305787,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tidyselect))\nstopifnot(as.character(packageVersion(\"tidyselect\")) == \"1.2.1\")\n\nvars <- paste0(\"v\", seq_len(10000))\nmatch <- c(\"V1\", \"v2\", \"zz\", \"V99\")\none <- function() {\n  starts_with(match, vars = vars)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nexample <- starts_with(\n  c(\"Petal\", \"Sepal\"),\n  vars = c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")\n)\nout <- \"/home/ahmed/killr_projects/killr/packages/tidyselect/docs/output/starts_with-r.txt\"\ndir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  paste0(\n    \"starts_with(c(\\\"Petal\\\", \\\"Sepal\\\"), vars = c(\\\"Sepal.Length\\\", \\\"Sepal.Width\\\", \\\"Petal.Length\\\", \\\"Petal.Width\\\", \\\"Species\\\")) returns \",\n    paste(example, collapse = \", \"),\n    \".\"\n  ),\n  out\n)\n\ncat(\"VERSION \", as.character(packageVersion(\"tidyselect\")), \"\\n\", sep = \"\")\ncat(\"VALUE \", paste(value, collapse = \",\"), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom tidyselect.starts_with import starts_with\n\nvars = [f\"v{i}\" for i in range(1, 10001)]\nmatch = [\"V1\", \"v2\", \"zz\", \"V99\"]\n\n\ndef one():\n    return starts_with(match, vars=vars)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\niris = [\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\"]\nexample = starts_with([\"Petal\", \"Sepal\"], vars=iris)\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"starts_with-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\n    'starts_with(c(\"Petal\", \"Sepal\"), vars = c(\"Sepal.Length\", \"Sepal.Width\", \"Petal.Length\", \"Petal.Width\", \"Species\")) returns '\n    + \", \".join(str(item) for item in example)\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nprint(\"VALUE \" + \",\".join(str(item) for item in value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "tidyselect_data_has_predicates",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "tidyselect_data_proxy",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vars_pull",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vars_rename",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vars_select",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "vars_select_helpers",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "where",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "with_vars",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

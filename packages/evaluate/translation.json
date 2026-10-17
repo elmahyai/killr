@@ -1,0 +1,424 @@
+{
+  "name": "evaluate",
+  "cran_version": "1.0.5",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All seventeen exports are done. parse_all keeps comments and groups a complete input, including semicolons, into one row. evaluate runs that input and records text, warnings, messages, errors, and plot display lists in order. Matplotlib draws a recorded plot. Suggested packages are not translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "parse_all",
+      "translated": true,
+      "python": "evaluate.parse_all",
+      "loads": [],
+      "uses": [],
+      "done": "Keeps comments and groups semicolon expressions that share a line.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "comment, x, x;y, and x;y;z, then the deparsed labels",
+        "r_ms": 4.192590713500977,
+        "translated_ms": 0.06817249868618092,
+        "speedup": 61.49973661374461,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  p <- parse_all(c(\"# a comment\", \"x\", \"x;y\", \"x;y;z\"))\n  labels <- vapply(p$expr, function(e) paste(deparse(e), collapse = \"\\n\"), \"\")\n  c(p$src, labels)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import parse_all\nfrom evaluate.parse import expr_label\n\ndef one():\n    parsed = parse_all([\"# a comment\", \"x\", \"x;y\", \"x;y;z\"])\n    return list(parsed.src) + [expr_label(exprs) for exprs in parsed.expr]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "evaluate",
+      "translated": true,
+      "python": "evaluate.evaluate",
+      "loads": [],
+      "uses": [],
+      "done": "Parses each complete input and records printed values in order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "evaluate(c(\"1 + 1\", \"2 + 2\")) printed text",
+        "r_ms": 8.872151374816895,
+        "translated_ms": 0.4715390005003428,
+        "speedup": 18.81530767423859,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  ev <- evaluate(c(\"1 + 1\", \"2 + 2\"))\n  as.character(ev[vapply(ev, is.character, logical(1))])\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate\n\ndef one():\n    ev = evaluate([\"1 + 1\", \"2 + 2\"], envir={})\n    return [item for item in ev if isinstance(item, str)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "replay",
+      "translated": true,
+      "python": "evaluate.replay",
+      "loads": [],
+      "uses": [],
+      "done": "Prints source with prompts, then text, conditions, and plots.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "replay of \"1 +\\n 2\" with the default prompts",
+        "r_ms": 7.193922996520996,
+        "translated_ms": 0.3609334999055136,
+        "speedup": 19.9314361188536,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  paste(capture.output(replay(evaluate(\"1 +\\n 2\"))), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nimport io\nimport contextlib\nfrom evaluate import evaluate, replay\n\ndef one():\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        replay(evaluate(\"1 +\\n 2\", envir={}))\n    return buf.getvalue().rstrip(\"\\n\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "trim_intermediate_plots",
+      "translated": true,
+      "python": "evaluate.trim_intermediate_plots",
+      "loads": [],
+      "uses": [],
+      "done": "Drops a plot whose display list is a prefix of the next plot.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "plot(1:3) then two text() calls; the kept display list has length 10",
+        "r_ms": 13.281106948852539,
+        "translated_ms": 0.9744235003381618,
+        "speedup": 13.629707149143563,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  ev <- evaluate(c(\"plot(1:3)\", \"text(1, 1, 'x')\", \"text(1, 1, 'y')\"))\n  tr <- trim_intermediate_plots(ev)\n  plots <- tr[vapply(tr, is.recordedplot, logical(1))]\n  c(length(plots), length(plots[[1]][[1]]))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate, is_recordedplot, trim_intermediate_plots\n\ndef one():\n    ev = evaluate([\"plot(1:3)\", 'text(1, 1, \"x\")', 'text(1, 1, \"y\")'], envir={})\n    trimmed = trim_intermediate_plots(ev)\n    plots = [item for item in trimmed if is_recordedplot(item)]\n    return [len(plots), len(plots[0].dl)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "new_output_handler",
+      "translated": true,
+      "python": "evaluate.new_output_handler",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the handler list that evaluate calls for each output.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a one-argument value handler keeps 1 + 1 as 2",
+        "r_ms": 6.3010454177856445,
+        "translated_ms": 0.44125049953436246,
+        "speedup": 14.279973449174417,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  handler <- new_output_handler(value = function(x) x)\n  ev <- evaluate(\"1 + 1\", output_handler = handler)\n  ev[[length(ev)]]\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate, new_output_handler\n\ndef one():\n    handler = new_output_handler(value=lambda x: x)\n    ev = evaluate(\"1 + 1\", envir={}, output_handler=handler)\n    return ev[-1]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.message",
+      "translated": true,
+      "python": "evaluate.is_message",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether an object is a message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a message is one, and a warning is not",
+        "r_ms": 0.06973743438720703,
+        "translated_ms": 0.0027034993763663806,
+        "speedup": 25.79524707748856,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() c(is.message(simpleMessage(\"a\")), is.message(simpleWarning(\"a\")))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import is_message\nfrom evaluate.types import Message, Warning\n\ndef one():\n    return [int(is_message(Message(\"a\"))), int(is_message(Warning(\"a\")))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.warning",
+      "translated": true,
+      "python": "evaluate.is_warning",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether an object is a warning.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a warning is one, and a message is not",
+        "r_ms": 0.04291534423828125,
+        "translated_ms": 0.004284000169718638,
+        "speedup": 10.017586960343145,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() c(is.warning(simpleWarning(\"a\")), is.warning(simpleMessage(\"a\")))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import is_warning\nfrom evaluate.types import Message, Warning\n\ndef one():\n    return [int(is_warning(Warning(\"a\"))), int(is_warning(Message(\"a\")))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.error",
+      "translated": true,
+      "python": "evaluate.is_error",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether an object is an error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "an error is one, and a warning is not",
+        "r_ms": 0.03993511199951172,
+        "translated_ms": 0.002598999344627373,
+        "speedup": 15.365572169945024,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() c(is.error(simpleError(\"a\")), is.error(simpleWarning(\"a\")))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import is_error\nfrom evaluate.types import Error, Warning\n\ndef one():\n    return [int(is_error(Error(\"a\"))), int(is_error(Warning(\"a\")))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.source",
+      "translated": true,
+      "python": "evaluate.is_source",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether an object is captured source.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the comment in evaluate('# x') is source, and a string is not",
+        "r_ms": 4.771232604980469,
+        "translated_ms": 0.2896055002565845,
+        "speedup": 16.474937805923076,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  ev <- evaluate(\"# x\")\n  c(is.source(ev[[1]]), is.source(\"x\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate, is_source\n\ndef one():\n    ev = evaluate(\"# x\", envir={})\n    return [int(is_source(ev[0])), int(is_source(\"x\"))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.recordedplot",
+      "translated": true,
+      "python": "evaluate.is_recordedplot",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether an object is a recorded plot.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the plot from plot(1) is one, and a number is not",
+        "r_ms": 9.669184684753418,
+        "translated_ms": 0.5130580002514762,
+        "speedup": 18.84618245893067,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  ev <- evaluate(\"plot(1)\")\n  c(is.recordedplot(ev[[2]]), is.recordedplot(1))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate, is_recordedplot\n\ndef one():\n    ev = evaluate(\"plot(1)\", envir={})\n    return [int(is_recordedplot(ev[1])), int(is_recordedplot(1))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "set_hooks",
+      "translated": true,
+      "python": "evaluate.set_hooks",
+      "loads": [],
+      "uses": [],
+      "done": "Appends, prepends, or replaces hook lists and returns the previous ones.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two before.plot.new hooks add 1 and 10 on plot(1). R time includes a null pdf device; Python time includes drawing with Matplotlib.",
+        "r_ms": 1.3731718063354492,
+        "translated_ms": 13.031598999987182,
+        "speedup": 0.1053724724292698,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  pdf(NULL)\n  on.exit(dev.off(), add = TRUE)\n  box <- 0\n  h1 <- list(before.plot.new = function() box <<- box + 1)\n  h2 <- list(before.plot.new = function() box <<- box + 10)\n  set_hooks(h1)\n  set_hooks(h2)\n  plot(1)\n  remove_hooks(h1)\n  remove_hooks(h2)\n  box\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nimport matplotlib.pyplot as plt\nfrom evaluate import plot, remove_hooks, set_hooks\n\ndef one():\n    box = {\"n\": 0}\n    def first():\n        box[\"n\"] += 1\n    def second():\n        box[\"n\"] += 10\n    set_hooks({\"before.plot.new\": first})\n    set_hooks({\"before.plot.new\": second})\n    plot(1)\n    remove_hooks({\"before.plot.new\": first})\n    remove_hooks({\"before.plot.new\": second})\n    plt.close(\"all\")\n    return box[\"n\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "remove_hooks",
+      "translated": true,
+      "python": "evaluate.remove_hooks",
+      "loads": [],
+      "uses": [],
+      "done": "Removes hook functions that are identical to the ones that were set.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a removed hook does not run on the next plot. R time includes a null pdf device; Python time includes drawing with Matplotlib.",
+        "r_ms": 1.5304088592529297,
+        "translated_ms": 24.06010850063467,
+        "speedup": 0.06360772891828646,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  pdf(NULL)\n  on.exit(dev.off(), add = TRUE)\n  box <- 0\n  h1 <- list(before.plot.new = function() box <<- box + 1)\n  set_hooks(h1)\n  plot(1)\n  remove_hooks(h1)\n  plot(1)\n  box\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nimport matplotlib.pyplot as plt\nfrom evaluate import plot, remove_hooks, set_hooks\n\ndef one():\n    box = []\n    def count():\n        box.append(1)\n    hooks = {\"before.plot.new\": count}\n    set_hooks(hooks)\n    plot(1)\n    remove_hooks(hooks)\n    plot(1)\n    plt.close(\"all\")\n    return len(box)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "inject_funs",
+      "translated": true,
+      "python": "evaluate.inject_funs",
+      "loads": [],
+      "uses": [],
+      "done": "Installs functions into the evaluation environment when the name is absent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "inject f that returns 1, then evaluate(\"f()\")",
+        "r_ms": 6.43610954284668,
+        "translated_ms": 0.34914099978777813,
+        "speedup": 18.43412703394561,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  old <- inject_funs(f = function() 1)\n  on.exit(inject_funs(old), add = TRUE)\n  ev <- evaluate(\"f()\")\n  ev[[2]]\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate, inject_funs\n\ndef one():\n    old = inject_funs(f=lambda: 1)\n    try:\n        ev = evaluate(\"f()\", envir={})\n        return ev[1]\n    finally:\n        inject_funs(old)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "flush_console",
+      "translated": true,
+      "python": "evaluate.flush_console",
+      "loads": [],
+      "uses": [],
+      "done": "Empties the captured console so the text handler runs immediately.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cat(\"hi\"); flush_console(); cat(\"bye\")",
+        "r_ms": 6.576776504516602,
+        "translated_ms": 0.8845889997246559,
+        "speedup": 7.434838672608116,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  test <- function() {\n    cat(\"hi\")\n    flush_console()\n    cat(\"bye\")\n  }\n  ev <- evaluate(\"test()\")\n  as.character(ev[vapply(ev, is.character, logical(1))])\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import evaluate\n\ndef one():\n    source = 'test <- function() { cat(\"hi\"); flush_console(); cat(\"bye\") }'\n    env = {}\n    evaluate(source, envir=env)\n    ev = evaluate(\"test()\", envir=env)\n    return [item for item in ev if isinstance(item, str)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "local_reproducible_output",
+      "translated": true,
+      "python": "evaluate.local_reproducible_output",
+      "loads": [],
+      "uses": [],
+      "done": "Sets width, color, unicode, hyperlink, and RStudio options for one scope.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "width 40 and NO_COLOR inside the scope",
+        "r_ms": 0.36084651947021484,
+        "translated_ms": 0.05204700028116349,
+        "speedup": 6.933089659747597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  local({\n    local_reproducible_output(width = 40, color = FALSE)\n    c(getOption(\"width\"), as.numeric(Sys.getenv(\"NO_COLOR\")))\n  })\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nimport os\nfrom evaluate import local_reproducible_output\nfrom evaluate.state import option\n\ndef one():\n    with local_reproducible_output(width=40, color=False):\n        return [int(option(\"width\")), int(os.environ[\"NO_COLOR\"])]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "create_traceback",
+      "translated": true,
+      "python": "evaluate.create_traceback",
+      "loads": [],
+      "uses": [],
+      "done": "Numbers deparsed calls and indents a wrapped line.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "create_traceback(list(quote(f()), quote(g(1, 2))))",
+        "r_ms": 0.263214111328125,
+        "translated_ms": 0.14103649937169394,
+        "speedup": 1.8662836393467104,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() create_traceback(list(quote(f()), quote(g(1, 2))))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import create_traceback\n\ndef one():\n    return create_traceback([\"f()\", \"g(1, 2)\"])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "try_capture_stack",
+      "translated": true,
+      "python": "evaluate.try_capture_stack",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the error and the call that was being evaluated.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "try_capture_stack(quote(stop(\"boom\")), environment())",
+        "r_ms": 0.27120113372802734,
+        "translated_ms": 0.06971950006118277,
+        "speedup": 3.8898892489193573,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(evaluate))\noptions(prompt = \"> \", continue = \"+ \")\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_val <- function(x) {\n  if (is.logical(x)) x <- as.numeric(x)\n  if (is.numeric(x)) {\n    if (length(x) == 1) return(sprintf(\"%.17g\", as.numeric(x)))\n    return(paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() {\n  e <- try_capture_stack(quote(stop(\"boom\")), environment())\n  c(conditionMessage(e), paste(deparse(e$calls[[1]]), collapse = \"\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom evaluate import create_traceback, try_capture_stack\n\ndef one():\n    caught = try_capture_stack('stop(\"boom\")', {})\n    return [caught.message, create_traceback(caught.calls)[0][3:]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

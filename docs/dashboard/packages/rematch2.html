@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rematch2 · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>rematch2</h1>
+<p class="note">CRAN 2.1.2</p>
+<p>CRAN rematch2 2.1.2 is inventoried. All 8 exports are checked. Matching uses Python&#x27;s re module, and the tables use the tibble columns already translated. There is no crate.</p>
+<p class="note">8 of 8 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#$.rematch_allrecords">$.rematch_allrecords</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Reads match, start, or end from each all-match record. Each entry is a vector.</td></tr>
+<tr><td><a href="#$.rematch_records">$.rematch_records</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Reads match, start, or end from each first-match record.</td></tr>
+<tr><td><a href="#bind_re_match">bind_re_match</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.</td></tr>
+<tr><td><a href="#bind_re_match_">bind_re_match_</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The same attachment as bind_re_match. R&#x27;s quoting of from is unnecessary in Python, so both take the column name as a string.</td></tr>
+<tr><td><a href="#re_exec">re_exec</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns the first match with 1-based start and end. A missed group is an empty string at position 0.</td></tr>
+<tr><td><a href="#re_exec_all">re_exec_all</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns every match with positions. A string with no match contributes empty vectors.</td></tr>
+<tr><td><a href="#re_match">re_match</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns the first match and each named capture. Python&#x27;s re compiles the pattern after rewriting PCRE names.</td></tr>
+<tr><td><a href="#re_match_all">re_match_all</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns every match in list columns. An input that misses is an empty list, not NA.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>$.rematch_allrecords</td><td>all first-name records from two notable strings</td><td>0.0741</td><td>0.00219</td><td><button type="button" class="proof-toggle" data-name="$.rematch_allrecords"><span class='yes'>+3287%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.0%'></span></div></td></tr>
+<tr><td>$.rematch_records</td><td>first-name records from two notable strings</td><td>0.0412</td><td>0.00179</td><td><button type="button" class="proof-toggle" data-name="$.rematch_records"><span class='yes'>+2209%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.3%'></span></div></td></tr>
+<tr><td>bind_re_match</td><td>two car names, make and model groups</td><td>2.39</td><td>0.0857</td><td><button type="button" class="proof-toggle" data-name="bind_re_match"><span class='yes'>+2691%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.6%'></span></div></td></tr>
+<tr><td>bind_re_match_</td><td>two car names, keeping the .match column</td><td>1.3</td><td>0.0449</td><td><button type="button" class="proof-toggle" data-name="bind_re_match_"><span class='yes'>+2799%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.4%'></span></div></td></tr>
+<tr><td>re_exec</td><td>two notable-name strings, first match positions</td><td>0.444</td><td>0.0363</td><td><button type="button" class="proof-toggle" data-name="re_exec"><span class='yes'>+1123%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.2%'></span></div></td></tr>
+<tr><td>re_exec_all</td><td>two notable-name strings, all match positions</td><td>0.76</td><td>0.0895</td><td><button type="button" class="proof-toggle" data-name="re_exec_all"><span class='yes'>+749%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.8%'></span></div></td></tr>
+<tr><td>re_match</td><td>seven date strings and a named ISO pattern</td><td>0.523</td><td>0.0391</td><td><button type="button" class="proof-toggle" data-name="re_match"><span class='yes'>+1237%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.5%'></span></div></td></tr>
+<tr><td>re_match_all</td><td>two notable-name strings and a POSIX name pattern</td><td>0.471</td><td>0.0355</td><td><button type="button" class="proof-toggle" data-name="re_match_all"><span class='yes'>+1226%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.5%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "$.rematch_allrecords", "r": "        suppressPackageStartupMessages(library(rematch2))\npos \u003c- re_exec_all(c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"), \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\n        one \u003c- function() {\n          paste(vapply(`$.rematch_allrecords`(pos$first, \"match\"), paste, \"\", collapse = \"+\"), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import dollar_rematch_allrecords, re_exec_all\npos = re_exec_all([\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"], \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\ndef one():\n    return \",\".join(\"+\".join(row) for row in dollar_rematch_allrecords(pos[\"first\"], \"match\"))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "$.rematch_records", "r": "        suppressPackageStartupMessages(library(rematch2))\npos \u003c- re_exec(c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"), \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\n        one \u003c- function() {\n          paste(`$.rematch_records`(pos$first, \"match\"), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import dollar_rematch_records, re_exec\npos = re_exec([\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"], \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\ndef one():\n    return \",\".join(dollar_rematch_records(pos[\"first\"], \"match\"))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "bind_re_match", "r": "        suppressPackageStartupMessages(library(rematch2))\ncars \u003c- data.frame(rowname = c(\"Mazda RX4\", \"Datsun 710\"), mpg = c(21, 22.8), stringsAsFactors = FALSE)\n        one \u003c- function() {\n          paste(bind_re_match_(cars, \"rowname\", \"^(?\u003cmake>\\\\w+) ?(?\u003cmodel>.+)?$\")$make, bind_re_match_(cars, \"rowname\", \"^(?\u003cmake>\\\\w+) ?(?\u003cmodel>.+)?$\")$model, sep = \"=\", collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import bind_re_match\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\", \"Datsun 710\"], mpg=[21.0, 22.8])\npattern = r\"^(?\u003cmake>\\w+) ?(?\u003cmodel>.+)?$\"\ndef one():\n    return \",\".join(f\"{m}={d}\" for m, d in zip(bind_re_match(cars, \"rowname\", pattern)[\"make\"], bind_re_match(cars, \"rowname\", pattern)[\"model\"]))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "bind_re_match_", "r": "        suppressPackageStartupMessages(library(rematch2))\ncars \u003c- data.frame(rowname = c(\"Mazda RX4\", \"Datsun 710\"), mpg = c(21, 22.8), stringsAsFactors = FALSE)\n        one \u003c- function() {\n          paste(bind_re_match_(cars, \"rowname\", \"^(?\u003cmake>\\\\w+) ?(?\u003cmodel>.+)?$\", keep_match = TRUE)$.match, collapse = \"|\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import bind_re_match_\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\", \"Datsun 710\"], mpg=[21.0, 22.8])\ndef one():\n    return \"|\".join(bind_re_match_(cars, \"rowname\", r\"^(?\u003cmake>\\w+) ?(?\u003cmodel>.+)?$\", keep_match=True)[\".match\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "re_exec", "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes \u003c- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern \u003c- \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\n        one \u003c- function() {\n          pos \u003c- re_exec(notes, pattern)\npaste(pos$first$match, pos$first$start, pos$first$end, sep = \":\", collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import re_exec\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\ndef one():\n    pos = re_exec(notes, pattern)\n    return \",\".join(f\"{m}:{s}:{e}\" for m, s, e in zip(pos[\"first\"].match, pos[\"first\"].start, pos[\"first\"].end))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "re_exec_all", "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes \u003c- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern \u003c- \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\n        one \u003c- function() {\n          pos \u003c- re_exec_all(notes, pattern)\npaste(vapply(seq_along(pos$first), function(i) paste(pos$first$match[[i]], pos$first$start[[i]], pos$first$end[[i]], sep = \":\", collapse = \"+\"), \"\"), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import re_exec_all\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\ndef one():\n    pos = re_exec_all(notes, pattern)\n    return \",\".join(\"+\".join(f\"{m}:{s}:{e}\" for m, s, e in zip(row_m, row_s, row_e)) for row_m, row_s, row_e in zip(pos[\"first\"].match, pos[\"first\"].start, pos[\"first\"].end))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "re_match", "r": "        suppressPackageStartupMessages(library(rematch2))\ndates \u003c- c(\"2016-04-20\", \"1977-08-08\", \"not a date\", \"2016\", \"76-03-02\", \"2012-06-30\", \"2015-01-21 19:58\")\npattern \u003c- \"(?\u003cyear>[0-9]{4})-(?\u003cmonth>[0-1][0-9])-(?\u003cday>[0-3][0-9])\"\n        one \u003c- function() {\n          paste(ifelse(is.na(one_value \u003c- re_match(dates, pattern)$year), \"NA\", one_value), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import re_match\ndates = [\"2016-04-20\", \"1977-08-08\", \"not a date\", \"2016\", \"76-03-02\", \"2012-06-30\", \"2015-01-21 19:58\"]\npattern = \"(?\u003cyear>[0-9]{4})-(?\u003cmonth>[0-1][0-9])-(?\u003cday>[0-3][0-9])\"\ndef one():\n    return \",\".join(\"NA\" if v is None else v for v in re_match(dates, pattern)[\"year\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "re_match_all", "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes \u003c- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern \u003c- \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\n        one \u003c- function() {\n          paste(vapply(re_match_all(notes, pattern)$first, paste, \"\", collapse = \"+\"), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom rematch2 import re_match_all\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\"\ndef one():\n    return \",\".join(\"+\".join(row) for row in re_match_all(notes, pattern)[\"first\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="tibble.html">tibble</a> <span class="note">replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "$.rematch_allrecords", "translated": true, "not_done": "", "title": "Extract match, start, or end", "origin": {"description": "Reads match, start, or end from each all-match record. Each entry is a vector.", "usage": "`$.rematch_allrecords`(x, name)", "arguments": [], "details": "Reads match, start, or end from each all-match record. Each entry is a vector.", "value": "The match selector on the all-matches column returns Ben and Jefferson for the first string.", "example": "allpos \u003c- re_exec_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nallpos$first$match", "output": "output/$.rematch_allrecords-r.txt", "output_blocks": [{"text": "The match selector on the all-matches column returns Ben and Jefferson for the first string."}]}, "translation": {"description": "Reads match, start, or end from each all-match record. Each entry is a vector.", "usage": "dollar_rematch_allrecords(x, name)", "arguments": [], "details": "Reads match, start, or end from each all-match record. Each entry is a vector.", "value": "dollar_rematch_allrecords on the all-matches column returns Ben and Jefferson for the first string.", "example": "from rematch2 import dollar_rematch_allrecords, re_exec_all\nallpos = re_exec_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nprint(dollar_rematch_allrecords(allpos[\"first\"], \"match\"))", "output": "output/$.rematch_allrecords-python.txt", "output_blocks": [{"text": "dollar_rematch_allrecords on the all-matches column returns Ben and Jefferson for the first string."}]}}, {"name": "$.rematch_records", "translated": true, "not_done": "", "title": "Extract match, start, or end", "origin": {"description": "Reads match, start, or end from each first-match record.", "usage": "`$.rematch_records`(x, name)", "arguments": [], "details": "Reads match, start, or end from each first-match record.", "value": "The match selector on the first column returns Ben and Millard.", "example": "pos \u003c- re_exec(c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"), \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\npos$first$match", "output": "output/$.rematch_records-r.txt", "output_blocks": [{"text": "The match selector on the first column returns Ben and Millard."}]}, "translation": {"description": "Reads match, start, or end from each first-match record.", "usage": "dollar_rematch_records(x, name)", "arguments": [], "details": "Reads match, start, or end from each first-match record.", "value": "dollar_rematch_records on the first column returns Ben and Millard.", "example": "from rematch2 import dollar_rematch_records, re_exec\npos = re_exec([\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"], \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nprint(dollar_rematch_records(pos[\"first\"], \"match\"))", "output": "output/$.rematch_records-python.txt", "output_blocks": [{"text": "dollar_rematch_records on the first column returns Ben and Millard."}]}}, {"name": "bind_re_match", "translated": true, "not_done": "", "title": "Match a data frame column and attach the results", "origin": {"description": "Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.", "usage": "bind_re_match(df, from, ..., keep_match = FALSE)", "arguments": [], "details": "Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.", "value": "bind_re_match of Mazda RX4 returns make Mazda and model RX4.", "example": "cars \u003c- data.frame(rowname = \"Mazda RX4\", mpg = 21, stringsAsFactors = FALSE)\nbind_re_match_(cars, \"rowname\", \"^(?\u003cmake>\\\\w+) ?(?\u003cmodel>.+)?$\")", "output": "output/bind_re_match-r.txt", "output_blocks": [{"text": "bind_re_match of Mazda RX4 returns make Mazda and model RX4."}]}, "translation": {"description": "Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.", "usage": "bind_re_match(df, column, pattern, keep_match=False, **options)", "arguments": [], "details": "Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.", "value": "bind_re_match of Mazda RX4 returns make Mazda and model RX4.", "example": "from rematch2 import bind_re_match\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\"], mpg=[21.0])\nprint(bind_re_match(cars, \"rowname\", r\"^(?\u003cmake>\\w+) ?(?\u003cmodel>.+)?$\")[\"make\"])", "output": "output/bind_re_match-python.txt", "output_blocks": [{"text": "bind_re_match of Mazda RX4 returns make Mazda and model RX4."}]}}, {"name": "bind_re_match_", "translated": true, "not_done": "", "title": "Match a data frame column and attach the results", "origin": {"description": "The same attachment as bind_re_match. R's quoting of from is unnecessary in Python, so both take the column name as a string.", "usage": "bind_re_match_(df, from, ..., keep_match = FALSE)", "arguments": [], "details": "The same attachment as bind_re_match. R's quoting of from is unnecessary in Python, so both take the column name as a string.", "value": "bind_re_match_ of Mazda RX4 with keep_match TRUE returns the .match value Mazda RX4.", "example": "cars \u003c- data.frame(rowname = \"Mazda RX4\", stringsAsFactors = FALSE)\nbind_re_match_(cars, \"rowname\", \"^(?\u003cmake>\\\\w+) ?(?\u003cmodel>.+)?$\", keep_match = TRUE)$.match", "output": "output/bind_re_match_-r.txt", "output_blocks": [{"text": "bind_re_match_ of Mazda RX4 with keep_match TRUE returns the .match value Mazda RX4."}]}, "translation": {"description": "The same attachment as bind_re_match. R's quoting of from is unnecessary in Python, so both take the column name as a string.", "usage": "bind_re_match_(df, column, pattern, keep_match=False, **options)", "arguments": [], "details": "The same attachment as bind_re_match. R's quoting of from is unnecessary in Python, so both take the column name as a string.", "value": "bind_re_match_ of Mazda RX4 with keep_match True returns the .match value Mazda RX4.", "example": "from rematch2 import bind_re_match_\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\"])\nprint(bind_re_match_(cars, \"rowname\", r\"^(?\u003cmake>\\w+) ?(?\u003cmodel>.+)?$\", keep_match=True)[\".match\"])", "output": "output/bind_re_match_-python.txt", "output_blocks": [{"text": "bind_re_match_ of Mazda RX4 with keep_match True returns the .match value Mazda RX4."}]}}, {"name": "re_exec", "translated": true, "not_done": "", "title": "Extract data from the first regular expression match", "origin": {"description": "Returns the first match with 1-based start and end. A missed group is an empty string at position 0.", "usage": "re_exec(text, pattern, perl = TRUE, ...)", "arguments": [], "details": "Returns the first match with 1-based start and end. A missed group is an empty string at position 0.", "value": "re_exec of \"  Ben Franklin and Jefferson Davis\" returns Ben at positions 3 through 5.", "example": "pos \u003c- re_exec(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\npos$first$match", "output": "output/re_exec-r.txt", "output_blocks": [{"text": "re_exec of \"  Ben Franklin and Jefferson Davis\" returns Ben at positions 3 through 5."}]}, "translation": {"description": "Returns the first match with 1-based start and end. A missed group is an empty string at position 0.", "usage": "re_exec(text, pattern, perl=True, ignore_case=False, fixed=False)", "arguments": [], "details": "Returns the first match with 1-based start and end. A missed group is an empty string at position 0.", "value": "re_exec of \"  Ben Franklin and Jefferson Davis\" returns Ben at positions 3 through 5.", "example": "from rematch2 import re_exec\npos = re_exec(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nprint(pos[\"first\"].match)", "output": "output/re_exec-python.txt", "output_blocks": [{"text": "re_exec of \"  Ben Franklin and Jefferson Davis\" returns Ben at positions 3 through 5."}]}}, {"name": "re_exec_all", "translated": true, "not_done": "", "title": "Extract data from all regular expression matches", "origin": {"description": "Returns every match with positions. A string with no match contributes empty vectors.", "usage": "re_exec_all(text, pattern, perl = TRUE, ...)", "arguments": [], "details": "Returns every match with positions. A string with no match contributes empty vectors.", "value": "re_exec_all of \"  Ben Franklin and Jefferson Davis\" returns Ben at 3 through 5 and Jefferson at 20 through 28.", "example": "allpos \u003c- re_exec_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nallpos$first$match", "output": "output/re_exec_all-r.txt", "output_blocks": [{"text": "re_exec_all of \"  Ben Franklin and Jefferson Davis\" returns Ben at 3 through 5 and Jefferson at 20 through 28."}]}, "translation": {"description": "Returns every match with positions. A string with no match contributes empty vectors.", "usage": "re_exec_all(text, pattern, perl=True, ignore_case=False, fixed=False)", "arguments": [], "details": "Returns every match with positions. A string with no match contributes empty vectors.", "value": "re_exec_all of \"  Ben Franklin and Jefferson Davis\" returns Ben at 3 through 5 and Jefferson at 20 through 28.", "example": "from rematch2 import re_exec_all\nallpos = re_exec_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")\nprint(allpos[\"first\"].match)", "output": "output/re_exec_all-python.txt", "output_blocks": [{"text": "re_exec_all of \"  Ben Franklin and Jefferson Davis\" returns Ben at 3 through 5 and Jefferson at 20 through 28."}]}}, {"name": "re_match", "translated": true, "not_done": "", "title": "Extract regular expression matches into a data frame", "origin": {"description": "Returns the first match and each named capture. Python's re compiles the pattern after rewriting PCRE names.", "usage": "re_match(text, pattern, perl = TRUE, ...)", "arguments": [], "details": "Returns the first match and each named capture. Python's re compiles the pattern after rewriting PCRE names.", "value": "re_match of 2016-04-20 against the ISO date pattern returns year 2016, month 04, and day 20.", "example": "re_match(\"2016-04-20\", \"(?\u003cyear>[0-9]{4})-(?\u003cmonth>[0-1][0-9])-(?\u003cday>[0-3][0-9])\")", "output": "output/re_match-r.txt", "output_blocks": [{"text": "re_match of 2016-04-20 against the ISO date pattern returns year 2016, month 04, and day 20."}]}, "translation": {"description": "Returns the first match and each named capture. Python's re compiles the pattern after rewriting PCRE names.", "usage": "re_match(text, pattern, perl=True, ignore_case=False, fixed=False)", "arguments": [], "details": "Returns the first match and each named capture. Python's re compiles the pattern after rewriting PCRE names.", "value": "re_match of 2016-04-20 against the ISO date pattern returns year 2016, month 04, and day 20.", "example": "from rematch2 import re_match\nprint(re_match(\"2016-04-20\", \"(?\u003cyear>[0-9]{4})-(?\u003cmonth>[0-1][0-9])-(?\u003cday>[0-3][0-9])\")[\"year\"])", "output": "output/re_match-python.txt", "output_blocks": [{"text": "re_match of 2016-04-20 against the ISO date pattern returns year 2016, month 04, and day 20."}]}}, {"name": "re_match_all", "translated": true, "not_done": "", "title": "Extract all regular expression matches into a data frame", "origin": {"description": "Returns every match in list columns. An input that misses is an empty list, not NA.", "usage": "re_match_all(text, pattern, perl = TRUE, ...)", "arguments": [], "details": "Returns every match in list columns. An input that misses is an empty list, not NA.", "value": "re_match_all of \"  Ben Franklin and Jefferson Davis\" returns first names Ben and Jefferson.", "example": "re_match_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")", "output": "output/re_match_all-r.txt", "output_blocks": [{"text": "re_match_all of \"  Ben Franklin and Jefferson Davis\" returns first names Ben and Jefferson."}]}, "translation": {"description": "Returns every match in list columns. An input that misses is an empty list, not NA.", "usage": "re_match_all(text, pattern, perl=True, ignore_case=False, fixed=False)", "arguments": [], "details": "Returns every match in list columns. An input that misses is an empty list, not NA.", "value": "re_match_all of \"  Ben Franklin and Jefferson Davis\" returns first names Ben and Jefferson.", "example": "from rematch2 import re_match_all\nprint(re_match_all(\"  Ben Franklin and Jefferson Davis\", \"(?\u003cfirst>[[:upper:]][[:lower:]]+) (?\u003clast>[[:upper:]][[:lower:]]+)\")[\"first\"])", "output": "output/re_match_all-python.txt", "output_blocks": [{"text": "re_match_all of \"  Ben Franklin and Jefferson Davis\" returns first names Ben and Jefferson."}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

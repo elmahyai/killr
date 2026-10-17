@@ -1,0 +1,40 @@
+{
+  "name": "local_file",
+  "title": "File removed on exit",
+  "origin": {
+    "description": "Delete named files when the frame exits.",
+    "usage": "local_file(..., .local_envir = parent.frame())",
+    "arguments": [
+      {
+        "name": "_file",
+        "text": "Path or mapping of paths to delete."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the deletion."
+      }
+    ],
+    "details": "A string names the path. A mapping uses the names as paths. The files are removed on exit, whether or not the body created them.",
+    "value": "The file specification.",
+    "example": "td <- tempfile()\ndir.create(td)\nold <- getwd()\nsetwd(td)\non.exit(setwd(old), add = TRUE)\ntext <- local({\n  local_file(\"file1\")\n  writeLines(\"foo\", \"file1\")\n  readLines(\"file1\")\n})\nc(text, if (file.exists(\"file1\")) \"kept\" else \"gone\")\n",
+    "output": "output/local_file-r.txt"
+  },
+  "translation": {
+    "description": "Delete named files when the frame exits.",
+    "usage": "local_file(..., _local_envir=None)",
+    "arguments": [
+      {
+        "name": "_file",
+        "text": "Path or mapping of paths to delete."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the deletion."
+      }
+    ],
+    "details": "A string names the path. A mapping uses the names as paths. The files are removed on exit, whether or not the body created them. code is a callable, and local_* is a context manager.",
+    "value": "The file specification.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\ntd = tempfile.mkdtemp()\nbefore = os.getcwd()\nos.chdir(td)\ntry:\n    with local_file(\"file1\"):\n        with open(\"file1\", \"w\") as handle:\n            handle.write(\"foo\\n\")\n        text = open(\"file1\").read().splitlines()[0]\n    flag = \"kept\" if os.path.exists(\"file1\") else \"gone\"\nfinally:\n    os.chdir(before)\nreturn [text, flag]\n",
+    "output": "output/local_file-python.txt"
+  }
+}

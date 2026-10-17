@@ -1,0 +1,128 @@
+{
+  "name": "boot.ci",
+  "title": "Nonparametric Bootstrap Confidence Intervals",
+  "origin": {
+    "description": "Equi-tailed two-sided bootstrap intervals: normal approximation, basic, studentized, percentile, and BCa. All five, or a named subset.",
+    "usage": "boot.ci(boot.out, conf = 0.95, type = \"all\",\n        index = 1:min(2, length(boot.out$t0)), var.t0 = NULL,\n        var.t = NULL, t0 = NULL, t = NULL, L = NULL,\n        h = function(t) t, hdot = function(t) rep(1, length(t)),\n        hinv = function(t) t, ...)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A bootstrap object. The replicates in t and the observed statistic t0 are read from it unless both are supplied."
+      },
+      {
+        "name": "conf",
+        "text": "One confidence level, or several. Each level is a separate row."
+      },
+      {
+        "name": "type",
+        "text": "\"all\", or any of \"norm\", \"basic\", \"stud\", \"perc\", and \"bca\". The names are exact. There is no partial matching."
+      },
+      {
+        "name": "index",
+        "text": "Length 1 or 2. The first entry is the statistic. The second, when present, is its variance. The default is positions 1 through min(2, length(t0))."
+      },
+      {
+        "name": "var.t0",
+        "text": "Variance of the observed statistic, on the original scale when h is supplied. Used by the normal and studentized intervals. If omitted and index has length 2, position 2 of t0 is used."
+      },
+      {
+        "name": "var.t",
+        "text": "Variances of the bootstrap replicates, one per replicate. Studentized intervals need them. If omitted and index has length 2, that column of t is used."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Must be supplied together with t. The default is t0 at index[1]."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates, a vector of length R. Must be supplied together with t0."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values for BCa, on the untransformed statistic. If omitted, they are obtained from empinf."
+      },
+      {
+        "name": "h",
+        "text": "Monotone transformation. Intervals are calculated on the h scale. It must accept a vector and return a vector of the same length. The default is the identity."
+      },
+      {
+        "name": "hdot",
+        "text": "Derivative of h, used by the delta method for the normal and studentized variances. The default is the constant function 1. The installed BCa calculation accepts this argument and does not use it."
+      },
+      {
+        "name": "hinv",
+        "text": "Inverse of h, applied to the endpoints. If h is supplied and hinv is not, the returned intervals stay on the transformed scale."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments for the statistic. They are used only when BCa has to call empinf."
+      }
+    ],
+    "details": "The formulae are those in Chapter 5 of Davison and Hinkley (1997). The normal interval uses the bootstrap bias and, if no variance is supplied, the sample variance of the replicates. Basic, percentile, and BCa endpoints come from norm.inter, which interpolates on the normal quantile scale. A requested order statistic at either end of the replicate list produces a warning. A time series bootstrap does not receive a BCa interval. If every replicate equals the same value, within eps = min(1e-8, mean(t) / 1e6), the function prints a message and returns NULL. The length of t is checked against R before missing replicates are dropped, and the reported R is the count that remains. The manual's description of hdot as part of the BCa influence calculation does not match the installed body.",
+    "value": "An object of class \"bootci\" with R, t0 on the interval scale, the call, and one or more of normal (three columns: level and the two endpoints), basic, student, percent, and bca. Those four matrices have five columns: the level, the two order-statistic indices, and the two endpoints.",
+    "example": "library(boot)\ndata <- c(2.3, 4.1, 3.3, 5.0, 4.4, 6.2, 3.8, 5.5)\nstat <- function(d, w) {\n  m <- sum(d * w)\n  v <- sum(w * (d - m)^2) * length(d) / (length(d) - 1) / length(d)\n  c(m, v)\n}\nt <- cbind(\n  c(4.2, 4.0, 4.5, 3.9, 4.6, 4.1, 4.3, 3.8, 4.7, 4.15,\n    4.55, 3.95, 4.25, 4.35, 4.05, 4.65, 3.85, 4.45, 4.12, 4.28),\n  c(0.18, 0.22, 0.15, 0.25, 0.14, 0.20, 0.17, 0.28, 0.13, 0.19,\n    0.16, 0.24, 0.18, 0.17, 0.21, 0.14, 0.27, 0.16, 0.20, 0.18)\n)\nboot.out <- list(\n  t0 = stat(data, rep(1/8, 8)), t = t, R = 20, data = data, statistic = stat,\n  sim = \"ordinary\", stype = \"w\", strata = rep(1L, 8), weights = rep(1/8, 8)\n)\nclass(boot.out) <- \"boot\"\nattr(boot.out, \"boot_type\") <- \"boot\"\nprint(boot.ci(boot.out, conf = c(0.90, 0.95),\n              type = c(\"norm\", \"basic\", \"stud\", \"perc\", \"bca\")))",
+    "output": "output/boot.ci-r.txt"
+  },
+  "translation": {
+    "description": "Equi-tailed two-sided bootstrap intervals: normal approximation, basic, studentized, percentile, and BCa.",
+    "usage": "boot_ci(boot_out, conf=0.95, type=\"all\", index omitted, var_t0=None, var_t=None, t0=None, t=None, L=None, h=None, hdot=None, hinv=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "A mapping or object with t0, t, R, data, statistic, sim, stype, and, when BCa needs them, strata, weights, and boot_type. This does not call boot()."
+      },
+      {
+        "name": "conf",
+        "text": "One confidence level, or several. Each level is a separate row."
+      },
+      {
+        "name": "type",
+        "text": "\"all\", or any of \"norm\", \"basic\", \"stud\", \"perc\", and \"bca\". The names are exact."
+      },
+      {
+        "name": "index",
+        "text": "Length 1 or 2, 1-based. The first entry is the statistic. The second is its variance. Omitting it selects positions 1 through min(2, length(t0))."
+      },
+      {
+        "name": "var_t0",
+        "text": "Variance of the observed statistic, on the original scale when h is supplied. If omitted and index has length 2, position 2 of t0 is used."
+      },
+      {
+        "name": "var_t",
+        "text": "Variances of the bootstrap replicates. Studentized intervals need them."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Must be supplied together with t."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates, length R. Must be supplied together with t0."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values for BCa. If omitted, a weight statistic uses the infinitesimal jackknife and a short index statistic uses the delete-one jackknife. The regression estimate is not rebuilt here; pass L."
+      },
+      {
+        "name": "h",
+        "text": "Monotone transformation. None means the identity and marks the calculation as being on the original scale. An explicit function, even the identity, marks it as transformed."
+      },
+      {
+        "name": "hdot",
+        "text": "Derivative of h. None means the constant 1. BCa accepts it and does not use it, as in the installed function."
+      },
+      {
+        "name": "hinv",
+        "text": "Inverse of h. None means the identity. If h is supplied and hinv is not, the endpoints stay on the transformed scale."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Further arguments for the statistic, used when the jackknife influence is calculated inside BCa."
+      }
+    ],
+    "details": "Index positions stay 1-based. A statistic with stype \"i\" receives 1-based indices. The normal interval is the bias-corrected normal approximation. Basic, percentile, and BCa endpoints are interpolated on the normal quantile scale. A time series bootstrap, marked by boot_type \"tsboot\", skips BCa with a warning. Constant replicates print the R message and return None. The length of t is checked against R before non-finite replicates are dropped. The jackknife influence used by BCa is private to this module.",
+    "value": "An object with R, t0, call, and the requested matrices normal, basic, student, percent, and bca. normal has three columns. The other four have five: level, two order-statistic indices, and two endpoints. print_bootci prints it.",
+    "example": "import numpy as np\nfrom boot.ci import boot_ci, print_bootci\n\ndata = np.array([2.3, 4.1, 3.3, 5.0, 4.4, 6.2, 3.8, 5.5])\n\ndef stat(d, w):\n    m = float(np.sum(d * w))\n    v = float(np.sum(w * (d - m) ** 2) * len(d) / (len(d) - 1) / len(d))\n    return np.array([m, v])\n\nt = np.column_stack([\n    [4.2, 4.0, 4.5, 3.9, 4.6, 4.1, 4.3, 3.8, 4.7, 4.15,\n     4.55, 3.95, 4.25, 4.35, 4.05, 4.65, 3.85, 4.45, 4.12, 4.28],\n    [0.18, 0.22, 0.15, 0.25, 0.14, 0.20, 0.17, 0.28, 0.13, 0.19,\n     0.16, 0.24, 0.18, 0.17, 0.21, 0.14, 0.27, 0.16, 0.20, 0.18],\n])\nweights = np.full(data.size, 1.0 / data.size)\nboot_out = {\n    \"t0\": stat(data, weights), \"t\": t, \"R\": 20, \"data\": data, \"statistic\": stat,\n    \"sim\": \"ordinary\", \"stype\": \"w\", \"strata\": np.ones(data.size, dtype=int),\n    \"weights\": weights, \"boot_type\": \"boot\",\n}\nprint_bootci(boot_ci(boot_out, conf=[0.90, 0.95],\n                     type=[\"norm\", \"basic\", \"stud\", \"perc\", \"bca\"]))",
+    "output": "output/boot.ci-python.txt"
+  }
+}

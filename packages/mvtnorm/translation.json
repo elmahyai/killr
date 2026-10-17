@@ -1,0 +1,1640 @@
+{
+  "name": "mvtnorm",
+  "cran_version": "1.4-2",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "mvtdst"
+  ],
+  "resume": "All exports of mvtnorm 1.4-2 match R within 1e-8. Genz\u2013Bretz and TVPACK are the Fortran in crates/mvtdst, with uniforms from boot and univariate margins from SciPy. Miwa is the C orthant routine in that crate. Lower-triangular algebra and the log-likelihoods are NumPy. utils::getFromNamespace is only used to call this package's own invchol, so utils is not loaded.",
+  "dependencies": {
+    "translated": [
+      "boot",
+      "extraDistr"
+    ],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": [
+      "mvtdst"
+    ]
+  },
+  "functions": [
+    {
+      "name": "dmvnorm",
+      "translated": true,
+      "python": "mvtnorm.dmvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Standard bivariate density at the origin.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Standard bivariate density at the origin.",
+        "r_ms": 0.21266937255859375,
+        "translated_ms": 0.14041200120118447,
+        "speedup": 1.514609654012963,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(dmvnorm(c(0, 0)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(dmvnorm([0.0, 0.0]))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "rmvnorm",
+      "translated": true,
+      "python": "mvtnorm.rmvnorm",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Two standard draws after set.seed(1), filled by row.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two standard draws after set.seed(1), filled by row.",
+        "r_ms": 0.926971435546875,
+        "translated_ms": 2.0129269978497177,
+        "speedup": 0.460509216944827,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  set.seed(1)\n  as.numeric(rmvnorm(2, sigma = diag(2)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    set_seed(1)\n    return flat(rmvnorm(2, sigma=np.eye(2)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "dmvt",
+      "translated": true,
+      "python": "mvtnorm.dmvt",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Unit bivariate t density at the origin, df 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Unit bivariate t density at the origin, df 1.",
+        "r_ms": 0.2415180206298828,
+        "translated_ms": 0.1048459998855833,
+        "speedup": 2.303550167802753,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(dmvt(c(0, 0), log = FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(dmvt([0.0, 0.0], log=False))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "rmvt",
+      "translated": true,
+      "python": "mvtnorm.rmvt",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Shifted t draws. Normals are drawn before the chi-squared scales.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shifted t draws. Normals are drawn before the chi-squared scales.",
+        "r_ms": 0.786900520324707,
+        "translated_ms": 2.361726001254283,
+        "speedup": 0.3331887441247605,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  set.seed(1)\n  as.numeric(rmvt(2, sigma = diag(2), df = 4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    set_seed(1)\n    return flat(rmvt(2, sigma=np.eye(2), df=4))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "pmvnorm",
+      "translated": true,
+      "python": "mvtnorm.pmvnorm",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "A length-one covariance is pnorm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A length-one covariance is pnorm.",
+        "r_ms": 0.07653236389160156,
+        "translated_ms": 0.08012700163817499,
+        "speedup": 0.9551382471191731,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(pmvnorm(lower = -Inf, upper = 3, mean = 0, sigma = 1))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(pmvnorm(lower=-math.inf, upper=3, mean=0, sigma=1))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "pmvt",
+      "translated": true,
+      "python": "mvtnorm.pmvt",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "A length-one problem is pt.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A length-one problem is pt.",
+        "r_ms": 0.09942054748535156,
+        "translated_ms": 0.5257629982224898,
+        "speedup": 0.18909765012272556,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(pmvt(lower = -Inf, upper = 2, df = 5, sigma = 1))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(pmvt(lower=-math.inf, upper=2, df=5, sigma=1))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qmvnorm",
+      "translated": true,
+      "python": "mvtnorm.qmvnorm",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Univariate normal quantile.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Univariate normal quantile.",
+        "r_ms": 0.20885467529296875,
+        "translated_ms": 0.27508550010679755,
+        "speedup": 0.7592354930081165,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  q <- qmvnorm(0.95, sigma = 1)\n  c(q$quantile, q$f.quantile)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    q = qmvnorm(0.95, sigma=1)\n    return np.array([q['quantile'], q['f.quantile']])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qmvt",
+      "translated": true,
+      "python": "mvtnorm.qmvt",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Univariate t quantile.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Univariate t quantile.",
+        "r_ms": 0.23496150970458984,
+        "translated_ms": 0.2635904984344961,
+        "speedup": 0.8913883888078737,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  q <- qmvt(0.9, df = 8, sigma = 1)\n  c(q$quantile, q$f.quantile)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    q = qmvt(0.9, df=8, sigma=1)\n    return np.array([q['quantile'], q['f.quantile']])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "GenzBretz",
+      "translated": true,
+      "python": "mvtnorm.GenzBretz",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Default lattice-rule settings.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default lattice-rule settings.",
+        "r_ms": 0.03170967102050781,
+        "translated_ms": 0.002070000846288167,
+        "speedup": 15.318675389610675,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  g <- GenzBretz()\n  c(g$maxpts, g$abseps, g$releps)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    g = GenzBretz()\n    return np.array([g.maxpts, g.abseps, g.releps])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Miwa",
+      "translated": true,
+      "python": "mvtnorm.Miwa",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Default Miwa grid.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default Miwa grid.",
+        "r_ms": 0.026345252990722656,
+        "translated_ms": 0.0021494997781701386,
+        "speedup": 12.256457645764577,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  g <- Miwa()\n  c(g$steps, g$maxval)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    g = Miwa()\n    return np.array([g.steps, g.maxval])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "TVPACK",
+      "translated": true,
+      "python": "mvtnorm.TVPACK",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Default absolute tolerance for dimension 2 or 3.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default absolute tolerance for dimension 2 or 3.",
+        "r_ms": 0.021219253540039062,
+        "translated_ms": 0.0036644996725954115,
+        "speedup": 5.790491318289669,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  TVPACK()$eps\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return np.array([TVPACK().eps])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ltMatrices",
+      "translated": true,
+      "python": "mvtnorm.ltMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One unit lower triangle, diagonal stored.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One unit lower triangle, diagonal stored.",
+        "r_ms": 0.09930133819580078,
+        "translated_ms": 0.016587000573053956,
+        "speedup": 5.986696495152871,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(ltMatrices(c(1, 0, 1), diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(ltMatrices([1.0, 0.0, 1.0], diag=True))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "syMatrices",
+      "translated": true,
+      "python": "mvtnorm.syMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One symmetric matrix stored as its lower triangle.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One symmetric matrix stored as its lower triangle.",
+        "r_ms": 0.16009807586669922,
+        "translated_ms": 0.028876002033939585,
+        "speedup": 5.544329705979622,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(syMatrices(c(1, 0.2, 1), diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(syMatrices([1.0, 0.2, 1.0], diag=True))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "as.ltMatrices",
+      "translated": true,
+      "python": "mvtnorm.as_ltMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The strict lower triangle of the identity is 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The strict lower triangle of the identity is 0.",
+        "r_ms": 0.36525726318359375,
+        "translated_ms": 0.2334729997528484,
+        "speedup": 1.5644518362733615,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(as.ltMatrices(matrix(c(1, 0, 0, 1), 2))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(as_ltMatrices(np.array([[1.0, 0.0], [0.0, 1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "as.syMatrices",
+      "translated": true,
+      "python": "mvtnorm.as_syMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The same packed values, class syMatrices.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same packed values, class syMatrices.",
+        "r_ms": 0.1900196075439453,
+        "translated_ms": 0.027382498956285417,
+        "speedup": 6.939454570866621,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(as.syMatrices(ltMatrices(c(1, 0, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(as_syMatrices(ltMatrices([1.0, 0.0, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "is.ltMatrices",
+      "translated": true,
+      "python": "mvtnorm.is_ltMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The constructor's class test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The constructor's class test.",
+        "r_ms": 0.1035928726196289,
+        "translated_ms": 0.026042001991299912,
+        "speedup": 3.9779150871057114,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  is.ltMatrices(ltMatrices(c(1, 0, 1), diag = TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return np.array([is_ltMatrices(ltMatrices([1.0, 0.0, 1.0], diag=True))])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "is.syMatrices",
+      "translated": true,
+      "python": "mvtnorm.is_syMatrices",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The symmetric class test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The symmetric class test.",
+        "r_ms": 0.22161006927490234,
+        "translated_ms": 0.04670400085160509,
+        "speedup": 4.744991119262671,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  is.syMatrices(syMatrices(c(1, 0.2, 1), diag = TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return np.array([is_syMatrices(syMatrices([1.0, 0.2, 1.0], diag=True))])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "is.chol",
+      "translated": true,
+      "python": "mvtnorm.is_chol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "as.chol adds the chol class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "as.chol adds the chol class.",
+        "r_ms": 0.20015239715576172,
+        "translated_ms": 0.03607500002544839,
+        "speedup": 5.548229993473824,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  is.chol(as.chol(ltMatrices(c(1, 0, 1), diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return np.array([is_chol(as_chol(ltMatrices([1.0, 0.0, 1.0], diag=True)))])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "is.invchol",
+      "translated": true,
+      "python": "mvtnorm.is_invchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "as.invchol adds the invchol class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "as.invchol adds the invchol class.",
+        "r_ms": 0.18799304962158203,
+        "translated_ms": 0.04263949995220173,
+        "speedup": 4.40889433113239,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  is.invchol(as.invchol(ltMatrices(c(1, -0.2, 1), diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return np.array([is_invchol(as_invchol(ltMatrices([1.0, -0.2, 1.0], diag=True)))])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "as.chol",
+      "translated": true,
+      "python": "mvtnorm.as_chol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The packed values are unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The packed values are unchanged.",
+        "r_ms": 0.13267993927001953,
+        "translated_ms": 0.04246599928592332,
+        "speedup": 3.124380480880393,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(as.chol(ltMatrices(c(1, 0, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(as_chol(ltMatrices([1.0, 0.0, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "as.invchol",
+      "translated": true,
+      "python": "mvtnorm.as_invchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The packed values are unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The packed values are unchanged.",
+        "r_ms": 0.1800060272216797,
+        "translated_ms": 0.043062498662038706,
+        "speedup": 4.18011106681002,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(as.invchol(ltMatrices(c(1, -0.2, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(as_invchol(ltMatrices([1.0, -0.2, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "diagonals",
+      "translated": true,
+      "python": "mvtnorm.diagonals",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The stored diagonal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The stored diagonal.",
+        "r_ms": 0.20575523376464844,
+        "translated_ms": 0.058720002925838344,
+        "speedup": 3.504005850008409,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(diagonals(ltMatrices(c(2, 0.3, 4), diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(diagonals(ltMatrices([2.0, 0.3, 4.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "diagonals<-",
+      "translated": true,
+      "python": "mvtnorm.set_diagonals",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Replace the diagonal and keep the off-diagonal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Replace the diagonal and keep the off-diagonal.",
+        "r_ms": 0.3031492233276367,
+        "translated_ms": 0.05813700227008667,
+        "speedup": 5.214393785205822,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  x <- ltMatrices(c(2, 0.3, 4), diag = TRUE)\n  diagonals(x) <- c(1, 1)\n  as.numeric(unclass(x))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(set_diagonals(ltMatrices([2.0, 0.3, 4.0], diag=True), np.array([[1.0], [1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "chol2cov",
+      "translated": true,
+      "python": "mvtnorm.chol2cov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Sigma = C C'. Packed lower triangle.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Sigma = C C'. Packed lower triangle.",
+        "r_ms": 1.0256767272949219,
+        "translated_ms": 0.20196249897708185,
+        "speedup": 5.078550386779047,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(chol2cov(as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(chol2cov(as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "cov2chol",
+      "translated": true,
+      "python": "mvtnorm.cov2chol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Cholesky of a symmetric matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Cholesky of a symmetric matrix.",
+        "r_ms": 0.2715587615966797,
+        "translated_ms": 0.2191615003539482,
+        "speedup": 1.2390805919749104,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(cov2chol(syMatrices(c(4, 1, 3), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(cov2chol(syMatrices([4.0, 1.0, 3.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "logdet",
+      "translated": true,
+      "python": "mvtnorm.logdet",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Sum of log diagonal entries.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Sum of log diagonal entries.",
+        "r_ms": 0.25665760040283203,
+        "translated_ms": 0.07813549927959684,
+        "speedup": 3.2847758415725874,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(logdet(as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(logdet(as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Lower_tri",
+      "translated": true,
+      "python": "mvtnorm.Lower_tri",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The packed triangle, diagonal included.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The packed triangle, diagonal included.",
+        "r_ms": 0.1939535140991211,
+        "translated_ms": 0.01893900116556324,
+        "speedup": 10.240957926112095,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(Lower_tri(ltMatrices(c(1, 0.2, 1), diag = TRUE), diag = TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(Lower_tri(ltMatrices([1.0, 0.2, 1.0], diag=True), diag=True))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Mult",
+      "translated": true,
+      "python": "mvtnorm.Mult",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One triangular matrix times a column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One triangular matrix times a column.",
+        "r_ms": 0.18095970153808594,
+        "translated_ms": 0.10687999929359648,
+        "speedup": 1.6931109911499391,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- ltMatrices(c(1, 0.2, 1), diag = TRUE)\n  as.numeric(Mult(C, matrix(c(1, 2), 2)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(Mult(ltMatrices([1.0, 0.2, 1.0], diag=True), np.array([[1.0], [2.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Tcrossprod",
+      "translated": true,
+      "python": "mvtnorm.Tcrossprod",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "C C', packed.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "C C', packed.",
+        "r_ms": 1.105189323425293,
+        "translated_ms": 0.2705474998947466,
+        "speedup": 4.0850102989502926,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(Tcrossprod(ltMatrices(c(1, 0.2, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(Tcrossprod(ltMatrices([1.0, 0.2, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Crossprod",
+      "translated": true,
+      "python": "mvtnorm.Crossprod",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "C' C, packed.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "C' C, packed.",
+        "r_ms": 0.6086826324462891,
+        "translated_ms": 0.271862001682166,
+        "speedup": 2.2389397145611403,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(Crossprod(ltMatrices(c(1, 0.2, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(Crossprod(ltMatrices([1.0, 0.2, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol",
+      "translated": true,
+      "python": "mvtnorm.invchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Inverse Cholesky of a 2 by 2 covariance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Inverse Cholesky of a 2 by 2 covariance.",
+        "r_ms": 1.4014244079589844,
+        "translated_ms": 0.844786500238115,
+        "speedup": 1.6589095677593961,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(invchol(matrix(c(2, 0.4, 0.4, 1), 2))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol(np.array([[2.0, 0.4], [0.4, 1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol2chol",
+      "translated": true,
+      "python": "mvtnorm.invchol2chol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Invert an inverse-Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Invert an inverse-Cholesky factor.",
+        "r_ms": 0.3085136413574219,
+        "translated_ms": 0.29617149812111165,
+        "speedup": 1.041672285532564,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  L <- as.invchol(ltMatrices(c(1, -0.2, 1), diag = TRUE))\n  as.numeric(unclass(invchol2chol(L)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol2chol(as_invchol(ltMatrices([1.0, -0.2, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "chol2invchol",
+      "translated": true,
+      "python": "mvtnorm.chol2invchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Invert a Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Invert a Cholesky factor.",
+        "r_ms": 0.2714395523071289,
+        "translated_ms": 0.1718024996080203,
+        "speedup": 1.5799511236823542,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- as.chol(ltMatrices(c(1, 0.2, 1), diag = TRUE))\n  as.numeric(unclass(chol2invchol(C)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(chol2invchol(as_chol(ltMatrices([1.0, 0.2, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol2cov",
+      "translated": true,
+      "python": "mvtnorm.invchol2cov",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Covariance from an inverse Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Covariance from an inverse Cholesky.",
+        "r_ms": 1.1783838272094727,
+        "translated_ms": 0.4553050002868986,
+        "speedup": 2.588119670258277,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  L <- as.invchol(ltMatrices(c(1, -0.2, 1), diag = TRUE))\n  as.numeric(unclass(invchol2cov(L)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol2cov(as_invchol(ltMatrices([1.0, -0.2, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "cov2invchol",
+      "translated": true,
+      "python": "mvtnorm.cov2invchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Inverse Cholesky of a covariance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Inverse Cholesky of a covariance.",
+        "r_ms": 0.8466243743896484,
+        "translated_ms": 0.8367325008293847,
+        "speedup": 1.011822026215617,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(cov2invchol(matrix(c(2, 0.4, 0.4, 1), 2))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(cov2invchol(np.array([[2.0, 0.4], [0.4, 1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "chol2pre",
+      "translated": true,
+      "python": "mvtnorm.chol2pre",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Precision from a Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Precision from a Cholesky factor.",
+        "r_ms": 0.4616975784301758,
+        "translated_ms": 0.495668000439764,
+        "speedup": 0.9314653720243204,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- as.chol(ltMatrices(c(1, 0.2, 1), diag = TRUE))\n  as.numeric(unclass(chol2pre(C)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(chol2pre(as_chol(ltMatrices([1.0, 0.2, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol2pre",
+      "translated": true,
+      "python": "mvtnorm.invchol2pre",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Precision from an inverse Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Precision from an inverse Cholesky.",
+        "r_ms": 0.47469139099121094,
+        "translated_ms": 0.20440650041564368,
+        "speedup": 2.322291072084133,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  L <- as.invchol(ltMatrices(c(1, -0.2, 1), diag = TRUE))\n  as.numeric(unclass(invchol2pre(L)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol2pre(as_invchol(ltMatrices([1.0, -0.2, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Dchol",
+      "translated": true,
+      "python": "mvtnorm.Dchol",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Scale a Cholesky factor to a correlation factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Scale a Cholesky factor to a correlation factor.",
+        "r_ms": 0.6712675094604492,
+        "translated_ms": 0.19162450007570442,
+        "speedup": 3.503035933271862,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(Dchol(as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(Dchol(as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invcholD",
+      "translated": true,
+      "python": "mvtnorm.invcholD",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Scale an inverse Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Scale an inverse Cholesky.",
+        "r_ms": 0.46443939208984375,
+        "translated_ms": 0.3348050013300963,
+        "speedup": 1.3871937105023597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(invcholD(as.invchol(ltMatrices(c(1, -0.2, 1.5), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invcholD(as_invchol(ltMatrices([1.0, -0.2, 1.5], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "chol2cor",
+      "translated": true,
+      "python": "mvtnorm.chol2cor",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Correlation from a Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Correlation from a Cholesky factor.",
+        "r_ms": 1.6350746154785156,
+        "translated_ms": 0.8495305010001175,
+        "speedup": 1.9246802952379098,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(chol2cor(as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(chol2cor(as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol2cor",
+      "translated": true,
+      "python": "mvtnorm.invchol2cor",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Correlation from an inverse Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Correlation from an inverse Cholesky.",
+        "r_ms": 1.696467399597168,
+        "translated_ms": 1.1938649986404926,
+        "speedup": 1.4209876338857503,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(invchol2cor(as.invchol(ltMatrices(c(1, -0.2, 1.5), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol2cor(as_invchol(ltMatrices([1.0, -0.2, 1.5], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "chol2pc",
+      "translated": true,
+      "python": "mvtnorm.chol2pc",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Partial correlations from a Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Partial correlations from a Cholesky factor.",
+        "r_ms": 1.2271404266357422,
+        "translated_ms": 0.8407245022681309,
+        "speedup": 1.4596225319056686,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(chol2pc(as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(chol2pc(as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "invchol2pc",
+      "translated": true,
+      "python": "mvtnorm.invchol2pc",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Partial correlations from an inverse Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Partial correlations from an inverse Cholesky.",
+        "r_ms": 1.3943910598754883,
+        "translated_ms": 0.6504269986180589,
+        "speedup": 2.143808702341855,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(invchol2pc(as.invchol(ltMatrices(c(1, -0.2, 1.5), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(invchol2pc(as_invchol(ltMatrices([1.0, -0.2, 1.5], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "vectrick",
+      "translated": true,
+      "python": "mvtnorm.vectrick",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "With S and A omitted, the product is C' C.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "With S and A omitted, the product is C' C.",
+        "r_ms": 1.0890960693359375,
+        "translated_ms": 0.5111680020490894,
+        "speedup": 2.1306029817401355,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(vectrick(ltMatrices(c(1, 0.3, 1), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(vectrick(ltMatrices([1.0, 0.3, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "marg_mvnorm",
+      "translated": true,
+      "python": "mvtnorm.marg_mvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The leading 2 by 2 Cholesky block.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The leading 2 by 2 Cholesky block.",
+        "r_ms": 0.7979869842529297,
+        "translated_ms": 1.1718344994733343,
+        "speedup": 0.6809724279423199,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- as.chol(ltMatrices(c(1, 0.3, 1, 0.2, 0.1, 1), diag = TRUE))\n  as.numeric(unclass(marg_mvnorm(chol = C, which = 1:2)$chol))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(marg_mvnorm(chol=as_chol(ltMatrices([1, 0.3, 1, 0.2, 0.1, 1], diag=True)), which=[1, 2])['chol'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "cond_mvnorm",
+      "translated": true,
+      "python": "mvtnorm.cond_mvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Condition the second margin on the first at 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Condition the second margin on the first at 0.",
+        "r_ms": 1.4327764511108398,
+        "translated_ms": 1.6236014998867176,
+        "speedup": 0.882468050941569,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- as.chol(ltMatrices(c(1, 0.3, 1), diag = TRUE))\n  as.numeric(unclass(cond_mvnorm(chol = C, which_given = 1, given = matrix(0, 1))$chol))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(cond_mvnorm(chol=as_chol(ltMatrices([1.0, 0.3, 1.0], diag=True)), which_given=1, given=np.array([[0.0]]))['chol'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ldmvnorm",
+      "translated": true,
+      "python": "mvtnorm.ldmvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Log-density of two bivariate observations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Log-density of two bivariate observations.",
+        "r_ms": 0.5750656127929688,
+        "translated_ms": 0.28600250152521767,
+        "speedup": 2.0107013390659576,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- ltMatrices(c(1, 0, 1), diag = TRUE)\n  obs <- matrix(c(0, 0, 1, -1), 2)\n  as.numeric(ldmvnorm(obs, chol = C))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(ldmvnorm(np.array([[0.0, 1.0], [0.0, -1.0]]), chol=ltMatrices([1.0, 0.0, 1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lpmvnorm",
+      "translated": true,
+      "python": "mvtnorm.lpmvnorm",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Interval log-probability, dimension 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Interval log-probability, dimension 1.",
+        "r_ms": 1.2407302856445312,
+        "translated_ms": 0.9433790000912268,
+        "speedup": 1.3151981181736607,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(lpmvnorm(lower = -1, upper = 1, chol = ltMatrices(1, diag = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(lpmvnorm(lower=-1, upper=1, chol=ltMatrices([1.0], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "slpmvnorm",
+      "translated": true,
+      "python": "mvtnorm.slpmvnorm",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Score log-likelihood in one dimension.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Score log-likelihood in one dimension.",
+        "r_ms": 2.4307966232299805,
+        "translated_ms": 1.5551830001641065,
+        "speedup": 1.5630293174330463,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(slpmvnorm(lower = -1, upper = 1, chol = ltMatrices(1, diag = TRUE))$logLik)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(slpmvnorm(lower=-1, upper=1, chol=ltMatrices([1.0], diag=True))['logLik'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "sldmvnorm",
+      "translated": true,
+      "python": "mvtnorm.sldmvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Score of an exact observation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Score of an exact observation.",
+        "r_ms": 2.0453929901123047,
+        "translated_ms": 2.0892795000690967,
+        "speedup": 0.9789944284834362,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(sldmvnorm(matrix(c(0, 1), 2), chol = ltMatrices(c(1, 0.3, 1), diag = TRUE))$logLik)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(sldmvnorm(np.array([[0.0], [1.0]]), chol=ltMatrices([1.0, 0.3, 1.0], diag=True))['logLik'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ldpmvnorm",
+      "translated": true,
+      "python": "mvtnorm.ldpmvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Interval log-likelihood with a fixed weight row.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Interval log-likelihood with a fixed weight row.",
+        "r_ms": 1.6405582427978516,
+        "translated_ms": 2.4406894990534056,
+        "speedup": 0.6721699927148144,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- ltMatrices(c(1, 0.3, 1), diag = TRUE)\n  as.numeric(ldpmvnorm(lower = matrix(-1, 2), upper = matrix(1, 2), chol = C, w = matrix(c(0.2, 0.5, 0.8), 1)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(ldpmvnorm(lower=np.array([[-1.0], [-1.0]]), upper=np.array([[1.0], [1.0]]), chol=ltMatrices([1.0, 0.3, 1.0], diag=True), w=np.array([[0.2, 0.5, 0.8]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "sldpmvnorm",
+      "translated": true,
+      "python": "mvtnorm.sldpmvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Score of that interval likelihood.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Score of that interval likelihood.",
+        "r_ms": 2.0520687103271484,
+        "translated_ms": 2.547156500440906,
+        "speedup": 0.8056311851949187,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- ltMatrices(c(1, 0.3, 1), diag = TRUE)\n  as.numeric(sldpmvnorm(lower = matrix(-1, 2), upper = matrix(1, 2), chol = C, w = matrix(c(0.2, 0.5, 0.8), 1))$logLik)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(sldpmvnorm(lower=np.array([[-1.0], [-1.0]]), upper=np.array([[1.0], [1.0]]), chol=ltMatrices([1.0, 0.3, 1.0], diag=True), w=np.array([[0.2, 0.5, 0.8]]))['logLik'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "standardize",
+      "translated": true,
+      "python": "mvtnorm.standardize",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Correlation-scale Cholesky.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Correlation-scale Cholesky.",
+        "r_ms": 0.6467103958129883,
+        "translated_ms": 0.2007375005632639,
+        "speedup": 3.2216720542914836,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(standardize(chol = as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(standardize(chol=as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "destandardize",
+      "translated": true,
+      "python": "mvtnorm.destandardize",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Map a standardized score back to the covariance scale.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Map a standardized score back to the covariance scale.",
+        "r_ms": 4.327178001403809,
+        "translated_ms": 4.7982404994399985,
+        "speedup": 0.9018259926547726,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(destandardize(chol = as.chol(ltMatrices(c(2, 0.5, 3), diag = TRUE)), score_schol = ltMatrices(c(0.1, 0.2, 0.3), diag = TRUE))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(destandardize(chol=as_chol(ltMatrices([2.0, 0.5, 3.0], diag=True)), score_schol=ltMatrices([0.1, 0.2, 0.3], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "deperma",
+      "translated": true,
+      "python": "mvtnorm.deperma",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "With perm omitted the score is returned as stored.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "With perm omitted the score is returned as stored.",
+        "r_ms": 0.34046173095703125,
+        "translated_ms": 0.11703749987646006,
+        "speedup": 2.9089969566712255,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  C <- as.chol(ltMatrices(c(1, 0.3, 1), diag = TRUE))\n  sc <- ltMatrices(c(0.1, 0.2, 0.3), diag = TRUE)\n  as.numeric(deperma(chol = C, permuted_chol = C, score_schol = sc))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    C = as_chol(ltMatrices([1.0, 0.3, 1.0], diag=True))\n    return flat(deperma(chol=C, permuted_chol=C, score_schol=ltMatrices([0.1, 0.2, 0.3], diag=True)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lpRR",
+      "translated": true,
+      "python": "mvtnorm.lpRR",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Log-probability of a rectangular region.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Log-probability of a rectangular region.",
+        "r_ms": 0.25212764739990234,
+        "translated_ms": 0.17748000027495436,
+        "speedup": 1.420597515265398,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  B <- matrix(c(1, 0, 0.5, 1), 2)\n  Z <- matrix(c(0, 0.5, -0.5, 1), 2)\n  as.numeric(lpRR(lower = c(-1, -1), upper = c(1, 1), B = B, Z = Z))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(lpRR(lower=np.array([-1.0, -1.0]), upper=np.array([1.0, 1.0]), B=np.array([[1.0, 0.5], [0.0, 1.0]]), Z=np.array([[0.0, -0.5], [0.5, 1.0]])))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "slpRR",
+      "translated": true,
+      "python": "mvtnorm.slpRR",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Mean score of that region.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Mean score of that region.",
+        "r_ms": 0.32651424407958984,
+        "translated_ms": 0.40624249959364533,
+        "speedup": 0.8037422091637242,
+        "matches": true,
+        "max_abs_diff": 6.938893903907228e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  B <- matrix(c(1, 0, 0.5, 1), 2)\n  Z <- matrix(c(0, 0.5, -0.5, 1), 2)\n  as.numeric(slpRR(lower = c(-1, -1), upper = c(1, 1), B = B, Z = Z)$mean)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(slpRR(lower=np.array([-1.0, -1.0]), upper=np.array([1.0, 1.0]), B=np.array([[1.0, 0.5], [0.0, 1.0]]), Z=np.array([[0.0, -0.5], [0.5, 1.0]]))['mean'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "mvnorm",
+      "translated": true,
+      "python": "mvtnorm.mvnorm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Covariance of a model whose Cholesky is the identity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Covariance of a model whose Cholesky is the identity.",
+        "r_ms": 1.2042522430419922,
+        "translated_ms": 0.49399700037611183,
+        "speedup": 2.437772379437764,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  as.numeric(unclass(vcov(mvnorm(mean = c(1, 2), chol = ltMatrices(c(1, 0, 1), diag = TRUE)))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(vcov_mvnorm(mvnorm(mean=np.array([1.0, 2.0]), chol=ltMatrices([1.0, 0.0, 1.0], diag=True))))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "margDist",
+      "translated": true,
+      "python": "mvtnorm.margDist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The first margin of a bivariate model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The first margin of a bivariate model.",
+        "r_ms": 0.7619857788085938,
+        "translated_ms": 0.7400574995699571,
+        "speedup": 1.0296305074286511,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  m <- mvnorm(chol = as.chol(ltMatrices(c(1, 0.3, 1), diag = TRUE)))\n  as.numeric(unclass(margDist(m, 1)$scale))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(margDist(mvnorm(chol=as_chol(ltMatrices([1.0, 0.3, 1.0], diag=True))), 1).scale)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "condDist",
+      "translated": true,
+      "python": "mvtnorm.condDist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The conditional scale given the first margin at 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The conditional scale given the first margin at 0.",
+        "r_ms": 1.6924142837524414,
+        "translated_ms": 1.5737054982309928,
+        "speedup": 1.0754326560178442,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  m <- mvnorm(chol = as.chol(ltMatrices(c(1, 0.3, 1), diag = TRUE)))\n  as.numeric(unclass(condDist(m, which_given = 1, given = matrix(0, 1))$scale))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    return flat(condDist(mvnorm(chol=as_chol(ltMatrices([1.0, 0.3, 1.0], diag=True))), which_given=1, given=np.array([[0.0]])).scale)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lLgrad",
+      "translated": true,
+      "python": "mvtnorm.lLgrad",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Score of two exact zeros. Row names are required.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Score of two exact zeros. Row names are required.",
+        "r_ms": 2.79843807220459,
+        "translated_ms": 2.1394435007096035,
+        "speedup": 1.3080214884274406,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(mvtnorm))\nfmt <- function(x) {\n  if (is.logical(x) && length(x) == 1) return(if (isTRUE(x)) \"1\" else \"0\")\n  paste(sprintf(\"%.16g\", as.numeric(x)), collapse = \" \")\n}\none <- function() {\n  m <- mvnorm(chol = as.chol(ltMatrices(c(1, 0.3, 1), diag = TRUE)))\n  obs <- matrix(0, 2, 1, dimnames = list(c('1', '2'), NULL))\n  as.numeric(lLgrad(m, obs = obs)$scale)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(fmt(value), \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom mvtnorm import *\n\ndef flat(x):\n    if isinstance(x, (bool, np.bool_)):\n        return np.array([1.0 if x else 0.0])\n    return np.atleast_1d(np.asarray(x, dtype=float)).ravel(order=\"F\")\n\ndef one():\n    from mvtnorm._iface import _RMatrix\n    return flat(lLgrad(mvnorm(chol=as_chol(ltMatrices([1.0, 0.3, 1.0], diag=True))), obs=_RMatrix(np.zeros((2, 1)), rownames=['1', '2']))['scale'])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\" \".join(f\"{v:.16g}\" for v in flat(value)))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

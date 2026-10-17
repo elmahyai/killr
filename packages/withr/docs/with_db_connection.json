@@ -1,0 +1,40 @@
+{
+  "name": "with_db_connection",
+  "title": "Database connection that disconnects",
+  "origin": {
+    "description": "Run code, then disconnect each named connection.",
+    "usage": "with_db_connection(new, code, ...)",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Mapping of names to objects with disconnect()."
+      },
+      {
+        "name": "code",
+        "text": "Callable run before disconnect."
+      }
+    ],
+    "details": "R checks DBIConnection and calls DBI::dbDisconnect. The translation calls disconnect().",
+    "value": "Whatever code returns.",
+    "example": "suppressPackageStartupMessages({library(DBI); library(RSQLite)})\npath <- tempfile()\nsetup <- DBI::dbConnect(RSQLite::SQLite(), path)\nDBI::dbExecute(setup, \"CREATE TABLE t (x REAL)\")\nDBI::dbExecute(setup, \"INSERT INTO t VALUES (1), (2)\")\nDBI::dbDisconnect(setup)\ntotal <- with_db_connection(list(con = DBI::dbConnect(RSQLite::SQLite(), path)), {\n  DBI::dbGetQuery(con, \"SELECT SUM(x) AS s FROM t\")$s\n})\nunlink(path)\ntotal\n",
+    "output": "output/with_db_connection-r.txt"
+  },
+  "translation": {
+    "description": "Run code, then disconnect each named connection.",
+    "usage": "with_db_connection(new, code, ...)",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Mapping of names to objects with disconnect()."
+      },
+      {
+        "name": "code",
+        "text": "Callable run before disconnect."
+      }
+    ],
+    "details": "R checks DBIConnection and calls DBI::dbDisconnect. The translation calls disconnect(). code is a callable, and local_* is a context manager.",
+    "value": "Whatever code returns.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\nimport sqlite3\nfd, path = tempfile.mkstemp()\nos.close(fd)\nraw = sqlite3.connect(path)\nraw.execute(\"CREATE TABLE t (x REAL)\")\nraw.execute(\"INSERT INTO t VALUES (1), (2)\")\nraw.commit()\nraw.close()\n\nclass Conn:\n    def __init__(self, path):\n        self.raw = sqlite3.connect(path)\n    def disconnect(self):\n        self.raw.close()\n\ncon = Conn(path)\ntotal = with_db_connection(\n    {\"con\": con},\n    lambda: con.raw.execute(\"SELECT SUM(x) FROM t\").fetchone()[0],\n)\nos.remove(path)\nreturn total\n",
+    "output": "output/with_db_connection-python.txt"
+  }
+}

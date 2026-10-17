@@ -1,0 +1,992 @@
+{
+  "name": "deSolve",
+  "cran_version": "1.42",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "ccl4model",
+    "aquaphy",
+    "scoc",
+    "lagvalue",
+    "rksolv",
+    "dvode",
+    "radau5",
+    "dlsode",
+    "lagderiv",
+    "lsodes",
+    "daspk",
+    "lsodar",
+    "zvode",
+    "dede",
+    "dlsoda"
+  ],
+  "resume": "Checked checkDLL, matplot.0D, matplot.1D, matplot.deSolve, euler.1D, nearestEvent, plot.1D, ode, ode.3D, ode.band, diagnostics.deSolve, diagnostics.default, and diagnostics, ode.2D, dede and DLLres, ode.1D, lsode, lagderiv, lsodes, daspk, lsodar, and zvode, radau, DLLfunc, rk, and vode, aquaphy, ccl4model, SCOC, lagvalue, and timestep, rk4 and rkMethod, cleanEventTimes. The other exports are listed and not translated. Reserved lsoda and euler. All exports translated.",
+  "functions": [
+    {
+      "name": "aquaphy",
+      "translated": true,
+      "python": "deSolve.aquaphy.aquaphy",
+      "loads": [],
+      "uses": [],
+      "done": "Aquaphy algal derivative from ex_Aquaphy.c. Integration is not included.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "aquaphy derivative on seq(0, 48, 0.5) with the help-page state",
+        "r_ms": 9.376287460327148,
+        "translated_ms": 0.11699050082825124,
+        "speedup": 80.14571605340912,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nparameters <- c(\n  maxPhotoSynt = 0.125,\n  rMortPHY = 0.001,\n  alpha = -0.125 / 150,\n  pExudation = 0.0,\n  maxProteinSynt = 0.136,\n  ksDIN = 1.0,\n  minpLMW = 0.05,\n  maxpLMW = 0.15,\n  minQuotum = 0.075,\n  maxStorage = 0.23,\n  respirationRate = 0.0001,\n  pResp = 0.4,\n  catabolismRate = 0.06,\n  dilutionRate = 0.01,\n  rNCProtein = 0.2,\n  inputDIN = 10.0,\n  rChlN = 1,\n  parMean = 250.0,\n  dayLength = 15.0\n)\n\nstate <- c(\n  DIN = 6.0,\n  PROTEIN = 20.0,\n  RESERVE = 5.0,\n  LMW = 1.0\n)\nnames(state) <- c(\"DIN\", \"PROTEIN\", \"RESERVE\", \"LMW\")\noutnames <- c(\n  \"PAR\", \"TotalN\", \"PhotoSynthesis\",\n  \"NCratio\", \"ChlCratio\", \"Chlorophyll\"\n)\n\neval_times <- seq(0, 48, 0.5)\n\none <- function() {\n  vals <- numeric(0)\n  for (t in eval_times) {\n    out <- DLLfunc(\n      func = \"aquaphy\", times = t, y = state, parms = parameters,\n      dllname = \"deSolve\", initfunc = \"iniaqua\", nout = 6, outnames = outnames\n    )\n    vals <- c(vals, as.numeric(out$dy), as.numeric(out$var))\n  }\n  vals\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.aquaphy import aquaphy_derivative_pack\n\nparameters = np.array(\n    [\n        0.125,\n        0.001,\n        -0.125 / 150,\n        0.0,\n        0.136,\n        1.0,\n        0.05,\n        0.15,\n        0.075,\n        0.23,\n        0.0001,\n        0.4,\n        0.06,\n        0.01,\n        0.2,\n        10.0,\n        1.0,\n        250.0,\n        15.0,\n    ],\n    dtype=np.float64,\n)\n\nstate = np.array([6.0, 20.0, 5.0, 1.0], dtype=np.float64)\neval_times = np.array([i * 0.5 for i in range(int(48 / 0.5) + 1)], dtype=np.float64)\n\n\ndef one():\n    return aquaphy_derivative_pack(eval_times, state, parameters)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ccl4model",
+      "translated": true,
+      "python": "deSolve.ccl4model.ccl4model",
+      "loads": [],
+      "uses": [
+        "rk4"
+      ],
+      "done": "CCl4 inhalation model. The derivative is the ccl4model crate. Integration uses rk4.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ccl4model with method rk4 on times 0, 0.1, 0.2, 0.3",
+        "r_ms": 1.1190176010131836,
+        "translated_ms": 0.4869325002800906,
+        "speedup": 2.2980959380807575,
+        "matches": true,
+        "max_abs_diff": 5.684341886080802e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nPm <- c(\n  BW = 0.182, QP = 4.0, QC = 4.0, VFC = 0.08, VLC = 0.04, VMC = 0.74,\n  QFC = 0.05, QLC = 0.15, QMC = 0.32, PLA = 16.17, PFA = 281.48, PMA = 13.3,\n  PTA = 16.17, PB = 5.487, MW = 153.8, VMAX = 0.04321671, KM = 0.4027255,\n  CONC = 1000, KL = 0.02, RATS = 1.0, VCHC = 3.8\n)\ny <- c(AI = 21, AAM = 0, AT = 0, AF = 0, AL = 0, CLT = 0, AM = 0)\ntimes <- seq(0, 0.3, by = 0.1)\none <- function() {\n  out <- ccl4model(times, y, Pm, method = \"rk4\")\n  as.vector(out)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.ccl4model import ccl4model\n\nPm = {\n    \"BW\": 0.182,\n    \"QP\": 4.0,\n    \"QC\": 4.0,\n    \"VFC\": 0.08,\n    \"VLC\": 0.04,\n    \"VMC\": 0.74,\n    \"QFC\": 0.05,\n    \"QLC\": 0.15,\n    \"QMC\": 0.32,\n    \"PLA\": 16.17,\n    \"PFA\": 281.48,\n    \"PMA\": 13.3,\n    \"PTA\": 16.17,\n    \"PB\": 5.487,\n    \"MW\": 153.8,\n    \"VMAX\": 0.04321671,\n    \"KM\": 0.4027255,\n    \"CONC\": 1000.0,\n    \"KL\": 0.02,\n    \"RATS\": 1.0,\n    \"VCHC\": 3.8,\n}\ny = {\"AI\": 21.0, \"AAM\": 0.0, \"AT\": 0.0, \"AF\": 0.0, \"AL\": 0.0, \"CLT\": 0.0, \"AM\": 0.0}\ntimes = [0.0, 0.1, 0.2, 0.3]\n\n\ndef one():\n    out = ccl4model(times, y, Pm, method=\"rk4\")\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": [float(item) for item in value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "SCOC",
+      "translated": true,
+      "python": "deSolve.SCOC.SCOC",
+      "loads": [],
+      "uses": [],
+      "done": "SCOC sediment derivative from ex_SCOC.c. The check is the derivative.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "scocder at five (k, y, depo) points",
+        "r_ms": 1.428365707397461,
+        "translated_ms": 21.02558849946945,
+        "speedup": 0.06793463628537692,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nFlux <- matrix(\n  ncol = 2,\n  byrow = TRUE,\n  data = c(\n    1, 0.654, 11, 0.167, 21, 0.060, 41, 0.070, 73, 0.277, 83, 0.186,\n    93, 0.140, 103, 0.255, 113, 0.231, 123, 0.309, 133, 1.127, 143, 1.923,\n    153, 1.091, 163, 1.001, 173, 1.691, 183, 1.404, 194, 1.226, 204, 0.767,\n    214, 0.893, 224, 0.737, 234, 0.772, 244, 0.726, 254, 0.624, 264, 0.439,\n    274, 0.168, 284, 0.280, 294, 0.202, 304, 0.193, 315, 0.286, 325, 0.599,\n    335, 1.889, 345, 0.996, 355, 0.681, 365, 1.135\n  )\n)\nparms <- c(k = 0.01)\n\nscocder_value <- function(k, y, depo) {\n  c(ydot = -k * y + depo, Mineralisation = k * y, Depo = depo)\n}\n\nproof_one <- function() {\n  pts <- list(\n    c(0.01, 63.00301, 0.654),\n    c(0.01, 34.3997631, 0.2205),\n    c(0.01, 72.98281, 1.135),\n    c(0.02, 10.0, 0.5),\n    c(0.005, 100.0, 0.0)\n  )\n  vapply(\n    pts,\n    function(p) scocder_value(p[1], p[2], p[3]),\n    numeric(3)\n  )\n}\n\nvalue <- as.vector(proof_one())\n\ntiming_one <- function() {\n  SCOC(1:365, parms = parms, Flux = Flux)\n}\ninvisible(timing_one())\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  invisible(timing_one())\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(\n  sprintf(\n    '{\"value\":%s,\"median_ms\":%.17g}\\n',\n    json_num(value),\n    median(elapsed) * 1000\n  )\n)\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\n\nfrom scoc import scocder_py\n\nfrom deSolve.SCOC import SCOC\n\nFlux = [\n    [1, 0.654],\n    [11, 0.167],\n    [21, 0.060],\n    [41, 0.070],\n    [73, 0.277],\n    [83, 0.186],\n    [93, 0.140],\n    [103, 0.255],\n    [113, 0.231],\n    [123, 0.309],\n    [133, 1.127],\n    [143, 1.923],\n    [153, 1.091],\n    [163, 1.001],\n    [173, 1.691],\n    [183, 1.404],\n    [194, 1.226],\n    [204, 0.767],\n    [214, 0.893],\n    [224, 0.737],\n    [234, 0.772],\n    [244, 0.726],\n    [254, 0.624],\n    [264, 0.439],\n    [274, 0.168],\n    [284, 0.280],\n    [294, 0.202],\n    [304, 0.193],\n    [315, 0.286],\n    [325, 0.599],\n    [335, 1.889],\n    [345, 0.996],\n    [355, 0.681],\n    [365, 1.135],\n]\nparms = {\"k\": 0.01}\n\npts = [\n    (0.01, 63.00301, 0.654),\n    (0.01, 34.3997631, 0.2205),\n    (0.01, 72.98281, 1.135),\n    (0.02, 10.0, 0.5),\n    (0.005, 100.0, 0.0),\n]\n\nvalue = []\nfor k, y, depo in pts:\n    ydot, mineralisation, depo_out = scocder_py(k, y, depo)\n    value.extend([ydot, mineralisation, depo_out])\n\nSCOC(list(range(1, 366)), parms=parms, Flux=Flux)\n\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    SCOC(list(range(1, 366)), parms=parms, Flux=Flux)\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\n    json.dumps(\n        {\n            \"value\": value,\n            \"median_ms\": statistics.median(elapsed) * 1000,\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "daspk",
+      "translated": true,
+      "python": "deSolve.daspk.daspk",
+      "loads": [],
+      "uses": [],
+      "done": "DAE solver. The kernel is the daspk crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Exponential decay y' = -0.5 y on times 0 through 5",
+        "r_ms": 4.2084455490112305,
+        "translated_ms": 4.0288000000145985,
+        "speedup": 1.0445903368238634,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\ndecay <- function(t, y, parms) {\n  list(c(-0.5 * y[1]))\n}\n\none <- function() {\n  daspk(y = 10, times = 0:5, func = decay, parms = NULL, rtol = 1e-8, atol = 1e-8)\n}\n\nvalue <- as.numeric(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\n\nimport numpy as np\n\nfrom deSolve.daspk import daspk\n\n\ndef decay(t, y, parms):\n    return [float(-0.5 * y[0])]\n\n\ndef one():\n    return daspk(\n        np.array([10.0]),\n        np.arange(0, 6, 1, dtype=np.float64),\n        {},\n        func=decay,\n        rtol=1e-8,\n        atol=1e-8,\n    )\n\n\nvalue = np.ravel(np.asarray(one().data, dtype=np.float64), order=\"F\").tolist()\n\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\n    json.dumps(\n        {\n            \"value\": value,\n            \"median_ms\": statistics.median(elapsed) * 1000,\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "lsoda",
+      "translated": true,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R on the proof cases.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "proof cases, packages/lsoda/proof",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "speedup": 1.2725,
+        "r_ms": 2.371,
+        "translated_ms": 1.863
+      }
+    },
+    {
+      "name": "lsodar",
+      "translated": true,
+      "python": "deSolve.lsodar.lsodar",
+      "loads": [],
+      "uses": [],
+      "done": "ODE integrator with optional roots. The kernel is the lsodar crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation on times 0, 2, 4, 6, 8, 10, no roots",
+        "r_ms": 3.184795379638672,
+        "translated_ms": 1.9545254981494509,
+        "speedup": 1.6294468312918113,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- lsodar(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [\n    f\"{ROOT}/packages/deSolve\",\n    f\"{ROOT}/crates/lsodar\",\n]\n\nfrom deSolve.lsodar import lsodar\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    dx = r * x[0] * (1.0 - x[0] / k)\n    return [dx]\n\n\ndef one():\n    out = lsodar({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "lsode",
+      "translated": true,
+      "python": "deSolve.lsode.lsode",
+      "loads": [],
+      "uses": [],
+      "done": "Adams and BDF integrator. The kernel is the dlsode crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation on times 0, 2, 4, 6, 8, 10",
+        "r_ms": 3.826141357421875,
+        "translated_ms": 6.189097000969923,
+        "speedup": 0.6182067201115545,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- lsode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [\n    f\"{ROOT}/packages/deSolve\",\n    f\"{ROOT}/crates/dlsode\",\n]\n\nfrom deSolve.lsode import lsode\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    dx = r * x[0] * (1.0 - x[0] / k)\n    return [dx]\n\n\ndef one():\n    out = lsode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "lsodes",
+      "translated": true,
+      "python": "deSolve.lsodes.lsodes",
+      "loads": [],
+      "uses": [],
+      "done": "Sparse ODE integrator. The kernel is the lsodes crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation with rtol and atol 1e-8",
+        "r_ms": 4.285454750061035,
+        "translated_ms": 3.5214560011809226,
+        "speedup": 1.2169553584153558,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- lsodes(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100), rtol = 1e-8, atol = 1e-8)\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.lsodes import lsodes\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    return [r * x[0] * (1 - x[0] / k)]\n\n\ndef one():\n    out = lsodes(\n        {\"N\": 0.1},\n        list(range(0, 11, 2)),\n        logist,\n        {\"r\": 0.5, \"K\": 100.0},\n        rtol=1e-8,\n        atol=1e-8,\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": [float(v) for v in value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "ode",
+      "translated": true,
+      "python": "deSolve.ode.ode",
+      "loads": [],
+      "uses": [
+        "vode",
+        "lsoda",
+        "lsode",
+        "lsodes",
+        "lsodar",
+        "daspk",
+        "rk",
+        "zvode",
+        "radau",
+        "rkMethod"
+      ],
+      "done": "General ODE driver that dispatches to the translated integrators.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation, method vode, times 0 to 10 by 2",
+        "r_ms": 1.905202865600586,
+        "translated_ms": 2.2753559987904737,
+        "speedup": 0.8373207825998865,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nlogist <- function(t, x, parms) {\n  r <- parms[[\"r\"]]\n  k <- parms[[\"K\"]]\n  list(r * x[1] * (1 - x[1] / k))\n}\n\none <- function() {\n  out <- ode(\n    y = c(N = 0.1),\n    times = seq(0, 10, by = 2),\n    func = logist,\n    parms = c(r = 0.5, K = 100),\n    method = \"vode\",\n    rtol = 1e-8,\n    atol = 1e-8\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [f\"{ROOT}/packages/deSolve\", f\"{ROOT}/crates/dvode\"]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    return [r * x[0] * (1.0 - x[0] / k)]\n\n\nfrom deSolve.ode import ode\n\ny = {\"N\": 0.1}\ntimes = list(range(0, 11, 2))\nparms = {\"r\": 0.5, \"K\": 100.0}\n\n\ndef one():\n    out = ode(y, times, logist, parms, method=\"vode\", rtol=1e-8, atol=1e-8)\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ode.1D",
+      "translated": true,
+      "python": "deSolve.ode1D.ode_1D",
+      "loads": [],
+      "uses": [
+        "vode",
+        "lsode",
+        "lsoda",
+        "lsodes",
+        "lsodar",
+        "daspk",
+        "radau",
+        "zvode",
+        "rk",
+        "rkMethod"
+      ],
+      "done": "One-dimensional method-of-lines driver over the existing integrators.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "River BOD and oxygen, two species, four boxes, method vode",
+        "r_ms": 10.915756225585938,
+        "translated_ms": 15.578136999465642,
+        "speedup": 0.7007099902870522,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nO2BOD <- function(t, state, pars) {\n  N <- length(state) / 2\n  BOD <- state[1:N]\n  O2 <- state[(N + 1):(2 * N)]\n  dx <- pars[[\"dx\"]]\n  v <- pars[[\"v\"]]\n  r <- pars[[\"r\"]]\n  p <- pars[[\"p\"]]\n  O2sat <- pars[[\"O2sat\"]]\n  BOD_0 <- pars[[\"BOD_0\"]]\n  O2_0 <- pars[[\"O2_0\"]]\n  FluxBOD <- v * c(BOD_0, BOD)\n  FluxO2 <- v * c(O2_0, O2)\n  BODrate <- r * BOD\n  dBOD <- -diff(FluxBOD) / dx - BODrate\n  dO2 <- -diff(FluxO2) / dx - BODrate + p * (O2sat - O2)\n  list(c(dBOD, dO2))\n}\n\ndx <- 100\nx <- seq(dx / 2, 400, by = dx)\nN <- length(x)\nparms <- list(\n  dx = dx, v = 1e3, r = 0.05, p = 0.5, O2sat = 300,\n  BOD_0 = 1000, O2_0 = 200\n)\nstate <- c(rep(200, N), rep(200, N))\ntimes <- seq(0, 1, by = 0.25)\n\none <- function() {\n  out <- ode.1D(\n    y = state, times = times, func = O2BOD, parms = parms,\n    nspec = 2, names = c(\"BOD\", \"O2\"), method = \"vode\",\n    rtol = 1e-8, atol = 1e-8\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [\n    f\"{ROOT}/packages/deSolve\",\n    f\"{ROOT}/crates/dvode\",\n]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\n\ndef O2BOD(t, state, pars):\n    n_state = len(state)\n    n = n_state // 2\n    bod = np.asarray(state[:n], dtype=np.float64)\n    o2 = np.asarray(state[n:], dtype=np.float64)\n    dx = pars[\"dx\"]\n    v = pars[\"v\"]\n    r = pars[\"r\"]\n    p = pars[\"p\"]\n    o2sat = pars[\"O2sat\"]\n    bod_0 = pars[\"BOD_0\"]\n    o2_0 = pars[\"O2_0\"]\n    flux_bod = v * np.concatenate([[bod_0], bod])\n    flux_o2 = v * np.concatenate([[o2_0], o2])\n    bodrate = r * bod\n    dbod = -np.diff(flux_bod) / dx - bodrate\n    do2 = -np.diff(flux_o2) / dx - bodrate + p * (o2sat - o2)\n    return [np.concatenate([dbod, do2])]\n\n\nfrom deSolve.ode1D import ode_1D\n\ndx = 100.0\nx = np.arange(dx / 2, 400 + dx / 2, dx)\nn = len(x)\nparms = {\n    \"dx\": dx,\n    \"v\": 1e3,\n    \"r\": 0.05,\n    \"p\": 0.5,\n    \"O2sat\": 300.0,\n    \"BOD_0\": 1000.0,\n    \"O2_0\": 200.0,\n}\nstate = np.concatenate([np.full(n, 200.0), np.full(n, 200.0)])\ntimes = np.arange(0, 1.25, 0.25)\n\n\ndef one():\n    out = ode_1D(\n        y=state,\n        times=times,\n        func=O2BOD,\n        parms=parms,\n        nspec=2,\n        names=[\"BOD\", \"O2\"],\n        method=\"vode\",\n        rtol=1e-8,\n        atol=1e-8,\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ode.2D",
+      "translated": true,
+      "python": "deSolve.ode2D.ode_2D",
+      "loads": [],
+      "uses": [
+        "lsodes",
+        "rk",
+        "lsode",
+        "rkMethod"
+      ],
+      "done": "Two-dimensional method-of-lines driver with 2D Jacobian sparsity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "react2d on a 2 by 2 grid, two species, method lsodes",
+        "r_ms": 0.8771419525146484,
+        "translated_ms": 1.4695424979436211,
+        "speedup": 0.5968809706027977,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nreact2d <- function(t, state, parms) {\n  nx <- parms[[\"nx\"]]\n  ny <- parms[[\"ny\"]]\n  nn <- nx * ny\n  a <- state[seq_len(nn)]\n  b <- state[(nn + 1):(2 * nn)]\n  r <- parms[[\"r\"]]\n  list(c(-r * a, -0.5 * r * b))\n}\n\nnx <- 2\nny <- 2\nnn <- nx * ny\nparms <- list(nx = nx, ny = ny, r = 0.7)\nstate <- c(rep(1.0, nn), rep(2.0, nn))\ntimes <- seq(0, 1, by = 0.5)\n\none <- function() {\n  out <- ode.2D(\n    y = state,\n    times = times,\n    func = react2d,\n    parms = parms,\n    nspec = 2,\n    dimens = c(nx, ny),\n    names = c(\"A\", \"B\"),\n    method = \"lsodes\",\n    rtol = 1e-8,\n    atol = 1e-8,\n    lrw = 300\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path.insert(0, f\"{ROOT}/packages/deSolve\")\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\n\ndef react2d(t, state, parms):\n    nx = parms[\"nx\"]\n    ny = parms[\"ny\"]\n    nn = nx * ny\n    state = np.asarray(state, dtype=np.float64).reshape(-1)\n    a = state[:nn]\n    b = state[nn : 2 * nn]\n    r = parms[\"r\"]\n    return [np.concatenate([-r * a, -0.5 * r * b])]\n\n\nfrom deSolve.ode2D import ode_2D\n\nnx = 2\nny = 2\nnn = nx * ny\nparms = {\"nx\": nx, \"ny\": ny, \"r\": 0.7}\nstate = np.concatenate([np.full(nn, 1.0), np.full(nn, 2.0)])\ntimes = np.arange(0, 1.5, 0.5)\n\n\ndef one():\n    out = ode_2D(\n        y=state,\n        times=times,\n        func=react2d,\n        parms=parms,\n        nspec=2,\n        dimens=[nx, ny],\n        names=[\"A\", \"B\"],\n        method=\"lsodes\",\n        rtol=1e-8,\n        atol=1e-8,\n        lrw=300,\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ode.3D",
+      "translated": true,
+      "python": "deSolve.ode3D.ode_3D",
+      "loads": [],
+      "uses": [
+        "lsodes",
+        "rk",
+        "lsode"
+      ],
+      "done": "Three-dimensional method-of-lines driver with 3D Jacobian sparsity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Uniform decay on a 2 by 2 by 2 grid, method lsodes",
+        "r_ms": 0.7020235061645508,
+        "translated_ms": 0.7905435013526585,
+        "speedup": 0.8880264083676032,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nreact3d <- function(t, state, parms) {\n  list(-parms[[\"r\"]] * state)\n}\n\ndims <- c(2, 2, 2)\nstate <- rep(1.0, 8)\ntimes <- seq(0, 1, by = 0.5)\nparms <- list(r = 0.5)\n\none <- function() {\n  out <- ode.3D(\n    y = state,\n    times = times,\n    func = react3d,\n    parms = parms,\n    nspec = 1,\n    dimens = dims,\n    method = \"lsodes\",\n    rtol = 1e-8,\n    atol = 1e-8,\n    lrw = 800\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path.insert(0, f\"{ROOT}/packages/deSolve\")\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\n\ndef react3d(t, state, parms):\n    state = np.asarray(state, dtype=np.float64).reshape(-1)\n    r = parms[\"r\"]\n    return [-r * state]\n\n\nfrom deSolve.ode3D import ode_3D\n\ndims = [2, 2, 2]\nstate = np.full(8, 1.0)\ntimes = np.arange(0, 1.5, 0.5)\nparms = {\"r\": 0.5}\n\n\ndef one():\n    out = ode_3D(\n        y=state,\n        times=times,\n        func=react3d,\n        parms=parms,\n        nspec=1,\n        dimens=dims,\n        method=\"lsodes\",\n        rtol=1e-8,\n        atol=1e-8,\n        lrw=800,\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "ode.band",
+      "translated": true,
+      "python": "deSolve.odeband.ode_band",
+      "loads": [],
+      "uses": [
+        "vode",
+        "lsode",
+        "lsoda",
+        "lsodar",
+        "daspk",
+        "radau"
+      ],
+      "done": "Banded-Jacobian driver forwarding to implicit integrators.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A five-state chain, bandwidth 1, method vode",
+        "r_ms": 0.8018016815185547,
+        "translated_ms": 0.873345999934827,
+        "speedup": 0.9180802128576633,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nchain <- function(t, y, parms) {\n  k <- parms[[\"k\"]]\n  list(-k * y)\n}\n\ny <- rep(1, 5)\ntimes <- seq(0, 2, by = 0.5)\nparms <- list(k = 0.3)\n\none <- function() {\n  out <- ode.band(\n    y = y,\n    times = times,\n    func = chain,\n    parms = parms,\n    nspec = 1,\n    dimens = 5,\n    bandup = 1,\n    banddown = 1,\n    method = \"vode\",\n    rtol = 1e-8,\n    atol = 1e-8\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [f\"{ROOT}/packages/deSolve\", f\"{ROOT}/crates/dvode\"]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\n\ndef chain(t, y, parms):\n    k = parms[\"k\"]\n    y = np.asarray(y, dtype=np.float64).reshape(-1)\n    return [-k * y]\n\n\nfrom deSolve.odeband import ode_band\n\ny = np.full(5, 1.0)\ntimes = np.arange(0, 2.5, 0.5)\nparms = {\"k\": 0.3}\n\n\ndef one():\n    out = ode_band(\n        y=y,\n        times=times,\n        func=chain,\n        parms=parms,\n        nspec=1,\n        dimens=5,\n        bandup=1,\n        banddown=1,\n        method=\"vode\",\n        rtol=1e-8,\n        atol=1e-8,\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "vode",
+      "translated": true,
+      "python": "deSolve.vode.vode",
+      "loads": [],
+      "uses": [],
+      "done": "VODE integrator. The kernel is the dvode crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation on times 0, 2, ..., 10",
+        "r_ms": 4.500985145568848,
+        "translated_ms": 4.676903501604102,
+        "speedup": 0.9623857203863803,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- vode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path[:0] = [\n    f\"{ROOT}/packages/deSolve\",\n    f\"{ROOT}/crates/dvode\",\n]\n\nfrom deSolve.vode import vode\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    dx = r * x[0] * (1.0 - x[0] / k)\n    return [dx]\n\n\ndef one():\n    out = vode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "zvode",
+      "translated": true,
+      "python": "deSolve.zvode.zvode",
+      "loads": [],
+      "uses": [],
+      "done": "Complex ODE integrator. The kernel is the zvode crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Complex rotation dy/dt = i omega y on times 0, 2, 4, 6",
+        "r_ms": 1.4576911926269531,
+        "translated_ms": 9.260184999220655,
+        "speedup": 0.15741491047421122,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nspin <- function(t, y, parms) {\n  list(1i * parms$w * y)\n}\n\none <- function() {\n  out <- zvode(\n    c(z = 1 + 0i),\n    seq(0, 6, by = 2),\n    spin,\n    list(w = 1.0)\n  )\n  v <- as.vector(out)\n  c(Re(v), Im(v))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path.insert(0, f\"{ROOT}/packages/deSolve\")\n\nfrom deSolve.zvode import zvode\n\n\ndef spin(t, y, parms):\n    w = parms[\"w\"]\n    return [1j * w * y[0]]\n\n\ndef one():\n    out = zvode({\"z\": 1 + 0j}, list(range(0, 7, 2)), spin, {\"w\": 1.0})\n    flat = np.ravel(out.data, order=\"F\")\n    return np.concatenate([flat.real, flat.imag])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "radau",
+      "translated": true,
+      "python": "deSolve.radau.radau",
+      "loads": [],
+      "uses": [],
+      "done": "Implicit RADAU5 integrator. The kernel is the radau5 crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Robertson stiff equation on times 0, 10, 20, 30, 40",
+        "r_ms": 4.858493804931641,
+        "translated_ms": 5.282455998894875,
+        "speedup": 0.9197414622948246,
+        "matches": true,
+        "max_abs_diff": 1.9984014443252818e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nf <- function(t, y, parms) {\n  dy1 <- -0.04 * y[1] + 1e4 * y[2] * y[3]\n  dy2 <- 0.04 * y[1] - 1e4 * y[2] * y[3] - 3e7 * y[2]^2\n  dy3 <- 3e7 * y[2]^2\n  list(c(dy1, dy2, dy3))\n}\none <- function() {\n  radau(c(1, 0, 0), seq(0, 40, 10), f, NULL)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.radau import radau\n\n\ndef robertson(t, y, parms):\n    dy1 = -0.04 * y[0] + 1e4 * y[1] * y[2]\n    dy2 = 0.04 * y[0] - 1e4 * y[1] * y[2] - 3e7 * y[1] ** 2\n    dy3 = 3e7 * y[1] ** 2\n    return [[dy1, dy2, dy3]]\n\n\ndef one():\n    return radau([1.0, 0.0, 0.0], [0.0, 10.0, 20.0, 30.0, 40.0], robertson, None)\n\n\nvalue = np.ravel(one().data, order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "rk",
+      "translated": true,
+      "python": "deSolve.rk.rk",
+      "loads": [],
+      "uses": [
+        "rkMethod"
+      ],
+      "done": "Explicit Runge-Kutta through the rksolv crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Logistic equation, default rk45dp7, times 0, 2, ..., 100",
+        "r_ms": 19.19567584991455,
+        "translated_ms": 7.286051501068869,
+        "speedup": 2.634578666798956,
+        "matches": true,
+        "max_abs_diff": 3.552713678800501e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\none <- function() {\n  rk(c(N = 0.1), seq(0, 100, 2), logist, c(r = 0.5, K = 100))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.rk import rk\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    dx = r * x[0] * (1.0 - x[0] / k)\n    return [dx]\n\n\ndef one():\n    out = rk({\"N\": 0.1}, list(range(0, 101, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": [float(item) for item in value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rk4",
+      "translated": true,
+      "python": "deSolve.rk4.rk4",
+      "loads": [],
+      "uses": [],
+      "done": "Classical fixed-step Runge-Kutta 4 integrates the model on the given times and returns the deSolve matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "logistic growth, N0 = 0.1, r = 0.5, K = 100, times 0, 2, …, 100",
+        "r_ms": 5.858182907104492,
+        "translated_ms": 4.233916999965004,
+        "speedup": 1.383631967077511,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\none <- function() {\n  rk4(c(N = 0.1), seq(0, 100, 2), logist, c(r = 0.5, K = 100))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.rk4 import rk4\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    dx = r * x[0] * (1.0 - x[0] / k)\n    return [dx]\n\n\ndef one():\n    out = rk4({\"N\": 0.1}, list(range(0, 101, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": [float(item) for item in value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "euler",
+      "translated": true,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R on the proof cases.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "proof cases, packages/euler/proof",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "speedup": 1.1889,
+        "r_ms": 0.3176,
+        "translated_ms": 0.2671
+      }
+    },
+    {
+      "name": "euler.1D",
+      "translated": true,
+      "python": "deSolve.euler1D.euler_1D",
+      "loads": [],
+      "uses": [],
+      "done": "Checks the 1D grid, then calls euler and keeps the dimens attributes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "O2BOD 1-D, nspec 2, four boxes.",
+        "r_ms": 0.3019571304321289,
+        "translated_ms": 0.535230499735917,
+        "speedup": 0.5641627870256174,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nO2BOD <- function(t, state, pars) {\n  N <- length(state) / 2\n  BOD <- state[1:N]\n  O2 <- state[(N + 1):(2 * N)]\n  dx <- pars[[\"dx\"]]\n  v <- pars[[\"v\"]]\n  r <- pars[[\"r\"]]\n  p <- pars[[\"p\"]]\n  O2sat <- pars[[\"O2sat\"]]\n  BOD_0 <- pars[[\"BOD_0\"]]\n  O2_0 <- pars[[\"O2_0\"]]\n  FluxBOD <- v * c(BOD_0, BOD)\n  FluxO2 <- v * c(O2_0, O2)\n  BODrate <- r * BOD\n  dBOD <- -diff(FluxBOD) / dx - BODrate\n  dO2 <- -diff(FluxO2) / dx - BODrate + p * (O2sat - O2)\n  list(c(dBOD, dO2))\n}\n\ndx <- 100\nN <- length(seq(dx / 2, 400, by = dx))\nparms <- list(\n  dx = dx, v = 1e3, r = 0.05, p = 0.5, O2sat = 300,\n  BOD_0 = 1000, O2_0 = 200\n)\nstate <- c(rep(200, N), rep(200, N))\ntimes <- seq(0, 1, by = 0.25)\n\none <- function() {\n  out <- euler.1D(\n    y = state, times = times, func = O2BOD, parms = parms,\n    nspec = 2, names = c(\"BOD\", \"O2\")\n  )\n  as.vector(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom types import ModuleType\n\nimport numpy as np\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path.insert(0, f\"{ROOT}/packages/deSolve\")\n\nif \"deSolve\" not in sys.modules:\n    _desolve_pkg = ModuleType(\"deSolve\")\n    _desolve_pkg.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = _desolve_pkg\n\nfrom deSolve.euler1D import euler_1D\n\n\ndef O2BOD(t, state, pars):\n    n = len(state) // 2\n    bod = np.asarray(state[:n], dtype=np.float64)\n    o2 = np.asarray(state[n:], dtype=np.float64)\n    dx = pars[\"dx\"]\n    v = pars[\"v\"]\n    r = pars[\"r\"]\n    p = pars[\"p\"]\n    o2sat = pars[\"O2sat\"]\n    bod_0 = pars[\"BOD_0\"]\n    o2_0 = pars[\"O2_0\"]\n    flux_bod = v * np.concatenate([[bod_0], bod])\n    flux_o2 = v * np.concatenate([[o2_0], o2])\n    bodrate = r * bod\n    dbod = -np.diff(flux_bod) / dx - bodrate\n    do2 = -np.diff(flux_o2) / dx - bodrate + p * (o2sat - o2)\n    return [np.concatenate([dbod, do2])]\n\n\ndx = 100.0\nn = len(np.arange(dx / 2, 400 + dx / 2, dx))\nparms = {\n    \"dx\": dx,\n    \"v\": 1e3,\n    \"r\": 0.05,\n    \"p\": 0.5,\n    \"O2sat\": 300.0,\n    \"BOD_0\": 1000.0,\n    \"O2_0\": 200.0,\n}\nstate = np.concatenate([np.full(n, 200.0), np.full(n, 200.0)])\ntimes = np.arange(0, 1.25, 0.25)\n\n\ndef one():\n    out = euler_1D(\n        y=state,\n        times=times,\n        func=O2BOD,\n        parms=parms,\n        nspec=2,\n        names=[\"BOD\", \"O2\"],\n    )\n    return np.ravel(out.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/euler1D-r.txt"
+      },
+      "translation": {
+        "output": "output/euler1D-python.txt"
+      }
+    },
+    {
+      "name": "rkMethod",
+      "translated": true,
+      "python": "deSolve.rkMethod.rkMethod",
+      "loads": [],
+      "uses": [],
+      "done": "Returns predefined or user-specified Runge-Kutta Butcher tables, including ode23 and ode45 aliases and the same validation rules as R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "rkMethod(\"ode45\") flattened Butcher coefficients, 76 values",
+        "r_ms": 0.2492666244506836,
+        "translated_ms": 0.04061399977217661,
+        "speedup": 6.137455701209916,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  x <- as.numeric(x)\n  parts <- vapply(x, function(v) if (is.na(v)) \"NaN\" else sprintf(\"%.17g\", v), character(1))\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\nflatten_rkMethod <- function(m) {\n  c(\n    as.integer(m$varstep),\n    if (!is.null(m$FSAL)) as.integer(m$FSAL) else NA_real_,\n    if (!is.null(m$implicit)) as.integer(m$implicit) else NA_real_,\n    as.vector(m$A),\n    m$b1,\n    if (!is.null(m$b2)) m$b2 else numeric(0),\n    m$c,\n    if (!is.null(m[[\"d\"]])) m[[\"d\"]] else numeric(0),\n    m$stage,\n    m$Qerr,\n    if (!is.null(m$densetype)) m$densetype else NA_real_\n  )\n}\none <- function() {\n  flatten_rkMethod(rkMethod(\"ode45\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.rkMethod import flatten_rk_method, rkMethod\n\n\ndef one():\n    return flatten_rk_method(rkMethod(\"ode45\"))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "lagvalue",
+      "translated": true,
+      "python": "deSolve.lagvalue.lagvalue",
+      "loads": [],
+      "uses": [],
+      "done": "Hermite lag lookup from a delay-equation history.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Shampine exercise 6 lag queries",
+        "r_ms": 399.3459939956665,
+        "translated_ms": 1.4402924989553867,
+        "speedup": 277.2672872248544,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nproof_dir <- \"/home/ahmed/killr_projects/killr/packages/deSolve/proof\"\ndeso <- system.file(\"libs/deSolve.so\", package = \"deSolve\")\nso <- file.path(proof_dir, \"lagvalue_dump.so\")\nif (!file.exists(so) || file.info(so)$mtime < file.info(file.path(proof_dir, \"lagvalue_dump.c\"))$mtime) {\n  owd <- setwd(proof_dir)\n  on.exit(setwd(owd), add = TRUE)\n  system(\"R CMD SHLIB lagvalue_dump.c\", ignore.stdout = TRUE)\n  system(sprintf(\n    \"gcc -std=gnu23 -shared -o lagvalue_dump.so lagvalue_dump.o '%s' -L/usr/lib/R/lib -lR\",\n    deso\n  ))\n}\ndyn.load(so)\n\nderivs <- function(t, y, parms) {\n  if (t < 1)\n    lag1 <- cos(t - 1)\n  else\n    lag1 <- lagvalue(t - 1)[1]\n  if (t < 2)\n    lag2 <- sin(t - 2)\n  else\n    lag2 <- lagvalue(t - 2, 2)\n  list(c(lag1 * lag2, -y[1] * lag2))\n}\n\nyinit <- c(y1 = 0, y2 = 0)\ntimes <- seq(0, 20, by = 0.01)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  yout <- dede(y = yinit, times = times, func = derivs, parms = NULL, atol = 1e-9)\n  invisible(yout)\n  tq <- c(0.5, 1, 1.5, 2.5, 5, 10, 15, 19.5)\n  out <- c(\n    unlist(lapply(tq, lagvalue)),\n    unlist(lapply(tq, function(tt) lagvalue(tt, 2))),\n    as.numeric(lagvalue(7.25)),\n    as.numeric(lagvalue(7.25, c(1, 2)))\n  )\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nyout <- dede(y = yinit, times = times, func = derivs, parms = NULL, atol = 1e-9)\nhist <- .Call(\"dump_lag_history\")\nsnap <- list(\n  histtime = as.numeric(hist$histtime),\n  histvar = as.numeric(hist$histvar),\n  histdvar = as.numeric(hist$histdvar),\n  n_eq = hist$n_eq,\n  histsize = hist$histsize,\n  indexhist = hist$indexhist,\n  starthist = hist$starthist,\n  endreached = hist$endreached,\n  offset = hist$offset,\n  interpolMethod = hist$interpolMethod\n)\nwriteLines(\n  sprintf('{\"value\":%s,\"median_ms\":%.17g}', json_num(value), median(elapsed) * 1000),\n  file.path(proof_dir, \"lagvalue-r-out.json\")\n)\njson_snap <- function(obj) {\n  paste0(\n    \"{\",\n    paste(\n      c(\n        paste0('\"histtime\":', json_num(obj$histtime)),\n        paste0('\"histvar\":', json_num(obj$histvar)),\n        paste0('\"histdvar\":', json_num(obj$histdvar)),\n        paste0('\"n_eq\":', obj$n_eq),\n        paste0('\"histsize\":', obj$histsize),\n        paste0('\"indexhist\":', obj$indexhist),\n        paste0('\"starthist\":', obj$starthist),\n        paste0('\"endreached\":', obj$endreached),\n        paste0('\"offset\":', obj$offset),\n        paste0('\"interpolMethod\":', obj$interpolMethod)\n      ),\n      collapse = \",\"\n    ),\n    \"}\"\n  )\n}\nwriteLines(json_snap(snap), file.path(proof_dir, \"lagvalue-hist.json\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [\n    str(ROOT / \"packages\" / \"deSolve\"),\n    str(ROOT / \"crates\" / \"lagvalue\"),\n]\n\nfrom deSolve.lagvalue import lagvalue, restore_hist  # noqa: E402\n\n\ndef _load_snapshot():\n    import subprocess\n\n    r_script = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagvalue-r.R\"\n    snap_path = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagvalue-hist.json\"\n    if not snap_path.exists():\n        subprocess.run([\"R\", \"--slave\", \"-f\", str(r_script)], check=True)\n    return json.loads(snap_path.read_text())\n\n\ndef one(snapshot):\n    restore_hist(snapshot)\n    tq = np.array([0.5, 1, 1.5, 2.5, 5, 10, 15, 19.5], dtype=float)\n    out = []\n    for tt in tq:\n        out.extend(np.asarray(lagvalue(float(tt)), dtype=float).reshape(-1))\n    for tt in tq:\n        out.append(float(lagvalue(float(tt), 2)))\n    out.extend(np.asarray(lagvalue(7.25), dtype=float).reshape(-1))\n    out.extend(np.asarray(lagvalue(7.25, [1, 2]), dtype=float).reshape(-1))\n    return out\n\n\ndef main():\n    snapshot = _load_snapshot()\n    value = one(snapshot)\n    elapsed = []\n    for _ in range(20):\n        started = time.perf_counter()\n        one(snapshot)\n        elapsed.append((time.perf_counter() - started) * 1000)\n    r_path = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagvalue-r-out.json\"\n    if not r_path.exists():\n        import subprocess\n\n        subprocess.run([\"R\", \"--slave\", \"-f\", str(ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagvalue-r.R\")], check=True)\n    r_payload = json.loads(r_path.read_text())\n    r_value = r_payload[\"value\"]\n    diff = max(abs(a - b) for a, b in zip(value, r_value))\n    payload = {\n        \"value\": value,\n        \"median_ms\": statistics.median(elapsed),\n        \"max_abs_diff\": diff,\n        \"matches\": bool(diff <= 1e-8),\n        \"r_median_ms\": r_payload[\"median_ms\"],\n    }\n    print(json.dumps(payload))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lagderiv",
+      "translated": true,
+      "python": "deSolve.lagderiv.lagderiv",
+      "loads": [],
+      "uses": [],
+      "done": "Hermite derivative of a lagged state. The kernel is the lagderiv crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two-state delay equation with lags 1 and 2",
+        "r_ms": 494.7279691696167,
+        "translated_ms": 1.1015854979632422,
+        "speedup": 449.10537591892376,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nproof_dir <- \"/home/ahmed/killr_projects/killr/packages/deSolve/proof\"\ndeso <- system.file(\"libs/deSolve.so\", package = \"deSolve\")\nso <- file.path(proof_dir, \"lagvalue_dump.so\")\nif (!file.exists(so) || file.info(so)$mtime < file.info(file.path(proof_dir, \"lagvalue_dump.c\"))$mtime) {\n  owd <- setwd(proof_dir)\n  on.exit(setwd(owd), add = TRUE)\n  system(\"R CMD SHLIB lagvalue_dump.c\", ignore.stdout = TRUE)\n  system(sprintf(\n    \"gcc -std=gnu23 -shared -o lagvalue_dump.so lagvalue_dump.o '%s' -L/usr/lib/R/lib -lR\",\n    deso\n  ))\n}\ndyn.load(so)\n\nderivs <- function(t, y, parms) {\n  if (t < 1)\n    lag1 <- cos(t - 1)\n  else\n    lag1 <- lagvalue(t - 1)[1]\n  if (t < 2)\n    lag2 <- sin(t - 2)\n  else\n    lag2 <- lagvalue(t - 2, 2)\n  dlag <- if (t < 0.5) 0 else lagderiv(t - 0.5, 1)\n  list(c(lag1 * lag2 + 0.01 * dlag, -y[1] * lag2))\n}\n\nyinit <- c(y1 = 0, y2 = 0)\ntimes <- seq(0, 20, by = 0.01)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  yout <- dede(y = yinit, times = times, func = derivs, parms = NULL, atol = 1e-9)\n  invisible(yout)\n  tq <- c(0.5, 1, 1.5, 2.5, 5, 10, 15, 19.5)\n  out <- c(\n    unlist(lapply(tq, lagderiv)),\n    unlist(lapply(tq, function(tt) lagderiv(tt, 2))),\n    as.numeric(lagderiv(7.25)),\n    as.numeric(lagderiv(7.25, c(1, 2)))\n  )\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nyout <- dede(y = yinit, times = times, func = derivs, parms = NULL, atol = 1e-9)\nhist <- .Call(\"dump_lag_history\")\nsnap <- list(\n  histtime = as.numeric(hist$histtime),\n  histvar = as.numeric(hist$histvar),\n  histdvar = as.numeric(hist$histdvar),\n  n_eq = hist$n_eq,\n  histsize = hist$histsize,\n  indexhist = hist$indexhist,\n  starthist = hist$starthist,\n  endreached = hist$endreached,\n  offset = hist$offset,\n  interpolMethod = hist$interpolMethod\n)\nwriteLines(\n  sprintf('{\"value\":%s,\"median_ms\":%.17g}', json_num(value), median(elapsed) * 1000),\n  file.path(proof_dir, \"lagderiv-r-out.json\")\n)\njson_snap <- function(obj) {\n  paste0(\n    \"{\",\n    paste(\n      c(\n        paste0('\"histtime\":', json_num(obj$histtime)),\n        paste0('\"histvar\":', json_num(obj$histvar)),\n        paste0('\"histdvar\":', json_num(obj$histdvar)),\n        paste0('\"n_eq\":', obj$n_eq),\n        paste0('\"histsize\":', obj$histsize),\n        paste0('\"indexhist\":', obj$indexhist),\n        paste0('\"starthist\":', obj$starthist),\n        paste0('\"endreached\":', obj$endreached),\n        paste0('\"offset\":', obj$offset),\n        paste0('\"interpolMethod\":', obj$interpolMethod)\n      ),\n      collapse = \",\"\n    ),\n    \"}\"\n  )\n}\nwriteLines(json_snap(snap), file.path(proof_dir, \"lagderiv-hist.json\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [\n    str(ROOT / \"packages\" / \"deSolve\"),\n    str(ROOT / \"crates\" / \"lagderiv\"),\n]\n\nfrom deSolve.lagderiv import lagderiv, restore_hist  # noqa: E402\n\n\ndef _load_snapshot():\n    import subprocess\n\n    r_script = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagderiv-r.R\"\n    snap_path = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagderiv-hist.json\"\n    if not snap_path.exists():\n        subprocess.run([\"R\", \"--slave\", \"-f\", str(r_script)], check=True)\n    return json.loads(snap_path.read_text())\n\n\ndef one(snapshot):\n    restore_hist(snapshot)\n    tq = np.array([0.5, 1, 1.5, 2.5, 5, 10, 15, 19.5], dtype=float)\n    out = []\n    for tt in tq:\n        out.extend(np.asarray(lagderiv(float(tt)), dtype=float).reshape(-1))\n    for tt in tq:\n        out.append(float(lagderiv(float(tt), 2)))\n    out.extend(np.asarray(lagderiv(7.25), dtype=float).reshape(-1))\n    out.extend(np.asarray(lagderiv(7.25, [1, 2]), dtype=float).reshape(-1))\n    return out\n\n\ndef main():\n    snapshot = _load_snapshot()\n    value = one(snapshot)\n    elapsed = []\n    for _ in range(20):\n        started = time.perf_counter()\n        one(snapshot)\n        elapsed.append((time.perf_counter() - started) * 1000)\n    r_path = ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagderiv-r-out.json\"\n    if not r_path.exists():\n        import subprocess\n\n        subprocess.run([\"R\", \"--slave\", \"-f\", str(ROOT / \"packages\" / \"deSolve\" / \"proof\" / \"lagderiv-r.R\")], check=True)\n    r_payload = json.loads(r_path.read_text())\n    r_value = r_payload[\"value\"]\n    diff = max(abs(a - b) for a, b in zip(value, r_value))\n    payload = {\n        \"value\": value,\n        \"median_ms\": statistics.median(elapsed),\n        \"max_abs_diff\": diff,\n        \"matches\": bool(diff <= 1e-8),\n        \"r_median_ms\": r_payload[\"median_ms\"],\n    }\n    print(json.dumps(payload))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "dede",
+      "translated": true,
+      "python": "deSolve.dede.dede",
+      "loads": [],
+      "uses": [],
+      "done": "Delay-equation driver. The default path is the dede crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two-state delay equation from 0 to 20 by 0.01",
+        "r_ms": 387.4051570892334,
+        "translated_ms": 754.0119589993992,
+        "speedup": 0.51379179397013,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nderivs <- function(t, y, parms) {\n  if (t < 1)\n    lag1 <- cos(t - 1)\n  else\n    lag1 <- lagvalue(t - 1)[1]\n  if (t < 2)\n    lag2 <- sin(t - 2)\n  else\n    lag2 <- lagvalue(t - 2, 2)\n  list(c(lag1 * lag2, -y[1] * lag2))\n}\n\nyinit <- c(y1 = 0, y2 = 0)\ntimes <- seq(0, 20, by = 0.01)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  yout <- dede(y = yinit, times = times, func = derivs, parms = NULL, atol = 1e-9)\n  as.vector(yout)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [\n    str(ROOT / \"packages\" / \"deSolve\"),\n    str(ROOT / \"crates\" / \"dede\"),\n    str(ROOT / \"crates\" / \"lagvalue\"),\n]\n\nfrom deSolve.dede import dede  # noqa: E402\nfrom deSolve.lagvalue import lagvalue  # noqa: E402\n\n\ndef derivs(t, y, parms):\n    del parms\n    if t < 1:\n        lag1 = math.cos(t - 1)\n    else:\n        lag1 = float(lagvalue(t - 1)[0])\n    if t < 2:\n        lag2 = math.sin(t - 2)\n    else:\n        lag2 = float(lagvalue(t - 2, 2))\n    return [[lag1 * lag2, -y[0] * lag2]]\n\n\ndef one():\n    times = np.linspace(0, 20, 2001, dtype=float)\n    yout = dede({\"y1\": 0.0, \"y2\": 0.0}, times, derivs, None, atol=1e-9)\n    return np.ravel(yout.data, order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(x) for x in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "timestep",
+      "translated": true,
+      "python": "deSolve.timestep.timestep",
+      "loads": [],
+      "uses": [],
+      "done": "Previous or current integrator step size.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Idle timestep plus rk4 step sizes on a logistic model",
+        "r_ms": 0.025510787963867188,
+        "translated_ms": 0.0005980000423733145,
+        "speedup": 42.660177518752626,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\none <- function() {\n  c(prev = as.numeric(timestep(TRUE)), curr = as.numeric(timestep(FALSE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.timestep import timestep\n\n\ndef one():\n    return [float(timestep(True)), float(timestep(False))]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "nearestEvent",
+      "translated": true,
+      "python": "deSolve.nearestEvent.nearestEvent",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the nearest event time for each time.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The nearestEvent help example.",
+        "r_ms": 0.2684593200683594,
+        "translated_ms": 0.07342449953284813,
+        "speedup": 3.6562635329677384,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nevents <- sort(c(0, 2, 3, 4 + 1e-10, 5, 7 - 1e-10,\n                 7 + 6e-15, 7.5, 9, 24.9999, 25, 80, 1001, 1e300))\ntimes <- sort(c(0, 1:7, 4.5, 6.75, 7.5, 9.2, 9.0001, 25, 879, 1e3, 1e300 + 5))\none <- function() {\n  nearestEvent(times, events)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.nearestEvent import nearestEvent\n\nevents = np.sort(\n    np.array(\n        [\n            0,\n            2,\n            3,\n            4 + 1e-10,\n            5,\n            7 - 1e-10,\n            7 + 6e-15,\n            7.5,\n            9,\n            24.9999,\n            25,\n            80,\n            1001,\n            1e300,\n        ],\n        dtype=float,\n    )\n)\ntimes = np.sort(\n    np.array(\n        [\n            0,\n            *range(1, 8),\n            4.5,\n            6.75,\n            7.5,\n            9.2,\n            9.0001,\n            25,\n            879,\n            1e3,\n            1e300 + 5,\n        ],\n        dtype=float,\n    )\n)\n\n\ndef one():\n    return nearestEvent(times, events)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\"value\": [float(item) for item in value], \"median_ms\": statistics.median(elapsed)}\n    )\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/nearestEvent-r.txt"
+      },
+      "translation": {
+        "output": "output/nearestEvent-python.txt"
+      }
+    },
+    {
+      "name": "cleanEventTimes",
+      "translated": true,
+      "python": "deSolve.cleanEventTimes.cleanEventTimes",
+      "loads": [],
+      "uses": [],
+      "done": "Sorts output times and drops those relatively closer than eps to the nearest event.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The cleanEventTimes help example, comparing the filtered time vector.",
+        "r_ms": 0.3103017807006836,
+        "translated_ms": 0.10931600081676152,
+        "speedup": 2.83857603994149,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nevents <- sort(c(0, 2, 3, 4 + 1e-10, 5, 7 - 1e-10,\n                 7 + 6e-15, 7.5, 9, 24.9999, 25, 80, 1001, 1e300))\ntimes <- sort(c(0, 1:7, 4.5, 6.75, 7.5, 9.2, 9.0001, 25, 879, 1e3, 1e300 + 5))\none <- function() {\n  cleanEventTimes(times, events)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.cleanEventTimes import cleanEventTimes\n\nevents = np.sort(\n    np.array(\n        [\n            0,\n            2,\n            3,\n            4 + 1e-10,\n            5,\n            7 - 1e-10,\n            7 + 6e-15,\n            7.5,\n            9,\n            24.9999,\n            25,\n            80,\n            1001,\n            1e300,\n        ],\n        dtype=float,\n    )\n)\ntimes = np.sort(\n    np.array(\n        [\n            0,\n            *range(1, 8),\n            4.5,\n            6.75,\n            7.5,\n            9.2,\n            9.0001,\n            25,\n            879,\n            1e3,\n            1e300 + 5,\n        ],\n        dtype=float,\n    )\n)\n\n\ndef one():\n    return cleanEventTimes(times, events)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\"value\": [float(item) for item in value], \"median_ms\": statistics.median(elapsed)}\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "plot.1D",
+      "translated": true,
+      "python": "deSolve.plot_1d.plot_1d",
+      "loads": [],
+      "uses": [],
+      "done": "Draws a 1D profile, including a swapped axis and a row subset.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Aphid and Flux profiles, second series, observations, xyswap, subset rows 1 and 3.",
+        "r_ms": 5.20479679107666,
+        "translated_ms": 161.40593950058246,
+        "speedup": 0.0322466249208746,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/deSolve\"\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nmake_series <- function(shift) {\n  mat <- rbind(\n    c(0.0, 1.0, 1.2, 1.4, 1.1,  0.10, 0.20,  0.00, -0.10, 0.30),\n    c(0.5, 1.1, 1.3, 1.5, 1.2,  0.20, 0.10,  0.10, -0.20, 0.20),\n    c(1.0, 1.3, 1.1, 1.6, 1.4,  0.00, 0.30,  0.20,  0.10, 0.00),\n    c(1.5, 1.4, 1.5, 1.2, 1.3,  0.40, 0.20, -0.10,  0.20, 0.10)\n  )\n  mat[, -1] <- mat[, -1] + shift\n  colnames(mat) <- c(\n    \"time\", \"A1\", \"A2\", \"A3\", \"A4\",\n    \"F1\", \"F2\", \"F3\", \"F4\", \"F5\"\n  )\n  attr(mat, \"dimens\") <- 4\n  attr(mat, \"nspec\") <- 1\n  attr(mat, \"ynames\") <- \"Aphid\"\n  attr(mat, \"lengthvar\") <- c(4L, 5L)\n  names(attr(mat, \"lengthvar\")) <- c(\"\", \"Flux\")\n  class(mat) <- c(\"deSolve\", \"matrix\")\n  mat\n}\n\nmat <- make_series(0)\nmat2 <- make_series(0.25)\nobs <- data.frame(x = c(0, 2), Aphid = c(0.9, 1.7), Flux = c(0.5, -0.4))\ngrid <- list(c(0, 1, 2, 3), c(0, 0.5, 1, 1.5, 2))\n\ndraw <- function() {\n  plot.1D(\n    mat, mat2,\n    which = c(\"Aphid\", \"Flux\"),\n    type = \"l\",\n    ask = FALSE,\n    xyswap = TRUE,\n    grid = grid,\n    subset = c(1, 3),\n    lwd = 2,\n    col = c(\"red\", \"blue\"),\n    obs = obs\n  )\n}\n\ncapture_value <- function() {\n  .GlobalEnv$captured <- list()\n  invisible(trace(graphics::plot.default, quote({\n    captured[[length(captured) + 1]] <<- list(\n      x = as.numeric(x),\n      y = if (is.null(y)) numeric(0) else as.numeric(y),\n      xlim = if (is.null(xlim)) numeric(0) else as.numeric(xlim),\n      ylim = if (is.null(ylim)) numeric(0) else as.numeric(ylim)\n    )\n  }), print = FALSE))\n  invisible(trace(graphics::lines, quote({\n    dd <- list(...)\n    captured[[length(captured) + 1]] <<- list(\n      x = as.numeric(x),\n      y = as.numeric(dd[[1]]),\n      xlim = numeric(0),\n      ylim = numeric(0)\n    )\n  }), print = FALSE))\n  invisible(trace(graphics::points, quote({\n    dd <- list(...)\n    captured[[length(captured) + 1]] <<- list(\n      x = as.numeric(x),\n      y = as.numeric(dd[[1]]),\n      xlim = numeric(0),\n      ylim = numeric(0)\n    )\n  }), print = FALSE))\n  pdf(NULL)\n  suppressWarnings(draw())\n  junk <- dev.off()\n  untrace(graphics::plot.default)\n  untrace(graphics::lines)\n  untrace(graphics::points)\n  vals <- numeric(0)\n  last_plot <- NULL\n  for (item in captured) {\n    # plot(type = \"l\") calls lines() with the same coordinates.\n    if (!is.null(last_plot) &&\n        length(item$xlim) == 0 &&\n        length(item$x) == length(last_plot$x) &&\n        length(item$y) == length(last_plot$y) &&\n        isTRUE(all.equal(item$x, last_plot$x)) &&\n        isTRUE(all.equal(item$y, last_plot$y))) {\n      last_plot <- NULL\n      next\n    }\n    if (length(item$xlim) > 0 || length(item$ylim) > 0) last_plot <- item\n    vals <- c(vals, item$x, item$y, item$xlim, item$ylim)\n  }\n  vals\n}\n\nvalue <- capture_value()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  pdf(NULL)\n  suppressWarnings(draw())\n  junk <- dev.off()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\npdf_path <- tempfile(fileext = \".pdf\")\npdf(pdf_path, width = 7, height = 5)\nplot.1D(mat, ask = FALSE, type = \"l\", lwd = 2, xyswap = TRUE)\njunk <- dev.off()\nsvg_path <- file.path(out_dir, \"plot.1D-r.svg\")\nstatus <- system2(\n  \"pdftocairo\",\n  c(\"-svg\", \"-f\", \"4\", \"-l\", \"4\", pdf_path, svg_path),\n  stdout = FALSE,\n  stderr = FALSE\n)\nif (status != 0) stop(\"pdftocairo failed\")\n\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport json\nimport statistics\nimport time\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n_spec = importlib.util.spec_from_file_location(\n    \"plot_1d\",\n    \"/home/ahmed/killr_projects/killr/packages/deSolve/deSolve/plot_1d.py\",\n)\n_mod = importlib.util.module_from_spec(_spec)\n_spec.loader.exec_module(_mod)\nplot_1d = _mod.plot_1d\n\n\nclass Series:\n    def __init__(self, data, colnames, lengthvar, lengthvar_names):\n        self.data = data\n        self.colnames = colnames\n        self.istate = None\n        self.lengthvar = lengthvar\n        self.lengthvar_names = lengthvar_names\n        self.dimens = 4\n        self.nspec = 1\n        self.ynames = [\"Aphid\"]\n\n\ndef make_series(shift):\n    mat = np.array(\n        [\n            [0.0, 1.0, 1.2, 1.4, 1.1, 0.10, 0.20, 0.00, -0.10, 0.30],\n            [0.5, 1.1, 1.3, 1.5, 1.2, 0.20, 0.10, 0.10, -0.20, 0.20],\n            [1.0, 1.3, 1.1, 1.6, 1.4, 0.00, 0.30, 0.20, 0.10, 0.00],\n            [1.5, 1.4, 1.5, 1.2, 1.3, 0.40, 0.20, -0.10, 0.20, 0.10],\n        ],\n        dtype=np.float64,\n    )\n    mat[:, 1:] = mat[:, 1:] + shift\n    return Series(\n        mat,\n        [\"time\", \"A1\", \"A2\", \"A3\", \"A4\", \"F1\", \"F2\", \"F3\", \"F4\", \"F5\"],\n        [4, 5],\n        [\"\", \"Flux\"],\n    )\n\n\nclass Obs:\n    def __init__(self, data, colnames):\n        self.data = data\n        self.colnames = colnames\n\n\nmat = make_series(0.0)\nmat2 = make_series(0.25)\nobs = Obs(\n    np.array([[0.0, 0.9, 0.5], [2.0, 1.7, -0.4]], dtype=np.float64),\n    [\"x\", \"Aphid\", \"Flux\"],\n)\ngrid = ([0.0, 1.0, 2.0, 3.0], [0.0, 0.5, 1.0, 1.5, 2.0])\n\n\ndef flatten(drawn):\n    values = []\n    for panel in drawn.panels:\n        if panel.get(\"empty\"):\n            continue\n        values.extend(float(v) for v in panel[\"x\"])\n        values.extend(float(v) for v in panel[\"y\"])\n        xlim = panel[\"xlim\"]\n        ylim = panel[\"ylim\"]\n        if xlim is None:\n            pass\n        else:\n            values.extend([float(xlim[0]), float(xlim[1])])\n        if ylim is None:\n            pass\n        else:\n            values.extend([float(ylim[0]), float(ylim[1])])\n        for line in panel[\"lines\"]:\n            values.extend(float(v) for v in line[\"x\"])\n            values.extend(float(v) for v in line[\"y\"])\n            values.extend([])  # xlim ylim placeholders stay absent, matching a numeric(0) pair only if we add nothing\n        for point in panel[\"points\"]:\n            values.extend(float(v) for v in point[\"x\"])\n            values.extend(float(v) for v in point[\"y\"])\n    return values\n\n\ndef draw():\n    return plot_1d(\n        mat,\n        mat2,\n        which=[\"Aphid\", \"Flux\"],\n        type=\"l\",\n        ask=False,\n        xyswap=True,\n        grid=grid,\n        subset=[1, 3],\n        lwd=2,\n        col=[\"red\", \"blue\"],\n        obs=obs,\n    )\n\n\ndef one():\n    drawn = draw()\n    values = flatten(drawn)\n    if drawn.figure is not None:\n        plt.close(drawn.figure)\n    return values\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndrawn = plot_1d(mat, type=\"l\", lwd=2, xyswap=True, ask=False)\ndrawn.figure.savefig(\n    \"/home/ahmed/killr_projects/killr/packages/deSolve/docs/output/plot.1D-python.svg\",\n    format=\"svg\",\n)\nplt.close(drawn.figure)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/matplot.1D-r.svg"
+      },
+      "translation": {
+        "output": "output/plot.1D-python.svg"
+      }
+    },
+    {
+      "name": "matplot.0D",
+      "translated": true,
+      "python": "deSolve.matplot_0D.matplot_0D",
+      "loads": [],
+      "uses": [],
+      "done": "Draws a deSolve 0D trajectory with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vode logistic default matplot.0D(out)",
+        "r_ms": 7.790803909301758,
+        "translated_ms": 19.236188999457227,
+        "speedup": 0.40500766079609557,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/deSolve\"\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- vode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  pdf(NULL)\n  matplot.0D(out)\n  usr <- par(\"usr\")\n  dev.off()\n  c(usr, as.vector(out[, \"N\"]))\n}\n\ninvisible(capture.output({\n  out <- vode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  svg(file.path(out_dir, \"matplot.0D-r.svg\"), width = 7, height = 5)\n  matplot.0D(out)\n  dev.off()\n}))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [str(ROOT / \"packages/deSolve\"), str(ROOT / \"crates/dvode\")]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _pkg = ModuleType(\"deSolve\")\n    _pkg.__path__ = [str(ROOT / \"packages/deSolve/deSolve\")]\n    sys.modules[\"deSolve\"] = _pkg\n\nfrom deSolve.matplot_0D import matplot_0D  # noqa: E402\nfrom deSolve.vode import vode  # noqa: E402\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    return [[r * x[0] * (1.0 - x[0] / k)]]\n\n\ndef one():\n    out = vode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    import matplotlib.pyplot as plt\n\n    res = matplot_0D(out)\n    usr = res[\"usr\"]\n    plt.close(res[\"figure\"])\n    series = out.data[:, 1].reshape(-1)\n    return usr + [float(v) for v in series]\n\n\nOUT = ROOT / \"packages/deSolve/docs/output\"\nOUT.mkdir(parents=True, exist_ok=True)\nout = vode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\nimport matplotlib.pyplot as plt\n\nmatplot_0D(out, _savefig=str(OUT / \"matplot.0D-python.svg\"))\nplt.close(\"all\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/matplot.0D-r.svg"
+      },
+      "translation": {
+        "output": "output/matplot.0D-python.svg"
+      }
+    },
+    {
+      "name": "matplot.1D",
+      "translated": true,
+      "python": "deSolve.matplot_1D.matplot_1D",
+      "loads": [],
+      "uses": [],
+      "done": "Draws a deSolve 1D profile with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ode.1D O2BOD N=4 matplot.1D(out, which=1)",
+        "r_ms": 8.653640747070312,
+        "translated_ms": 25.58032950037159,
+        "speedup": 0.3382927787128233,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/deSolve\"\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nO2BOD <- function(t, state, pars) {\n  N <- length(state) / 2\n  BOD <- state[1:N]\n  O2 <- state[(N + 1):(2 * N)]\n  dx <- pars[[\"dx\"]]\n  v <- pars[[\"v\"]]\n  r <- pars[[\"r\"]]\n  p <- pars[[\"p\"]]\n  O2sat <- pars[[\"O2sat\"]]\n  BOD_0 <- pars[[\"BOD_0\"]]\n  O2_0 <- pars[[\"O2_0\"]]\n  FluxBOD <- v * c(BOD_0, BOD)\n  FluxO2 <- v * c(O2_0, O2)\n  BODrate <- r * BOD\n  dBOD <- -diff(FluxBOD) / dx - BODrate\n  dO2 <- -diff(FluxO2) / dx - BODrate + p * (O2sat - O2)\n  list(c(dBOD, dO2))\n}\n\nbuild_out <- function() {\n  dx <- 100\n  N <- 4\n  parms <- list(\n    dx = dx, v = 1e3, r = 0.05, p = 0.5, O2sat = 300,\n    BOD_0 = 1000, O2_0 = 200\n  )\n  state <- c(rep(200, N), rep(200, N))\n  times <- seq(0, 1, by = 0.5)\n  ode.1D(\n    y = state, times = times, func = O2BOD, parms = parms,\n    nspec = 2, names = c(\"BOD\", \"O2\"), method = \"vode\"\n  )\n}\n\none <- function() {\n  out <- build_out()\n  pdf(NULL)\n  matplot.1D(out, which = 1, ask = FALSE)\n  usr <- par(\"usr\")\n  dev.off()\n  c(usr, as.vector(t(out[, 2:5])))\n}\n\ninvisible(capture.output({\n  out <- build_out()\n  svg(file.path(out_dir, \"matplot.1D-r.svg\"), width = 7, height = 5)\n  matplot.1D(out, which = 1, ask = FALSE)\n  dev.off()\n}))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\nimport numpy as np\n\nmatplotlib.use(\"Agg\")\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [str(ROOT / \"packages/deSolve\"), str(ROOT / \"crates/dvode\")]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _pkg = ModuleType(\"deSolve\")\n    _pkg.__path__ = [str(ROOT / \"packages/deSolve/deSolve\")]\n    sys.modules[\"deSolve\"] = _pkg\n\nfrom deSolve.matplot_1D import matplot_1D  # noqa: E402\nfrom deSolve.ode1D import ode_1D  # noqa: E402\n\n\ndef O2BOD(t, state, pars):\n    n = len(state) // 2\n    bod = np.asarray(state[:n])\n    o2 = np.asarray(state[n:])\n    dx = pars[\"dx\"]\n    v = pars[\"v\"]\n    r = pars[\"r\"]\n    p = pars[\"p\"]\n    o2sat = pars[\"O2sat\"]\n    bod_0 = pars[\"BOD_0\"]\n    o2_0 = pars[\"O2_0\"]\n    flux_bod = v * np.concatenate([[bod_0], bod])\n    flux_o2 = v * np.concatenate([[o2_0], o2])\n    bodrate = r * bod\n    dbod = -np.diff(flux_bod) / dx - bodrate\n    do2 = -np.diff(flux_o2) / dx - bodrate + p * (o2sat - o2)\n    return [np.concatenate([dbod, do2])]\n\n\ndef build_out():\n    dx = 100.0\n    n = 4\n    parms = {\n        \"dx\": dx,\n        \"v\": 1e3,\n        \"r\": 0.05,\n        \"p\": 0.5,\n        \"O2sat\": 300.0,\n        \"BOD_0\": 1000.0,\n        \"O2_0\": 200.0,\n    }\n    state = np.concatenate([np.full(n, 200.0), np.full(n, 200.0)])\n    times = np.arange(0, 1.5, 0.5)\n    return ode_1D(\n        y=state,\n        times=times,\n        func=O2BOD,\n        parms=parms,\n        nspec=2,\n        names=[\"BOD\", \"O2\"],\n        method=\"vode\",\n    )\n\n\ndef one():\n    out = build_out()\n    import matplotlib.pyplot as plt\n\n    res = matplot_1D(out, which=1, ask=False)\n    usr = res[\"usr\"]\n    plt.close(res[\"figure\"])\n    block = out.data[:, 1:5].T.reshape(-1, order=\"F\")\n    return [float(v) for v in usr] + [float(v) for v in block]\n\n\nOUT = ROOT / \"packages/deSolve/docs/output\"\nOUT.mkdir(parents=True, exist_ok=True)\nout = build_out()\nimport matplotlib.pyplot as plt\n\nmatplot_1D(out, which=1, ask=False, _savefig=str(OUT / \"matplot.1D-python.svg\"))\nplt.close(\"all\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/matplot.1D-r.svg"
+      },
+      "translation": {
+        "output": "output/matplot.1D-python.svg"
+      }
+    },
+    {
+      "name": "matplot.deSolve",
+      "translated": true,
+      "python": "deSolve.matplot_0D.matplot_deSolve",
+      "loads": [],
+      "uses": [],
+      "done": "Draws a deSolve object with the same Matplotlib driver.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vode logistic matplot.deSolve(out)",
+        "r_ms": 6.916165351867676,
+        "translated_ms": 22.348950499690545,
+        "speedup": 0.3094626457722675,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/deSolve\"\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- vode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  pdf(NULL)\n  matplot.deSolve(out)\n  usr <- par(\"usr\")\n  dev.off()\n  c(usr, as.vector(out[, \"N\"]))\n}\n\ninvisible(capture.output({\n  out <- vode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  svg(file.path(out_dir, \"matplot.deSolve-r.svg\"), width = 7, height = 5)\n  matplot.deSolve(out)\n  dev.off()\n}))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nvalue_json <- paste0(\"[\", paste(sprintf(\"%.17g\", value), collapse = \",\"), \"]\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', value_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nsys.path[:0] = [str(ROOT / \"packages/deSolve\"), str(ROOT / \"crates/dvode\")]\n\nfrom types import ModuleType\n\nif \"deSolve\" not in sys.modules:\n    _pkg = ModuleType(\"deSolve\")\n    _pkg.__path__ = [str(ROOT / \"packages/deSolve/deSolve\")]\n    sys.modules[\"deSolve\"] = _pkg\n\nfrom deSolve.matplot_0D import matplot_deSolve  # noqa: E402\nfrom deSolve.vode import vode  # noqa: E402\n\n\ndef logist(t, x, parms):\n    r = parms[\"r\"]\n    k = parms[\"K\"]\n    return [[r * x[0] * (1.0 - x[0] / k)]]\n\n\ndef one():\n    out = vode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\n    import matplotlib.pyplot as plt\n\n    res = matplot_deSolve(out)\n    usr = res[\"usr\"]\n    plt.close(res[\"figure\"])\n    series = out.data[:, 1].reshape(-1)\n    return usr + [float(v) for v in series]\n\n\nOUT = ROOT / \"packages/deSolve/docs/output\"\nOUT.mkdir(parents=True, exist_ok=True)\nout = vode({\"N\": 0.1}, list(range(0, 11, 2)), logist, {\"r\": 0.5, \"K\": 100})\nimport matplotlib.pyplot as plt\n\nmatplot_deSolve(out, _savefig=str(OUT / \"matplot.deSolve-python.svg\"))\nplt.close(\"all\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/matplot.deSolve-r.svg"
+      },
+      "translation": {
+        "output": "output/matplot.deSolve-python.svg"
+      }
+    },
+    {
+      "name": "checkDLL",
+      "translated": true,
+      "python": "deSolve.checkDLL.checkDLL",
+      "loads": [],
+      "uses": [],
+      "done": "Resolves compiled model symbols and the names of extra DLL outputs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "aquaphy, iniaqua, and aquaphyforc symbols, with outname padding and duplicate counts",
+        "r_ms": 1.2302398681640625,
+        "translated_ms": 0.2524135015846696,
+        "speedup": 4.8739067460358925,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\npack <- function(sym) {\n  vals <- numeric(0)\n  nglobal <- sym$Nglobal\n  vals <- c(vals, if (is.null(nglobal)) -999 else as.numeric(nglobal))\n  vals <- c(vals, if (inherits(sym$ModelInit, \"NativeSymbol\")) 1 else 0)\n  vals <- c(vals, if (inherits(sym$Func, \"NativeSymbol\")) 1 else 0)\n  vals <- c(vals, if (is.null(sym$JacFunc)) 0 else 1)\n  cols <- sym$Nmtot$colnames\n  if (is.null(cols)) {\n    vals <- c(vals, -1)\n  } else {\n    vals <- c(vals, if (is.character(cols)) 0 else 1)\n    vals <- c(vals, length(cols))\n    nm <- names(cols)\n    if (is.null(nm)) nm <- rep(\"\", length(cols))\n    for (i in seq_along(cols)) {\n      chars <- utf8ToInt(nm[[i]])\n      vals <- c(vals, length(chars), chars)\n      if (is.character(cols)) {\n        piece <- utf8ToInt(cols[[i]])\n        vals <- c(vals, length(piece), piece)\n      } else {\n        vals <- c(vals, as.numeric(cols[[i]]))\n      }\n    }\n  }\n  lv <- sym$Nmtot$lengthvar\n  if (is.null(lv)) {\n    vals <- c(vals, 0)\n  } else {\n    vals <- c(vals, 1, length(lv))\n    lnm <- names(lv)\n    if (is.null(lnm)) lnm <- rep(\"\", length(lv))\n    for (i in seq_along(lv)) {\n      vals <- c(vals, if (is.na(lv[[i]])) -1 else as.numeric(lv[[i]]))\n      chars <- utf8ToInt(lnm[[i]])\n      vals <- c(vals, length(chars), chars)\n    }\n  }\n  vals\n}\n\none <- function() {\n  out6 <- c(\n    \"PAR\", \"TotalN\", \"PhotoSynthesis\",\n    \"NCratio\", \"ChlCratio\", \"Chlorophyll\"\n  )\n  parts <- list(\n    checkDLL(\"aquaphy\", NULL, \"deSolve\", \"iniaqua\", TRUE, 6, out6, 1),\n    checkDLL(\n      \"aquaphy\", \"iniaqua\", \"deSolve\", NULL, TRUE, 4,\n      c(\"PAR\", \"PAR\", \"TotalN\", \"PhotoSynthesis\", \"Extra\"), 1\n    ),\n    checkDLL(\"aquaphy\", NULL, \"deSolve\", \"deSolve\", FALSE, 4, c(\"A\", \"B\"), 1),\n    checkDLL(\"aquaphy\", NULL, \"deSolve\", NULL, FALSE, 3, 1:2, 1),\n    checkDLL(\"aquaphy\", NULL, \"deSolve\", NULL, FALSE, 0, \"A\", 1),\n    checkDLL(\n      \"aquaphy\", NULL, \"deSolve\", \"iniaqua\", FALSE, 2,\n      c(A = \"x\", B = \"x\", C = \"y\"), 1\n    ),\n    checkDLL(\"aquaphy\", NULL, \"deSolve\", NULL, FALSE, 0, character(0), 1)\n  )\n  fa <- checkDLL(\"aquaphy\", NULL, \"deSolve\", NULL, FALSE, 0, NULL, 1)\n  fb <- checkDLL(\"aquaphyforc\", NULL, \"deSolve\", NULL, FALSE, 0, NULL, 1)\n  fc <- checkDLL(\"iniaqua\", NULL, \"deSolve\", NULL, FALSE, 0, NULL, 1)\n  value <- unlist(lapply(parts, pack), use.names = FALSE)\n  value <- c(\n    value, pack(fa), pack(fb), pack(fc),\n    as.numeric(identical(fa$Func, fb$Func)),\n    as.numeric(identical(fa$Func, fc$Func))\n  )\n  as.numeric(value)\n}\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom types import ModuleType\n\nROOT = \"/home/ahmed/killr_projects/killr\"\nsys.path.insert(0, f\"{ROOT}/packages/deSolve\")\nif \"deSolve\" not in sys.modules:\n    package = ModuleType(\"deSolve\")\n    package.__path__ = [f\"{ROOT}/packages/deSolve/deSolve\"]\n    sys.modules[\"deSolve\"] = package\n\nfrom deSolve.checkDLL import NativeSymbol, checkDLL\n\n\nclass Named(list):\n    def __init__(self, values, names):\n        super().__init__(values)\n        self.names = list(names)\n\n\ndef _codes(text: str) -> list[float]:\n    chars = [float(ord(ch)) for ch in text]\n    return [float(len(chars)), *chars]\n\n\ndef pack(sym) -> list[float]:\n    vals: list[float] = []\n    nglobal = sym.Nglobal\n    vals.append(-999.0 if nglobal is None else float(nglobal))\n    vals.append(1.0 if isinstance(sym.ModelInit, NativeSymbol) else 0.0)\n    vals.append(1.0 if isinstance(sym.Func, NativeSymbol) else 0.0)\n    vals.append(0.0 if sym.JacFunc is None else 1.0)\n    cols = sym.Nmtot.get(\"colnames\")\n    if cols is None:\n        vals.append(-1.0)\n    else:\n        vals.append(0.0 if cols.mode == \"character\" else 1.0)\n        vals.append(float(len(cols.values)))\n        for index, value in enumerate(cols.values):\n            name = \"\" if cols.names is None else cols.names[index]\n            vals.extend(_codes(name))\n            if cols.mode == \"character\":\n                vals.extend(_codes(\"\" if value is None else str(value)))\n            else:\n                vals.append(float(value))\n    lengthvar = sym.Nmtot.get(\"lengthvar\")\n    if lengthvar is None:\n        vals.append(0.0)\n    else:\n        vals.append(1.0)\n        vals.append(float(len(lengthvar.values)))\n        for index, value in enumerate(lengthvar.values):\n            vals.append(-1.0 if value is None else float(value))\n            name = \"\" if lengthvar.names is None else lengthvar.names[index]\n            vals.extend(_codes(name))\n    return vals\n\n\ndef one() -> list[float]:\n    out6 = [\n        \"PAR\",\n        \"TotalN\",\n        \"PhotoSynthesis\",\n        \"NCratio\",\n        \"ChlCratio\",\n        \"Chlorophyll\",\n    ]\n    parts = [\n        checkDLL(\"aquaphy\", None, \"deSolve\", \"iniaqua\", True, 6, out6, 1),\n        checkDLL(\n            \"aquaphy\",\n            \"iniaqua\",\n            \"deSolve\",\n            None,\n            True,\n            4,\n            [\"PAR\", \"PAR\", \"TotalN\", \"PhotoSynthesis\", \"Extra\"],\n            1,\n        ),\n        checkDLL(\"aquaphy\", None, \"deSolve\", \"deSolve\", False, 4, [\"A\", \"B\"], 1),\n        checkDLL(\"aquaphy\", None, \"deSolve\", None, False, 3, [1, 2], 1),\n        checkDLL(\"aquaphy\", None, \"deSolve\", None, False, 0, [\"A\"], 1),\n        checkDLL(\n            \"aquaphy\",\n            None,\n            \"deSolve\",\n            \"iniaqua\",\n            False,\n            2,\n            Named([\"x\", \"x\", \"y\"], [\"A\", \"B\", \"C\"]),\n            1,\n        ),\n        checkDLL(\"aquaphy\", None, \"deSolve\", None, False, 0, [], 1),\n    ]\n    fa = checkDLL(\"aquaphy\", None, \"deSolve\", None, False, 0, None, 1)\n    fb = checkDLL(\"aquaphyforc\", None, \"deSolve\", None, False, 0, None, 1)\n    fc = checkDLL(\"iniaqua\", None, \"deSolve\", None, False, 0, None, 1)\n    value: list[float] = []\n    for item in parts:\n        value.extend(pack(item))\n    value.extend(pack(fa))\n    value.extend(pack(fb))\n    value.extend(pack(fc))\n    value.append(1.0 if fa.Func.address == fb.Func.address else 0.0)\n    value.append(1.0 if fa.Func.address == fc.Func.address else 0.0)\n    return value\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/checkDLL-r.txt"
+      },
+      "translation": {
+        "output": "output/checkDLL-python.txt"
+      }
+    },
+    {
+      "name": "DLLfunc",
+      "translated": true,
+      "python": "deSolve.DLLfunc.DLLfunc",
+      "loads": [],
+      "uses": [],
+      "done": "Calls a compiled deSolve derivative by symbol name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "DLLfunc aquaphy on seq(0, 48, 0.5)",
+        "r_ms": 13.44144344329834,
+        "translated_ms": 6.934917999387835,
+        "speedup": 1.9382267309411378,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nparameters <- c(\n  maxPhotoSynt = 0.125,\n  rMortPHY = 0.001,\n  alpha = -0.125 / 150,\n  pExudation = 0.0,\n  maxProteinSynt = 0.136,\n  ksDIN = 1.0,\n  minpLMW = 0.05,\n  maxpLMW = 0.15,\n  minQuotum = 0.075,\n  maxStorage = 0.23,\n  respirationRate = 0.0001,\n  pResp = 0.4,\n  catabolismRate = 0.06,\n  dilutionRate = 0.01,\n  rNCProtein = 0.2,\n  inputDIN = 10.0,\n  rChlN = 1,\n  parMean = 250.0,\n  dayLength = 15.0\n)\n\nstate <- c(\n  DIN = 6.0,\n  PROTEIN = 20.0,\n  RESERVE = 5.0,\n  LMW = 1.0\n)\nnames(state) <- c(\"DIN\", \"PROTEIN\", \"RESERVE\", \"LMW\")\noutnames <- c(\n  \"PAR\", \"TotalN\", \"PhotoSynthesis\",\n  \"NCratio\", \"ChlCratio\", \"Chlorophyll\"\n)\n\neval_times <- seq(0, 48, 0.5)\n\none <- function() {\n  vals <- numeric(0)\n  for (t in eval_times) {\n    out <- DLLfunc(\n      func = \"aquaphy\", times = t, y = state, parms = parameters,\n      dllname = \"deSolve\", initfunc = \"iniaqua\", nout = 6, outnames = outnames\n    )\n    vals <- c(vals, as.numeric(out$dy), as.numeric(out$var))\n  }\n  vals\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.DLLfunc import DLLfunc\n\nparameters = np.array(\n    [\n        0.125,\n        0.001,\n        -0.125 / 150,\n        0.0,\n        0.136,\n        1.0,\n        0.05,\n        0.15,\n        0.075,\n        0.23,\n        0.0001,\n        0.4,\n        0.06,\n        0.01,\n        0.2,\n        10.0,\n        1.0,\n        250.0,\n        15.0,\n    ],\n    dtype=np.float64,\n)\n\nstate = np.array([6.0, 20.0, 5.0, 1.0], dtype=np.float64)\noutnames = [\n    \"PAR\",\n    \"TotalN\",\n    \"PhotoSynthesis\",\n    \"NCratio\",\n    \"ChlCratio\",\n    \"Chlorophyll\",\n]\neval_times = np.array([i * 0.5 for i in range(int(48 / 0.5) + 1)], dtype=np.float64)\n\n\ndef one():\n    vals = []\n    for t in eval_times:\n        out = DLLfunc(\n            func=\"aquaphy\",\n            times=t,\n            y=state,\n            parms=parameters,\n            dllname=\"deSolve\",\n            initfunc=\"iniaqua\",\n            nout=6,\n            outnames=outnames,\n        )\n        vals.extend(out[\"dy\"].tolist())\n        vals.extend(np.asarray(out[\"var\"]).tolist())\n    return vals\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "DLLres",
+      "translated": true,
+      "python": "deSolve.DLLres.DLLres",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates a residual once, including a forcing series.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Chemical residual on times 0 to 50 by 2.5",
+        "r_ms": 6.031394004821777,
+        "translated_ms": 1.7620625003473833,
+        "speedup": 3.422917180084539,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\npars <- c(K = 1, ka = 1e6, r = 1)\ny <- c(A = 2, B = 3, D = 2 * 3 / pars[\"K\"])\ndy <- c(dA = 0, dB = 0, dD = 0)\nprod <- matrix(\n  ncol = 2,\n  data = c(seq(0, 100, by = 10), seq(0.1, 0.5, len = 11))\n)\noutnames <- c(\"CONC\", \"Prod\")\neval_times <- seq(0, 50, 2.5)\n\none <- function() {\n  vals <- numeric(0)\n  for (t in eval_times) {\n    out <- DLLres(\n      y = y,\n      dy = dy,\n      times = t,\n      res = \"chemres\",\n      dllname = \"deSolve\",\n      initfunc = \"initparms\",\n      initforc = \"initforcs\",\n      parms = pars,\n      forcings = prod,\n      nout = 2,\n      outnames = outnames\n    )\n    vals <- c(vals, as.numeric(out$delta), as.numeric(out$var))\n  }\n  vals\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/deSolve\")\nfrom deSolve.DLLres import DLLres\n\npars = np.array([1.0, 1e6, 1.0], dtype=np.float64)\ny = np.array([2.0, 3.0, 6.0], dtype=np.float64)\ndy = np.array([0.0, 0.0, 0.0], dtype=np.float64)\nprod = np.column_stack(\n    [\n        np.arange(0, 101, 10, dtype=np.float64),\n        np.linspace(0.1, 0.5, 11, dtype=np.float64),\n    ]\n)\noutnames = [\"CONC\", \"Prod\"]\neval_times = np.arange(0, 50.1, 2.5, dtype=np.float64)\n\n\ndef chemres_callable(t, state, ydot, parms, prod_rate):\n    del t\n    k = parms[0]\n    ka = parms[1]\n    r_rate = parms[2]\n    ra = ka * state[2]\n    rb = ka / k * state[0] * state[1]\n    delta = np.array(\n        [\n            -ydot[0] + ra - rb,\n            -ydot[1] + ra - rb - r_rate * state[1],\n            -ydot[2] - ra + rb + prod_rate,\n        ],\n        dtype=np.float64,\n    )\n    var = np.array([state[0] + state[1] + state[2], prod_rate], dtype=np.float64)\n    return delta, var\n\n\ndef one():\n    vals = []\n    for t in eval_times:\n        out = DLLres(\n            res=chemres_callable,\n            times=t,\n            y=y,\n            dy=dy,\n            parms=pars,\n            dllname=\"deSolve\",\n            initfunc=\"initparms\",\n            initforc=\"initforcs\",\n            forcings=prod,\n            nout=2,\n            outnames=outnames,\n        )\n        vals.extend(out[\"delta\"].tolist())\n        vals.extend(np.asarray(out[\"var\"]).tolist())\n    return vals\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"value\": [float(item) for item in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "diagnostics.deSolve",
+      "translated": true,
+      "python": "deSolve.diagnostics_deSolve.diagnostics_deSolve",
+      "loads": [],
+      "uses": [],
+      "done": "Prints lsode return code, istate, and rstate for a deSolve object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A constructed lsode solution of a logistic equation",
+        "r_ms": 2.629876136779785,
+        "translated_ms": 0.07040499986032955,
+        "speedup": 37.35354224837683,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- lsode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  paste(capture.output({ invisible(diagnostics(out)) }), collapse = \"\\n\")\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport io\nimport statistics\nimport sys\nimport time\nimport types\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nPKG = ROOT / \"packages/deSolve/deSolve\"\nsys.path.insert(0, str(ROOT / \"packages/deSolve\"))\n\n\ndef _ensure_desolve_package() -> None:\n    if \"deSolve\" not in sys.modules:\n        pkg = types.ModuleType(\"deSolve\")\n        pkg.__path__ = [str(PKG)]\n        pkg.__package__ = \"deSolve\"\n        sys.modules[\"deSolve\"] = pkg\n\n\ndef _load(stem: str):\n    _ensure_desolve_package()\n    name = f\"deSolve.{stem}\"\n    if name in sys.modules:\n        return sys.modules[name]\n    spec = importlib.util.spec_from_file_location(\n        name, PKG / f\"{stem}.py\", submodule_search_locations=[str(PKG)]\n    )\n    mod = importlib.util.module_from_spec(spec)\n    sys.modules[name] = mod\n    spec.loader.exec_module(mod)\n    return mod\n\n\ndef _captured_text(buffer: io.StringIO) -> str:\n    text = buffer.getvalue()\n    if text.endswith(\"\\n\"):\n        text = text[:-1]\n    return text\n\n\n_load(\"timestep\")\nrk4 = _load(\"rk4\")\ndiagnostics_deSolve = _load(\"diagnostics_deSolve\").diagnostics_deSolve\nDeSolveMatrix = rk4.DeSolveMatrix\n\n\ndef _lsode_like_object():\n    istate = [None] * 21\n    for index, value in [(0, 2), (1, 52), (2, 69), (4, 5), (5, 5), (6, 0), (7, 32), (8, 21), (13, 5)]:\n        istate[index] = value\n    obj = DeSolveMatrix(np.zeros((1, 2)), [\"time\", \"N\"], istate, None, None, None)\n    obj.type = \"lsode\"\n    obj.rstate = [0.2695228, 0.2695228, 10.23201, 0, None]\n    return obj\n\n\ndef one() -> str:\n    buf = io.StringIO()\n    old = sys.stdout\n    sys.stdout = buf\n    try:\n        diagnostics_deSolve(_lsode_like_object())\n    finally:\n        sys.stdout = old\n    return _captured_text(buf)\n\n\ninvisible = one()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "diagnostics.default",
+      "translated": true,
+      "python": "deSolve.diagnostics_default.diagnostics_default",
+      "loads": [],
+      "uses": [],
+      "done": "Warns when the object is not a deSolve solution.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An object that is not a deSolve solution",
+        "r_ms": 0.1277923583984375,
+        "translated_ms": 0.010210000255028717,
+        "speedup": 12.516391303271135,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\none <- function() {\n  w <- NULL\n  withCallingHandlers(\n    diagnostics(1:3),\n    warning = function(msg) {\n      w <<- conditionMessage(msg)\n      invokeRestart(\"muffleWarning\")\n    }\n  )\n  w\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport statistics\nimport sys\nimport time\nimport types\nimport warnings\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nPKG = ROOT / \"packages/deSolve/deSolve\"\nsys.path.insert(0, str(ROOT / \"packages/deSolve\"))\n\n\ndef _ensure_desolve_package() -> None:\n    if \"deSolve\" not in sys.modules:\n        pkg = types.ModuleType(\"deSolve\")\n        pkg.__path__ = [str(PKG)]\n        pkg.__package__ = \"deSolve\"\n        sys.modules[\"deSolve\"] = pkg\n\n\ndef _load(stem: str):\n    _ensure_desolve_package()\n    name = f\"deSolve.{stem}\"\n    if name in sys.modules:\n        return sys.modules[name]\n    spec = importlib.util.spec_from_file_location(\n        name, PKG / f\"{stem}.py\", submodule_search_locations=[str(PKG)]\n    )\n    mod = importlib.util.module_from_spec(spec)\n    sys.modules[name] = mod\n    spec.loader.exec_module(mod)\n    return mod\n\n\n_load(\"timestep\")\n_load(\"rk4\")\ndiagnostics_default = _load(\"diagnostics_default\").diagnostics_default\n\n\ndef one() -> str:\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        diagnostics_default(np.array([1, 2, 3], dtype=np.int32))\n    return str(caught[0].message)\n\n\ninvisible = one()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "diagnostics",
+      "translated": true,
+      "python": "deSolve.diagnostics.diagnostics",
+      "loads": [],
+      "uses": [],
+      "done": "Dispatches diagnostics to the deSolve or default method.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same constructed lsode solution",
+        "r_ms": 2.665996551513672,
+        "translated_ms": 0.07182750050560571,
+        "speedup": 37.11665494061855,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(deSolve))\nif (packageDescription(\"deSolve\")$Version != \"1.42\") stop(\"expected deSolve 1.42\")\n\nlogist <- function(t, x, parms) {\n  with(as.list(parms), {\n    dx <- r * x[1] * (1 - x[1] / K)\n    list(dx)\n  })\n}\n\none <- function() {\n  out <- lsode(c(N = 0.1), seq(0, 10, 2), logist, c(r = 0.5, K = 100))\n  paste(capture.output({ invisible(diagnostics(out)) }), collapse = \"\\n\")\n}\n\ninvisible(one())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import importlib.util\nimport io\nimport statistics\nimport sys\nimport time\nimport types\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(\"/home/ahmed/killr_projects/killr\")\nPKG = ROOT / \"packages/deSolve/deSolve\"\nsys.path.insert(0, str(ROOT / \"packages/deSolve\"))\n\n\ndef _ensure_desolve_package() -> None:\n    if \"deSolve\" not in sys.modules:\n        pkg = types.ModuleType(\"deSolve\")\n        pkg.__path__ = [str(PKG)]\n        pkg.__package__ = \"deSolve\"\n        sys.modules[\"deSolve\"] = pkg\n\n\ndef _load(stem: str):\n    _ensure_desolve_package()\n    name = f\"deSolve.{stem}\"\n    if name in sys.modules:\n        return sys.modules[name]\n    spec = importlib.util.spec_from_file_location(\n        name, PKG / f\"{stem}.py\", submodule_search_locations=[str(PKG)]\n    )\n    mod = importlib.util.module_from_spec(spec)\n    sys.modules[name] = mod\n    spec.loader.exec_module(mod)\n    return mod\n\n\ndef _captured_text(buffer: io.StringIO) -> str:\n    text = buffer.getvalue()\n    if text.endswith(\"\\n\"):\n        text = text[:-1]\n    return text\n\n\n_load(\"timestep\")\nrk4 = _load(\"rk4\")\n_load(\"diagnostics_deSolve\")\n_load(\"diagnostics_default\")\ndiagnostics = _load(\"diagnostics\").diagnostics\nDeSolveMatrix = rk4.DeSolveMatrix\n\n\ndef _lsode_like_object():\n    istate = [None] * 21\n    for index, value in [(0, 2), (1, 52), (2, 69), (4, 5), (5, 5), (6, 0), (7, 32), (8, 21), (13, 5)]:\n        istate[index] = value\n    obj = DeSolveMatrix(np.zeros((1, 2)), [\"time\", \"N\"], istate, None, None, None)\n    obj.type = \"lsode\"\n    obj.rstate = [0.2695228, 0.2695228, 10.23201, 0, None]\n    return obj\n\n\ndef one() -> str:\n    buf = io.StringIO()\n    old = sys.stdout\n    sys.stdout = buf\n    try:\n        diagnostics(_lsode_like_object())\n    finally:\n        sys.stdout = old\n    return _captured_text(buf)\n\n\ninvisible = one()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

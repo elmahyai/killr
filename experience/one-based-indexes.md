@@ -1,0 +1,1 @@
+Indexes that R prints are 1-based. Subtract one only at the NumPy subscript. `findInterval` with `left.open=FALSE` is `bisect_right`; `left.open=TRUE` is `bisect_left`. `match` is a unique inverse, not `searchsorted`.

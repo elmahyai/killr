@@ -1,0 +1,71 @@
+{
+  "name": "leaps",
+  "cran_version": "3.2",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "leaps"
+  ],
+  "resume": "Exports: 2 translated (regsubsets, leaps) on the exhaustive path. Forward, backward, seqrep, Efroymson, and rank-deficient designs not ported. All exports translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "leaps"
+    ]
+  },
+  "strategy": "small-low",
+  "functions": [
+    {
+      "name": "regsubsets",
+      "translated": true,
+      "python": "leaps.regsubsets.regsubsets",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly on 51 subsets (RSS max abs diff 0). Rank-deficient designs are explicitly unsupported.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.747,
+        "translated_ms": 1.891,
+        "speedup": 0.39,
+        "case": "Exhaustive search, n=200, p=12, nvmax=10, nbest=5 (51 subsets).",
+        "proof": {
+          "r": "# Proof, R side: leaps 3.2 exhaustive search on the fixed design in design.csv.\n#\n# Run from packages/leaps/proof (see run_proof.sh). Writes:\n#   ../docs/output/r_subsets.csv  selected subsets and their RSS values\n#   ../docs/output/r_timings.txt  one untimed call, then 20 timed calls\n#\n# The R fit is the reference. It is not called from Rust or Python.\n\nlib_dir <- Sys.getenv(\"LEAPS_RLIB\", unset = \"\")\nif (nzchar(lib_dir)) .libPaths(c(lib_dir, .libPaths()))\nsuppressPackageStartupMessages(library(leaps))\n\nNVMAX <- 10L\nNBEST <- 5L\nN_TIMED <- 20L\n\ndesign <- read.csv(\"design.csv\")\ny <- design$y\nX <- as.matrix(design[, -1])\n\nrun_fit <- function() {\n  regsubsets(x = X, y = y, nbest = NBEST, nvmax = NVMAX, method = \"exhaustive\")\n}\n\n# One untimed call.\nfit <- run_fit()\n\n# Median of 20 timed calls, using Sys.time().\ntimes <- numeric(N_TIMED)\nfor (k in seq_len(N_TIMED)) {\n  t0 <- Sys.time()\n  fit <- run_fit()\n  times[k] <- as.numeric(Sys.time() - t0, units = \"secs\")\n}\n\n# Selected subsets: for each size i (intercept included in the count) and\n# rank j, the RSS and the sorted variable positions from LOPT.\n# Position 1 is the intercept. Positions 2.. are predictors x1.. in order.\nnvmax_eff <- fit$nvmax\nress <- fit$ress\nlopt <- fit$lopt\nrows <- list()\nfor (i in seq_len(nvmax_eff)) {\n  lo <- i * (i - 1) / 2 + 1\n  hi <- lo + i - 1\n  for (j in seq_len(NBEST)) {\n    rss <- ress[i, j]\n    if (rss >= 1e35) next\n    vars <- sort(lopt[lo:hi, j])\n    rows[[length(rows) + 1]] <- data.frame(\n      predictors = i - 1L,\n      rank = j,\n      rss = sprintf(\"%.17g\", rss),\n      vars = paste(vars, collapse = \";\"),\n      stringsAsFactors = FALSE\n    )\n  }\n}\nsubsets <- do.call(rbind, rows)\n\nout_dir <- file.path(\"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwrite.csv(subsets, file.path(out_dir, \"r_subsets.csv\"), row.names = FALSE)\n\nmedian_s <- median(times)\ntiming_lines <- c(\n  sprintf(\"R %s, leaps %s\", R.version.string, as.character(packageVersion(\"leaps\"))),\n  sprintf(\n    \"regsubsets(method='exhaustive') n=%d p=%d nvmax=%d nbest=%d\",\n    nrow(X), ncol(X), NVMAX, NBEST\n  ),\n  sprintf(\"untimed calls: 1, timed calls: %d (Sys.time)\", N_TIMED),\n  sprintf(\"timed seconds: %s\", paste(sprintf(\"%.6f\", times), collapse = \" \")),\n  sprintf(\"median_seconds: %.9f\", median_s),\n  sprintf(\"subsets_recorded: %d\", nrow(subsets))\n)\nwriteLines(timing_lines, file.path(out_dir, \"r_timings.txt\"))\ncat(timing_lines, sep = \"\\n\")\n",
+          "python": ""
+        }
+      }
+    },
+    {
+      "name": "leaps",
+      "translated": true,
+      "python": "leaps.leaps.leaps",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R exactly on 51 subsets (RSS max abs diff 0). Rank-deficient designs are explicitly unsupported.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.747,
+        "translated_ms": 1.891,
+        "speedup": 0.39,
+        "case": "Exhaustive search, n=200, p=12, nvmax=10, nbest=5 (51 subsets).",
+        "proof": {
+          "r": "# Proof, R side: leaps 3.2 exhaustive search on the fixed design in design.csv.\n#\n# Run from packages/leaps/proof (see run_proof.sh). Writes:\n#   ../docs/output/r_subsets.csv  selected subsets and their RSS values\n#   ../docs/output/r_timings.txt  one untimed call, then 20 timed calls\n#\n# The R fit is the reference. It is not called from Rust or Python.\n\nlib_dir <- Sys.getenv(\"LEAPS_RLIB\", unset = \"\")\nif (nzchar(lib_dir)) .libPaths(c(lib_dir, .libPaths()))\nsuppressPackageStartupMessages(library(leaps))\n\nNVMAX <- 10L\nNBEST <- 5L\nN_TIMED <- 20L\n\ndesign <- read.csv(\"design.csv\")\ny <- design$y\nX <- as.matrix(design[, -1])\n\nrun_fit <- function() {\n  regsubsets(x = X, y = y, nbest = NBEST, nvmax = NVMAX, method = \"exhaustive\")\n}\n\n# One untimed call.\nfit <- run_fit()\n\n# Median of 20 timed calls, using Sys.time().\ntimes <- numeric(N_TIMED)\nfor (k in seq_len(N_TIMED)) {\n  t0 <- Sys.time()\n  fit <- run_fit()\n  times[k] <- as.numeric(Sys.time() - t0, units = \"secs\")\n}\n\n# Selected subsets: for each size i (intercept included in the count) and\n# rank j, the RSS and the sorted variable positions from LOPT.\n# Position 1 is the intercept. Positions 2.. are predictors x1.. in order.\nnvmax_eff <- fit$nvmax\nress <- fit$ress\nlopt <- fit$lopt\nrows <- list()\nfor (i in seq_len(nvmax_eff)) {\n  lo <- i * (i - 1) / 2 + 1\n  hi <- lo + i - 1\n  for (j in seq_len(NBEST)) {\n    rss <- ress[i, j]\n    if (rss >= 1e35) next\n    vars <- sort(lopt[lo:hi, j])\n    rows[[length(rows) + 1]] <- data.frame(\n      predictors = i - 1L,\n      rank = j,\n      rss = sprintf(\"%.17g\", rss),\n      vars = paste(vars, collapse = \";\"),\n      stringsAsFactors = FALSE\n    )\n  }\n}\nsubsets <- do.call(rbind, rows)\n\nout_dir <- file.path(\"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwrite.csv(subsets, file.path(out_dir, \"r_subsets.csv\"), row.names = FALSE)\n\nmedian_s <- median(times)\ntiming_lines <- c(\n  sprintf(\"R %s, leaps %s\", R.version.string, as.character(packageVersion(\"leaps\"))),\n  sprintf(\n    \"regsubsets(method='exhaustive') n=%d p=%d nvmax=%d nbest=%d\",\n    nrow(X), ncol(X), NVMAX, NBEST\n  ),\n  sprintf(\"untimed calls: 1, timed calls: %d (Sys.time)\", N_TIMED),\n  sprintf(\"timed seconds: %s\", paste(sprintf(\"%.6f\", times), collapse = \" \")),\n  sprintf(\"median_seconds: %.9f\", median_s),\n  sprintf(\"subsets_recorded: %d\", nrow(subsets))\n)\nwriteLines(timing_lines, file.path(out_dir, \"r_timings.txt\"))\ncat(timing_lines, sep = \"\\n\")\n",
+          "python": ""
+        }
+      }
+    }
+  ]
+}

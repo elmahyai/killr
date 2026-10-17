@@ -1,0 +1,64 @@
+{
+  "name": "handler_ascii_alert",
+  "title": "Progression Handler: Progress Reported as ASCII BEL Symbols (Audio or Blink) in the Terminal",
+  "origin": {
+    "description": "Report progress by writing a BEL character, or another symbol, to a connection.",
+    "usage": "handler_ascii_alert(symbol = \"\\a\", file = stderr(), intrusiveness = getOption(\"progressr.intrusiveness.audio\", 5), target = c(\"terminal\", \"audio\"), ...)",
+    "arguments": [
+      {
+        "name": "symbol",
+        "text": "The text written for a non-zero update. The default is the BEL character."
+      },
+      {
+        "name": "file",
+        "text": "A connection. The default is stderr()."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.audio, or 5."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is terminal and audio."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to make_progression_handler()."
+      }
+    ],
+    "details": "update writes the symbol when the handler is enabled and the amount is not 0. interrupt writes a blank line, the condition message, and a blank line. hide and unhide do nothing.",
+    "value": "A function of class progression_handler.",
+    "example": "path <- tempfile(\"al\")\ncon <- file(path, open = \"wt\")\nhandler <- handler_ascii_alert(symbol = \"!\", file = con, enable = TRUE, intrusiveness = 1)\nwith_progress({\n  p <- progressor(steps = 2, on_exit = FALSE)\n  p(message = \"a\")\n  p(amount = 0, message = \"skip\")\n  p(message = \"b\")\n}, handlers = handler, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\nclose(con)\ncat(\"handler_ascii_alert wrote \", nchar(readChar(path, 100, useBytes = TRUE)), \" bells.\\n\", sep = \"\")\n",
+    "output": "output/handler_ascii_alert-r.txt"
+  },
+  "translation": {
+    "description": "Report progress by writing a BEL character, or another symbol, to a text stream.",
+    "usage": "handler_ascii_alert(symbol=\"\\a\", file=None, intrusiveness=None, target=(\"terminal\", \"audio\"), **extra)",
+    "arguments": [
+      {
+        "name": "symbol",
+        "text": "The text written for a non-zero update. The default is the BEL character."
+      },
+      {
+        "name": "file",
+        "text": "A text stream with write(). The default is sys.stderr."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.audio, or 5."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is terminal and audio."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments passed to make_progression_handler(), including enable."
+      }
+    ],
+    "details": "update writes the symbol when the handler is enabled and the amount is not 0. interrupt writes a blank line, the condition message, and a blank line. hide and unhide do nothing.",
+    "value": "A calling handler.",
+    "example": "import os\nimport tempfile\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_ascii_alert\n\npath = os.path.join(tempfile.mkdtemp(), \"alert.txt\")\nhandle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\nhandler = handler_ascii_alert(symbol=\"!\", file=handle, enable=True, intrusiveness=1)\n\ndef body():\n    progress = progressor(steps=2, on_exit=False)\n    progress(message=\"a\")\n    progress(amount=0, message=\"skip\")\n    progress(message=\"b\")\n\nwith_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nhandle.close()\nprint(f\"handler_ascii_alert wrote {len(open(path, encoding='utf-8').read())} bells.\")\n",
+    "output": "output/handler_ascii_alert-python.txt"
+  }
+}

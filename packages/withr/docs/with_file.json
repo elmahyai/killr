@@ -1,0 +1,40 @@
+{
+  "name": "with_file",
+  "title": "File removed afterwards",
+  "origin": {
+    "description": "Run code, then delete the named files.",
+    "usage": "with_file(new, code, ...)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path or paths to delete afterwards."
+      },
+      {
+        "name": "code",
+        "text": "Callable run before the deletion."
+      }
+    ],
+    "details": "The path is deleted after code, including when code raises.",
+    "value": "The file specification, invisibly in R. code's value is discarded.",
+    "example": "td <- tempfile()\ndir.create(td)\nold <- getwd()\nsetwd(td)\non.exit(setwd(old), add = TRUE)\nlines <- with_file(\"file1\", {\n  writeLines(\"foo\", \"file1\")\n  readLines(\"file1\")\n})\nc(lines, if (file.exists(\"file1\")) \"kept\" else \"gone\")\n",
+    "output": "output/with_file-r.txt"
+  },
+  "translation": {
+    "description": "Run code, then delete the named files.",
+    "usage": "with_file(new, code, ...)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path or paths to delete afterwards."
+      },
+      {
+        "name": "code",
+        "text": "Callable run before the deletion."
+      }
+    ],
+    "details": "The path is deleted after code, including when code raises. code is a callable, and local_* is a context manager.",
+    "value": "The file specification, invisibly in R. code's value is discarded.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\ntd = tempfile.mkdtemp()\nbefore = os.getcwd()\nos.chdir(td)\ntry:\n    def body():\n        with open(\"file1\", \"w\") as handle:\n            handle.write(\"foo\\n\")\n        return open(\"file1\").read().splitlines()[0]\n    lines = with_file(\"file1\", body)\n    flag = \"kept\" if os.path.exists(\"file1\") else \"gone\"\nfinally:\n    os.chdir(before)\nreturn [lines, flag]\n",
+    "output": "output/with_file-python.txt"
+  }
+}

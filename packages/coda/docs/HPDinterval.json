@@ -1,0 +1,44 @@
+{
+  "name": "HPDinterval",
+  "title": "Highest Posterior Density intervals",
+  "origin": {
+    "description": "Create Highest Posterior Density (HPD) intervals for the parameters in an MCMC sample.",
+    "usage": "HPDinterval(obj, prob = 0.95, ...)",
+    "arguments": [
+      {
+        "name": "obj",
+        "text": "The object containing the MCMC sample - usually of class \"mcmc\" or \"mcmc.list\"."
+      },
+      {
+        "name": "prob",
+        "text": "A numeric scalar in the interval (0,1) giving the target probability content of the intervals. The nominal probability content of the intervals is the multiple of 1/nrow(obj) nearest to prob."
+      },
+      {
+        "name": "...",
+        "text": "Optional additional arguments for methods. None are used at present."
+      }
+    ],
+    "details": "For each parameter the interval is constructed from the empirical cdf of the sample as the shortest interval for which the difference in the ecdf values of the endpoints is the nominal probability. Assuming that the distribution is not severely multimodal, this is the HPD interval.",
+    "value": "For an \"mcmc\" object, a matrix with columns \"lower\" and \"upper\" and rows corresponding to the parameters. The attribute \"Probability\" is the nominal probability content of the intervals. A list of such matrices is returned for an \"mcmc.list\" object.",
+    "example": "data(line)\nHPDinterval(line)",
+    "output": "output/HPDinterval-r.txt"
+  },
+  "translation": {
+    "description": "Create Highest Posterior Density (HPD) intervals for the parameters in an MCMC sample.",
+    "usage": "HPDinterval(obj, prob=0.95)",
+    "arguments": [
+      {
+        "name": "obj",
+        "text": "One chain as a vector or a matrix with iterations in rows, or a list of chains. A list returns one HPDResult per chain."
+      },
+      {
+        "name": "prob",
+        "text": "Target probability content in (0, 1). The nominal content is gap/nrow where gap is round(nrow * prob) clipped to [1, nrow - 1]."
+      }
+    ],
+    "details": "For each parameter the interval is constructed from the empirical cdf of the sample as the shortest interval for which the difference in the ecdf values of the endpoints is the nominal probability. Assuming that the distribution is not severely multimodal, this is the HPD interval.",
+    "value": "HPDResult with lower and upper vectors, optional parameter names, and probability. A list of HPDResult objects for a list of chains.",
+    "example": "import json\nfrom pathlib import Path\nfrom types import SimpleNamespace\n\nimport numpy as np\n\nfrom coda.HPDinterval import HPDinterval\n\nroot = Path(__file__).resolve().parents[1]\nchains_raw = json.loads((root / \"proof\" / \"line-chains.json\").read_text())\nchains = [\n    SimpleNamespace(\n        data=np.array(entry[\"data\"], dtype=float).reshape(-1, len(entry[\"cols\"]), order=\"F\"),\n        colnames=entry[\"cols\"],\n    )\n    for entry in chains_raw\n]\nfor label, item in zip((\"line1\", \"line2\"), HPDinterval(chains)):\n    print(f\"${label}\")\n    print(\"         lower   upper\")\n    for name, lo, hi in zip(item.rownames, item.lower, item.upper):\n        print(f\"{name} {lo:8.5f} {hi:8.5f}\")\n    print('attr(,\"Probability\")')\n    print(f\"[1] {item.probability}\")",
+    "output": "output/HPDinterval-python.txt"
+  }
+}

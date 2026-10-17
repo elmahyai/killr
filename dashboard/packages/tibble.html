@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tibble · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>tibble</h1>
+<p class="note">CRAN 3.3.1</p>
+<p>Checked has_name, new_tibble, repair_names, and tibble. The rest is left unfinished. A data frame is Polars, and that is not a check.</p>
+<p class="note">4 of 45 functions · 8.9% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:8.9%"></div></div><strong>8.9%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#%>%">%&gt;%</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#add_case">add_case</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#add_column">add_column</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#add_row">add_row</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as.tibble">as.tibble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as_data_frame">as_data_frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as_tibble">as_tibble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as_tibble_col">as_tibble_col</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as_tibble_row">as_tibble_row</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#char">char</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#column_to_rownames">column_to_rownames</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#data_frame">data_frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#data_frame_">data_frame_</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#deframe">deframe</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#enframe">enframe</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#frame_data">frame_data</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#frame_matrix">frame_matrix</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#glimpse">glimpse</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#has_name">has_name</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Reports whether a column name is present.</td></tr>
+<tr><td><a href="#has_rownames">has_rownames</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is.tibble">is.tibble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_tibble">is_tibble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#lst">lst</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#lst_">lst_</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_tibble">new_tibble</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Builds a tibble from a list of columns and stores the names as given.</td></tr>
+<tr><td><a href="#num">num</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_sum">obj_sum</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#remove_rownames">remove_rownames</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#repair_names">repair_names</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Makes column names unique. Blank names take the first free prefix numbers, matching vec_as_names_legacy.</td></tr>
+<tr><td><a href="#rowid_to_column">rowid_to_column</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rownames_to_column">rownames_to_column</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_char_opts">set_char_opts</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_num_opts">set_num_opts</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_tidy_names">set_tidy_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#size_sum">size_sum</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tbl_sum">tbl_sum</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tibble">tibble</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Builds columns from keywords and recycles a length-1 column.</td></tr>
+<tr><td><a href="#tibble_">tibble_</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tibble_row">tibble_row</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tidy_names">tidy_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tribble">tribble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#trunc_mat">trunc_mat</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#type_sum">type_sum</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#validate_tibble">validate_tibble</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#view">view</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>has_name</td><td>a one-column data frame named a</td><td>0.0224</td><td>0.0011</td><td><button type="button" class="proof-toggle" data-name="has_name"><span class='yes'>+1938%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.9%'></span></div></td></tr>
+<tr><td>new_tibble</td><td>columns a = 1:3 and b = 4:6</td><td>0.0581</td><td>0.00862</td><td><button type="button" class="proof-toggle" data-name="new_tibble"><span class='yes'>+574%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:14.8%'></span></div></td></tr>
+<tr><td>repair_names</td><td>two columns both named a</td><td>0.0985</td><td>0.0058</td><td><button type="button" class="proof-toggle" data-name="repair_names"><span class='yes'>+1596%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:5.9%'></span></div></td></tr>
+<tr><td>tibble</td><td>a = 1:3 and a length-1 b</td><td>1.14</td><td>0.0128</td><td><button type="button" class="proof-toggle" data-name="tibble"><span class='yes'>+8829%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.1%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "has_name", "r": "        suppressPackageStartupMessages(library(tibble))\ndf \u003c- data.frame(a = 1)\n        one \u003c- function() {\n          paste(c(has_name(df, \"a\"), has_name(df, \"nope\")), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom tibble import has_name, new_tibble\nframe = new_tibble([[1]], names=[\"a\"], nrow=1)\ndef one():\n    return f\"{has_name(frame, 'a')},{has_name(frame, 'nope')}\"\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "new_tibble", "r": "        suppressPackageStartupMessages(library(tibble))\n        one \u003c- function() {\n          frame \u003c- new_tibble(list(a = 1:3, b = 4:6))\npaste(paste(frame$a, collapse = \",\"), paste(frame$b, collapse = \",\"), sep = \"|\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom tibble import new_tibble\ndef one():\n    frame = new_tibble([[1, 2, 3], [4, 5, 6]], names=[\"a\", \"b\"])\n    return \"|\".join([\",\".join(map(str, frame[\"a\"])), \",\".join(map(str, frame[\"b\"]))])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "repair_names", "r": "        suppressPackageStartupMessages(library(tibble))\ndf \u003c- data.frame(x = 1, y = 2)\nnames(df) \u003c- c(\"a\", \"a\")\n        one \u003c- function() {\n          paste(names(repair_names(df)), collapse = \",\")\n        }\n        ans \u003c- one()\n        elapsed \u003c- numeric(20)\n        for (i in seq_len(20)) {\n          t0 \u003c- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom tibble import new_tibble, repair_names\nframe = new_tibble([[1], [2]], names=[\"a\", \"a\"], nrow=1)\ndef one():\n    return \",\".join(repair_names(frame).names)\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}, {"name": "tibble", "r": "suppressPackageStartupMessages(library(tibble))\none \u003c- function() {\n  paste(tibble(a = 1:3, b = 1)$b, collapse = \",\")\n}\nans \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(ans, \"\\n\", sep = \"\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom tibble import tibble\ndef one():\n    return \",\".join(str(v) for v in tibble(a=[1, 2, 3], b=1)[\"b\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="cli.html">cli</a> <span class="note">replaced</span></p><p><a href="lifecycle.html">lifecycle</a> <span class="note">>= 1.0.0 · replaced</span></p><p><a href="magrittr.html">magrittr</a> <span class="note">finished</span></p><p>methods</p><p><a href="pillar.html">pillar</a> <span class="note">>= 1.8.1 · replaced</span></p><p><a href="pkgconfig.html">pkgconfig</a> <span class="note">finished</span></p><p><a href="rlang.html">rlang</a> <span class="note">>= 1.0.2 · replaced</span></p><p><a href="utils.html">utils</a></p><p><a href="vctrs.html">vctrs</a> <span class="note">>= 0.5.0 · replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "%>%", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "%>%", "origin": null, "translation": null}, {"name": "add_case", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "add_case", "origin": null, "translation": null}, {"name": "add_column", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "add_column", "origin": null, "translation": null}, {"name": "add_row", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "add_row", "origin": null, "translation": null}, {"name": "as.tibble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as.tibble", "origin": null, "translation": null}, {"name": "as_data_frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as_data_frame", "origin": null, "translation": null}, {"name": "as_tibble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as_tibble", "origin": null, "translation": null}, {"name": "as_tibble_col", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as_tibble_col", "origin": null, "translation": null}, {"name": "as_tibble_row", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as_tibble_row", "origin": null, "translation": null}, {"name": "char", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "char", "origin": null, "translation": null}, {"name": "column_to_rownames", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "column_to_rownames", "origin": null, "translation": null}, {"name": "data_frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "data_frame", "origin": null, "translation": null}, {"name": "data_frame_", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "data_frame_", "origin": null, "translation": null}, {"name": "deframe", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "deframe", "origin": null, "translation": null}, {"name": "enframe", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "enframe", "origin": null, "translation": null}, {"name": "frame_data", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "frame_data", "origin": null, "translation": null}, {"name": "frame_matrix", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "frame_matrix", "origin": null, "translation": null}, {"name": "glimpse", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "glimpse", "origin": null, "translation": null}, {"name": "has_name", "translated": true, "not_done": "", "title": "Does an object have an element with this name?", "origin": {"description": "Reports whether a column name is present.", "usage": "has_name(x, name)", "arguments": [], "details": "Reports whether a column name is present.", "value": "has_name of a frame with column a returns TRUE for a and FALSE for nope.", "example": "has_name(data.frame(a = 1), \"a\")\nhas_name(data.frame(a = 1), \"nope\")", "output": "output/has_name-r.txt", "output_blocks": [{"text": "has_name of a frame with column a returns TRUE for a and FALSE for nope."}]}, "translation": {"description": "Reports whether a column name is present.", "usage": "has_name(x, name)", "arguments": [], "details": "Reports whether a column name is present.", "value": "has_name of a frame with column a returns True for a and False for nope.", "example": "from tibble import has_name, new_tibble\nframe = new_tibble([[1]], names=[\"a\"], nrow=1)\nprint(has_name(frame, \"a\"))\nprint(has_name(frame, \"nope\"))", "output": "output/has_name-python.txt", "output_blocks": [{"text": "has_name of a frame with column a returns True for a and False for nope."}]}}, {"name": "has_rownames", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "has_rownames", "origin": null, "translation": null}, {"name": "is.tibble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is.tibble", "origin": null, "translation": null}, {"name": "is_tibble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_tibble", "origin": null, "translation": null}, {"name": "lst", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "lst", "origin": null, "translation": null}, {"name": "lst_", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "lst_", "origin": null, "translation": null}, {"name": "new_tibble", "translated": true, "not_done": "", "title": "Tibble constructor and validator", "origin": {"description": "Builds a tibble from a list of columns and stores the names as given.", "usage": "new_tibble(x, ..., nrow = NULL, class = NULL)", "arguments": [], "details": "Builds a tibble from a list of columns and stores the names as given.", "value": "new_tibble(list(a = 1:3, b = 4:6)) returns columns a = 1, 2, 3 and b = 4, 5, 6.", "example": "new_tibble(list(a = 1:3, b = 4:6))", "output": "output/new_tibble-r.txt", "output_blocks": [{"text": "new_tibble(list(a = 1:3, b = 4:6)) returns columns a = 1, 2, 3 and b = 4, 5, 6."}]}, "translation": {"description": "Builds a tibble from a list of columns and stores the names as given.", "usage": "new_tibble(columns, nrow=None, names=None)", "arguments": [], "details": "Builds a tibble from a list of columns and stores the names as given.", "value": "new_tibble of columns a = 1, 2, 3 and b = 4, 5, 6 returns those columns.", "example": "from tibble import new_tibble\nprint(new_tibble([[1, 2, 3], [4, 5, 6]], names=[\"a\", \"b\"])[\"a\"])", "output": "output/new_tibble-python.txt", "output_blocks": [{"text": "new_tibble of columns a = 1, 2, 3 and b = 4, 5, 6 returns those columns."}]}}, {"name": "num", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "num", "origin": null, "translation": null}, {"name": "obj_sum", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_sum", "origin": null, "translation": null}, {"name": "remove_rownames", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "remove_rownames", "origin": null, "translation": null}, {"name": "repair_names", "translated": true, "not_done": "", "title": "Repair object names", "origin": {"description": "Makes column names unique. Blank names take the first free prefix numbers, matching vec_as_names_legacy.", "usage": "repair_names(x, prefix = \"V\", sep = \"\")", "arguments": [], "details": "Makes column names unique. Blank names take the first free prefix numbers, matching vec_as_names_legacy.", "value": "repair_names of columns named a and a returns a and a1.", "example": "df \u003c- data.frame(x = 1, y = 2)\nnames(df) \u003c- c(\"a\", \"a\")\nnames(repair_names(df))", "output": "output/repair_names-r.txt", "output_blocks": [{"text": "repair_names of columns named a and a returns a and a1."}]}, "translation": {"description": "Makes column names unique. Blank names take the first free prefix numbers, matching vec_as_names_legacy.", "usage": "repair_names(x, prefix=\"V\", sep=\"\")", "arguments": [], "details": "Makes column names unique. Blank names take the first free prefix numbers, matching vec_as_names_legacy.", "value": "repair_names of columns named a and a returns a and a1.", "example": "from tibble import new_tibble, repair_names\nframe = new_tibble([[1], [2]], names=[\"a\", \"a\"], nrow=1)\nprint(repair_names(frame).names)", "output": "output/repair_names-python.txt", "output_blocks": [{"text": "repair_names of columns named a and a returns a and a1."}]}}, {"name": "rowid_to_column", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rowid_to_column", "origin": null, "translation": null}, {"name": "rownames_to_column", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rownames_to_column", "origin": null, "translation": null}, {"name": "set_char_opts", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_char_opts", "origin": null, "translation": null}, {"name": "set_num_opts", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_num_opts", "origin": null, "translation": null}, {"name": "set_tidy_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_tidy_names", "origin": null, "translation": null}, {"name": "size_sum", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "size_sum", "origin": null, "translation": null}, {"name": "tbl_sum", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tbl_sum", "origin": null, "translation": null}, {"name": "tibble", "translated": true, "not_done": "", "title": "Build a data frame", "origin": {"description": "Builds columns from keywords and recycles a length-1 column.", "usage": "tibble(..., .rows = NULL, .name_repair = c(\"check_unique\", \"unique\", \"universal\", \"minimal\"))", "arguments": [], "details": "Builds columns from keywords and recycles a length-1 column.", "value": "tibble(a = 1:3, b = 1) recycles b to 1, 1, 1.", "example": "tibble(a = 1:3, b = 1)", "output": "output/tibble-r.txt", "output_blocks": [{"text": "tibble(a = 1:3, b = 1) recycles b to 1, 1, 1."}]}, "translation": {"description": "Builds columns from keywords and recycles a length-1 column.", "usage": "tibble(rows=None, name_repair=\"check_unique\", **columns)", "arguments": [], "details": "Builds columns from keywords and recycles a length-1 column.", "value": "tibble(a=[1, 2, 3], b=1) recycles b to 1, 1, 1.", "example": "from tibble import tibble\nprint(tibble(a=[1, 2, 3], b=1)[\"b\"])", "output": "output/tibble-python.txt", "output_blocks": [{"text": "tibble(a=[1, 2, 3], b=1) recycles b to 1, 1, 1."}]}}, {"name": "tibble_", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tibble_", "origin": null, "translation": null}, {"name": "tibble_row", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tibble_row", "origin": null, "translation": null}, {"name": "tidy_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tidy_names", "origin": null, "translation": null}, {"name": "tribble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tribble", "origin": null, "translation": null}, {"name": "trunc_mat", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "trunc_mat", "origin": null, "translation": null}, {"name": "type_sum", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "type_sum", "origin": null, "translation": null}, {"name": "validate_tibble", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "validate_tibble", "origin": null, "translation": null}, {"name": "view", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "view", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

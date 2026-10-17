@@ -1,0 +1,128 @@
+{
+  "name": "read.zoo",
+  "title": "Read a zoo series from a table",
+  "origin": {
+    "description": "Read a text file and return a zoo series. This is the zoo 1.9-1 reader.",
+    "usage": "read.zoo(file, format = \"\", tz = \"\", FUN = NULL,\n  regular = FALSE, index.column = 1, drop = TRUE, FUN2 = NULL,\n  split = NULL, aggregate = FALSE, ..., text, read = read.table)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path, text connection, or data frame to read. Several paths are read and merged."
+      },
+      {
+        "name": "format",
+        "text": "Date format passed to FUN. Omitted means missing, which is not the same as an empty string."
+      },
+      {
+        "name": "tz",
+        "text": "Time zone passed to as.POSIXct. Omitted means missing. An empty string is the local zone."
+      },
+      {
+        "name": "FUN",
+        "text": "Function that builds the index from index.column. NULL chooses numeric, Date, or POSIXct."
+      },
+      {
+        "name": "regular",
+        "text": "If TRUE and the series is regular, coerce it to zooreg."
+      },
+      {
+        "name": "index.column",
+        "text": "Column number, name, or list of columns that hold the index. 0 uses the row names. The default is 1."
+      },
+      {
+        "name": "drop",
+        "text": "If TRUE, a single data column is returned as a vector."
+      },
+      {
+        "name": "FUN2",
+        "text": "Applied to the index after FUN. If FUN is omitted, only FUN2 runs."
+      },
+      {
+        "name": "split",
+        "text": "Column used to split long data into separate series. Inf and -Inf number the runs."
+      },
+      {
+        "name": "aggregate",
+        "text": "FALSE keeps duplicate indexes. TRUE averages them. Any other function aggregates each index."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to read, unless file is already a data frame."
+      },
+      {
+        "name": "text",
+        "text": "Character data read through a text connection when file is omitted."
+      },
+      {
+        "name": "read",
+        "text": "Reader for file. The default is read.table."
+      }
+    ],
+    "details": "read.zoo reads the file with read.table unless read= selects another reader or file is already a data frame. The index.column (default the first) becomes the index and the other columns become the data. When FUN is omitted, a numeric index stays numeric. A character index is POSIXct when tz is supplied, Date when format is supplied, and otherwise a heuristic: POSIXct, then Date when every time is the same clock time. An omitted format or tz is missing. An explicit empty string is not missing.",
+    "value": "An object of class \"zoo\", or \"zooreg\" when regular is TRUE and the series is regular.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(zoo))\npath <- tempfile()\nwriteLines(c(\n  \"date,a,b\",\n  \"2020-01-01,1.5,2.25\",\n  \"2020-01-02,3.5,4.75\",\n  \"2020-01-03,5.25,6.125\"\n), path)\nz <- read.zoo(path, header = TRUE, sep = \",\")\ncat(sprintf(\"index %s\\n\", paste(sprintf(\"%.17g\", as.numeric(index(z))), collapse = \" \")))\ncat(sprintf(\"values %s\\n\", paste(sprintf(\"%.17g\", as.vector(coredata(z))), collapse = \" \")))\n",
+    "output": "output/read.zoo-r.txt"
+  },
+  "translation": {
+    "description": "Python read_zoo returns a Zoo. The core data is a NumPy array.",
+    "usage": "read_zoo(file, format=MISSING, tz=MISSING, FUN=None,\n  regular=False, index_column=1, drop=True, FUN2=None,\n  split=None, aggregate=False, *, text=MISSING, read=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path or text. A DataFrame is used as the table and is not read again."
+      },
+      {
+        "name": "format",
+        "text": "Date format. Omit it to leave the argument missing. An explicit empty string is supplied."
+      },
+      {
+        "name": "tz",
+        "text": "Time zone. Omit it to leave the argument missing. \"\" is the local zone and selects POSIXct when it is supplied."
+      },
+      {
+        "name": "FUN",
+        "text": "Callable or name such as \"as.Date\" that builds the index. None selects the heuristic."
+      },
+      {
+        "name": "regular",
+        "text": "When True and the index has a constant positive step, the series is marked regular."
+      },
+      {
+        "name": "index_column",
+        "text": "1-based column number, name, or list of columns. 0 uses the row names."
+      },
+      {
+        "name": "drop",
+        "text": "When True, one data column is stored as a 1-d NumPy array."
+      },
+      {
+        "name": "FUN2",
+        "text": "Called on the index after FUN."
+      },
+      {
+        "name": "split",
+        "text": "Column that splits long data. math.inf numbers each run from the start."
+      },
+      {
+        "name": "aggregate",
+        "text": "False keeps every row. True averages duplicate indexes."
+      },
+      {
+        "name": "text",
+        "text": "String read when file is omitted."
+      },
+      {
+        "name": "read",
+        "text": "Callable used to read a path. The default is read_table."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Passed to read. Ignored when file is already a data frame."
+      }
+    ],
+    "details": "The table is read with the Python csv rules for comma, semicolon, and tab files, and with a whitespace splitter for read.table. Values are a NumPy array in Fortran order. A character index such as 2020-01-01 becomes datetime.date when format and tz are omitted. read_table_zoo passes format=\"\" and tz=\"\", so this heuristic is not the one that runs.",
+    "value": "A Zoo. index is datetime.date, datetime.datetime, or a numeric NumPy array. data holds the series.",
+    "example": "import datetime as dt\nimport sys\nimport tempfile\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/zoo\")\nfrom zoo.io import read_zoo\n\npath = tempfile.mktemp()\nPath(path).write_text(\n    \"date,a,b\\n\"\n    \"2020-01-01,1.5,2.25\\n\"\n    \"2020-01-02,3.5,4.75\\n\"\n    \"2020-01-03,5.25,6.125\\n\"\n)\nz = read_zoo(path, header=True, sep=\",\")\norigin = dt.date(1970, 1, 1)\nprint(\"index \" + \" \".join(format(float((value - origin).days), \".17g\") for value in z.index))\nprint(\"values \" + \" \".join(format(float(value), \".17g\") for value in np.asarray(z.data, dtype=float).ravel(order=\"F\")))\n",
+    "output": "output/read.zoo-python.txt"
+  }
+}

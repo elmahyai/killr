@@ -1,0 +1,1327 @@
+{
+  "name": "coda",
+  "cran_version": "0.19-4.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked is.mcmc.list, nvar, pcramer, is.mcmc, traceplot, densplot, multi.menu, read.and.check, acfplot, cumuplot, nchain, mcmc.list, and read.jags, spectrum0.ar and read.coda, spectrum0, effectiveSize, HPDinterval, as, thin, varnames, batchSE, autocorr, chanames, rejectionRate, coda, heidel, gelman, and bugs2jags.diag.diag.options, and raftery.diag.diag, and crosscorr.array.mcmc.list, as.mcmc, as.mcmc.list, niter, and autocorr, geweke.diag, read.openbugs, mcmcUpgrade, mcmc, display.coda.options, codamenu, read.coda.interactive, and varnames<-. Checked autocorr.plot, crosscorr.plot, gelman.plot, and geweke.plot. The other exports are listed and not translated. Reserved mcpar. All exports translated.",
+  "functions": [
+    {
+      "name": "acfplot",
+      "translated": true,
+      "python": "coda.acfplot.acfplot",
+      "loads": [],
+      "uses": [],
+      "done": "Draws MCMC autocorrelations with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 200 by 3 chain, lag.max 10.",
+        "r_ms": 8.604168891906738,
+        "translated_ms": 263.8225410000814,
+        "speedup": 0.032613,
+        "matches": true,
+        "max_abs_diff": 7.771561172376096e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 200L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  cos(i / 5) + 0.01 * i,\n  rep(2, n)\n)\nm <- as.mcmc(x)\n\nacf_values <- function(m, lag.max = 10L) {\n  getAcf <- function(x, lag.max) as.vector(acf(x, lag.max = lag.max, plot = FALSE)$acf)\n  mat <- as.matrix(m)\n  nvar <- ncol(mat)\n  out <- numeric(0)\n  for (j in seq_len(nvar)) {\n    v <- getAcf(mat[, j], lag.max)\n    ylim_val <- max(abs(v[-1]), na.rm = TRUE)\n    out <- c(out, -ylim_val, ylim_val, v)\n  }\n  out\n}\n\none <- function() {\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  acfplot(m, lag.max = 10L)\n  acf_values(m, lag.max = 10L)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nencode <- function(x) {\n  if (is.nan(x)) return(\"null\")\n  if (is.infinite(x)) return(ifelse(x > 0, \"1e300\", \"-1e300\"))\n  sprintf(\"%.17g\", x)\n}\nparts <- vapply(value, encode, character(1))\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\")\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.acfplot import acfplot, proof_values\nfrom coda.as_mcmc import as_mcmc\n\nn = 200\ni = np.arange(1, n + 1, dtype=np.float64)\nx = np.column_stack(\n    (\n        np.sin(i / 3) + 0.2 * np.cos(i),\n        np.cos(i / 5) + 0.01 * i,\n        np.full(n, 2.0),\n    )\n)\nm = as_mcmc(x)\n\n\ndef one():\n    plt.close(\"all\")\n    result = acfplot(m, lag_max=10, draw=True)\n    return proof_values(result)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\ndef encode(number):\n    if number != number:\n        return None\n    if number == float(\"inf\"):\n        return 1e300\n    if number == float(\"-inf\"):\n        return -1e300\n    return number\n\n\nprint(json.dumps({\"value\": [encode(v) for v in value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      },
+      "origin": {
+        "output": "output/acfplot-r.txt"
+      },
+      "translation": {
+        "output": "output/acfplot-python.svg"
+      }
+    },
+    {
+      "name": "HPDinterval",
+      "translated": true,
+      "python": "coda.HPDinterval.HPDinterval",
+      "loads": [],
+      "uses": [],
+      "done": "Shortest empirical HPD intervals from sorted MCMC columns, for one chain or a list of chains.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "coda line mcmc.list, 2 chains by 200 by 3, prob 0.95",
+        "r_ms": 2.0837783813476562,
+        "translated_ms": 0.16629899982945062,
+        "speedup": 12.530312169554195,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\ndata(line)\n\none <- function() {\n  res <- HPDinterval(line)\n  unlist(lapply(res, function(m) {\n    c(as.numeric(m[, \"lower\"]), as.numeric(m[, \"upper\"]), attr(m, \"Probability\"))\n  }))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\nfrom types import SimpleNamespace\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.HPDinterval import HPDinterval\n\nroot = Path(__file__).resolve().parent\nchains_raw = json.loads((root / \"line-chains.json\").read_text())\nchains = []\nfor entry in chains_raw:\n    matrix = np.array(entry[\"data\"], dtype=np.float64).reshape(\n        -1, len(entry[\"cols\"]), order=\"F\"\n    )\n    wrapped = SimpleNamespace(data=matrix, colnames=entry[\"cols\"])\n    chains.append(wrapped)\n\n\ndef one():\n    result = HPDinterval(chains)\n    values = []\n    for item in result:\n        values.extend(float(x) for x in item.lower)\n        values.extend(float(x) for x in item.upper)\n        values.append(float(item.probability))\n    return values\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "as.array.mcmc.list",
+      "translated": true,
+      "python": "coda.as_array_mcmc_list.as_array_mcmc_list",
+      "loads": [],
+      "uses": [],
+      "done": "Stacks MCMC list chains into a Fortran-ordered (iteration, variable, chain) array and drops singleton dimensions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "coda line mcmc.list, 200 iterations by 3 variables by 2 chains, drop=TRUE",
+        "r_ms": 0.7764101028442383,
+        "translated_ms": 0.022001499019097537,
+        "speedup": 35.28896381879735,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\ndata(line)\n\none <- function() {\n  as.numeric(as.array(line))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/as.array.mcmc.list-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\nfrom types import SimpleNamespace\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_array_mcmc_list import as_array_mcmc_list\n\nroot = Path(__file__).resolve().parent\nchains_raw = json.loads((root / \"line-chains.json\").read_text())\nchains = []\nfor entry in chains_raw:\n    matrix = np.array(entry[\"data\"], dtype=np.float64).reshape(\n        -1, len(entry[\"cols\"]), order=\"F\"\n    )\n    chains.append(SimpleNamespace(data=matrix, colnames=entry[\"cols\"]))\n\n\ndef one():\n    array = as_array_mcmc_list(chains, drop=True)\n    return np.ravel(np.asarray(array, dtype=np.float64), order=\"F\")\n\n\nvalue = one().tolist()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"as.array.mcmc.list-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "as.mcmc",
+      "translated": true,
+      "python": "coda.as_mcmc.as_mcmc",
+      "loads": [],
+      "uses": [],
+      "done": "Coerces vectors and matrices to an MCMC object with start, end, and thin; an existing MCMC object is returned unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2000 by 3 numeric matrix coerced with as.mcmc; flattened chain and mcpar",
+        "r_ms": 0.4947185516357422,
+        "translated_ms": 0.2344015001654043,
+        "speedup": 2.1105605181137768,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  obj <- as.mcmc(x)\n  c(as.numeric(obj), attr(obj, \"mcpar\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/as.mcmc-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    obj = as_mcmc(x)\n    array = np.asarray(obj.data, dtype=np.float64)\n    if array.ndim == 1:\n        flat = array\n    else:\n        flat = np.ravel(array, order=\"F\")\n    return np.concatenate([flat, obj.mcpar])\n\n\nvalue = one().tolist()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"as.mcmc-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "as.mcmc.list",
+      "translated": true,
+      "python": "coda.as_mcmc_list.as_mcmc_list",
+      "loads": [],
+      "uses": [],
+      "done": "Builds an MCMC list from chains that share start, end, thin, and variable names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The coda line dataset, two chains of 200 iterations and 3 variables, compared by values and mcpar",
+        "r_ms": 0.03063678741455078,
+        "translated_ms": 0.08332000015798258,
+        "speedup": 0.3677002803223781,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\ndata(line)\n\none <- function() {\n  obj <- as.mcmc.list(line)\n  parts <- length(obj)\n  for (ch in obj) {\n    parts <- c(parts, as.numeric(ch), mcpar(ch))\n  }\n  parts\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/as.mcmc.list-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import Mcmc\nfrom coda.as_mcmc_list import McmcList, as_mcmc_list\n\nroot = Path(__file__).resolve().parent\nchains_raw = json.loads((root / \"line-chains.json\").read_text())\nchains = []\nfor entry in chains_raw:\n    matrix = np.array(entry[\"data\"], dtype=np.float64).reshape(\n        -1, len(entry[\"cols\"]), order=\"F\"\n    )\n    chain = Mcmc(data=matrix, start=1.0, end=200.0, thin=1.0)\n    chain.colnames = list(entry[\"cols\"])\n    chains.append(chain)\nline = McmcList(chains=chains)\n\n\ndef one():\n    obj = as_mcmc_list(line)\n    parts = [len(obj.chains)]\n    for chain in obj.chains:\n        array = np.asarray(chain.data, dtype=np.float64)\n        parts.extend(np.ravel(array, order=\"F\").tolist())\n        parts.extend(chain.mcpar.tolist())\n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"as.mcmc.list-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "autocorr",
+      "translated": true,
+      "python": "coda.autocorr.autocorr",
+      "loads": [],
+      "uses": [
+        "as.mcmc"
+      ],
+      "done": "Autocorrelation at selected lags for an MCMC object or each chain in a list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Autocorrelation of a 2000 by 3 chain at the default lags, including a constant column",
+        "r_ms": 3.9844512939453125,
+        "translated_ms": 1.5705945006629918,
+        "speedup": 2.5369064340053176,
+        "matches": true,
+        "max_abs_diff": 1.4432899320127035e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 2000L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  cos(i / 5) + 0.01 * i,\n  rep(2, n)\n)\n\none <- function() {\n  as.numeric(autocorr(as.mcmc(x)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.autocorr import autocorr\n\nn = 2000\ni = np.arange(1, n + 1, dtype=float)\nx = np.column_stack(\n    (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i, np.full(n, 2.0))\n)\n\n\ndef one():\n    result = autocorr(as_mcmc(x))\n    return np.ravel(np.asarray(result, dtype=np.float64), order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "autocorr.diag",
+      "translated": true,
+      "python": "coda.autocorr_diag.autocorr_diag",
+      "loads": [],
+      "uses": [
+        "autocorr"
+      ],
+      "done": "Diagonal autocorrelations at selected lags, averaged across chains.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default-lag diagonal autocorrelations of a 2000 by 3 mcmc chain, including a constant column.",
+        "r_ms": 4.3419599533081055,
+        "translated_ms": 1.5387559997179778,
+        "speedup": 2.8217338903009295,
+        "matches": true,
+        "max_abs_diff": 1.4432899320127035e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 2000L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  cos(i / 5) + 0.01 * i,\n  rep(2, n)\n)\n\none <- function() {\n  as.numeric(autocorr.diag(as.mcmc(x)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.autocorr_diag import autocorr_diag\n\nn = 2000\ni = np.arange(1, n + 1, dtype=float)\nx = np.column_stack(\n    (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i, np.full(n, 2.0))\n)\n\n\ndef one():\n    result = autocorr_diag(as_mcmc(x))\n    return np.ravel(np.asarray(result, dtype=np.float64), order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "autocorr.plot",
+      "translated": true,
+      "python": "coda.autocorr_plot.autocorr_plot",
+      "loads": [],
+      "uses": [
+        "as.mcmc.list",
+        "nchain",
+        "nvar",
+        "varnames",
+        "chanames"
+      ],
+      "done": "Draws MCMC autocorrelations with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains, three variables, lag.max 10.",
+        "r_ms": 10.193228721618652,
+        "translated_ms": 439.4228610017308,
+        "speedup": 0.023196855753889654,
+        "matches": true,
+        "max_abs_diff": 7.771561172376096e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nencode_title <- function(title) {\n  if (!nzchar(title)) return(0)\n  c(-1, nchar(title), utf8ToInt(title))\n}\n\nplotted <- function(obj, lag.max = 10L) {\n  obj <- mcmc.list(obj)\n  out <- numeric(0)\n  for (i in seq_len(nchain(obj))) {\n    xacf <- acf(coda:::as.ts.mcmc(obj[[i]]), lag.max = lag.max, plot = FALSE)\n    for (j in seq_len(nvar(obj))) {\n      out <- c(out, -1, 1, as.numeric(xacf$lag[, j, j]), as.numeric(xacf$acf[, j, j]))\n      title <- paste(\n        varnames(obj)[j],\n        ifelse(is.null(chanames(obj)), \"\", \":\"),\n        chanames(obj)[i],\n        sep = \"\"\n      )\n      out <- c(out, encode_title(title))\n    }\n  }\n  out\n}\n\nbuild <- function() {\n  n <- 200L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  colnames(x) <- c(\"alpha\", \"beta\", \"gamma\")\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  colnames(y) <- colnames(x)\n  mcmc.list(mcmc(x), mcmc(y))\n}\n\none <- function(save = FALSE) {\n  obj <- build()\n  if (save) {\n    dir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\n    svg(file.path(root, \"docs\", \"output\", \"autocorr.plot-r.svg\"), width = 7, height = 9)\n    autocorr.plot(obj, lag.max = 10L)\n    dev.off()\n  }\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  autocorr.plot(obj, lag.max = 10L)\n  plotted(obj, lag.max = 10L)\n}\n\nvalue <- one(TRUE)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one(FALSE)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"autocorr.plot-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\")\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.autocorr_plot import autocorr_plot, proof_values\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef build():\n    n = 200\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    names = [\"alpha\", \"beta\", \"gamma\"]\n    c1 = as_mcmc(x)\n    c1.colnames = names\n    c2 = as_mcmc(y)\n    c2.colnames = names\n    return mcmc_list(c1, c2)\n\n\ndef one(save=False):\n    plt.close(\"all\")\n    obj = build()\n    result = autocorr_plot(obj, lag_max=10)\n    values = proof_values(result)\n    if save and result[\"figures\"]:\n        out = package / \"docs\" / \"output\"\n        out.mkdir(parents=True, exist_ok=True)\n        result[\"figures\"][0].savefig(out / \"autocorr.plot-python.svg\")\n    plt.close(\"all\")\n    return values\n\n\nvalue = one(True)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one(False)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n(root / \"autocorr.plot-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/autocorr.plot-r.svg"
+      },
+      "translation": {
+        "output": "output/autocorr.plot-python.svg"
+      }
+    },
+    {
+      "name": "batchSE",
+      "translated": true,
+      "python": "coda.batchSE.batchSE",
+      "loads": [],
+      "uses": [
+        "niter"
+      ],
+      "done": "Batch standard errors from batch means with the usual variance correction.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of length 2000 with three columns each and batchSize 100, compared as three standard errors.",
+        "r_ms": 13.644695281982422,
+        "translated_ms": 0.7176810004239087,
+        "speedup": 19.01220078826524,
+        "matches": true,
+        "max_abs_diff": 3.3306690738754696e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  as.numeric(batchSE(mcmc.list(mcmc(x), mcmc(y)), batchSize = 100L))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"batchSE-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.batchSE import batchSE\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    obj = as_mcmc_list([as_mcmc(x), as_mcmc(y)])\n    return [float(value) for value in batchSE(obj, batchSize=100)]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"batchSE-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "bugs2jags",
+      "translated": true,
+      "python": "coda.bugs2jags.bugs2jags",
+      "loads": [],
+      "uses": [],
+      "done": "Converts a WinBUGS data file to JAGS dump form.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A scalar, a vector, and two integer arrays, compared after the dump is read back.",
+        "r_ms": 1.4965534210205078,
+        "translated_ms": 1.8019449998973869,
+        "speedup": 0.8305211430458367,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\ninfile <- file.path(root, \"bugs2jags-in.dat\")\noutfile <- file.path(root, \"bugs2jags-out-r.dat\")\n\nif (!file.exists(infile)) {\n  bugs.dat <- list(\n    N = 5L,\n    y = c(1.1, 2.2, 3.3, 4.4, 5.5),\n    X = array(1:12, dim = c(3, 4)),\n    Z = array(1:24, dim = c(2, 3, 4))\n  )\n  dput(bugs.dat, file = infile)\n}\n\none <- function() {\n  bugs2jags(infile, outfile)\n  env <- new.env()\n  source(outfile, local = env)\n  c(\n    env$N,\n    sum(env$y),\n    sum(env$X),\n    sum(env$Z),\n    env$X[1, 1],\n    env$X[3, 4],\n    env$Z[1, 2, 3]\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"bugs2jags-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.bugs2jags import _load_dump, bugs2jags\n\nroot = Path(__file__).resolve().parent\ninfile = root / \"bugs2jags-in.dat\"\noutfile = root / \"bugs2jags-out-py.dat\"\n\nif not infile.exists():\n    text = (\n        \"list(N = 5L, y = c(1.1, 2.2, 3.3, 4.4, 5.5), \"\n        \"X = structure(1:12, dim = 3:4), Z = structure(1:24, dim = 2:4))\"\n    )\n    infile.write_text(text, encoding=\"utf-8\")\n\n\ndef one():\n    bugs2jags(infile, outfile)\n    env = _load_dump(outfile)\n    y = env[\"y\"]\n    if hasattr(y, \"values\"):\n        y = y.values\n    x_arr = env[\"X\"]\n    z_arr = env[\"Z\"]\n    return [\n        float(env[\"N\"]),\n        float(np.sum(y)),\n        float(np.sum(x_arr)),\n        float(np.sum(z_arr)),\n        float(x_arr[0, 0]),\n        float(x_arr[2, 3]),\n        float(z_arr[0, 1, 2]),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"bugs2jags-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "chanames",
+      "translated": true,
+      "python": "coda.chanames.chanames",
+      "loads": [],
+      "uses": [
+        "is.mcmc.list"
+      ],
+      "done": "Returns chain names for an mcmc.list, or fills chain1, chain2 when allow.null is false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Named and unnamed two- and three-chain mcmc.list objects, one mcmc, and a non-MCMC vector, with allow.null true and false.",
+        "r_ms": 1.2218952178955078,
+        "translated_ms": 0.5072559988548164,
+        "speedup": 2.4088334502776987,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nencode_names <- function(v) {\n  if (is.null(v)) {\n    return(0)\n  }\n  out <- c(length(v), nchar(v))\n  for (nm in v) {\n    out <- c(out, as.numeric(charToRaw(nm)))\n  }\n  out\n}\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  m <- mcmc(x)\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  m2 <- mcmc(y)\n  ml <- mcmc.list(m, m2)\n  names(ml) <- c(\"chainA\", \"chainB\")\n  ml2 <- mcmc.list(m, m2)\n  ml3 <- mcmc.list(m, m2, m)\n  c(\n    encode_names(chanames(ml)),\n    encode_names(chanames(ml2)),\n    encode_names(chanames(ml2, allow.null = FALSE)),\n    encode_names(chanames(ml3, allow.null = FALSE)),\n    encode_names(chanames(m)),\n    encode_names(chanames(i))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/chanames-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.chanames import chanames\n\nroot = Path(__file__).resolve().parent\n\n\ndef encode_names(names):\n    if names is None:\n        return [0.0]\n    out = [float(len(names))]\n    lengths = [float(len(name)) for name in names]\n    out.extend(lengths)\n    for name in names:\n        out.extend(float(ord(char)) for char in name)\n    return out\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    m = as_mcmc(x)\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    m2 = as_mcmc(y)\n    ml = as_mcmc_list([m, m2])\n    ml.chain_names = [\"chainA\", \"chainB\"]\n    ml2 = as_mcmc_list([m, m2])\n    ml3 = as_mcmc_list([m, m2, m])\n    out = []\n    out.extend(encode_names(chanames(ml)))\n    out.extend(encode_names(chanames(ml2)))\n    out.extend(encode_names(chanames(ml2, allow_null=False)))\n    out.extend(encode_names(chanames(ml3, allow_null=False)))\n    out.extend(encode_names(chanames(m)))\n    out.extend(encode_names(chanames(i)))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"chanames-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "coda.options",
+      "translated": true,
+      "python": "coda.coda_options.coda_options",
+      "loads": [],
+      "uses": [],
+      "done": "Gets, sets, and resets the coda option list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Reset defaults, evaluate the default bandwidth, set digits, trace, and frac1, then read the stored scalars.",
+        "r_ms": 0.4372596740722656,
+        "translated_ms": 0.3229274998375331,
+        "speedup": 1.3540490490659784,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  coda.options(default = TRUE)\n  x <- c(1.2, 2.3, 3.4, 100, 200, 0.5, NA, 4.5)\n  bw0 <- coda.options(\"bandwidth\")(x)\n  coda.options(digits = 4, trace = FALSE, frac1 = 0.15)\n  coda.options(digits = 2)\n  c(\n    coda.options(\"digits\"),\n    as.numeric(coda.options(\"trace\")),\n    coda.options(\"frac1\"),\n    bw0,\n    as.numeric(coda.options(\"quantiles\")),\n    as.numeric(unlist(coda.options(\"gr.bin\", \"gr.max\"))),\n    as.numeric(coda.options(\"combine.stats\"))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/coda.options-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.coda_options import coda_options\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    coda_options(default=True)\n    x = np.array([1.2, 2.3, 3.4, 100, 200, 0.5, np.nan, 4.5], dtype=np.float64)\n    bw0 = coda_options(\"bandwidth\")(x)\n    coda_options(digits=4, trace=False, frac1=0.15)\n    coda_options(digits=2)\n    multi = coda_options(\"gr.bin\", \"gr.max\")\n    return [\n        float(coda_options(\"digits\")),\n        float(coda_options(\"trace\")),\n        float(coda_options(\"frac1\")),\n        float(bw0),\n        *[float(v) for v in coda_options(\"quantiles\")],\n        float(multi[\"gr.bin\"]),\n        float(multi[\"gr.max\"]),\n        float(coda_options(\"combine.stats\")),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"coda.options-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "codamenu",
+      "translated": true,
+      "python": "coda.codamenu.codamenu",
+      "loads": [],
+      "uses": [],
+      "done": "Interactive CODA driver with startup data loading and main menu loop.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Startup menu quit; default options after coda.options(default=TRUE).",
+        "r_ms": 0.25331974029541016,
+        "translated_ms": 0.1533920003566891,
+        "speedup": 1.6514533985237478,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "if (!interactive() && Sys.getenv(\"CODA_TTY\") != \"1\") {\n  file_arg <- grep(\"^--file=\", commandArgs(trailingOnly = FALSE), value = TRUE)\n  if (length(file_arg) == 1L) {\n    script <- sub(\"^--file=\", \"\", file_arg[[1L]])\n    Sys.setenv(CODA_TTY = \"1\")\n    status <- system2(\n      \"script\",\n      c(\"-q\", \"-c\", shQuote(\"R --vanilla --quiet --no-echo\"), \"/dev/null\"),\n      stdin = script,\n      stdout = FALSE,\n      stderr = FALSE\n    )\n    quit(status = status)\n  }\n}\n\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() {\n  codamenu()\n  c(\n    coda.options(\"digits\"),\n    as.numeric(coda.options(\"trace\")),\n    coda.options(\"frac1\")\n  )\n}\n\nsink(file.path(out_dir, \"codamenu-r.txt\"))\nvalue <- one()\n3\nsink()\n\nelapsed <- numeric(20)\nsink(\"/dev/null\")\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\nsink()\n\nparts <- sprintf(\"%.17g\", value)\nwriteLines(\n  sprintf(\n    \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n    paste(parts, collapse = \",\"),\n    median(elapsed) * 1000\n  ),\n  con = file.path(root, \"codamenu-r.txt\")\n)\nq(save = \"no\")\n",
+          "python": "import contextlib\nimport io\nimport json\nimport os\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.coda_options import coda_options\nfrom coda.codamenu import codamenu\n\nroot = Path(__file__).resolve().parents[1]\nout_dir = root / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\nsys.stdin = io.StringIO(\"3\\n\" * 21)\n\n\ndef one(capture_path=None):\n    if capture_path is None:\n        sink = open(os.devnull, \"w\", encoding=\"utf-8\")\n    else:\n        sink = capture_path.open(\"w\", encoding=\"utf-8\")\n    try:\n        with contextlib.redirect_stdout(sink):\n            codamenu()\n    finally:\n        sink.close()\n    return [\n        float(coda_options(\"digits\")),\n        float(coda_options(\"trace\")),\n        float(coda_options(\"frac1\")),\n    ]\n\n\nvalue = one(out_dir / \"codamenu-python.txt\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\n(root / \"proof\" / \"codamenu-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/codamenu-r.txt"
+      },
+      "translation": {
+        "output": "output/codamenu-python.txt"
+      }
+    },
+    {
+      "name": "crosscorr",
+      "translated": true,
+      "python": "coda.crosscorr.crosscorr",
+      "loads": [],
+      "uses": [
+        "is.mcmc",
+        "is.mcmc.list",
+        "niter"
+      ],
+      "done": "Pearson correlations between MCMC variables, stacking every chain.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of length 2000 with three columns, two series and a constant.",
+        "r_ms": 0.8682012557983398,
+        "translated_ms": 0.4786194995176629,
+        "speedup": 1.8139696704235508,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nn <- 2000L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  cos(i / 5) + 0.01 * i,\n  rep(2, n)\n)\ny <- cbind(\n  sin(i / 4) + 0.15 * cos(i / 2),\n  cos(i / 6) + 0.005 * i,\n  rep(1, n)\n)\n\none <- function() {\n  as.numeric(crosscorr(mcmc.list(mcmc(x), mcmc(y))))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"crosscorr-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.crosscorr import crosscorr\n\nn = 2000\ni = np.arange(1, n + 1, dtype=float)\nx = np.column_stack(\n    (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i, np.full(n, 2.0))\n)\ny = np.column_stack(\n    (\n        np.sin(i / 4) + 0.15 * np.cos(i / 2),\n        np.cos(i / 6) + 0.005 * i,\n        np.full(n, 1.0),\n    )\n)\n\n\ndef one():\n    result = crosscorr(as_mcmc_list([as_mcmc(x), as_mcmc(y)]))\n    return np.ravel(np.asarray(result, dtype=np.float64), order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nroot = Path(__file__).resolve().parent\nout = json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)})\n(root / \"crosscorr-py.txt\").write_text(out + \"\\n\")\nprint(out)\n"
+        }
+      }
+    },
+    {
+      "name": "crosscorr.plot",
+      "translated": true,
+      "python": "coda.crosscorr_plot.crosscorr_plot",
+      "loads": [],
+      "uses": [
+        "crosscorr",
+        "nvar",
+        "varnames"
+      ],
+      "done": "Draws the cross-correlation matrix with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One chain of 200 with a constant column; correlation bins and labels.",
+        "r_ms": 7.174491882324219,
+        "translated_ms": 52.9333439990296,
+        "speedup": 0.13553823243163599,
+        "matches": true,
+        "max_abs_diff": 6.938893903907228e-18,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nencode_title <- function(title) {\n  if (!nzchar(title)) return(0)\n  c(-1, nchar(title), utf8ToInt(title))\n}\n\nplotted <- function(m) {\n  pcorr <- crosscorr(m)\n  col <- topo.colors(10)\n  dens <- ((pcorr + 1) * length(col)) %/% 2 + (pcorr < 1) + (pcorr < -1)\n  labs <- abbreviate(varnames(m, allow.null = FALSE), minlength = 7)\n  out <- c(as.numeric(pcorr))\n  out <- c(out, ifelse(is.na(dens), 0, as.numeric(dens)))\n  for (lab in labs) out <- c(out, encode_title(lab))\n  out\n}\n\nbuild <- function() {\n  n <- 200L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  colnames(x) <- c(\"alpha\", \"beta\", \"gamma\")\n  as.mcmc(x)\n}\n\none <- function(save = FALSE) {\n  m <- build()\n  if (save) {\n    dir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\n    svg(file.path(root, \"docs\", \"output\", \"crosscorr.plot-r.svg\"), width = 6, height = 6)\n    crosscorr.plot(m)\n    dev.off()\n  }\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  crosscorr.plot(m)\n  plotted(m)\n}\n\nvalue <- one(TRUE)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one(FALSE)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"crosscorr.plot-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nwarnings.filterwarnings(\"ignore\")\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.crosscorr_plot import crosscorr_plot, proof_values\nimport numpy as np\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef build():\n    n = 200\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    chain = as_mcmc(x)\n    chain.colnames = [\"alpha\", \"beta\", \"gamma\"]\n    return chain\n\n\ndef one(save=False):\n    plt.close(\"all\")\n    result = crosscorr_plot(build())\n    values = proof_values(result)\n    if save:\n        out = package / \"docs\" / \"output\"\n        out.mkdir(parents=True, exist_ok=True)\n        result[\"figure\"].savefig(out / \"crosscorr.plot-python.svg\")\n    plt.close(\"all\")\n    return values\n\n\nvalue = one(True)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one(False)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\npayload = {\"value\": value, \"median_ms\": statistics.median(elapsed)}\nprint(json.dumps(payload))\n(root / \"crosscorr.plot-py.txt\").write_text(json.dumps(payload) + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/crosscorr.plot-r.svg"
+      },
+      "translation": {
+        "output": "output/crosscorr.plot-python.svg"
+      }
+    },
+    {
+      "name": "cumuplot",
+      "translated": true,
+      "python": "coda.cumuplot.cumuplot",
+      "loads": [],
+      "uses": [],
+      "done": "Draws running quantiles with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One named chain, 80 by 2, start 11, thin 2.",
+        "r_ms": 25.788307189941406,
+        "translated_ms": 30.045012999835308,
+        "speedup": 0.8583223841534955,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 80L\ni <- seq_len(n)\nalpha <- sin(i / 3) + 0.2 * cos(i)\nbeta <- cos(i / 5) + 0.01 * i\nchain <- mcmc(cbind(alpha = alpha, beta = beta), start = 11, thin = 2)\nobj <- mcmc.list(chain)\nnames(obj) <- \"north\"\n\n# The numbers matplot receives: iterations, then each panel column-major.\nplotted <- function(obj) {\n  caps <- list()\n  trace(matplot, tracer = quote({\n    caps <- get(\"caps\", envir = .GlobalEnv)\n    caps[[length(caps) + 1]] <- list(\n      x = as.numeric(x),\n      y = as.numeric(as.matrix(y))\n    )\n    assign(\"caps\", caps, envir = .GlobalEnv)\n  }), print = FALSE, where = asNamespace(\"graphics\"))\n  on.exit(untrace(matplot, where = asNamespace(\"graphics\")), add = TRUE)\n  assign(\"caps\", list(), envir = .GlobalEnv)\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  cumuplot(obj, ask = FALSE)\n  caps <- get(\"caps\", envir = .GlobalEnv)\n  c(caps[[1]]$x, unlist(lapply(caps, `[[`, \"y\"), use.names = FALSE))\n}\n\nvalue <- plotted(obj)\n\ndir.create(\"docs/output\", recursive = TRUE, showWarnings = FALSE)\nsvg(\"docs/output/cumuplot-r.svg\", width = 7, height = 5)\ncumuplot(obj, ask = FALSE)\ndev.off()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  pdf(nullfile())\n  cumuplot(obj, ask = FALSE)\n  dev.off()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/cumuplot-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.cumuplot import cumuplot, proof_values\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\nn = 80\ni = np.arange(1, n + 1, dtype=np.float64)\nalpha = np.sin(i / 3) + 0.2 * np.cos(i)\nbeta = np.cos(i / 5) + 0.01 * i\nchain = as_mcmc(np.column_stack((alpha, beta)), start=11, thin=2)\nchain.colnames = [\"alpha\", \"beta\"]\nobj = mcmc_list(chain)\nobj.chain_names = [\"north\"]\n\n\ndef one():\n    plt.close(\"all\")\n    result = cumuplot(obj, ask=False)\n    values = proof_values(result)\n    figures = result.figures\n    return values, figures\n\n\nvalue, figures = one()\noutput = package / \"docs\" / \"output\"\noutput.mkdir(parents=True, exist_ok=True)\nfor index, figure in enumerate(figures):\n    name = \"cumuplot-python.svg\" if index == 0 else f\"cumuplot-python-{index + 1}.svg\"\n    figure.savefig(output / name, format=\"svg\")\nplt.close(\"all\")\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nplt.close(\"all\")\n\nout_path = root / \"cumuplot-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/cumuplot-r.svg"
+      },
+      "translation": {
+        "output": "output/cumuplot-python.svg"
+      }
+    },
+    {
+      "name": "densplot",
+      "translated": true,
+      "python": "coda.densplot.densplot",
+      "loads": [],
+      "uses": [],
+      "done": "Draws an MCMC density with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Chain of 400 with a sine, a proportion, and a discrete residue.",
+        "r_ms": 19.47915554046631,
+        "translated_ms": 226.56447450026462,
+        "speedup": 0.08597621309974418,
+        "matches": true,
+        "max_abs_diff": 5.551115123125783e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nn <- 400L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  (sin(i / 5) + 1) / 2,\n  (i - 1L) %% 6\n)\ncolnames(x) <- c(\"alpha\", \"beta\", \"gamma\")\nm <- as.mcmc(x)\n\npretty.discrete <- function(y, right) {\n  ybreaks <- pretty(y, nclass.Sturges(y))\n  yunique <- unique(y)\n  if (length(yunique) == 1) {\n    return(ybreaks)\n  }\n  if (length(ybreaks) > length(yunique)) {\n    ybreaks <- sort(yunique)\n  }\n  nb <- length(ybreaks)\n  if (right) {\n    if (max(y) < ybreaks[nb]) {\n      ybreaks[nb] <- max(y)\n    }\n    if (min(y) > ybreaks[1]) {\n      ybreaks[1] <- min(y) - 1\n    } else if (min(y) == ybreaks[1]) {\n      ybreaks <- c(ybreaks[1] - 1, ybreaks)\n    }\n  } else {\n    if (min(y) > ybreaks[1]) {\n      ybreaks[1] <- min(y)\n    }\n    if (max(y) < ybreaks[nb]) {\n      ybreaks[nb] <- max(y) + 1\n    } else if (max(y) == ybreaks[nb]) {\n      ybreaks <- c(ybreaks[nb] + 1, ybreaks)\n    }\n  }\n  ybreaks\n}\n\nextract <- function(obj) {\n  xx <- as.matrix(obj)\n  out <- numeric(0)\n  bwf <- function(sample) {\n    sample <- sample[!is.na(as.vector(sample))]\n    1.06 * min(sd(sample), IQR(sample) / 1.34) * length(sample)^-0.2\n  }\n  for (col in seq_len(nvar(obj))) {\n    y0 <- xx[, col]\n    bw <- bwf(y0)\n    discrete <- max(abs(y0 - floor(y0))) == 0 || bw == 0 || length(unique(y0)) == 1\n    if (discrete) {\n      ybreaks <- pretty.discrete(y0, TRUE)\n      yhist <- hist(y0, breaks = ybreaks, right = TRUE, plot = FALSE)\n      out <- c(\n        out,\n        1,\n        bw,\n        length(yhist$breaks),\n        yhist$breaks,\n        length(yhist$density),\n        yhist$density\n      )\n    } else {\n      y <- y0\n      scale <- \"open\"\n      if (max(y) <= 1 && 1 - max(y) < 2 * bw) {\n        if (min(y) >= 0 && min(y) < 2 * bw) {\n          scale <- \"proportion\"\n          y <- c(y, -y, 2 - y)\n        }\n      } else if (min(y) >= 0 && min(y) < 2 * bw) {\n        scale <- \"positive\"\n        y <- c(y, -y)\n      }\n      dens <- density(y, width = 4 * bw)\n      if (scale == \"proportion\") {\n        dens$y <- 3 * dens$y[dens$x >= 0 & dens$x <= 1]\n        dens$x <- dens$x[dens$x >= 0 & dens$x <= 1]\n      } else if (scale == \"positive\") {\n        dens$y <- 2 * dens$y[dens$x >= 0]\n        dens$x <- dens$x[dens$x >= 0]\n      }\n      rug <- y[seq_len(niter(obj))]\n      out <- c(\n        out,\n        0,\n        bw,\n        dens$bw,\n        max(dens$y) / 100,\n        length(rug),\n        rug,\n        length(dens$x),\n        dens$x,\n        length(dens$y),\n        dens$y\n      )\n    }\n  }\n  out\n}\n\none <- function(svg_path = NULL) {\n  if (is.null(svg_path)) {\n    pdf(nullfile())\n  } else {\n    svg(svg_path, width = 7, height = 8)\n  }\n  on.exit(dev.off(), add = TRUE)\n  par(mfrow = c(3, 1))\n  densplot(m)\n  extract(m)\n}\n\nvalue <- one(file.path(out_dir, \"densplot-r.svg\"))\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"proof\", \"densplot-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.densplot import densplot, proof_values\n\nroot = Path(__file__).resolve().parents[1]\nout_dir = root / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\nn = 400\ni = np.arange(1, n + 1, dtype=np.float64)\ndata = np.column_stack(\n    (\n        np.sin(i / 3) + 0.2 * np.cos(i),\n        (np.sin(i / 5) + 1) / 2,\n        np.arange(n) % 6,\n    )\n)\nchain = as_mcmc(data)\nchain.colnames = [\"alpha\", \"beta\", \"gamma\"]\n\n\ndef one(svg_path=None):\n    result = densplot(chain)\n    values = proof_values(result)\n    figure = result.get(\"figure\")\n    if svg_path is not None and figure is not None:\n        figure.savefig(svg_path)\n    plt.close(\"all\")\n    return values\n\n\nvalue = one(out_dir / \"densplot-python.svg\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)})\n(root / \"proof\" / \"densplot-py.txt\").write_text(out + \"\\n\")\nprint(out)\n"
+        }
+      },
+      "origin": {
+        "output": "output/densplot-r.svg"
+      },
+      "translation": {
+        "output": "output/densplot-python.svg"
+      }
+    },
+    {
+      "name": "display.coda.options",
+      "translated": true,
+      "python": "coda.display_coda_options.display_coda_options",
+      "loads": [],
+      "uses": [],
+      "done": "Prints summary, plot, and diagnostic option settings.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default options reset, frac1 and digits changed, stats and diagnostics listing digest.",
+        "r_ms": 0.8401870727539062,
+        "translated_ms": 0.20121849956922233,
+        "speedup": 4.1754961623937,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\ndigest_lines <- function(lines) {\n  sum(vapply(lines, function(line) sum(utf8ToInt(line)), numeric(1)))\n}\n\none <- function() {\n  coda.options(default = TRUE)\n  coda.options(frac1 = 0.12, digits = 4)\n  captured <- capture.output(display.coda.options(stats = TRUE, diags = TRUE, plots = FALSE))\n  c(\n    digest_lines(captured),\n    coda.options(\"frac1\"),\n    coda.options(\"digits\"),\n    as.numeric(coda.options(\"combine.stats\")),\n    length(captured)\n  )\n}\n\nsink(file.path(out_dir, \"display.coda.options-r.txt\"))\none()\nsink()\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nwriteLines(\n  sprintf(\n    \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n    paste(parts, collapse = \",\"),\n    median(elapsed) * 1000\n  ),\n  con = file.path(root, \"display.coda.options-r.txt\")\n)\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.coda_options import coda_options\nfrom coda.display_coda_options import display_coda_options\n\nroot = Path(__file__).resolve().parents[1]\nout_dir = root / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\n\ndef digest_lines(lines):\n    return sum(sum(map(ord, line)) for line in lines)\n\n\ndef one(capture_path=None):\n    coda_options(default=True)\n    coda_options(frac1=0.12, digits=4)\n    buffer = io.StringIO()\n    with contextlib.redirect_stdout(buffer):\n        display_coda_options(stats=True, diags=True, plots=False)\n    captured = buffer.getvalue().splitlines()\n    if capture_path is not None:\n        capture_path.write_text(buffer.getvalue())\n    return [\n        float(digest_lines(captured)),\n        float(coda_options(\"frac1\")),\n        float(coda_options(\"digits\")),\n        float(coda_options(\"combine.stats\")),\n        float(len(captured)),\n    ]\n\n\nvalue = one(out_dir / \"display.coda.options-python.txt\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\n(root / \"proof\" / \"display.coda.options-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/display.coda.options-r.txt"
+      },
+      "translation": {
+        "output": "output/display.coda.options-python.txt"
+      }
+    },
+    {
+      "name": "effectiveSize",
+      "translated": true,
+      "python": "coda.effectiveSize.effectiveSize",
+      "loads": [],
+      "uses": [],
+      "done": "Effective sample size from the Yule-Walker spectrum at frequency zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of length 2000, three columns, summed effective sample size.",
+        "r_ms": 22.879838943481445,
+        "translated_ms": 218.13699600011205,
+        "speedup": 0.104887476049545,
+        "matches": true,
+        "max_abs_diff": 2.9665159217984183e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 2000L\ni <- seq_len(n)\nx <- cbind(sin(i / 3) + 0.2 * cos(i), cos(i / 5) + 0.01 * i, rep(2, n))\ny <- cbind(sin(i / 4) + 0.15 * cos(i / 2), cos(i / 6) + 0.005 * i, rep(1, n))\n\none <- function() {\n  as.numeric(effectiveSize(mcmc.list(mcmc(x), mcmc(y))))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.effectiveSize import effectiveSize\n\nn = 2000\ni = np.arange(1, n + 1, dtype=float)\nx = np.column_stack(\n    (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i, np.full(n, 2.0))\n)\ny = np.column_stack(\n    (\n        np.sin(i / 4) + 0.15 * np.cos(i / 2),\n        np.cos(i / 6) + 0.005 * i,\n        np.full(n, 1.0),\n    )\n)\n\n\ndef one():\n    return [float(value) for value in effectiveSize([x, y])]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "gelman.diag",
+      "translated": true,
+      "python": "coda.gelman_diag.gelman_diag",
+      "loads": [],
+      "uses": [
+        "as.mcmc.list",
+        "as.mcmc",
+        "niter",
+        "varnames"
+      ],
+      "done": "Gelman-Rubin potential scale reduction for two or more chains.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of length 2000 on sine and cosine columns, autoburnin false.",
+        "r_ms": 2.4340152740478516,
+        "translated_ms": 4.263430999344564,
+        "speedup": 0.5709052813149886,
+        "matches": true,
+        "max_abs_diff": 1.2434497875801753e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x1 <- cbind(sin(i / 3) + 0.2 * cos(i), cos(i / 5) + 0.01 * i)\n  x2 <- cbind(sin(i / 4) + 0.15 * cos(i / 2), cos(i / 6) + 0.005 * i)\n  ml <- mcmc.list(mcmc(x1), mcmc(x2))\n  g <- gelman.diag(ml, autoburnin = FALSE)\n  c(as.numeric(g$psrf), as.numeric(g$mpsrf))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(\n  value,\n  function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v),\n  character(1)\n)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"gelman.diag-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.gelman_diag import gelman_diag\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x1 = np.column_stack(\n        (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i)\n    )\n    x2 = np.column_stack(\n        (np.sin(i / 4) + 0.15 * np.cos(i / 2), np.cos(i / 6) + 0.005 * i)\n    )\n    ml = as_mcmc_list([as_mcmc(x1), as_mcmc(x2)])\n    result = gelman_diag(ml, autoburnin=False)\n    values = np.ravel(result.psrf, order=\"F\").tolist()\n    if result.mpsrf is not None:\n        values.append(float(result.mpsrf))\n    return values\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"gelman.diag-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "gelman.plot",
+      "translated": true,
+      "python": "coda.gelman_plot.gelman_plot",
+      "loads": [],
+      "uses": [
+        "gelman.diag",
+        "as.mcmc.list",
+        "nvar",
+        "varnames"
+      ],
+      "done": "Draws Gelman-Rubin shrink factors with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of 2000, two variables, autoburnin false.",
+        "r_ms": 154.17790412902832,
+        "translated_ms": 391.6551090005669,
+        "speedup": 0.3936573290782865,
+        "matches": true,
+        "max_abs_diff": 3.836099438103702e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nencode_title <- function(title) {\n  if (is.null(title)) return(0)\n  c(-1, nchar(title), utf8ToInt(title))\n}\n\nplotted <- function(y, obj) {\n  out <- c(as.numeric(y$shrink), as.numeric(y$last.iter))\n  all.na <- apply(is.na(y$shrink[, , 1, drop = FALSE]), 2, all)\n  for (j in seq_len(nvar(obj))) {\n    if (all.na[j]) next\n    out <- c(out, as.numeric(y$shrink[, j, ]))\n    out <- c(out, encode_title(varnames(obj)[j]))\n  }\n  out\n}\n\nbuild <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x1 <- cbind(sin(i / 3) + 0.2 * cos(i), cos(i / 5) + 0.01 * i)\n  x2 <- cbind(sin(i / 4) + 0.15 * cos(i / 2), cos(i / 6) + 0.005 * i)\n  colnames(x1) <- c(\"alpha\", \"beta\")\n  colnames(x2) <- colnames(x1)\n  mcmc.list(mcmc(x1), mcmc(x2))\n}\n\none <- function(save = FALSE) {\n  obj <- build()\n  if (save) {\n    dir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\n    svg(file.path(root, \"docs\", \"output\", \"gelman.plot-r.svg\"), width = 7, height = 5)\n    gelman.plot(obj, autoburnin = FALSE)\n    dev.off()\n  }\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  y <- gelman.plot(obj, autoburnin = FALSE)\n  plotted(y, obj)\n}\n\nvalue <- one(TRUE)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one(FALSE)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v), character(1))\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"gelman.plot-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\")\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.gelman_plot import gelman_plot, proof_values\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef build():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x1 = np.column_stack(\n        (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i)\n    )\n    x2 = np.column_stack(\n        (np.sin(i / 4) + 0.15 * np.cos(i / 2), np.cos(i / 6) + 0.005 * i)\n    )\n    names = [\"alpha\", \"beta\"]\n    c1 = as_mcmc(x1)\n    c1.colnames = names\n    c2 = as_mcmc(x2)\n    c2.colnames = names\n    return mcmc_list(c1, c2)\n\n\ndef one(save=False):\n    plt.close(\"all\")\n    result = gelman_plot(build(), autoburnin=False)\n    values = proof_values(result)\n    if save and result[\"figures\"]:\n        out = package / \"docs\" / \"output\"\n        out.mkdir(parents=True, exist_ok=True)\n        result[\"figures\"][0].savefig(out / \"gelman.plot-python.svg\")\n    plt.close(\"all\")\n    return values\n\n\ndef encode(values):\n    out = []\n    for number in values:\n        if number != number:\n            out.append(None)\n        else:\n            out.append(float(number))\n    return out\n\n\nvalue = one(True)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one(False)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\npayload = {\"value\": encode(value), \"median_ms\": statistics.median(elapsed)}\nprint(json.dumps(payload))\n(root / \"gelman.plot-py.txt\").write_text(json.dumps(payload) + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/gelman.plot-r.svg"
+      },
+      "translation": {
+        "output": "output/gelman.plot-python.svg"
+      }
+    },
+    {
+      "name": "geweke.diag",
+      "translated": true,
+      "python": "coda.geweke_diag.geweke_diag",
+      "loads": [],
+      "uses": [
+        "as.mcmc",
+        "niter"
+      ],
+      "done": "Geweke z-scores compare the early and late windows of an mcmc chain.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 2000 by 3 chain: a sine series, a drifting cosine, and a constant column.",
+        "r_ms": 18.42045783996582,
+        "translated_ms": 69.62900600046851,
+        "speedup": 0.264551497975454,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  g <- geweke.diag(as.mcmc(x))\n  as.numeric(g$z)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(\n  value,\n  function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v),\n  character(1)\n)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"geweke.diag-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.geweke_diag import geweke_diag\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    result = geweke_diag(as_mcmc(x))\n    return np.ravel(np.asarray(result.z, dtype=np.float64), order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"geweke.diag-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "geweke.plot",
+      "translated": true,
+      "python": "coda.geweke_plot.geweke_plot",
+      "loads": [],
+      "uses": [
+        "geweke.diag",
+        "as.mcmc.list",
+        "nchain",
+        "nvar",
+        "varnames",
+        "chanames"
+      ],
+      "done": "Draws Geweke Z-scores over sliding windows with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of 2000, two variables, default bins.",
+        "r_ms": 667.1732664108276,
+        "translated_ms": 2612.3997054983192,
+        "speedup": 0.25538713122904877,
+        "matches": true,
+        "max_abs_diff": 4.733990977001667e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nencode_title <- function(title) {\n  c(-1, nchar(title), utf8ToInt(title))\n}\n\nplotted <- function(y, obj) {\n  out <- c(as.numeric(y$z), as.numeric(y$start.iter))\n  climit <- qnorm(1 - 0.05 / 2)\n  for (k in seq_len(nchain(obj))) {\n    for (j in seq_len(nvar(obj))) {\n      z <- y$z[, j, k]\n      ylimit <- max(c(climit, abs(z)))\n      out <- c(out, -ylimit, ylimit, as.numeric(z))\n      if (nchain(obj) > 1) {\n        title <- paste(varnames(obj, allow.null = FALSE)[j], \" (\", chanames(obj, allow.null = FALSE)[k], \")\", sep = \"\")\n      } else {\n        title <- varnames(obj, allow.null = FALSE)[j]\n      }\n      out <- c(out, encode_title(title))\n    }\n  }\n  out\n}\n\nbuild <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i\n  )\n  colnames(x) <- c(\"alpha\", \"beta\")\n  colnames(y) <- colnames(x)\n  mcmc.list(mcmc(x), mcmc(y))\n}\n\none <- function(save = FALSE) {\n  obj <- build()\n  if (save) {\n    dir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\n    svg(file.path(root, \"docs\", \"output\", \"geweke.plot-r.svg\"), width = 7, height = 9)\n    geweke.plot(obj)\n    dev.off()\n  }\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  y <- geweke.plot(obj)\n  plotted(y, obj)\n}\n\nvalue <- one(TRUE)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one(FALSE)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v), character(1))\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"geweke.plot-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\")\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.geweke_plot import geweke_plot, proof_values\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef build():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i)\n    )\n    y = np.column_stack(\n        (np.sin(i / 4) + 0.15 * np.cos(i / 2), np.cos(i / 6) + 0.005 * i)\n    )\n    names = [\"alpha\", \"beta\"]\n    c1 = as_mcmc(x)\n    c1.colnames = names\n    c2 = as_mcmc(y)\n    c2.colnames = names\n    return mcmc_list(c1, c2)\n\n\ndef one(save=False):\n    plt.close(\"all\")\n    result = geweke_plot(build())\n    values = proof_values(result)\n    if save and result[\"figures\"]:\n        out = package / \"docs\" / \"output\"\n        out.mkdir(parents=True, exist_ok=True)\n        result[\"figures\"][0].savefig(out / \"geweke.plot-python.svg\")\n    plt.close(\"all\")\n    return values\n\n\ndef encode(values):\n    out = []\n    for number in values:\n        if number != number:\n            out.append(None)\n        else:\n            out.append(float(number))\n    return out\n\n\nvalue = one(True)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one(False)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\npayload = {\"value\": encode(value), \"median_ms\": statistics.median(elapsed)}\nprint(json.dumps(payload))\n(root / \"geweke.plot-py.txt\").write_text(json.dumps(payload) + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/geweke.plot-r.svg"
+      },
+      "translation": {
+        "output": "output/geweke.plot-python.svg"
+      }
+    },
+    {
+      "name": "heidel.diag",
+      "translated": true,
+      "python": "coda.heidel_diag.heidel_diag",
+      "loads": [],
+      "uses": [
+        "as.mcmc",
+        "is.mcmc",
+        "is.mcmc.list",
+        "effectiveSize",
+        "niter",
+        "varnames"
+      ],
+      "done": "Heidelberger-Welch stationarity and half-width diagnostic for an MCMC sample.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One mcmc chain of length 2000 with an oscillating column, a linear trend, and a constant.",
+        "r_ms": 31.713247299194336,
+        "translated_ms": 255.59506850004254,
+        "speedup": 0.12407613137962033,
+        "matches": true,
+        "max_abs_diff": 1.887379141862766e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  hw <- heidel.diag(as.mcmc(x))\n  as.numeric(hw)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(\n  value,\n  function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v),\n  character(1)\n)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"heidel.diag-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.heidel_diag import heidel_diag\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    result = heidel_diag(as_mcmc(x))\n    return np.ravel(np.asarray(result.matrix, dtype=np.float64), order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"heidel.diag-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "is.mcmc",
+      "translated": true,
+      "python": "coda.is_mcmc.is_mcmc",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether the value is an mcmc object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Matrix and vector mcmc objects, a numeric matrix, NULL, and a plain list.",
+        "r_ms": 0.6557703018188477,
+        "translated_ms": 0.3365224993103766,
+        "speedup": 1.9486670376057889,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  m <- mcmc(x)\n  v <- mcmc(sin(i / 7))\n  ml <- mcmc.list(m, mcmc(x))\n  obsolete <- array(seq_len(24), dim = c(2L, 3L, 4L))\n  class(obsolete) <- \"mcmc\"\n  msg <- tryCatch(is.mcmc(obsolete), error = function(e) conditionMessage(e))\n  flags <- as.numeric(c(\n    is.mcmc(m),\n    is.mcmc(v),\n    is.mcmc(x),\n    is.mcmc(ml),\n    is.mcmc(NULL),\n    is.mcmc(list(m))\n  ))\n  c(flags, nchar(msg), utf8ToInt(msg))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/is.mcmc-r.txt\")\n\nn <- 2000L\ni <- seq_len(n)\nx <- cbind(\n  sin(i / 3) + 0.2 * cos(i),\n  cos(i / 5) + 0.01 * i,\n  rep(2, n)\n)\nm <- mcmc(x)\nv <- mcmc(sin(i / 7))\nml <- mcmc.list(m, mcmc(x))\nobsolete <- array(seq_len(24), dim = c(2L, 3L, 4L))\nclass(obsolete) <- \"mcmc\"\nmsg <- tryCatch(is.mcmc(obsolete), error = function(e) conditionMessage(e))\nexample <- paste0(\n  \"mcmc matrix: \", is.mcmc(m), \"\\n\",\n  \"mcmc vector: \", is.mcmc(v), \"\\n\",\n  \"numeric matrix: \", is.mcmc(x), \"\\n\",\n  \"mcmc.list: \", is.mcmc(ml), \"\\n\",\n  \"NULL: \", is.mcmc(NULL), \"\\n\",\n  \"list: \", is.mcmc(list(m)), \"\\n\",\n  msg, \"\\n\"\n)\ncat(example, file = \"docs/output/is.mcmc-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import Mcmc, as_mcmc\nfrom coda.is_mcmc import is_mcmc\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef _word(flag):\n    return \"TRUE\" if flag else \"FALSE\"\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    chain = as_mcmc(x)\n    vector = as_mcmc(np.sin(i / 7))\n    chains = mcmc_list(chain, as_mcmc(x))\n    obsolete = Mcmc(data=np.arange(1, 25, dtype=np.float64).reshape(2, 3, 4))\n    try:\n        is_mcmc(obsolete)\n        msg = \"\"\n    except ValueError as exc:\n        msg = str(exc)\n    flags = [\n        1.0 if is_mcmc(chain) else 0.0,\n        1.0 if is_mcmc(vector) else 0.0,\n        1.0 if is_mcmc(x) else 0.0,\n        1.0 if is_mcmc(chains) else 0.0,\n        1.0 if is_mcmc(None) else 0.0,\n        1.0 if is_mcmc([chain]) else 0.0,\n    ]\n    coded = [float(len(msg))]\n    coded.extend(float(ord(char)) for char in msg)\n    return flags + coded\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\n(root / \"is.mcmc-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n\nn = 2000\ni = np.arange(1, n + 1, dtype=np.float64)\nx = np.column_stack(\n    (\n        np.sin(i / 3) + 0.2 * np.cos(i),\n        np.cos(i / 5) + 0.01 * i,\n        np.full(n, 2.0),\n    )\n)\nchain = as_mcmc(x)\nvector = as_mcmc(np.sin(i / 7))\nchains = mcmc_list(chain, as_mcmc(x))\ntry:\n    is_mcmc(Mcmc(data=np.arange(1, 25, dtype=np.float64).reshape(2, 3, 4)))\n    msg = \"\"\nexcept ValueError as exc:\n    msg = str(exc)\n\nexample = (\n    f\"mcmc matrix: {_word(is_mcmc(chain))}\\n\"\n    f\"mcmc vector: {_word(is_mcmc(vector))}\\n\"\n    f\"numeric matrix: {_word(is_mcmc(x))}\\n\"\n    f\"mcmc.list: {_word(is_mcmc(chains))}\\n\"\n    f\"NULL: {_word(is_mcmc(None))}\\n\"\n    f\"list: {_word(is_mcmc([chain]))}\\n\"\n    f\"{msg}\\n\"\n)\n(package / \"docs\" / \"output\" / \"is.mcmc-python.txt\").write_text(example)\n"
+        }
+      },
+      "origin": {
+        "output": "output/is.mcmc.list-r.txt"
+      },
+      "translation": {
+        "output": "output/is.mcmc.list-python.txt"
+      }
+    },
+    {
+      "name": "is.mcmc.list",
+      "translated": true,
+      "python": "coda.is_mcmc_list.is_mcmc_list",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether the value is an mcmc.list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An mcmc.list, a single chain, a plain list, and NULL.",
+        "r_ms": 0.8655786514282227,
+        "translated_ms": 0.4186074993413058,
+        "speedup": 2.067757153873837,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  chain <- mcmc(x)\n  as.numeric(c(\n    is.mcmc.list(mcmc.list(chain, mcmc(y))),\n    is.mcmc.list(chain),\n    is.mcmc.list(list(chain)),\n    is.mcmc.list(NULL)\n  ))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/is.mcmc.list-r.txt\")\nwriteLines(\n  paste(ifelse(value == 1, \"TRUE\", \"FALSE\"), collapse = \" \"),\n  con = \"docs/output/is.mcmc.list-r.txt\"\n)\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.is_mcmc_list import is_mcmc_list\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    chain = as_mcmc(x)\n    flags = [\n        is_mcmc_list(as_mcmc_list([chain, as_mcmc(y)])),\n        is_mcmc_list(chain),\n        is_mcmc_list([chain]),\n        is_mcmc_list(None),\n    ]\n    return [1.0 if flag else 0.0 for flag in flags]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"is.mcmc.list-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\ndocs = root.parent / \"docs\" / \"output\" / \"is.mcmc.list-python.txt\"\ndocs.write_text(\" \".join(\"TRUE\" if flag == 1.0 else \"FALSE\" for flag in value) + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/is.mcmc.list-r.txt"
+      },
+      "translation": {
+        "output": "output/is.mcmc.list-python.txt"
+      }
+    },
+    {
+      "name": "mcmc",
+      "translated": true,
+      "python": "coda.mcmc.mcmc",
+      "loads": [],
+      "uses": [],
+      "done": "Constructs an mcmc chain with start, end, and thin metadata.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "100 by 3 matrix and length-10 vector with end=19, thin=2; flattened data and mcpar.",
+        "r_ms": 0.0997781753540039,
+        "translated_ms": 0.10776750059449114,
+        "speedup": 0.9258651708871901,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 100L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  v <- 1:10\n  obj <- mcmc(x)\n  obj2 <- mcmc(v, end = 19, thin = 2)\n  c(\n    as.numeric(obj),\n    mcpar(obj),\n    as.numeric(obj2),\n    mcpar(obj2)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"mcmc-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.mcmc import mcmc\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 100\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    v = np.arange(1, 11, dtype=np.float64)\n    obj = mcmc(x)\n    obj2 = mcmc(v, end=19, thin=2)\n    parts = [\n        *np.ravel(np.asarray(obj.data, dtype=np.float64), order=\"F\"),\n        *obj.mcpar.tolist(),\n        *np.ravel(np.asarray(obj2.data, dtype=np.float64), order=\"F\"),\n        *obj2.mcpar.tolist(),\n    ]\n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\n(root / \"mcmc-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "mcmc.list",
+      "translated": true,
+      "python": "coda.mcmc_list.mcmc_list",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a list of mcmc chains.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of 100 iterations and 3 variables",
+        "r_ms": 0.42641162872314453,
+        "translated_ms": 0.33451099989179056,
+        "speedup": 1.2747312610380002,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 100L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  obj <- mcmc.list(mcmc(x), mcmc(y))\n  parts <- length(obj)\n  for (ch in obj) {\n    parts <- c(parts, as.numeric(ch), mcpar(ch))\n  }\n  parts\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"mcmc.list-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.mcmc_list import mcmc_list\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 100\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    obj = mcmc_list(as_mcmc(x), as_mcmc(y))\n    parts = [float(len(obj.chains))]\n    for chain in obj.chains:\n        array = np.asarray(chain.data, dtype=np.float64)\n        parts.extend(np.ravel(array, order=\"F\").tolist())\n        parts.extend(chain.mcpar.tolist())\n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"mcmc.list-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "mcmcUpgrade",
+      "translated": true,
+      "python": "coda.mcmc_upgrade.mcmc_upgrade",
+      "loads": [],
+      "uses": [
+        "as.mcmc",
+        "mcmc.list"
+      ],
+      "done": "Upgrades obsolete three-dimensional mcmc arrays to modern chains.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two-chain obsolete array; matches R chain slicing",
+        "r_ms": 0.23233890533447266,
+        "translated_ms": 0.17504299830761738,
+        "speedup": 1.3273247578070189,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  mat1 <- matrix(\n    c(0.11, 0.22, 0.33, 0.44, 0.55, 0.66, 1.11, 1.22, 1.33, 1.44, 1.55, 1.66),\n    ncol = 2\n  )\n  mat2 <- mat1 + 10\n  arr <- array(NA, dim = c(6, 2, 2))\n  arr[, , 1] <- mat1\n  arr[, , 2] <- mat2\n  class(arr) <- \"mcmc\"\n  attr(arr, \"tspar\") <- c(1, 6, 1)\n  obj <- mcmcUpgrade(arr)\n  parts <- if (inherits(obj, \"mcmc.list\")) length(obj) else 1L\n  chains <- if (inherits(obj, \"mcmc.list\")) obj else list(obj)\n  for (ch in chains) {\n    parts <- c(parts, as.numeric(ch), mcpar(ch))\n  }\n  parts\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"mcmcUpgrade-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import Mcmc\nfrom coda.mcmc_upgrade import mcmc_upgrade\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    mat1 = np.array(\n        [\n            [0.11, 1.11],\n            [0.22, 1.22],\n            [0.33, 1.33],\n            [0.44, 1.44],\n            [0.55, 1.55],\n            [0.66, 1.66],\n        ],\n        dtype=np.float64,\n    )\n    mat2 = mat1 + 10.0\n    arr = np.empty((6, 2, 2), dtype=np.float64)\n    arr[:, :, 0] = mat1\n    arr[:, :, 1] = mat2\n    obj = Mcmc(data=arr, tspar=np.array([1.0, 6.0, 1.0], dtype=np.float64))\n    upgraded = mcmc_upgrade(obj)\n    if hasattr(upgraded, \"chains\"):\n        chains = upgraded.chains\n        parts = [float(len(chains))]\n    else:\n        chains = [upgraded]\n        parts = [1.0]\n    for chain in chains:\n        array = np.asarray(chain.data, dtype=np.float64)\n        parts.extend(np.ravel(array, order=\"F\").tolist())\n        parts.extend(chain.mcpar.tolist())\n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"mcmcUpgrade-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "mcpar",
+      "translated": true,
+      "python": "coda.mcpar.mcpar",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R within the 1e-8 tolerance on the proof case.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Proof case from packages/coda/proof",
+        "r_ms": 0.0276566,
+        "translated_ms": 0.042468,
+        "speedup": 0.651233,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08
+      }
+    },
+    {
+      "name": "multi.menu",
+      "translated": true,
+      "python": "coda.multi_menu.multi_menu",
+      "loads": [],
+      "uses": [],
+      "done": "Selects several menu entries from a printed list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Choices alpha through epsilon, selection 1,3:5.",
+        "r_ms": 0.43761730194091797,
+        "translated_ms": 0.06898000083310762,
+        "speedup": 6.344118536613285,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "if (!interactive() && Sys.getenv(\"CODA_TTY\") != \"1\") {\n  file_arg <- grep(\"^--file=\", commandArgs(trailingOnly = FALSE), value = TRUE)\n  if (length(file_arg) == 1L) {\n    script <- sub(\"^--file=\", \"\", file_arg[[1L]])\n    Sys.setenv(CODA_TTY = \"1\")\n    status <- system2(\n      \"script\",\n      c(\"-q\", \"-c\", shQuote(\"R --vanilla --quiet --no-echo\"), \"/dev/null\"),\n      stdin = script,\n      stdout = FALSE,\n      stderr = FALSE\n    )\n    quit(status = status)\n  }\n}\n\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nchoices <- c(\"alpha\", \"beta\", \"gamma\", \"delta\", \"epsilon\")\none <- function() {\n  multi.menu(choices, \"Pick variables\", c(\"Id\", \"Name\"))\n}\n\nsink(file.path(out_dir, \"multi.menu-r.txt\"))\nvalue <- one()\n1,3:5\nsink()\nelapsed <- numeric(20)\nsink(\"/dev/null\")\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n1,3:5\n\nsink()\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"proof\", \"multi.menu-r.txt\"))\nq(save = \"no\")\n",
+          "python": "import contextlib\nimport io\nimport json\nimport os\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.multi_menu import multi_menu\n\nroot = Path(__file__).resolve().parents[1]\nout_dir = root / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\nsys.stdin = io.StringIO(\"1,3:5\\n\" * 21)\nchoices = [\"alpha\", \"beta\", \"gamma\", \"delta\", \"epsilon\"]\n\n\ndef one(capture_path=None):\n    if capture_path is None:\n        sink = open(os.devnull, \"w\", encoding=\"utf-8\")\n        close_sink = True\n    else:\n        sink = capture_path.open(\"w\", encoding=\"utf-8\")\n        close_sink = True\n    try:\n        with contextlib.redirect_stdout(sink):\n            selected = multi_menu(choices, \"Pick variables\", [\"Id\", \"Name\"])\n    finally:\n        if close_sink:\n            sink.close()\n    return [float(item) for item in selected]\n\n\nvalue = one(out_dir / \"multi.menu-python.txt\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)})\n(root / \"proof\" / \"multi.menu-py.txt\").write_text(out + \"\\n\")\nprint(out)\n"
+        }
+      },
+      "origin": {
+        "output": "output/multi.menu-r.txt"
+      },
+      "translation": {
+        "output": "output/multi.menu-python.txt"
+      }
+    },
+    {
+      "name": "nchain",
+      "translated": true,
+      "python": "coda.nchain.nchain",
+      "loads": [],
+      "uses": [],
+      "done": "Counts the chains in an mcmc or mcmc.list object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One chain and a two-chain list",
+        "r_ms": 0.6825923919677734,
+        "translated_ms": 0.8079665003606351,
+        "speedup": 0.8448275908259797,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  c(\n    nchain(mcmc(x)),\n    nchain(mcmc.list(mcmc(x), mcmc(y)))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/nchain-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.nchain import nchain\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    return [\n        float(nchain(as_mcmc(x))),\n        float(nchain(as_mcmc_list([as_mcmc(x), as_mcmc(y)]))),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"nchain-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "niter",
+      "translated": true,
+      "python": "coda.niter.niter",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the iteration count of an MCMC object or of the first chain in a list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Iteration count of a 2000 by 3 matrix chain, a length-2000 vector chain, and an mcmc list",
+        "r_ms": 0.8875131607055664,
+        "translated_ms": 0.5411845004346105,
+        "speedup": 1.639945637749841,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  v <- sin(i / 7)\n  c(\n    niter(mcmc(x)),\n    niter(mcmc(v)),\n    niter(mcmc.list(mcmc(x), mcmc(y)))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/niter-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.niter import niter\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    v = np.sin(i / 7)\n    return [\n        float(niter(as_mcmc(x))),\n        float(niter(as_mcmc(v))),\n        float(niter(as_mcmc_list([as_mcmc(x), as_mcmc(y)]))),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"niter-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "nvar",
+      "translated": true,
+      "python": "coda.nvar.nvar",
+      "loads": [],
+      "uses": [],
+      "done": "Counts the variables in an mcmc object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 2000 by 3 chain, a length-2000 vector, a two-chain list.",
+        "r_ms": 0.9198188781738281,
+        "translated_ms": 0.4957049995937268,
+        "speedup": 1.8555771657088376,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  v <- sin(i / 7)\n  list(\n    nvar(mcmc(x)),\n    nvar(mcmc(v)),\n    nvar(mcmc.list(mcmc(x), mcmc(y))),\n    nvar(1)\n  )\n}\n\nfmt <- function(v) {\n  if (is.null(v)) \"null\" else sprintf(\"%.17g\", v)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, fmt, character(1))\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/nvar-r.txt\")\nshown <- vapply(value, function(v) if (is.null(v)) \"NULL\" else sprintf(\"%.17g\", v), character(1))\nwriteLines(paste(shown, collapse = \" \"), con = \"docs/output/nvar-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.nvar import nvar\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    v = np.sin(i / 7)\n    return [\n        nvar(as_mcmc(x)),\n        nvar(as_mcmc(v)),\n        nvar(as_mcmc_list([as_mcmc(x), as_mcmc(y)])),\n        nvar(1),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"nvar-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\nshown = \" \".join(\"NULL\" if item is None else format(float(item), \".17g\") for item in value)\ndocs = root.parent / \"docs\" / \"output\" / \"nvar-python.txt\"\ndocs.write_text(shown + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/nvar-r.txt"
+      },
+      "translation": {
+        "output": "output/nvar-python.txt"
+      }
+    },
+    {
+      "name": "pcramer",
+      "translated": true,
+      "python": "coda.pcramer.pcramer",
+      "loads": [],
+      "uses": [],
+      "done": "Cramer-von Mises probability for a quantile.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Eleven quantiles at eps 1e-5 and at eps 1e-8.",
+        "r_ms": 0.31828880310058594,
+        "translated_ms": 0.3584154992495314,
+        "speedup": 0.888044193867272,
+        "matches": true,
+        "max_abs_diff": 2.275957200481571e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nquantiles <- c(1e-4, 0.005, 0.00543, 0.01, 0.05, 0.1, 0.461, 1, 2, 10, 100)\n\none <- function() {\n  c(pcramer(quantiles), pcramer(quantiles, eps = 1e-8))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/pcramer-r.txt\")\nwriteLines(paste(parts, collapse = \" \"), con = \"docs/output/pcramer-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.pcramer import pcramer\n\nroot = Path(__file__).resolve().parent\n\nquantiles = np.array(\n    [1e-4, 0.005, 0.00543, 0.01, 0.05, 0.1, 0.461, 1.0, 2.0, 10.0, 100.0],\n    dtype=np.float64,\n)\n\n\ndef one():\n    default = np.asarray(pcramer(quantiles), dtype=np.float64)\n    tighter = np.asarray(pcramer(quantiles, eps=1e-8), dtype=np.float64)\n    return np.concatenate((default, tighter)).tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"pcramer-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\nshown = \" \".join(format(float(item), \".17g\") for item in value)\ndocs = root.parent / \"docs\" / \"output\" / \"pcramer-python.txt\"\ndocs.write_text(shown + \"\\n\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/pcramer-r.txt"
+      },
+      "translation": {
+        "output": "output/pcramer-python.txt"
+      }
+    },
+    {
+      "name": "raftery.diag",
+      "translated": true,
+      "python": "coda.raftery_diag.raftery_diag",
+      "loads": [],
+      "uses": [
+        "as.mcmc",
+        "niter",
+        "thin"
+      ],
+      "done": "Raftery-Lewis diagnostic of burn-in, total length, and dependence.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One mcmc chain of length 5000 with two oscillating columns and one constant.",
+        "r_ms": 13.080239295959473,
+        "translated_ms": 31.13405100066302,
+        "speedup": 0.42012648131400954,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 5000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- raftery.diag(as.mcmc(x))\n  as.numeric(y$resmatrix)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(\n  value,\n  function(v) if (is.na(v)) \"null\" else sprintf(\"%.17g\", v),\n  character(1)\n)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"raftery.diag-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.raftery_diag import raftery_diag\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 5000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    result = raftery_diag(as_mcmc(x))\n    matrix = np.asarray(result.resmatrix, dtype=np.float64)\n    return np.ravel(matrix, order=\"F\").tolist()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"raftery.diag-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "read.and.check",
+      "translated": true,
+      "python": "coda.read_and_check.read_and_check",
+      "loads": [],
+      "uses": [],
+      "done": "Reads a checked numeric answer, with a default.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Probability in [0, 1] with default 0.5, entry 0.25.",
+        "r_ms": 0.10788440704345703,
+        "translated_ms": 0.03064399970753584,
+        "speedup": 3.5205719903765225,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "if (!interactive() && Sys.getenv(\"CODA_TTY\") != \"1\") {\n  file_arg <- grep(\"^--file=\", commandArgs(trailingOnly = FALSE), value = TRUE)\n  if (length(file_arg) == 1L) {\n    script <- sub(\"^--file=\", \"\", file_arg[[1L]])\n    Sys.setenv(CODA_TTY = \"1\")\n    status <- system2(\n      \"script\",\n      c(\"-q\", \"-c\", shQuote(\"R --vanilla --quiet --no-echo\"), \"/dev/null\"),\n      stdin = script,\n      stdout = FALSE,\n      stderr = FALSE\n    )\n    quit(status = status)\n  }\n}\n\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() {\n  read.and.check(\"Enter a probability\", lower = 0, upper = 1, default = 0.5)\n}\n\nsink(file.path(out_dir, \"read.and.check-r.txt\"))\nvalue <- one()\n0.25\nsink()\nelapsed <- numeric(20)\nsink(\"/dev/null\")\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n0.25\n\nsink()\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"proof\", \"read.and.check-r.txt\"))\nq(save = \"no\")\n",
+          "python": "import contextlib\nimport io\nimport json\nimport os\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.read_and_check import read_and_check\n\nroot = Path(__file__).resolve().parents[1]\nout_dir = root / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\nsys.stdin = io.StringIO(\"0.25\\n\" * 21)\n\n\ndef one(capture_path=None):\n    if capture_path is None:\n        sink = open(os.devnull, \"w\", encoding=\"utf-8\")\n    else:\n        sink = capture_path.open(\"w\", encoding=\"utf-8\")\n    try:\n        with contextlib.redirect_stdout(sink):\n            value = read_and_check(\n                \"Enter a probability\", lower=0, upper=1, default=0.5\n            )\n    finally:\n        sink.close()\n    return [float(value)]\n\n\nvalue = one(out_dir / \"read.and.check-python.txt\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)})\n(root / \"proof\" / \"read.and.check-py.txt\").write_text(out + \"\\n\")\nprint(out)\n"
+        }
+      },
+      "origin": {
+        "output": "output/read.and.check-r.txt"
+      },
+      "translation": {
+        "output": "output/read.and.check-python.txt"
+      }
+    },
+    {
+      "name": "read.coda.interactive",
+      "translated": true,
+      "python": "coda.read_coda_interactive.read_coda_interactive",
+      "loads": [],
+      "uses": [
+        "read.coda",
+        "mcmc.list"
+      ],
+      "done": "Prompts for CODA output and index files, then reads them into an mcmc.list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "simulated interactive read of CODA files",
+        "r_ms": 2.404332160949707,
+        "translated_ms": 1.0546784978942014,
+        "speedup": 2.279682543780175,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\noutfile <- file.path(root, \"read.coda-proof.out\")\nindexfile <- file.path(root, \"read.coda-proof.ind\")\n\n# Test read.coda.interactive by reading the same files it would use\n# Since interactive input cannot be automated easily, we use the underlying mechanism\none <- function() {\n  # read.coda.interactive returns an mcmc.list\n  chains <- list()\n  chains[[1]] <- read.coda(outfile, indexfile, quiet = TRUE)\n  chains[[2]] <- read.coda(outfile, indexfile, quiet = TRUE)\n  \n  obj <- mcmc.list(chains[[1]], chains[[2]])\n  \n  # Get numeric values from all chains like as.numeric() does for mcmc.list\n  parts <- nchain(obj)\n  for (ch in obj) {\n    parts <- c(parts, as.numeric(ch), mcpar(ch))\n  }\n  \n  # Add name indices\n  parts <- c(parts, match(varnames(obj), c(\"alpha\", \"beta\")))\n  parts\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"read.coda.interactive-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.read_coda import read_coda\nfrom coda.mcmc_list import mcmc_list\nfrom coda.varnames import varnames\nfrom coda.nchain import nchain\n\nroot = Path(__file__).resolve().parent\noutfile = root / \"read.coda-proof.out\"\nindexfile = root / \"read.coda-proof.ind\"\n\n\ndef one():\n    # Simulate what read.coda.interactive would do:\n    # It prompts for files and reads them into an mcmc.list\n    chains = []\n    chains.append(read_coda(outfile, indexfile, quiet=True))\n    chains.append(read_coda(outfile, indexfile, quiet=True))\n    \n    obj = mcmc_list(*chains)\n    \n    # Build result similar to R: nchains, then for each chain all data + mcpar\n    parts = [float(nchain(obj))]\n    for chain in obj.chains:\n        array = np.asarray(chain.data, dtype=np.float64)\n        parts.extend(np.ravel(array, order=\"F\").tolist())\n        parts.extend(chain.mcpar.tolist())\n    \n    # Add name indices\n    names = varnames(obj, allow_null=False)\n    for name in [\"alpha\", \"beta\"]:\n        try:\n            parts.append(float(names.index(name) + 1))\n        except ValueError:\n            pass\n    \n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"read.coda.interactive-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "read.coda",
+      "translated": true,
+      "python": "coda.read_coda.read_coda",
+      "loads": [],
+      "uses": [
+        "as.mcmc"
+      ],
+      "done": "Reads a CODA output file and index into an mcmc object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "alpha and beta, six iterations each",
+        "r_ms": 1.1658668518066406,
+        "translated_ms": 0.7088085003488231,
+        "speedup": 1.6448262841555754,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\noutfile <- file.path(root, \"read.coda-proof.out\")\nindexfile <- file.path(root, \"read.coda-proof.ind\")\n\none <- function() {\n  obj <- read.coda(outfile, indexfile, quiet = TRUE)\n  vals <- as.numeric(obj)\n  mcpar <- attr(obj, \"mcpar\")\n  c(vals, mcpar, match(varnames(obj), c(\"alpha\", \"beta\")))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"read.coda-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.read_coda import read_coda\nfrom coda.varnames import varnames\n\nroot = Path(__file__).resolve().parent\noutfile = root / \"read.coda-proof.out\"\nindexfile = root / \"read.coda-proof.ind\"\n\n\ndef one():\n    obj = read_coda(outfile, indexfile, quiet=True)\n    array = np.asarray(obj.data, dtype=np.float64)\n    vals = np.ravel(array, order=\"F\").tolist()\n    mcpar = obj.mcpar.tolist()\n    names = varnames(obj, allow_null=False)\n    name_part = [float(names.index(name) + 1) for name in (\"alpha\", \"beta\")]\n    return vals + mcpar + name_part\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"read.coda-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "read.jags",
+      "translated": true,
+      "python": "coda.read_jags.read_jags",
+      "loads": [],
+      "uses": [
+        "read.coda"
+      ],
+      "done": "Reads JAGS CODA output by deriving the index path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "CODAchain.out with alpha and beta",
+        "r_ms": 1.02996826171875,
+        "translated_ms": 0.8175425009540049,
+        "speedup": 1.2598345168806047,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\noutfile <- file.path(root, \"CODAchain.out\")\n\none <- function() {\n  obj <- read.jags(outfile, quiet = TRUE)\n  vals <- as.numeric(obj)\n  mcpar <- attr(obj, \"mcpar\")\n  c(vals, mcpar, match(varnames(obj), c(\"alpha\", \"beta\")))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"read.jags-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.read_jags import read_jags\nfrom coda.varnames import varnames\n\nroot = Path(__file__).resolve().parent\noutfile = root / \"CODAchain.out\"\n\n\ndef one():\n    obj = read_jags(outfile, quiet=True)\n    array = np.asarray(obj.data, dtype=np.float64)\n    vals = np.ravel(array, order=\"F\").tolist()\n    mcpar = obj.mcpar.tolist()\n    names = varnames(obj, allow_null=False)\n    name_part = [float(names.index(name) + 1) for name in (\"alpha\", \"beta\")]\n    return vals + mcpar + name_part\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"read.jags-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "read.openbugs",
+      "translated": true,
+      "python": "coda.read_openbugs.read_openbugs",
+      "loads": [],
+      "uses": [
+        "read.coda",
+        "mcmc.list"
+      ],
+      "done": "Reads OpenBUGS CODA index and chain files into an mcmc.list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "CODAindex.txt and CODAchain1.txt with alpha and beta",
+        "r_ms": 1.7466545104980469,
+        "translated_ms": 0.6617350009037182,
+        "speedup": 2.639507519041121,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  obj <- read.openbugs(\"\", quiet = TRUE)\n  parts <- length(obj)\n  for (ch in obj) {\n    parts <- c(parts, as.numeric(ch), mcpar(ch))\n  }\n  parts\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"read.openbugs-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.read_openbugs import read_openbugs\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    obj = read_openbugs(\"\", quiet=True)\n    parts = [float(len(obj.chains))]\n    for chain in obj.chains:\n        array = np.asarray(chain.data, dtype=np.float64)\n        parts.extend(np.ravel(array, order=\"F\").tolist())\n        parts.extend(chain.mcpar.tolist())\n    return parts\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"read.openbugs-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "rejectionRate",
+      "translated": true,
+      "python": "coda.rejectionRate.rejectionRate",
+      "loads": [],
+      "uses": [
+        "is.mcmc",
+        "is.mcmc.list"
+      ],
+      "done": "Rejection rate is the fraction of successive iterations that stay the same.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two chains of length 2000 with three columns: two changing series and one constant.",
+        "r_ms": 2.1146535873413086,
+        "translated_ms": 0.7300544993995572,
+        "speedup": 2.8965694877307553,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  as.numeric(rejectionRate(mcmc.list(mcmc(x), mcmc(y))))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"rejectionRate-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.rejectionRate import rejectionRate\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    obj = as_mcmc_list([as_mcmc(x), as_mcmc(y)])\n    return [float(value) for value in rejectionRate(obj)]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"rejectionRate-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "spectrum0",
+      "translated": true,
+      "python": "coda.spectrum0.spectrum0",
+      "loads": [],
+      "uses": [],
+      "done": "Spectral density at frequency zero from a gamma GLM on the low-frequency periodogram.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 2500 by 2 series, seed 1030, default batch length 200.",
+        "r_ms": 12.193441390991211,
+        "translated_ms": 3.7172580014157575,
+        "speedup": 3.280224667307787,
+        "matches": true,
+        "max_abs_diff": 1.1300960167659468e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\ninput_path <- file.path(root, \"spectrum0-input.tsv\")\n\nset.seed(1030L)\nn <- 2500L\nx <- cbind(rnorm(n), rep(2, n))\nwrite.table(x, input_path, row.names = FALSE, col.names = FALSE)\n\none <- function() as.numeric(spectrum0(x)$spec)\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, fmt = \"%.17g\", character(1))\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"spectrum0-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.spectrum0 import spectrum0\n\nroot = Path(__file__).resolve().parent\ninput_path = root / \"spectrum0-input.tsv\"\n\n\ndef one():\n    x = np.loadtxt(input_path)\n    return [float(value) for value in spectrum0(x).spec]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"spectrum0-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "spectrum0.ar",
+      "translated": true,
+      "python": "coda.spectrum0_ar.spectrum0_ar",
+      "loads": [],
+      "uses": [],
+      "done": "Autoregressive spectral density at frequency zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An 800 by 3 chain",
+        "r_ms": 10.355591773986816,
+        "translated_ms": 64.79052000031515,
+        "speedup": 0.15983189784456808,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nn <- 800L\ni <- seq_len(n)\nx <- cbind(sin(i / 3) + 0.2 * cos(i), cos(i / 5) + 0.01 * i, rep(2, n))\n\none <- function() {\n  out <- spectrum0.ar(x)\n  c(as.numeric(out$spec), as.numeric(out$order))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (j in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[j]] <- as.numeric(Sys.time()) - t0\n}\nspec <- value[1:3]\nord <- value[4:6]\nparts_spec <- vapply(spec, sprintf, fmt = \"%.17g\", character(1))\nparts_ord <- vapply(ord, sprintf, fmt = \"%.17g\", character(1))\ncat(sprintf(\n  \"{\\\"spec\\\":[%s],\\\"order\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts_spec, collapse = \",\"),\n  paste(parts_ord, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.spectrum0_ar import spectrum0_ar\n\nn = 800\ni = np.arange(1, n + 1, dtype=float)\nx = np.column_stack(\n    (np.sin(i / 3) + 0.2 * np.cos(i), np.cos(i / 5) + 0.01 * i, np.full(n, 2.0))\n)\n\n\ndef one():\n    out = spectrum0_ar(x)\n    return (\n        [float(value) for value in out.spec],\n        [int(value) for value in out.order],\n    )\n\n\nspec, order = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(\n    json.dumps(\n        {\n            \"spec\": spec,\n            \"order\": order,\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "thin",
+      "translated": true,
+      "python": "coda.thin.thin",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the thinning interval from mcpar for an Mcmc object and from the first chain for an McmcList.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Thinning interval for a 2000 by 3 matrix chain, a length-2000 vector chain, a two-chain mcmc.list, and a matrix chain built with thin=3.",
+        "r_ms": 0.9527206420898438,
+        "translated_ms": 0.5713194996133097,
+        "speedup": 1.6675794240082484,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (as.character(packageVersion(\"coda\")) != \"0.19.4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  v <- sin(i / 7)\n  c(\n    thin(mcmc(x)),\n    thin(mcmc(v)),\n    thin(mcmc.list(mcmc(x), mcmc(y))),\n    thin(mcmc(x, thin = 3))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/thin-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.thin import thin\n\nroot = Path(__file__).resolve().parent\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    v = np.sin(i / 7)\n    return [\n        float(thin(as_mcmc(x))),\n        float(thin(as_mcmc(v))),\n        float(thin(as_mcmc_list([as_mcmc(x), as_mcmc(y)]))),\n        float(thin(as_mcmc(x, thin=3))),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"thin-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "traceplot",
+      "translated": true,
+      "python": "coda.traceplot.traceplot",
+      "loads": [],
+      "uses": [],
+      "done": "Draws MCMC traces with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two named chains, start 11, thin 2, plus an unnamed vector.",
+        "r_ms": 61.791062355041504,
+        "translated_ms": 664.9974504998681,
+        "speedup": 0.09291924699650221,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nencode_title <- function(obj, j, main) {\n  title <- NULL\n  if (!is.null(varnames(obj)) && is.null(main)) {\n    title <- paste(\"Trace of\", varnames(obj)[j])\n  } else if (!is.null(main)) {\n    title <- as.character(main)\n  }\n  if (is.null(title)) {\n    0\n  } else {\n    c(-1, nchar(title), utf8ToInt(title))\n  }\n}\n\nplotted <- function(obj, smooth, main) {\n  chains <- mcmc.list(obj)\n  out <- numeric(0)\n  xp <- as.vector(time(chains))\n  for (j in seq_len(nvar(chains))) {\n    yp <- if (nvar(chains) > 1) chains[, j, drop = TRUE] else chains\n    yp <- do.call(\"cbind\", yp)\n    out <- c(out, xp, as.numeric(yp), encode_title(chains, j, main))\n    if (smooth) {\n      for (k in seq_len(ncol(yp))) {\n        out <- c(out, lowess(xp, yp[, k])$y)\n      }\n    }\n  }\n  out\n}\n\nbuild <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  colnames(x) <- c(\"alpha\", \"beta\", \"gamma\")\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  colnames(y) <- colnames(x)\n  ml <- mcmc.list(mcmc(x, start = 11, thin = 2), mcmc(y, start = 11, thin = 2))\n  nv <- 200L\n  iv <- seq_len(nv)\n  vec <- mcmc(sin(iv / 9) + 0.1 * iv, start = 5, thin = 3)\n  list(ml = ml, vec = vec)\n}\n\none <- function(save = FALSE) {\n  built <- build()\n  if (save) {\n    svg(\"docs/output/traceplot-r.svg\", width = 7, height = 9)\n    par(mfrow = c(3, 1), mar = c(4, 4, 3, 1))\n    traceplot(built$ml)\n    dev.off()\n  }\n  pdf(nullfile())\n  on.exit(dev.off(), add = TRUE)\n  traceplot(built$ml)\n  traceplot(built$vec, smooth = TRUE)\n  c(plotted(built$ml, FALSE, NULL), plotted(built$vec, TRUE, NULL))\n}\n\nvalue <- one(TRUE)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one(FALSE)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/traceplot-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.mcmc_list import mcmc_list\nfrom coda.traceplot import proof_values, traceplot\n\nroot = Path(__file__).resolve().parent\npackage = root.parent\n\n\ndef build():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    first = as_mcmc(x, start=11, thin=2)\n    second = as_mcmc(y, start=11, thin=2)\n    names = [\"alpha\", \"beta\", \"gamma\"]\n    first.colnames = names\n    second.colnames = names\n    chains = mcmc_list(first, second)\n    nv = 200\n    iv = np.arange(1, nv + 1, dtype=np.float64)\n    vector = as_mcmc(np.sin(iv / 9) + 0.1 * iv, start=5, thin=3)\n    return chains, vector\n\n\ndef one(path=None):\n    chains, vector = build()\n    drawn = traceplot(chains)\n    smoothed = traceplot(vector, smooth=True)\n    if path is not None:\n        drawn[\"figure\"].savefig(path, format=\"svg\")\n    plt.close(drawn[\"figure\"])\n    plt.close(smoothed[\"figure\"])\n    return proof_values(drawn) + proof_values(smoothed)\n\n\nvalue = one(package / \"docs\" / \"output\" / \"traceplot-python.svg\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\n(root / \"traceplot-py.txt\").write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      },
+      "origin": {
+        "output": "output/traceplot-r.svg"
+      },
+      "translation": {
+        "output": "output/traceplot-python.svg"
+      }
+    },
+    {
+      "name": "varnames",
+      "translated": true,
+      "python": "coda.varnames.varnames",
+      "loads": [],
+      "uses": [],
+      "done": "varnames reads variable names for Mcmc and McmcList objects and for non-MCMC inputs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Named and unnamed mcmc, a vector mcmc, a duplicate-chain mcmc.list, and a non-MCMC input with allow.null true and false.",
+        "r_ms": 1.7354488372802734,
+        "translated_ms": 0.7045439988360158,
+        "speedup": 2.4632227939595337,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nencode_names <- function(v) {\n  if (is.null(v)) {\n    return(0)\n  }\n  out <- c(length(v), nchar(v))\n  for (nm in v) {\n    out <- c(out, as.numeric(charToRaw(nm)))\n  }\n  out\n}\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  colnames(x) <- c(\"alpha\", \"beta\", \"gamma\")\n  m <- mcmc(x)\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  m2 <- mcmc(y)\n  ml <- mcmc.list(m, m)\n  z <- cbind(sin(i / 7), cos(i / 8))\n  mu <- mcmc(z)\n  v <- sin(i / 9)\n  mv <- mcmc(v)\n  c(\n    encode_names(varnames(m)),\n    encode_names(varnames(mu, allow.null = FALSE)),\n    encode_names(varnames(mv)),\n    encode_names(varnames(mv, allow.null = FALSE)),\n    encode_names(varnames(ml)),\n    encode_names(varnames(ml, allow.null = FALSE)),\n    encode_names(varnames(m2)),\n    encode_names(varnames(m2, allow.null = FALSE)),\n    encode_names(varnames(i))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = \"proof/varnames-r.txt\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.as_mcmc import as_mcmc\nfrom coda.as_mcmc_list import as_mcmc_list\nfrom coda.varnames import varnames\n\nroot = Path(__file__).resolve().parent\n\n\ndef encode_names(names):\n    if names is None:\n        return [0.0]\n    out = [float(len(names))]\n    lengths = [float(len(name)) for name in names]\n    out.extend(lengths)\n    for name in names:\n        out.extend(float(ord(char)) for char in name)\n    return out\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1, dtype=np.float64)\n    x = np.column_stack(\n        (\n            np.sin(i / 3) + 0.2 * np.cos(i),\n            np.cos(i / 5) + 0.01 * i,\n            np.full(n, 2.0),\n        )\n    )\n    m = as_mcmc(x)\n    m.colnames = [\"alpha\", \"beta\", \"gamma\"]\n    y = np.column_stack(\n        (\n            np.sin(i / 4) + 0.15 * np.cos(i / 2),\n            np.cos(i / 6) + 0.005 * i,\n            np.full(n, 1.0),\n        )\n    )\n    m2 = as_mcmc(y)\n    ml = as_mcmc_list([m, m])\n    z = np.column_stack((np.sin(i / 7), np.cos(i / 8)))\n    mu = as_mcmc(z)\n    v = np.sin(i / 9)\n    mv = as_mcmc(v)\n    out = []\n    for args in (\n        (m,),\n        (mu, False),\n        (mv,),\n        (mv, False),\n        (ml,),\n        (ml, False),\n        (m2,),\n        (m2, False),\n        (i,),\n    ):\n        if len(args) == 1:\n            out.extend(encode_names(varnames(args[0])))\n        else:\n            out.extend(encode_names(varnames(args[0], allow_null=args[1])))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = root / \"varnames-py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "varnames<-",
+      "translated": true,
+      "python": "coda.varnames_setter.set_varnames",
+      "loads": [],
+      "uses": [
+        "varnames"
+      ],
+      "done": "Sets variable names for Mcmc or McmcList objects.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set variable names on mcmc and mcmc.list",
+        "r_ms": 0.919342041015625,
+        "translated_ms": 0.46200699944165535,
+        "speedup": 1.989887690287524,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(coda))\nif (packageDescription(\"coda\")$Version != \"0.19-4.1\") stop(\"expected coda 0.19-4.1\")\noptions(warn = -1)\n\nroot <- normalizePath(\".\", winslash = \"/\", mustWork = FALSE)\n\nencode_names <- function(v) {\n  if (is.null(v)) {\n    return(0)\n  }\n  out <- c(length(v), nchar(v))\n  for (nm in v) {\n    out <- c(out, as.numeric(charToRaw(nm)))\n  }\n  out\n}\n\none <- function() {\n  n <- 2000L\n  i <- seq_len(n)\n  x <- cbind(\n    sin(i / 3) + 0.2 * cos(i),\n    cos(i / 5) + 0.01 * i,\n    rep(2, n)\n  )\n  m <- mcmc(x)\n  \n  # Test varnames<- assignment on single mcmc object\n  varnames(m) <- c(\"theta1\", \"theta2\", \"theta3\")\n  names_after_set <- varnames(m)\n  \n  # Create mcmc.list with compatible chains\n  y <- cbind(\n    sin(i / 4) + 0.15 * cos(i / 2),\n    cos(i / 6) + 0.005 * i,\n    rep(1, n)\n  )\n  m2 <- mcmc(y)\n  \n  # Set names on m2 to match m before creating list\n  varnames(m2) <- c(\"theta1\", \"theta2\", \"theta3\")\n  ml <- mcmc.list(m, m2)\n  \n  # Now test varnames<- on the mcmc.list\n  varnames(ml) <- c(\"alpha\", \"beta\", \"gamma\")\n  names_list <- varnames(ml)\n  \n  c(\n    encode_names(names_after_set),\n    encode_names(names_list),\n    encode_names(varnames(ml[[1]])),\n    encode_names(varnames(ml[[2]]))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- sprintf(\"%.17g\", value)\nout <- sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n)\nwriteLines(out, con = file.path(root, \"varnames<--r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom coda.mcmc import mcmc\nfrom coda.mcmc_list import mcmc_list\nfrom coda.varnames import varnames\nfrom coda.varnames_setter import set_varnames\n\n\ndef encode_names(v):\n    \"\"\"Encode names similar to R proof.\"\"\"\n    if v is None:\n        return [0]\n    if isinstance(v, str):\n        v = [v]\n    \n    out = [len(v)]\n    out.extend([len(name) for name in v])\n    for name in v:\n        for char in name:\n            out.append(ord(char))\n    return out\n\n\ndef one():\n    n = 2000\n    i = np.arange(1, n + 1)\n    x = np.column_stack([\n        np.sin(i / 3) + 0.2 * np.cos(i),\n        np.cos(i / 5) + 0.01 * i,\n        np.full(n, 2.0)\n    ])\n    m = mcmc(x)\n    \n    # Test varnames<- assignment on single mcmc object\n    set_varnames(m, [\"theta1\", \"theta2\", \"theta3\"])\n    names_after_set = varnames(m)\n    \n    # Create mcmc.list with compatible chains\n    y = np.column_stack([\n        np.sin(i / 4) + 0.15 * np.cos(i / 2),\n        np.cos(i / 6) + 0.005 * i,\n        np.full(n, 1.0)\n    ])\n    m2 = mcmc(y)\n    \n    # Set names on m2 to match m before creating list\n    set_varnames(m2, [\"theta1\", \"theta2\", \"theta3\"])\n    ml = mcmc_list(m, m2)\n    \n    # Now test varnames<- on the mcmc.list\n    set_varnames(ml, [\"alpha\", \"beta\", \"gamma\"])\n    names_list = varnames(ml)\n    \n    result = []\n    result.extend(encode_names(names_after_set))\n    result.extend(encode_names(names_list))\n    result.extend(encode_names(varnames(ml.chains[0])))\n    result.extend(encode_names(varnames(ml.chains[1])))\n    \n    return result\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout_path = Path(__file__).resolve().parent / \"varnames<--py.txt\"\nout_path.write_text(\n    json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}) + \"\\n\"\n)\n"
+        }
+      }
+    }
+  ],
+  "strategy": "medium"
+}

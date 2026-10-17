@@ -1,0 +1,70 @@
+{
+  "name": "bkde2D",
+  "title": "Compute a 2D Binned Kernel Density Estimate",
+  "origin": {
+    "description": "Returns the grid points in each coordinate direction, and the matrix of density estimates over the mesh they induce. The kernel is the standard bivariate normal density.",
+    "usage": "bkde2D(x, bandwidth, gridsize = c(51L, 51L), range.x, truncate = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A two-column numeric matrix of observations. Missing values are not allowed."
+      },
+      {
+        "name": "bandwidth",
+        "text": "Numeric vector of length 2, the bandwidth in each coordinate direction."
+      },
+      {
+        "name": "gridsize",
+        "text": "Number of equally spaced points in each direction."
+      },
+      {
+        "name": "range.x",
+        "text": "A list of two vectors, each the minimum and maximum values at which to compute the estimate. The default extends the data range by 1.5 bandwidths in each direction."
+      },
+      {
+        "name": "truncate",
+        "text": "If TRUE, observations outside range.x are ignored."
+      }
+    ],
+    "details": "Binned approximation to the two-dimensional kernel density estimate. Linear binning supplies the bin counts and the fast Fourier transform performs the discrete convolutions. At each grid location the bivariate Gaussian kernel is centered and the heights, scaled by the bandwidths, are summed and normalized.",
+    "value": "A list with x1 and x2, the grid points in each direction, and fhat, the matrix of density estimates.",
+    "example": "if(length(data(geyser, package=\"MASS\"))) {\nx <- cbind(geyser$duration, geyser$waiting)\nest <- bkde2D(x, bandwidth=c(0.7, 7))\ncontour(est$x1, est$x2, est$fhat)\npersp(est$fhat)\n}",
+    "output": [
+      "output/bkde2D-r-contour.svg",
+      "output/bkde2D-r-surface.svg"
+    ]
+  },
+  "translation": {
+    "description": "Returns the grid points in each coordinate direction, and the matrix of density estimates over the mesh they induce. The kernel is the standard bivariate normal density.",
+    "usage": "bkde2d(x, bandwidth, gridsize=(51, 51), range_x=None, truncate=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A two-column numeric sample. Missing values are not allowed."
+      },
+      {
+        "name": "bandwidth",
+        "text": "Length-2 bandwidth, one value for each coordinate. A single value is used in both directions. Every value must be strictly positive."
+      },
+      {
+        "name": "gridsize",
+        "text": "Number of equally spaced points in each direction."
+      },
+      {
+        "name": "range_x",
+        "text": "Two min/max pairs, one for each coordinate. This is range.x in R. None extends the data range by 1.5 bandwidths in each direction."
+      },
+      {
+        "name": "truncate",
+        "text": "Observations outside the mesh are ignored. The argument is retained from R, and KernSmooth 2.23-26 bins with that rule either way."
+      }
+    ],
+    "details": "Binned approximation to the two-dimensional kernel density estimate. Linear binning, from the Rust crate lbtwod, supplies the bin counts. The bivariate normal kernel and the two-dimensional FFT stay in NumPy. At each grid location the bivariate Gaussian kernel is centered and the heights, scaled by the bandwidths, are summed and normalized.",
+    "value": "A dictionary with x1 and x2, the grid points in each direction, and fhat, the matrix of density estimates. Rows of fhat follow x1 and columns follow x2.",
+    "example": "from mass import geyser\nfrom kernsmooth.bkde2d import bkde2d\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nx = np.column_stack((geyser[\"duration\"], geyser[\"waiting\"]))\nest = bkde2d(x, bandwidth=(0.7, 7))\nplt.contour(est[\"x1\"], est[\"x2\"], est[\"fhat\"].T)\n\nfig = plt.figure()\nax = fig.add_subplot(projection=\"3d\")\ngrid1, grid2 = np.meshgrid(est[\"x1\"], est[\"x2\"], indexing=\"ij\")\nax.plot_surface(grid1, grid2, est[\"fhat\"])",
+    "output": [
+      "output/bkde2D-python-contour.svg",
+      "output/bkde2D-python-surface.svg"
+    ]
+  }
+}

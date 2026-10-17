@@ -1,0 +1,307 @@
+{
+  "name": "memoise",
+  "cran_version": "2.0.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 12 exports match memoise 2.0.1. The default cache is a dictionary. Cache keys are a hash of the bound arguments, checked by call counts. cache_s3 drops a key by deleting the bucket. cache_gcs deletes that one object. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "pickle",
+      "urllib"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "memoise",
+      "translated": true,
+      "python": "memoise.memoise",
+      "loads": [],
+      "uses": [],
+      "done": "Saves the result of a call and returns it when the same arguments are bound again, including defaults and named arguments in either order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a repeated call and an explicit default do not run again",
+        "r_ms": 0.8064508438110352,
+        "translated_ms": 0.20814700019400334,
+        "speedup": 3.87442933628341,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  n <- 0\n  f <- function(x, dummy = \"a\") { n <<- n + 1; x + nchar(dummy) }\n  m <- memoise(f)\n  c(m(2), m(2), m(2, dummy = \"a\"), n)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    n = {\"n\": 0}\n\n    def f(x, dummy=\"a\"):\n        n[\"n\"] += 1\n        return x + len(dummy)\n\n    m = memoise(f)\n    return [m(2), m(2), m(2, dummy=\"a\"), n[\"n\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "memoize",
+      "translated": true,
+      "python": "memoise.memoize",
+      "loads": [],
+      "uses": [],
+      "done": "Alias of memoise.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "memoize is the same cache as memoise",
+        "r_ms": 0.5624294281005859,
+        "translated_ms": 0.1504914998804452,
+        "speedup": 3.737283690755931,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  n <- 0\n  f <- function(x) { n <<- n + 1; x + 3 }\n  m <- memoize(f)\n  c(m(2), m(2), n)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    n = {\"n\": 0}\n\n    def f(x):\n        n[\"n\"] += 1\n        return x + 3\n\n    m = memoize(f)\n    return [m(2), m(2), n[\"n\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "forget",
+      "translated": true,
+      "python": "memoise.forget",
+      "loads": [],
+      "uses": [],
+      "done": "Clears every stored result. A function that is not memoised returns false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "forget runs the function again",
+        "r_ms": 0.7047653198242188,
+        "translated_ms": 0.1534355005787802,
+        "speedup": 4.59323505424589,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  n <- 0\n  f <- function(x) { n <<- n + 1; x }\n  m <- memoise(f)\n  a <- m(1)\n  cleared <- forget(m)\n  b <- m(1)\n  c(a, b, n, as.integer(cleared))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    n = {\"n\": 0}\n\n    def f(x):\n        n[\"n\"] += 1\n        return x\n\n    m = memoise(f)\n    a = m(1)\n    cleared = forget(m)\n    b = m(1)\n    return [a, b, n[\"n\"], int(cleared)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "has_cache",
+      "translated": true,
+      "python": "memoise.has_cache",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a function that reports whether those arguments are stored.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "has_cache is false before the call and true after",
+        "r_ms": 0.7191896438598633,
+        "translated_ms": 0.18947750049846945,
+        "speedup": 3.7956466702793175,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  m <- memoise(function(x) x)\n  before <- has_cache(m)(1)\n  m(1)\n  after <- has_cache(m)(1)\n  c(as.integer(before), as.integer(after))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    m = memoise(lambda x: x)\n    before = has_cache(m)(1)\n    m(1)\n    after = has_cache(m)(1)\n    return [int(before), int(after)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "drop_cache",
+      "translated": true,
+      "python": "memoise.drop_cache",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a function that deletes the stored result for those arguments.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "drop_cache removes one call and leaves the other",
+        "r_ms": 1.0707378387451172,
+        "translated_ms": 0.2384709996476886,
+        "speedup": 4.490012791186349,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  m <- memoise(function(x) x)\n  m(1)\n  m(2)\n  dropped <- drop_cache(m)(1)\n  c(as.integer(dropped), as.integer(has_cache(m)(1)), as.integer(has_cache(m)(2)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    m = memoise(lambda x: x)\n    m(1)\n    m(2)\n    dropped = drop_cache(m)(1)\n    return [int(dropped), int(has_cache(m)(1)), int(has_cache(m)(2))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "is.memoised",
+      "translated": true,
+      "python": "memoise.is_memoised",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether a function was returned by memoise.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is.memoised is false for the original and true for the copy",
+        "r_ms": 0.18453598022460938,
+        "translated_ms": 0.07028900108707603,
+        "speedup": 2.6253891415529,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  f <- function(x) x\n  m <- memoise(f)\n  c(as.integer(is.memoised(f)), as.integer(is.memoised(m)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    def f(x):\n        return x\n\n    m = memoise(f)\n    return [int(is_memoised(f)), int(is_memoised(m))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "is.memoized",
+      "translated": true,
+      "python": "memoise.is_memoized",
+      "loads": [],
+      "uses": [],
+      "done": "Alias of is.memoised.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is.memoized matches is.memoised",
+        "r_ms": 0.18405914306640625,
+        "translated_ms": 0.06888000098115299,
+        "speedup": 2.6721710285220333,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  f <- function(x) x\n  m <- memoize(f)\n  c(as.integer(is.memoized(f)), as.integer(is.memoized(m)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    def f(x):\n        return x\n\n    m = memoize(f)\n    return [int(is_memoized(f)), int(is_memoized(m))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "timeout",
+      "translated": true,
+      "python": "memoise.timeout",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a number that stays fixed until the given number of seconds has elapsed.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "timeout(10) changes when the clock crosses a 10-second boundary",
+        "r_ms": 0.012993812561035156,
+        "translated_ms": 0.0009704999683890492,
+        "speedup": 13.388782054886438,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() c(timeout(10, current = 25), timeout(10, current = 30))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    return [timeout(10, current=25), timeout(10, current=30)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "cache_memory",
+      "translated": true,
+      "python": "memoise.cache_memory",
+      "loads": [],
+      "uses": [],
+      "done": "Keeps values in a dictionary for this process. The key hash is sha512 of a canonical form of the arguments.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a memory cache stores, drops, and resets a value",
+        "r_ms": 0.056862831115722656,
+        "translated_ms": 0.0023430002329405397,
+        "speedup": 24.26923835357797,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  cm <- cache_memory()\n  cm$set(\"k\", 7)\n  got <- cm$get(\"k\")\n  has <- cm$has_key(\"k\")\n  cm$drop_key(\"k\")\n  has2 <- cm$has_key(\"k\")\n  cm$set(\"a\", 1)\n  cm$reset()\n  c(got, as.integer(has), as.integer(has2), length(cm$keys()))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    cm = cache_memory()\n    cm.set(\"k\", 7)\n    got = cm.get(\"k\")\n    has = cm.has_key(\"k\")\n    cm.drop_key(\"k\")\n    has2 = cm.has_key(\"k\")\n    cm.set(\"a\", 1)\n    cm.reset()\n    return [got, int(has), int(has2), len(cm.keys())]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "cache_filesystem",
+      "translated": true,
+      "python": "memoise.cache_filesystem",
+      "loads": [],
+      "uses": [],
+      "done": "Writes each value to a file under path and reads it back. gzip, bzip2, and xz compression are optional.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a filesystem cache stores, drops, and resets a value",
+        "r_ms": 0.3075599670410156,
+        "translated_ms": 0.3799164996962645,
+        "speedup": 0.8095462220959172,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  td <- tempfile(\"mc\")\n  fs <- cache_filesystem(td)\n  fs$set(\"abc\", 4)\n  got <- fs$get(\"abc\")\n  has <- fs$has_key(\"abc\")\n  fs$drop_key(\"abc\")\n  has2 <- fs$has_key(\"abc\")\n  fs$set(\"a\", 1)\n  fs$reset()\n  c(got, as.integer(has), as.integer(has2), length(fs$keys()))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport tempfile\nimport time\n\nfrom memoise import (\n    cache_filesystem,\n    cache_memory,\n    drop_cache,\n    forget,\n    has_cache,\n    is_memoised,\n    is_memoized,\n    memoise,\n    memoize,\n    timeout,\n)\n\ndef one():\n    td = tempfile.mkdtemp(prefix=\"mc\")\n    fs = cache_filesystem(td)\n    fs.set(\"abc\", 4)\n    got = fs.get(\"abc\")\n    has = fs.has_key(\"abc\")\n    fs.drop_key(\"abc\")\n    has2 = fs.has_key(\"abc\")\n    fs.set(\"a\", 1)\n    fs.reset()\n    return [got, int(has), int(has2), len(fs.keys())]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "cache_s3",
+      "translated": true,
+      "python": "memoise.cache_s3",
+      "loads": [],
+      "uses": [],
+      "done": "Stores a serialized value in the bucket and reads it back. Dropping a key deletes the bucket, because both arguments of delete_bucket are the bucket name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "store 4, keep it, then drop it",
+        "r_ms": 266.28029346466064,
+        "translated_ms": 66.49986849970446,
+        "speedup": 4.004222857460899,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cloudyr.aws.default_region = \"\", cloudyr.aws.allow_empty_region = TRUE)\nSys.setenv(\n  AWS_ACCESS_KEY_ID = \"testing\",\n  AWS_SECRET_ACCESS_KEY = \"testing\",\n  AWS_DEFAULT_REGION = \"\",\n  PYTHONPATH = \"/home/ahmed/killr_projects/killr/packages/memoise\"\n)\nready <- tempfile(\"s3ready\")\nsystem2(\n  \"/home/ahmed/killr_projects/killr/.venv/bin/python\",\n  c(\"-m\", \"memoise._s3mock\", ready),\n  wait = FALSE, stdout = FALSE, stderr = FALSE\n)\nfor (i in 1:100) {\n  if (file.exists(ready) && file.info(ready)$size > 0) break\n  Sys.sleep(0.05)\n}\ninfo <- jsonlite::fromJSON(paste(readLines(ready, warn = FALSE), collapse = \"\"))\nSys.setenv(\n  AWS_S3_ENDPOINT = paste0(\"127.0.0.1:\", info$port),\n  SSL_CERT_FILE = info$cert,\n  CURL_CA_BUNDLE = info$cert\n)\nhttr::set_config(httr::config(cainfo = info$cert))\nsuppressPackageStartupMessages(library(memoise))\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\none <- function() {\n  name <- paste0(\"bkt\", sprintf(\"%08d\", sample.int(1e8, 1)))\n  s3 <- cache_s3(name)\n  s3$set(\"abc\", 4)\n  got <- s3$get(\"abc\")\n  has <- s3$has_key(\"abc\")\n  nkeys <- length(s3$keys())\n  s3$drop_key(\"abc\")\n  has2 <- s3$has_key(\"abc\")\n  c(got, as.integer(has), nkeys, as.integer(has2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nready = Path(tempfile.mktemp(prefix=\"s3ready\"))\nsubprocess.Popen(\n    [sys.executable, \"-m\", \"memoise._s3mock\", str(ready)],\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nfor _ in range(100):\n    if ready.exists() and ready.stat().st_size:\n        break\n    time.sleep(0.05)\ninfo = json.loads(ready.read_text())\nos.environ[\"AWS_S3_ENDPOINT\"] = f\"127.0.0.1:{info['port']}\"\nos.environ[\"SSL_CERT_FILE\"] = info[\"cert\"]\nos.environ[\"CURL_CA_BUNDLE\"] = info[\"cert\"]\n\nfrom memoise import cache_s3\n\ndef one():\n    name = f\"bkt{os.urandom(4).hex()}\"\n    store = cache_s3(name)\n    store.set(\"abc\", 4)\n    got = store.get(\"abc\")\n    has = store.has_key(\"abc\")\n    nkeys = len(store.keys())\n    store.drop_key(\"abc\")\n    has2 = store.has_key(\"abc\")\n    return [got, int(has), nkeys, int(has2)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "cache_gcs",
+      "translated": true,
+      "python": "memoise.cache_gcs",
+      "loads": [],
+      "uses": [],
+      "done": "Stores a serialized value and deletes that one object. Listing uses the object name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "store 4, keep it, then drop it",
+        "r_ms": 1.7615556716918945,
+        "translated_ms": 54.55086750043847,
+        "speedup": 0.03229198273845481,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(memoise))\nroot <- tempfile(\"gcsroot\")\ndir.create(root)\nupload <- function(file, bucket = NULL, name = \"object\", ...) {\n  dest <- file.path(root, bucket)\n  dir.create(dest, showWarnings = FALSE, recursive = TRUE)\n  file.copy(file, file.path(dest, name), overwrite = TRUE)\n  invisible(TRUE)\n}\ndownload <- function(object_name, bucket = NULL, saveToDisk = NULL, overwrite = TRUE, ...) {\n  file.copy(file.path(root, bucket, object_name), saveToDisk, overwrite = TRUE)\n  TRUE\n}\nlisting <- function(bucket = NULL, prefix = NULL, ...) {\n  dest <- file.path(root, bucket)\n  files <- if (dir.exists(dest)) list.files(dest) else character(0)\n  if (!is.null(prefix)) files <- files[startsWith(files, prefix)]\n  if (!length(files)) return(data.frame())\n  data.frame(name = files, stringsAsFactors = FALSE)\n}\nremove_one <- function(object_name, bucket = NULL, ...) {\n  unlink(file.path(root, bucket, object_name))\n  TRUE\n}\nassignInNamespace(\"gcs_upload\", upload, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_get_object\", download, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_list_objects\", listing, \"googleCloudStorageR\")\nassignInNamespace(\"gcs_delete_object\", remove_one, \"googleCloudStorageR\")\njson_num <- function(x) {\n  parts <- sprintf(\"%.17g\", as.numeric(x))\n  if (length(parts) == 1) return(parts[[1]])\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\none <- function() {\n  name <- paste0(\"bkt\", sprintf(\"%08d\", sample.int(1e8, 1)))\n  gcs <- cache_gcs(name)\n  gcs$set(\"abc\", 4)\n  got <- gcs$get(\"abc\")\n  has <- gcs$has_key(\"abc\")\n  nkeys <- length(gcs$keys())\n  gcs$drop_key(\"abc\")\n  has2 <- gcs$has_key(\"abc\")\n  c(got, as.integer(has), nkeys, as.integer(has2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nready = Path(tempfile.mktemp(prefix=\"gcsready\"))\nsubprocess.Popen(\n    [sys.executable, \"-m\", \"memoise._gcsmock\", str(ready)],\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nfor _ in range(100):\n    if ready.exists() and ready.stat().st_size:\n        break\n    time.sleep(0.05)\ninfo = json.loads(ready.read_text())\nos.environ[\"GCS_API_HOST\"] = f\"127.0.0.1:{info['port']}\"\nos.environ[\"SSL_CERT_FILE\"] = info[\"cert\"]\nos.environ[\"CURL_CA_BUNDLE\"] = info[\"cert\"]\n\nfrom memoise import cache_gcs\n\ndef one():\n    name = f\"bkt{os.urandom(4).hex()}\"\n    store = cache_gcs(name)\n    store.set(\"abc\", 4)\n    got = store.get(\"abc\")\n    has = store.has_key(\"abc\")\n    nkeys = len(store.keys())\n    store.drop_key(\"abc\")\n    has2 = store.has_key(\"abc\")\n    return [got, int(has), nkeys, int(has2)]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

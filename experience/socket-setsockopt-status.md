@@ -1,0 +1,1 @@
+setTCPNoDelay calls setsockopt for TCP_NODELAY. A successful call does not clear errno, so the returned text is SUCCESS only when errno is 0 and otherwise the previous strerror text, while the flag still changes. The C error macro is empty, so a real failure's message is strerror. A sockconn passes the connection number rather than the descriptor.

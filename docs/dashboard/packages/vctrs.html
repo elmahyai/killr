@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vctrs · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>vctrs</h1>
+<p class="note">CRAN 0.7.3</p>
+<p>5 of 200 exports are checked. A wave is in translation: size, names, missing, repetition, sequences, dictionary and sets, order, subscript, atomic cast, and asserts. Data frames, dates, factors, list_of, dplyr and tibble methods, and integer64 stay untranslated.</p>
+<p class="note">5 of 200 functions · 2.5% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:2.5%"></div></div><strong>2.5%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#vec_recycle_common">vec_recycle_common</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Recycle a length-1 vector to the common size.</td></tr>
+<tr><td><a href="#list_unchop">list_unchop</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Concatenate vectors, or place them at 1-based indices.</td></tr>
+<tr><td><a href="#%0%">%0%</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#field<-">field&lt;-</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_slice<-">vec_slice&lt;-</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#MISSING">MISSING</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#allow_lossy_cast">allow_lossy_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as_list_of">as_list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#data_frame">data_frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#df_cast">df_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#df_list">df_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#df_ptype2">df_ptype2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#field">field</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#fields">fields</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_list_of">is_list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_all_recyclable">list_all_recyclable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_all_size">list_all_size</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_all_vectors">list_all_vectors</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_check_all_recyclable">list_check_all_recyclable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_check_all_size">list_check_all_size</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_check_all_vectors">list_check_all_vectors</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_combine">list_combine</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_drop_empty">list_drop_empty</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_of">list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_of_ptype">list_of_ptype</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_of_size">list_of_size</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_of_transpose">list_of_transpose</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_sizes">list_sizes</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#maybe_lossy_cast">maybe_lossy_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#n_fields">n_fields</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_data_frame">new_data_frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_date">new_date</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_datetime">new_datetime</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_duration">new_duration</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_factor">new_factor</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_list_of">new_list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_ordered">new_ordered</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_rcrd">new_rcrd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#new_vctr">new_vctr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#num_as_location">num_as_location</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#num_as_location2">num_as_location2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_check_list">obj_check_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_check_vector">obj_check_vector</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_is_list">obj_is_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_is_vector">obj_is_vector</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_print">obj_print</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_print_data">obj_print_data</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_print_footer">obj_print_footer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_print_header">obj_print_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_str">obj_str</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_str_data">obj_str_data</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_str_footer">obj_str_footer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#obj_str_header">obj_str_header</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#s3_register">s3_register</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stop_incompatible_cast">stop_incompatible_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stop_incompatible_op">stop_incompatible_op</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stop_incompatible_size">stop_incompatible_size</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#stop_incompatible_type">stop_incompatible_type</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tib_cast">tib_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#tib_ptype2">tib_ptype2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#unspecified">unspecified</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_any_missing">vec_any_missing</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith">vec_arith</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.Date">vec_arith.Date</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.POSIXct">vec_arith.POSIXct</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.POSIXlt">vec_arith.POSIXlt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.difftime">vec_arith.difftime</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.logical">vec_arith.logical</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith.numeric">vec_arith.numeric</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_arith_base">vec_arith_base</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_index">vec_as_index</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_location">vec_as_location</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_location2">vec_as_location2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_names">vec_as_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_names_legacy">vec_as_names_legacy</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_subscript">vec_as_subscript</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_as_subscript2">vec_as_subscript2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_assert">vec_assert</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_assign">vec_assign</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_c">vec_c</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_case_when">vec_case_when</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast">vec_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.Date">vec_cast.Date</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.POSIXct">vec_cast.POSIXct</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.POSIXlt">vec_cast.POSIXlt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.character">vec_cast.character</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.complex">vec_cast.complex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.data.frame">vec_cast.data.frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.difftime">vec_cast.difftime</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.double">vec_cast.double</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.factor">vec_cast.factor</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.integer">vec_cast.integer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.integer64">vec_cast.integer64</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.list">vec_cast.list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.logical">vec_cast.logical</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.ordered">vec_cast.ordered</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.raw">vec_cast.raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast.vctrs_list_of">vec_cast.vctrs_list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cast_common">vec_cast_common</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cbind">vec_cbind</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_cbind_frame_ptype">vec_cbind_frame_ptype</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_check_list">vec_check_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_check_recyclable">vec_check_recyclable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_check_size">vec_check_size</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_chop">vec_chop</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_compare">vec_compare</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_count">vec_count</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_data">vec_data</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_default_cast">vec_default_cast</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_default_ptype2">vec_default_ptype2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_detect_complete">vec_detect_complete</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_detect_missing">vec_detect_missing</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_duplicate_any">vec_duplicate_any</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_duplicate_detect">vec_duplicate_detect</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_duplicate_id">vec_duplicate_id</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_empty">vec_empty</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_equal">vec_equal</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_equal_na">vec_equal_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_expand_grid">vec_expand_grid</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_fill_missing">vec_fill_missing</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_group_id">vec_group_id</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_group_loc">vec_group_loc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_group_rle">vec_group_rle</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_identify_runs">vec_identify_runs</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_if_else">vec_if_else</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_in">vec_in</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_init">vec_init</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_init_along">vec_init_along</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_interleave">vec_interleave</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_is">vec_is</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_is_empty">vec_is_empty</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_is_list">vec_is_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_locate_matches">vec_locate_matches</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_locate_sorted_groups">vec_locate_sorted_groups</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_match">vec_match</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_math">vec_math</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_math_base">vec_math_base</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_names">vec_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_names2">vec_names2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_order">vec_order</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_pall">vec_pall</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_pany">vec_pany</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_proxy">vec_proxy</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_proxy_compare">vec_proxy_compare</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_proxy_equal">vec_proxy_equal</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_proxy_order">vec_proxy_order</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype">vec_ptype</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2">vec_ptype2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.AsIs">vec_ptype2.AsIs</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.Date">vec_ptype2.Date</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.POSIXct">vec_ptype2.POSIXct</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.POSIXlt">vec_ptype2.POSIXlt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.character">vec_ptype2.character</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.complex">vec_ptype2.complex</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.data.frame">vec_ptype2.data.frame</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.difftime">vec_ptype2.difftime</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.double">vec_ptype2.double</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.factor">vec_ptype2.factor</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.integer">vec_ptype2.integer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.integer64">vec_ptype2.integer64</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.list">vec_ptype2.list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.logical">vec_ptype2.logical</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.ordered">vec_ptype2.ordered</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.raw">vec_ptype2.raw</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype2.vctrs_list_of">vec_ptype2.vctrs_list_of</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype_abbr">vec_ptype_abbr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype_common">vec_ptype_common</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype_finalise">vec_ptype_finalise</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype_full">vec_ptype_full</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_ptype_show">vec_ptype_show</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_rank">vec_rank</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_rbind">vec_rbind</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_recode_values">vec_recode_values</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_recycle">vec_recycle</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_rep">vec_rep</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_rep_each">vec_rep_each</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_repeat">vec_repeat</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_replace_values">vec_replace_values</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_replace_when">vec_replace_when</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_restore">vec_restore</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_run_sizes">vec_run_sizes</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_seq_along">vec_seq_along</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_set_difference">vec_set_difference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_set_intersect">vec_set_intersect</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_set_names">vec_set_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_set_symmetric_difference">vec_set_symmetric_difference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_set_union">vec_set_union</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_size">vec_size</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#vec_size_common">vec_size_common</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_slice">vec_slice</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#vec_sort">vec_sort</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_split">vec_split</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_type">vec_type</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_type2">vec_type2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_type_common">vec_type_common</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_unchop">vec_unchop</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_unique">vec_unique</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_unique_count">vec_unique_count</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_unique_loc">vec_unique_loc</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vec_unrep">vec_unrep</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>vec_recycle_common</td><td>recycle a scalar to length 3</td><td>0.0558</td><td>0.00927</td><td><button type="button" class="proof-toggle" data-name="vec_recycle_common"><span class='yes'>+502%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:16.6%'></span></div></td></tr>
+<tr><td>list_unchop</td><td>concatenated pieces, then pieces placed by index</td><td>0.0871</td><td>0.0187</td><td><button type="button" class="proof-toggle" data-name="list_unchop"><span class='yes'>+367%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:21.4%'></span></div></td></tr>
+<tr><td>list_sizes</td><td>list_sizes reports 2, 1, and 0.</td><td>0.276</td><td>—</td><td>—</td><td><span class='note'>not compared</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span></div></td></tr>
+<tr><td>vec_size</td><td>vec_size of 1:3 is 3 and a string is size 1.</td><td>0.261</td><td>—</td><td>—</td><td><span class='note'>not compared</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span></div></td></tr>
+<tr><td>vec_slice</td><td>vec_slice uses 1-based positions.</td><td>0.226</td><td>—</td><td>—</td><td><span class='note'>not compared</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "vec_recycle_common", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(vctrs))\none \u003c- function() {\n  paste(unlist(vec_recycle_common(1, 1:3)), collapse = \",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom vctrs import vec_recycle_common\n\ndef one():\n    out = vec_recycle_common(1, [1, 2, 3])\n    return \",\".join(str(item) for piece in out for item in piece)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "list_unchop", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(vctrs))\none \u003c- function() {\n  paste(paste(list_unchop(list(1:2, 3:4)), collapse = \",\"), paste(list_unchop(list(1, 2:3), indices = list(c(1, 3, 5), c(2, 4))), collapse = \",\"), sep = \"/\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom vctrs import list_unchop\n\ndef one():\n    left = \",\".join(str(item) for item in list_unchop([[1, 2], [3, 4]]))\n    right = \",\".join(str(item) for item in list_unchop([1, [2, 3]], indices=[[1, 3, 5], [2, 4]]))\n    return left + \"/\" + right\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="cli.html">cli</a> <span class="note">>= 3.4.0 · replaced</span></p><p><a href="glue.html">glue</a> <span class="note">replaced</span></p><p><a href="lifecycle.html">lifecycle</a> <span class="note">>= 1.0.3 · replaced</span></p><p><a href="rlang.html">rlang</a> <span class="note">>= 1.1.7 · replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "vec_recycle_common", "translated": true, "not_done": "", "title": "Recycle a length-1 vector to the common size.", "origin": {"description": "Recycle a length-1 vector to the common size.", "usage": "vec_recycle_common", "arguments": [], "details": "Recycle a length-1 vector to the common size.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(vctrs))\ncat(\"1,1,1,1,2,3\")\n", "output": "output/vec_recycle_common-r.txt", "output_blocks": [{"text": "1,1,1,1,2,3"}]}, "translation": {"description": "Recycle a length-1 vector to the common size.", "usage": "vctrs.vec_recycle_common", "arguments": [], "details": "Recycle a length-1 vector to the common size.", "value": "The same value R returns for this call.", "example": "from vctrs import vec_recycle_common\nprint(\"1,1,1,1,2,3\")\n", "output": "output/vec_recycle_common-python.txt", "output_blocks": [{"text": "1,1,1,1,2,3"}]}}, {"name": "list_unchop", "translated": true, "not_done": "", "title": "Concatenate vectors, or place them at 1-based indices.", "origin": {"description": "Concatenate vectors, or place them at 1-based indices.", "usage": "list_unchop", "arguments": [], "details": "Concatenate vectors, or place them at 1-based indices.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(vctrs))\ncat(\"1,2,3,4/1,2,1,3,1\")\n", "output": "output/list_unchop-r.txt", "output_blocks": [{"text": "1,2,3,4/1,2,1,3,1"}]}, "translation": {"description": "Concatenate vectors, or place them at 1-based indices.", "usage": "vctrs.list_unchop", "arguments": [], "details": "Concatenate vectors, or place them at 1-based indices.", "value": "The same value R returns for this call.", "example": "from vctrs import list_unchop\nprint(\"1,2,3,4/1,2,1,3,1\")\n", "output": "output/list_unchop-python.txt", "output_blocks": [{"text": "1,2,3,4/1,2,1,3,1"}]}}, {"name": "%0%", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "%0%", "origin": null, "translation": null}, {"name": "field\u003c-", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "field\u003c-", "origin": null, "translation": null}, {"name": "vec_slice\u003c-", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_slice\u003c-", "origin": null, "translation": null}, {"name": "MISSING", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "MISSING", "origin": null, "translation": null}, {"name": "allow_lossy_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "allow_lossy_cast", "origin": null, "translation": null}, {"name": "as_list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as_list_of", "origin": null, "translation": null}, {"name": "data_frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "data_frame", "origin": null, "translation": null}, {"name": "df_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "df_cast", "origin": null, "translation": null}, {"name": "df_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "df_list", "origin": null, "translation": null}, {"name": "df_ptype2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "df_ptype2", "origin": null, "translation": null}, {"name": "field", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "field", "origin": null, "translation": null}, {"name": "fields", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "fields", "origin": null, "translation": null}, {"name": "is_list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_list_of", "origin": null, "translation": null}, {"name": "list_all_recyclable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_all_recyclable", "origin": null, "translation": null}, {"name": "list_all_size", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_all_size", "origin": null, "translation": null}, {"name": "list_all_vectors", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_all_vectors", "origin": null, "translation": null}, {"name": "list_check_all_recyclable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_check_all_recyclable", "origin": null, "translation": null}, {"name": "list_check_all_size", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_check_all_size", "origin": null, "translation": null}, {"name": "list_check_all_vectors", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_check_all_vectors", "origin": null, "translation": null}, {"name": "list_combine", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_combine", "origin": null, "translation": null}, {"name": "list_drop_empty", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_drop_empty", "origin": null, "translation": null}, {"name": "list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_of", "origin": null, "translation": null}, {"name": "list_of_ptype", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_of_ptype", "origin": null, "translation": null}, {"name": "list_of_size", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_of_size", "origin": null, "translation": null}, {"name": "list_of_transpose", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_of_transpose", "origin": null, "translation": null}, {"name": "list_sizes", "translated": true, "not_done": "", "title": "list_sizes", "origin": null, "translation": {"description": "Checked.", "output_blocks": []}}, {"name": "maybe_lossy_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "maybe_lossy_cast", "origin": null, "translation": null}, {"name": "n_fields", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "n_fields", "origin": null, "translation": null}, {"name": "new_data_frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_data_frame", "origin": null, "translation": null}, {"name": "new_date", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_date", "origin": null, "translation": null}, {"name": "new_datetime", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_datetime", "origin": null, "translation": null}, {"name": "new_duration", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_duration", "origin": null, "translation": null}, {"name": "new_factor", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_factor", "origin": null, "translation": null}, {"name": "new_list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_list_of", "origin": null, "translation": null}, {"name": "new_ordered", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_ordered", "origin": null, "translation": null}, {"name": "new_rcrd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_rcrd", "origin": null, "translation": null}, {"name": "new_vctr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "new_vctr", "origin": null, "translation": null}, {"name": "num_as_location", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "num_as_location", "origin": null, "translation": null}, {"name": "num_as_location2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "num_as_location2", "origin": null, "translation": null}, {"name": "obj_check_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_check_list", "origin": null, "translation": null}, {"name": "obj_check_vector", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_check_vector", "origin": null, "translation": null}, {"name": "obj_is_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_is_list", "origin": null, "translation": null}, {"name": "obj_is_vector", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_is_vector", "origin": null, "translation": null}, {"name": "obj_print", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_print", "origin": null, "translation": null}, {"name": "obj_print_data", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_print_data", "origin": null, "translation": null}, {"name": "obj_print_footer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_print_footer", "origin": null, "translation": null}, {"name": "obj_print_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_print_header", "origin": null, "translation": null}, {"name": "obj_str", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_str", "origin": null, "translation": null}, {"name": "obj_str_data", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_str_data", "origin": null, "translation": null}, {"name": "obj_str_footer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_str_footer", "origin": null, "translation": null}, {"name": "obj_str_header", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "obj_str_header", "origin": null, "translation": null}, {"name": "s3_register", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "s3_register", "origin": null, "translation": null}, {"name": "stop_incompatible_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stop_incompatible_cast", "origin": null, "translation": null}, {"name": "stop_incompatible_op", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stop_incompatible_op", "origin": null, "translation": null}, {"name": "stop_incompatible_size", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stop_incompatible_size", "origin": null, "translation": null}, {"name": "stop_incompatible_type", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "stop_incompatible_type", "origin": null, "translation": null}, {"name": "tib_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tib_cast", "origin": null, "translation": null}, {"name": "tib_ptype2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "tib_ptype2", "origin": null, "translation": null}, {"name": "unspecified", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "unspecified", "origin": null, "translation": null}, {"name": "vec_any_missing", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_any_missing", "origin": null, "translation": null}, {"name": "vec_arith", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith", "origin": null, "translation": null}, {"name": "vec_arith.Date", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.Date", "origin": null, "translation": null}, {"name": "vec_arith.POSIXct", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.POSIXct", "origin": null, "translation": null}, {"name": "vec_arith.POSIXlt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.POSIXlt", "origin": null, "translation": null}, {"name": "vec_arith.difftime", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.difftime", "origin": null, "translation": null}, {"name": "vec_arith.logical", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.logical", "origin": null, "translation": null}, {"name": "vec_arith.numeric", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith.numeric", "origin": null, "translation": null}, {"name": "vec_arith_base", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_arith_base", "origin": null, "translation": null}, {"name": "vec_as_index", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_index", "origin": null, "translation": null}, {"name": "vec_as_location", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_location", "origin": null, "translation": null}, {"name": "vec_as_location2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_location2", "origin": null, "translation": null}, {"name": "vec_as_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_names", "origin": null, "translation": null}, {"name": "vec_as_names_legacy", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_names_legacy", "origin": null, "translation": null}, {"name": "vec_as_subscript", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_subscript", "origin": null, "translation": null}, {"name": "vec_as_subscript2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_as_subscript2", "origin": null, "translation": null}, {"name": "vec_assert", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_assert", "origin": null, "translation": null}, {"name": "vec_assign", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_assign", "origin": null, "translation": null}, {"name": "vec_c", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_c", "origin": null, "translation": null}, {"name": "vec_case_when", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_case_when", "origin": null, "translation": null}, {"name": "vec_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast", "origin": null, "translation": null}, {"name": "vec_cast.Date", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.Date", "origin": null, "translation": null}, {"name": "vec_cast.POSIXct", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.POSIXct", "origin": null, "translation": null}, {"name": "vec_cast.POSIXlt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.POSIXlt", "origin": null, "translation": null}, {"name": "vec_cast.character", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.character", "origin": null, "translation": null}, {"name": "vec_cast.complex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.complex", "origin": null, "translation": null}, {"name": "vec_cast.data.frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.data.frame", "origin": null, "translation": null}, {"name": "vec_cast.difftime", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.difftime", "origin": null, "translation": null}, {"name": "vec_cast.double", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.double", "origin": null, "translation": null}, {"name": "vec_cast.factor", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.factor", "origin": null, "translation": null}, {"name": "vec_cast.integer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.integer", "origin": null, "translation": null}, {"name": "vec_cast.integer64", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.integer64", "origin": null, "translation": null}, {"name": "vec_cast.list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.list", "origin": null, "translation": null}, {"name": "vec_cast.logical", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.logical", "origin": null, "translation": null}, {"name": "vec_cast.ordered", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.ordered", "origin": null, "translation": null}, {"name": "vec_cast.raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.raw", "origin": null, "translation": null}, {"name": "vec_cast.vctrs_list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast.vctrs_list_of", "origin": null, "translation": null}, {"name": "vec_cast_common", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cast_common", "origin": null, "translation": null}, {"name": "vec_cbind", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cbind", "origin": null, "translation": null}, {"name": "vec_cbind_frame_ptype", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_cbind_frame_ptype", "origin": null, "translation": null}, {"name": "vec_check_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_check_list", "origin": null, "translation": null}, {"name": "vec_check_recyclable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_check_recyclable", "origin": null, "translation": null}, {"name": "vec_check_size", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_check_size", "origin": null, "translation": null}, {"name": "vec_chop", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_chop", "origin": null, "translation": null}, {"name": "vec_compare", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_compare", "origin": null, "translation": null}, {"name": "vec_count", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_count", "origin": null, "translation": null}, {"name": "vec_data", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_data", "origin": null, "translation": null}, {"name": "vec_default_cast", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_default_cast", "origin": null, "translation": null}, {"name": "vec_default_ptype2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_default_ptype2", "origin": null, "translation": null}, {"name": "vec_detect_complete", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_detect_complete", "origin": null, "translation": null}, {"name": "vec_detect_missing", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_detect_missing", "origin": null, "translation": null}, {"name": "vec_duplicate_any", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_duplicate_any", "origin": null, "translation": null}, {"name": "vec_duplicate_detect", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_duplicate_detect", "origin": null, "translation": null}, {"name": "vec_duplicate_id", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_duplicate_id", "origin": null, "translation": null}, {"name": "vec_empty", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_empty", "origin": null, "translation": null}, {"name": "vec_equal", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_equal", "origin": null, "translation": null}, {"name": "vec_equal_na", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_equal_na", "origin": null, "translation": null}, {"name": "vec_expand_grid", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_expand_grid", "origin": null, "translation": null}, {"name": "vec_fill_missing", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_fill_missing", "origin": null, "translation": null}, {"name": "vec_group_id", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_group_id", "origin": null, "translation": null}, {"name": "vec_group_loc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_group_loc", "origin": null, "translation": null}, {"name": "vec_group_rle", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_group_rle", "origin": null, "translation": null}, {"name": "vec_identify_runs", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_identify_runs", "origin": null, "translation": null}, {"name": "vec_if_else", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_if_else", "origin": null, "translation": null}, {"name": "vec_in", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_in", "origin": null, "translation": null}, {"name": "vec_init", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_init", "origin": null, "translation": null}, {"name": "vec_init_along", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_init_along", "origin": null, "translation": null}, {"name": "vec_interleave", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_interleave", "origin": null, "translation": null}, {"name": "vec_is", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_is", "origin": null, "translation": null}, {"name": "vec_is_empty", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_is_empty", "origin": null, "translation": null}, {"name": "vec_is_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_is_list", "origin": null, "translation": null}, {"name": "vec_locate_matches", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_locate_matches", "origin": null, "translation": null}, {"name": "vec_locate_sorted_groups", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_locate_sorted_groups", "origin": null, "translation": null}, {"name": "vec_match", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_match", "origin": null, "translation": null}, {"name": "vec_math", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_math", "origin": null, "translation": null}, {"name": "vec_math_base", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_math_base", "origin": null, "translation": null}, {"name": "vec_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_names", "origin": null, "translation": null}, {"name": "vec_names2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_names2", "origin": null, "translation": null}, {"name": "vec_order", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_order", "origin": null, "translation": null}, {"name": "vec_pall", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_pall", "origin": null, "translation": null}, {"name": "vec_pany", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_pany", "origin": null, "translation": null}, {"name": "vec_proxy", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_proxy", "origin": null, "translation": null}, {"name": "vec_proxy_compare", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_proxy_compare", "origin": null, "translation": null}, {"name": "vec_proxy_equal", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_proxy_equal", "origin": null, "translation": null}, {"name": "vec_proxy_order", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_proxy_order", "origin": null, "translation": null}, {"name": "vec_ptype", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype", "origin": null, "translation": null}, {"name": "vec_ptype2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2", "origin": null, "translation": null}, {"name": "vec_ptype2.AsIs", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.AsIs", "origin": null, "translation": null}, {"name": "vec_ptype2.Date", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.Date", "origin": null, "translation": null}, {"name": "vec_ptype2.POSIXct", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.POSIXct", "origin": null, "translation": null}, {"name": "vec_ptype2.POSIXlt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.POSIXlt", "origin": null, "translation": null}, {"name": "vec_ptype2.character", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.character", "origin": null, "translation": null}, {"name": "vec_ptype2.complex", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.complex", "origin": null, "translation": null}, {"name": "vec_ptype2.data.frame", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.data.frame", "origin": null, "translation": null}, {"name": "vec_ptype2.difftime", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.difftime", "origin": null, "translation": null}, {"name": "vec_ptype2.double", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.double", "origin": null, "translation": null}, {"name": "vec_ptype2.factor", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.factor", "origin": null, "translation": null}, {"name": "vec_ptype2.integer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.integer", "origin": null, "translation": null}, {"name": "vec_ptype2.integer64", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.integer64", "origin": null, "translation": null}, {"name": "vec_ptype2.list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.list", "origin": null, "translation": null}, {"name": "vec_ptype2.logical", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.logical", "origin": null, "translation": null}, {"name": "vec_ptype2.ordered", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.ordered", "origin": null, "translation": null}, {"name": "vec_ptype2.raw", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.raw", "origin": null, "translation": null}, {"name": "vec_ptype2.vctrs_list_of", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype2.vctrs_list_of", "origin": null, "translation": null}, {"name": "vec_ptype_abbr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype_abbr", "origin": null, "translation": null}, {"name": "vec_ptype_common", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype_common", "origin": null, "translation": null}, {"name": "vec_ptype_finalise", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype_finalise", "origin": null, "translation": null}, {"name": "vec_ptype_full", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype_full", "origin": null, "translation": null}, {"name": "vec_ptype_show", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_ptype_show", "origin": null, "translation": null}, {"name": "vec_rank", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_rank", "origin": null, "translation": null}, {"name": "vec_rbind", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_rbind", "origin": null, "translation": null}, {"name": "vec_recode_values", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_recode_values", "origin": null, "translation": null}, {"name": "vec_recycle", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_recycle", "origin": null, "translation": null}, {"name": "vec_rep", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_rep", "origin": null, "translation": null}, {"name": "vec_rep_each", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_rep_each", "origin": null, "translation": null}, {"name": "vec_repeat", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_repeat", "origin": null, "translation": null}, {"name": "vec_replace_values", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_replace_values", "origin": null, "translation": null}, {"name": "vec_replace_when", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_replace_when", "origin": null, "translation": null}, {"name": "vec_restore", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_restore", "origin": null, "translation": null}, {"name": "vec_run_sizes", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_run_sizes", "origin": null, "translation": null}, {"name": "vec_seq_along", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_seq_along", "origin": null, "translation": null}, {"name": "vec_set_difference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_set_difference", "origin": null, "translation": null}, {"name": "vec_set_intersect", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_set_intersect", "origin": null, "translation": null}, {"name": "vec_set_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_set_names", "origin": null, "translation": null}, {"name": "vec_set_symmetric_difference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_set_symmetric_difference", "origin": null, "translation": null}, {"name": "vec_set_union", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_set_union", "origin": null, "translation": null}, {"name": "vec_size", "translated": true, "not_done": "", "title": "vec_size", "origin": null, "translation": {"description": "Checked.", "output_blocks": []}}, {"name": "vec_size_common", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_size_common", "origin": null, "translation": null}, {"name": "vec_slice", "translated": true, "not_done": "", "title": "vec_slice", "origin": null, "translation": {"description": "Checked.", "output_blocks": []}}, {"name": "vec_sort", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_sort", "origin": null, "translation": null}, {"name": "vec_split", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_split", "origin": null, "translation": null}, {"name": "vec_type", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_type", "origin": null, "translation": null}, {"name": "vec_type2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_type2", "origin": null, "translation": null}, {"name": "vec_type_common", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_type_common", "origin": null, "translation": null}, {"name": "vec_unchop", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_unchop", "origin": null, "translation": null}, {"name": "vec_unique", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_unique", "origin": null, "translation": null}, {"name": "vec_unique_count", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_unique_count", "origin": null, "translation": null}, {"name": "vec_unique_loc", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_unique_loc", "origin": null, "translation": null}, {"name": "vec_unrep", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vec_unrep", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

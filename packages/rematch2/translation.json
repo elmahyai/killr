@@ -1,0 +1,208 @@
+{
+  "name": "rematch2",
+  "cran_version": "2.1.2",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN rematch2 2.1.2 is inventoried. All 8 exports are checked. Matching uses Python's re module, and the tables use the tibble columns already translated. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "$.rematch_allrecords",
+      "translated": true,
+      "python": "rematch2.dollar_rematch_allrecords",
+      "loads": [],
+      "uses": [],
+      "done": "Reads match, start, or end from each all-match record. Each entry is a vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "all first-name records from two notable strings",
+        "r_ms": 0.07414817810058594,
+        "translated_ms": 0.0021890000425628386,
+        "speedup": 33.87308207348168,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\npos <- re_exec_all(c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"), \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\")\n        one <- function() {\n          paste(vapply(`$.rematch_allrecords`(pos$first, \"match\"), paste, \"\", collapse = \"+\"), collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import dollar_rematch_allrecords, re_exec_all\npos = re_exec_all([\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"], \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\")\ndef one():\n    return \",\".join(\"+\".join(row) for row in dollar_rematch_allrecords(pos[\"first\"], \"match\"))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "$.rematch_records",
+      "translated": true,
+      "python": "rematch2.dollar_rematch_records",
+      "loads": [],
+      "uses": [],
+      "done": "Reads match, start, or end from each first-match record.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "first-name records from two notable strings",
+        "r_ms": 0.04124641418457031,
+        "translated_ms": 0.001785999756975798,
+        "speedup": 23.094299998344983,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\npos <- re_exec(c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"), \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\")\n        one <- function() {\n          paste(`$.rematch_records`(pos$first, \"match\"), collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import dollar_rematch_records, re_exec\npos = re_exec([\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"], \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\")\ndef one():\n    return \",\".join(dollar_rematch_records(pos[\"first\"], \"match\"))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "bind_re_match",
+      "translated": true,
+      "python": "rematch2.bind_re_match",
+      "loads": [],
+      "uses": [],
+      "done": "Runs re_match on a column and attaches the new columns. The R argument from is column, because from is a Python keyword.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two car names, make and model groups",
+        "r_ms": 2.3920536041259766,
+        "translated_ms": 0.08569750025344547,
+        "speedup": 27.91275821408576,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\ncars <- data.frame(rowname = c(\"Mazda RX4\", \"Datsun 710\"), mpg = c(21, 22.8), stringsAsFactors = FALSE)\n        one <- function() {\n          paste(bind_re_match_(cars, \"rowname\", \"^(?<make>\\\\w+) ?(?<model>.+)?$\")$make, bind_re_match_(cars, \"rowname\", \"^(?<make>\\\\w+) ?(?<model>.+)?$\")$model, sep = \"=\", collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import bind_re_match\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\", \"Datsun 710\"], mpg=[21.0, 22.8])\npattern = r\"^(?<make>\\w+) ?(?<model>.+)?$\"\ndef one():\n    return \",\".join(f\"{m}={d}\" for m, d in zip(bind_re_match(cars, \"rowname\", pattern)[\"make\"], bind_re_match(cars, \"rowname\", pattern)[\"model\"]))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "bind_re_match_",
+      "translated": true,
+      "python": "rematch2.bind_re_match_",
+      "loads": [],
+      "uses": [],
+      "done": "The same attachment as bind_re_match. R's quoting of from is unnecessary in Python, so both take the column name as a string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two car names, keeping the .match column",
+        "r_ms": 1.302480697631836,
+        "translated_ms": 0.04492249991017161,
+        "speedup": 28.993949585092455,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\ncars <- data.frame(rowname = c(\"Mazda RX4\", \"Datsun 710\"), mpg = c(21, 22.8), stringsAsFactors = FALSE)\n        one <- function() {\n          paste(bind_re_match_(cars, \"rowname\", \"^(?<make>\\\\w+) ?(?<model>.+)?$\", keep_match = TRUE)$.match, collapse = \"|\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import bind_re_match_\nfrom tibble import tibble\ncars = tibble(rowname=[\"Mazda RX4\", \"Datsun 710\"], mpg=[21.0, 22.8])\ndef one():\n    return \"|\".join(bind_re_match_(cars, \"rowname\", r\"^(?<make>\\w+) ?(?<model>.+)?$\", keep_match=True)[\".match\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "re_exec",
+      "translated": true,
+      "python": "rematch2.re_exec",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the first match with 1-based start and end. A missed group is an empty string at position 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two notable-name strings, first match positions",
+        "r_ms": 0.4436969757080078,
+        "translated_ms": 0.036276500395615585,
+        "speedup": 12.230975173162886,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes <- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern <- \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\n        one <- function() {\n          pos <- re_exec(notes, pattern)\npaste(pos$first$match, pos$first$start, pos$first$end, sep = \":\", collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import re_exec\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\ndef one():\n    pos = re_exec(notes, pattern)\n    return \",\".join(f\"{m}:{s}:{e}\" for m, s, e in zip(pos[\"first\"].match, pos[\"first\"].start, pos[\"first\"].end))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "re_exec_all",
+      "translated": true,
+      "python": "rematch2.re_exec_all",
+      "loads": [],
+      "uses": [],
+      "done": "Returns every match with positions. A string with no match contributes empty vectors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two notable-name strings, all match positions",
+        "r_ms": 0.7603168487548828,
+        "translated_ms": 0.08954050008469494,
+        "speedup": 8.49131787331667,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes <- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern <- \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\n        one <- function() {\n          pos <- re_exec_all(notes, pattern)\npaste(vapply(seq_along(pos$first), function(i) paste(pos$first$match[[i]], pos$first$start[[i]], pos$first$end[[i]], sep = \":\", collapse = \"+\"), \"\"), collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import re_exec_all\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\ndef one():\n    pos = re_exec_all(notes, pattern)\n    return \",\".join(\"+\".join(f\"{m}:{s}:{e}\" for m, s, e in zip(row_m, row_s, row_e)) for row_m, row_s, row_e in zip(pos[\"first\"].match, pos[\"first\"].start, pos[\"first\"].end))\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "re_match",
+      "translated": true,
+      "python": "rematch2.re_match",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the first match and each named capture. Python's re compiles the pattern after rewriting PCRE names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "seven date strings and a named ISO pattern",
+        "r_ms": 0.522613525390625,
+        "translated_ms": 0.03910250006811111,
+        "speedup": 13.365220241168851,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\ndates <- c(\"2016-04-20\", \"1977-08-08\", \"not a date\", \"2016\", \"76-03-02\", \"2012-06-30\", \"2015-01-21 19:58\")\npattern <- \"(?<year>[0-9]{4})-(?<month>[0-1][0-9])-(?<day>[0-3][0-9])\"\n        one <- function() {\n          paste(ifelse(is.na(one_value <- re_match(dates, pattern)$year), \"NA\", one_value), collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import re_match\ndates = [\"2016-04-20\", \"1977-08-08\", \"not a date\", \"2016\", \"76-03-02\", \"2012-06-30\", \"2015-01-21 19:58\"]\npattern = \"(?<year>[0-9]{4})-(?<month>[0-1][0-9])-(?<day>[0-3][0-9])\"\ndef one():\n    return \",\".join(\"NA\" if v is None else v for v in re_match(dates, pattern)[\"year\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "re_match_all",
+      "translated": true,
+      "python": "rematch2.re_match_all",
+      "loads": [],
+      "uses": [],
+      "done": "Returns every match in list columns. An input that misses is an empty list, not NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two notable-name strings and a POSIX name pattern",
+        "r_ms": 0.4709959030151367,
+        "translated_ms": 0.035532500078261364,
+        "speedup": 13.255355012390194,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "        suppressPackageStartupMessages(library(rematch2))\nnotes <- c(\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\")\npattern <- \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\n        one <- function() {\n          paste(vapply(re_match_all(notes, pattern)$first, paste, \"\", collapse = \"+\"), collapse = \",\")\n        }\n        ans <- one()\n        elapsed <- numeric(20)\n        for (i in seq_len(20)) {\n          t0 <- as.numeric(Sys.time())\n          one()\n          elapsed[[i]] <- as.numeric(Sys.time()) - t0\n        }\n        cat(ans, \"\\n\", sep = \"\")\n        cat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rematch2 import re_match_all\nnotes = [\"  Ben Franklin and Jefferson Davis\", \"\\tMillard Fillmore\"]\npattern = \"(?<first>[[:upper:]][[:lower:]]+) (?<last>[[:upper:]][[:lower:]]+)\"\ndef one():\n    return \",\".join(\"+\".join(row) for row in re_match_all(notes, pattern)[\"first\"])\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(ans)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+suppressPackageStartupMessages(library(tools))
+db <- base_aliases_db(verbose = FALSE, Ncpus = 1L)
+cat(length(db), "\n")
+cat(paste(names(db), collapse = ","), "\n")
+cat(paste(db[["stats"]][["acf.Rd"]], collapse = ","), "\n")

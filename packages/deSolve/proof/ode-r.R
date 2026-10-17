@@ -1,0 +1,35 @@
+.libPaths(c(path.expand("~/R/library"), .libPaths()))
+suppressPackageStartupMessages(library(deSolve))
+if (packageDescription("deSolve")$Version != "1.42") stop("expected deSolve 1.42")
+
+json_num <- function(x) {
+  paste0("[", paste(sprintf("%.17g", as.numeric(x)), collapse = ","), "]")
+}
+
+logist <- function(t, x, parms) {
+  r <- parms[["r"]]
+  k <- parms[["K"]]
+  list(r * x[1] * (1 - x[1] / k))
+}
+
+one <- function() {
+  out <- ode(
+    y = c(N = 0.1),
+    times = seq(0, 10, by = 2),
+    func = logist,
+    parms = c(r = 0.5, K = 100),
+    method = "vode",
+    rtol = 1e-8,
+    atol = 1e-8
+  )
+  as.vector(out)
+}
+
+value <- one()
+elapsed <- numeric(20)
+for (i in seq_len(20)) {
+  t0 <- as.numeric(Sys.time())
+  one()
+  elapsed[[i]] <- as.numeric(Sys.time()) - t0
+}
+cat(sprintf('{"value":%s,"median_ms":%.17g}\n', json_num(value), median(elapsed) * 1000))

@@ -1,0 +1,104 @@
+{
+  "name": "empinf",
+  "title": "Empirical influence values",
+  "origin": {
+    "description": "Empirical influence values of a statistic on one sample or several strata.",
+    "usage": "empinf(boot.out = NULL, data = NULL, statistic = NULL,\n       type = NULL, stype = NULL, index = 1, t = NULL,\n       strata = rep(1, n), eps = 0.001, ...)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A bootstrap object. Required when type is \"reg\". For the other types it is optional, and if supplied its data, statistic, stype, and strata replace any values passed directly. Parametric bootstraps are rejected."
+      },
+      {
+        "name": "data",
+        "text": "Vector, matrix, or data frame. Required when boot.out is omitted."
+      },
+      {
+        "name": "statistic",
+        "text": "Function of the data and a second argument whose meaning is stype. Further arguments are passed through unchanged. Required when boot.out is omitted."
+      },
+      {
+        "name": "type",
+        "text": "\"inf\" is the infinitesimal jackknife, \"jack\" the delete-one jackknife, \"pos\" the include-one-twice jackknife, and \"reg\" a regression on bootstrap frequencies. If omitted, t selects \"reg\". Otherwise stype \"w\" selects \"inf\". Otherwise a nonparametric bootstrap with R at least n selects \"reg\" and a shorter one selects \"jack\". Anything else selects \"jack\"."
+      },
+      {
+        "name": "stype",
+        "text": "\"w\" for weights, \"f\" for frequencies, or \"i\" for indices. Taken from boot.out when that is supplied. Otherwise the default is \"w\". Type \"inf\" requires \"w\"."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the component of interest in the statistic's return value. If several positions are given, only the first is used, with a warning."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates of the statistic, used only for type \"reg\". When omitted, the index column of boot.out$t is used. For the other types t is ignored, with a warning."
+      },
+      {
+        "name": "strata",
+        "text": "Integer vector or factor of stratum labels, one per observation. Taken from boot.out when that object has strata. Otherwise every observation is in one sample."
+      },
+      {
+        "name": "eps",
+        "text": "Step for the infinitesimal jackknife. The derivative divides by eps/n."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to statistic on every call."
+      }
+    ],
+    "details": "Type \"inf\" differentiates the weighted statistic numerically. Type \"jack\" deletes one observation. Type \"pos\" includes one observation twice. Type \"reg\" regresses the finite bootstrap replicates on the frequency array from boot.array, drops the first observation in each stratum, and centers the coefficients within strata. Strata are renumbered with tapply(strata, as.numeric(strata)) and no FUN, which returns 1-based group codes. The manual's default for type omits the rule that a bootstrap shorter than n uses the jackknife.",
+    "value": "A numeric vector of influence values, in the same order as the observations.",
+    "example": "ratio <- function(d, w) sum(d$x * w) / sum(d$u * w)\nprint(empinf(data = city, statistic = ratio))\nprint(empinf(data = city, statistic = ratio, type = \"jack\"))\nprint(empinf(data = city, statistic = ratio, type = \"pos\"))",
+    "output": "output/empinf-r.txt"
+  },
+  "translation": {
+    "description": "Empirical influence values of a statistic on one sample or several strata.",
+    "usage": "empinf(boot_out=None, data=None, statistic=None, type=None, stype=None, index=1, t=None, strata=None, eps=0.001, **kwargs)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "Any object with the components the R function reads: data, statistic, stype, sim, strata, R, t, and, for type \"reg\", seed. Required when type is \"reg\". A parametric sim is rejected. This does not call boot()."
+      },
+      {
+        "name": "data",
+        "text": "A one-dimensional array, a two-dimensional array with one row per observation, or a dict of columns. Required when boot_out is omitted."
+      },
+      {
+        "name": "statistic",
+        "text": "Function of the data and a second argument whose meaning is stype. Further keyword arguments are passed through unchanged. Required when boot_out is omitted."
+      },
+      {
+        "name": "type",
+        "text": "\"inf\", \"jack\", \"pos\", or \"reg\". If omitted, t selects \"reg\". Otherwise stype \"w\" selects \"inf\". Otherwise a nonparametric bootstrap with R at least n selects \"reg\" and a shorter one selects \"jack\". Anything else selects \"jack\"."
+      },
+      {
+        "name": "stype",
+        "text": "\"w\" for weights, \"f\" for frequencies, or \"i\" for 1-based indices. Taken from boot_out when that is supplied. Otherwise the default is \"w\". Type \"inf\" requires \"w\"."
+      },
+      {
+        "name": "index",
+        "text": "1-based position of the component of interest. If several positions are given, only the first is used, with a warning."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates, used only for type \"reg\". When omitted, column index of boot_out.t is used. For the other types t is ignored, with a warning."
+      },
+      {
+        "name": "strata",
+        "text": "Integer labels or strings treated as a factor with sorted levels. None puts every observation in one sample. A strata attribute on boot_out replaces this argument."
+      },
+      {
+        "name": "eps",
+        "text": "Step for the infinitesimal jackknife. The derivative divides by eps/n."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Further arguments passed to statistic on every call."
+      }
+    ],
+    "details": "Type \"inf\" differentiates the weighted statistic numerically. Type \"jack\" deletes one observation. Type \"pos\" includes one observation twice. Type \"reg\" regresses the finite replicates on the ordinary or permutation frequency array rebuilt from seed, drops the first row of each stratum, and centers the coefficients within strata. Stratum codes follow R's tapply call with FUN omitted: 1-based codes of the sorted numeric values, or of as.numeric on a factor.",
+    "value": "A one-dimensional NumPy array of influence values, in the same order as the observations.",
+    "example": "import numpy as np\nfrom boot.influence import empinf\n\ncity = {\n    \"u\": np.array([138, 93, 61, 179, 48, 37, 29, 23, 30, 2], dtype=float),\n    \"x\": np.array([143, 104, 69, 260, 75, 63, 50, 48, 111, 50], dtype=float),\n}\n\ndef ratio(d, w):\n    return np.sum(d[\"x\"] * w) / np.sum(d[\"u\"] * w)\n\nprint(empinf(data=city, statistic=ratio))\nprint(empinf(data=city, statistic=ratio, type=\"jack\"))\nprint(empinf(data=city, statistic=ratio, type=\"pos\"))",
+    "output": "output/empinf-python.txt"
+  }
+}

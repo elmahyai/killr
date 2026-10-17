@@ -1,0 +1,1156 @@
+{
+  "name": "pillar",
+  "cran_version": "1.11.1",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "dependencies": {
+    "translated": [
+      "cli",
+      "glue",
+      "lifecycle",
+      "utf8"
+    ],
+    "native": [],
+    "rust": []
+  },
+  "resume": "CRAN pillar 1.11.1. 44 of 46 exports are checked. Shafts, pillars, glimpse, and the table header, body, and footer match R. colonnade, squeeze, and extra_cols are defunct and stop. The ggplot2 scales are left out. cli, glue, lifecycle, and utf8 are the translated dependencies.",
+  "functions": [
+    {
+      "name": "align",
+      "translated": true,
+      "python": "pillar.extent.align",
+      "loads": [],
+      "uses": [
+        "get_extent"
+      ],
+      "done": "Pads each string on the left or the right. A missing string is the letters NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "left, right, a missing string, and a two-letter pad",
+        "r_ms": 0.6791353225708008,
+        "translated_ms": 0.08468150008411612,
+        "speedup": 8.019878272068867,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\none <- function() {\n  list(\n    align(c(\"abc\", \"de\"), align = \"left\"),\n    align(c(\"abc\", \"de\"), align = \"right\"),\n    align(c(\"a\", NA), align = \"left\"),\n    align(c(\"a\", \"bb\"), space = \"ab\")\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.extent import align\n\n\ndef one():\n    return [\n        align([\"abc\", \"de\"], align=\"left\"),\n        align([\"abc\", \"de\"], align=\"right\"),\n        align([\"a\", None], align=\"left\"),\n        align([\"a\", \"bb\"], space=\"ab\"),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "char",
+      "translated": true,
+      "python": "pillar.char.char",
+      "loads": [],
+      "uses": [
+        "set_char_opts"
+      ],
+      "done": "Stores the strings and formats the pillar attribute. abbreviate adds no mark.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "char with mid, a missing string, abbreviate, back, and front",
+        "r_ms": 0.8511543273925781,
+        "translated_ms": 0.021736999769927934,
+        "speedup": 39.15693685428051,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode_data <- function(x) {\n  if (!length(x)) return(\"[]\")\n  parts <- vapply(seq_along(x), function(i) {\n    if (is.na(x[[i]])) \"null\" else json_str(x[[i]])\n  }, \"\")\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\nencode <- function(items) {\n  parts <- vapply(items, function(item) {\n    paste0(\n      '{\"data\":', encode_data(item$data),\n      ',\"type\":', json_str(item$type), \"}\"\n    )\n  }, \"\")\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  items <- list(\n    char(c(\"a\", \"bb\"), min_chars = 5, shorten = \"mid\"),\n    char(c(\"a\", NA)),\n    char(\"hello\", min_chars = 3, shorten = \"abbreviate\"),\n    char(\"ab\", shorten = \"back\"),\n    char(c(\"ab\", \"cd\"), min_chars = 2, shorten = \"front\")\n  )\n  lapply(items, function(x) {\n    list(data = x, type = format(attr(x, \"pillar\", exact = TRUE)))\n  })\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.char import char, format_pillar_char_attr\n\n\ndef snap(x):\n    data = x.data\n    if not isinstance(data, list):\n        data = [data]\n    return {\"data\": data, \"type\": format_pillar_char_attr(x.pillar)}\n\n\ndef one():\n    return [\n        snap(char([\"a\", \"bb\"], min_chars=5, shorten=\"mid\")),\n        snap(char([\"a\", None])),\n        snap(char(\"hello\", min_chars=3, shorten=\"abbreviate\")),\n        snap(char(\"ab\", shorten=\"back\")),\n        snap(char([\"ab\", \"cd\"], min_chars=2, shorten=\"front\")),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "colonnade",
+      "translated": true,
+      "python": "pillar.colonnade.colonnade",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Defunct since pillar 1.9.0. The call stops and names ctl_colonnade().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tryCatch(colonnade(), error = function(e) conditionMessage(e))",
+        "r_ms": 64.23532962799072,
+        "translated_ms": 0.021957499484415166,
+        "speedup": 2925.439195550623,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tryCatch(colonnade(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom lifecycle import LifecycleError\nfrom pillar.colonnade import colonnade\n\n\ndef one():\n    try:\n        colonnade()\n    except LifecycleError as exc:\n        return str(exc)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "ctl_new_pillar",
+      "translated": true,
+      "python": "pillar.column.ctl_new_pillar",
+      "loads": [],
+      "uses": [],
+      "done": "Builds one pillar from a column and a title.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(ctl_new_pillar(df, 1:3, 60, title = \"n\")), collapse = \"\\n\")",
+        "r_ms": 5.495786666870117,
+        "translated_ms": 0.818476999484119,
+        "speedup": 6.714650100533158,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(format(ctl_new_pillar(df, 1:3, 60, title = \"n\")), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.column import ctl_new_pillar\n\n\ndef one():\n    frame = DataFrame({\"a\": [1]})\n    return \"\\n\".join(ctl_new_pillar(frame, [1, 2, 3], 60, title=\"n\").format())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "ctl_new_pillar_list",
+      "translated": true,
+      "python": "pillar.column.ctl_new_pillar_list",
+      "loads": [],
+      "uses": [],
+      "done": "Builds one pillar per column of a data frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pillars <- ctl_new_pillar_list(df, df[1:2, ], width = 30)",
+        "r_ms": 13.863325119018555,
+        "translated_ms": 1.658111999859102,
+        "speedup": 8.360909950712973,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  pillars <- ctl_new_pillar_list(df, df[1:2, ], width = 30)\n  bits <- vapply(pillars, function(item) paste(format(item), collapse = \"\\n\"), \"\")\n  paste(bits, collapse = \"\\n---\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.column import ctl_new_pillar_list\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    head = DataFrame({name: values[:2] for name, values in frame.columns.items()})\n    pillars = ctl_new_pillar_list(frame, head, width=30)\n    return \"\\n---\\n\".join(\"\\n\".join(item.format()) for item in pillars)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "ctl_new_rowid_pillar",
+      "translated": true,
+      "python": "pillar.column.ctl_new_rowid_pillar",
+      "loads": [],
+      "uses": [],
+      "done": "Builds the row-number pillar.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(ctl_new_rowid_pillar(df, df, 30, type = \"*\")), collapse = \"\\n\")",
+        "r_ms": 3.660917282104492,
+        "translated_ms": 0.2729679999902146,
+        "speedup": 13.41152546172346,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(format(ctl_new_rowid_pillar(df, df, 30, type = \"*\")), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.column import ctl_new_rowid_pillar\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    return \"\\n\".join(ctl_new_rowid_pillar(frame, frame, 30, type=\"*\").format())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "dim_desc",
+      "translated": true,
+      "python": "pillar.summary.dim_desc",
+      "loads": [],
+      "uses": [],
+      "done": "Formats dimensions with a times sign, or the length when there is no dim.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lengths and dims of 1:10, Titanic, NULL, trees, and a matrix",
+        "r_ms": 2.0799636840820312,
+        "translated_ms": 0.08310499924846226,
+        "speedup": 25.02814154252601,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\none <- function() {\n  c(\n    dim_desc(1:10),\n    dim_desc(Titanic),\n    dim_desc(NULL),\n    dim_desc(trees),\n    dim_desc(matrix(1:4, nrow = 2)),\n    dim_desc(1:1000),\n    dim_desc(data.frame(a = 1)),\n    dim_desc(matrix(1:10))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(vapply(value, json_str, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Matrix, Table\nfrom pillar.summary import dim_desc\n\n\ndef one():\n    trees = DataFrame({name: list(range(31)) for name in (\"Girth\", \"Height\", \"Volume\")})\n    return [\n        dim_desc(list(range(1, 11))),\n        dim_desc(Table((4, 2, 2, 2))),\n        dim_desc(NULL),\n        dim_desc(trees),\n        dim_desc(Matrix(list(range(1, 5)), 2)),\n        dim_desc(list(range(1, 1001))),\n        dim_desc(DataFrame({\"a\": [1]})),\n        dim_desc(Matrix(list(range(1, 11)), 10)),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "expect_known_display",
+      "translated": true,
+      "python": "pillar.deprecated.expect_known_display",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Defunct since pillar 1.7.0. The call stops and names expect_snapshot().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tryCatch(expect_known_display(), error = function(e) conditionMessage(e))",
+        "r_ms": 54.86929416656494,
+        "translated_ms": 0.017364000086672604,
+        "speedup": 3159.9455132852013,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tryCatch(expect_known_display(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom lifecycle import LifecycleError\nfrom pillar.deprecated import expect_known_display\n\n\ndef one():\n    try:\n        expect_known_display()\n    except LifecycleError as exc:\n        return str(exc)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "extra_cols",
+      "translated": true,
+      "python": "pillar.colonnade.extra_cols",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Defunct since pillar 1.5.0. The call stops.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tryCatch(extra_cols(), error = function(e) conditionMessage(e))",
+        "r_ms": 39.39008712768555,
+        "translated_ms": 0.008920500476961024,
+        "speedup": 4415.681298310372,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tryCatch(extra_cols(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom lifecycle import LifecycleError\nfrom pillar.colonnade import extra_cols\n\n\ndef one():\n    try:\n        extra_cols()\n    except LifecycleError as exc:\n        return str(exc)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "format_glimpse",
+      "translated": true,
+      "python": "pillar.glimpse.format_glimpse",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Renders one element the way glimpse shows it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format_glimpse(x), collapse = \"\\n\")",
+        "r_ms": 0.5114078521728516,
+        "translated_ms": 0.04752749919134658,
+        "speedup": 10.760251662178021,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  x <- list(1:3, \"A, B\", factor(c(\"A\", \"B, C\")), character(), NULL)\n  paste(format_glimpse(x), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.glimpse import format_glimpse\n\n\ndef one():\n    items = List([[1, 2, 3], \"A, B\", Factor([\"A\", \"B, C\"]), [], NULL])\n    return \"\\n\".join(format_glimpse(items))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "format_type_sum",
+      "translated": true,
+      "python": "pillar.styles.format_type_sum",
+      "loads": [],
+      "uses": [
+        "get_extent",
+        "style_subtle"
+      ],
+      "done": "Wraps a type name in angle brackets, then subtle italic. An AsIs string has no brackets.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "format_type_sum of dbl with no width, at 8 colors",
+        "r_ms": 0.07426738739013672,
+        "translated_ms": 0.012904999493912328,
+        "speedup": 5.754931445380595,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.subtle = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() format_type_sum(\"dbl\", NULL)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import format_type_sum\n\npillar_options(**{\"pillar.subtle\": True})\n\n\ndef one():\n    return format_type_sum(\"dbl\", None)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "get_extent",
+      "translated": true,
+      "python": "pillar.extent.get_extent",
+      "loads": [],
+      "uses": [],
+      "done": "Display width of each string after ANSI sequences are removed. A missing string has width 2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "get_extent of abc, de, a CJK pair, a red abc, a tab, and NA",
+        "r_ms": 0.213623046875,
+        "translated_ms": 0.026857999728235882,
+        "speedup": 7.953795853621131,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\none <- function() {\n  get_extent(c(\"abc\", \"de\", \"\\u904b\\u6c23\", \"\\033[31mabc\\033[39m\", \"a\\tb\", NA))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.extent import get_extent\n\n\ndef one():\n    return get_extent([\"abc\", \"de\", \"運氣\", \"\\033[31mabc\\033[39m\", \"a\\tb\", None])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "get_max_extent",
+      "translated": true,
+      "python": "pillar.extent.get_max_extent",
+      "loads": [],
+      "uses": [
+        "get_extent"
+      ],
+      "done": "The widest display width, or zero when the vector is empty.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "get_max_extent of abc and de, and of an empty vector",
+        "r_ms": 0.19252300262451172,
+        "translated_ms": 0.009899500582832843,
+        "speedup": 19.44774900648769,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\none <- function() {\n  c(get_max_extent(c(\"abc\", \"de\")), get_max_extent(character(0)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.extent import get_max_extent\n\n\ndef one():\n    return [get_max_extent([\"abc\", \"de\"]), get_max_extent([])]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "glimpse",
+      "translated": true,
+      "python": "pillar.glimpse.glimpse",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Prints the size of a data frame and one line per column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(capture.output(glimpse(df, width = 40)), collapse = \"\\n\")",
+        "r_ms": 5.749225616455078,
+        "translated_ms": 0.40559249828220345,
+        "speedup": 14.17488153948764,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(capture.output(glimpse(df, width = 40)), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nimport io\nimport sys\n\nfrom pillar.glimpse import glimpse\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    buffer = io.StringIO()\n    old = sys.stdout\n    sys.stdout = buffer\n    try:\n        glimpse(frame, width=40)\n    finally:\n        sys.stdout = old\n    text = buffer.getvalue()\n    if text.endswith(\"\\n\"):\n        text = text[:-1]\n    return text\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "is_vector_s3",
+      "translated": true,
+      "python": "pillar.deprecated.is_vector_s3",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Defunct since pillar 1.7.0. The call stops and names vec_is().",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tryCatch(is_vector_s3(), error = function(e) conditionMessage(e))",
+        "r_ms": 50.389766693115234,
+        "translated_ms": 0.01923099989653565,
+        "speedup": 2620.2364393019757,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tryCatch(is_vector_s3(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom lifecycle import LifecycleError\nfrom pillar.deprecated import is_vector_s3\n\n\ndef one():\n    try:\n        is_vector_s3()\n    except LifecycleError as exc:\n        return str(exc)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "new_ornament",
+      "translated": true,
+      "python": "pillar.extent.new_ornament",
+      "loads": [],
+      "uses": [
+        "get_max_extent",
+        "align"
+      ],
+      "done": "A character vector that prints under a pillar_ornament header, aligned to a width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "new_ornament of abc and de, aligned right, and format at width 5",
+        "r_ms": 0.7308721542358398,
+        "translated_ms": 0.038589999348914716,
+        "speedup": 18.939418672376693,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\none <- function() {\n  o <- new_ornament(c(\"abc\", \"de\"), align = \"right\")\n  list(\n    text = paste(capture.output(print(o)), collapse = \"\\n\"),\n    format5 = format(o, width = 5),\n    align = attr(o, \"align\", exact = TRUE),\n    width = attr(o, \"width\", exact = TRUE)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.extent import new_ornament\n\n\ndef one():\n    ornament = new_ornament([\"abc\", \"de\"], align=\"right\")\n    return {\n        \"text\": str(ornament),\n        \"format5\": ornament.format(width=5),\n        \"align\": ornament.align,\n        \"width\": ornament.width,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar",
+      "translated": true,
+      "python": "pillar.column.new_pillar",
+      "loads": [],
+      "uses": [],
+      "done": "Assembles title, type, and data into one pillar.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(new_pillar(pillar(1:3, \"n\"))), collapse = \"\\n\")",
+        "r_ms": 5.485177040100098,
+        "translated_ms": 0.49887349996424746,
+        "speedup": 10.995126100089905,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(format(new_pillar(pillar(1:3, \"n\"))), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.column import new_pillar, pillar\n\n\ndef one():\n    return \"\\n\".join(new_pillar(pillar([1, 2, 3], \"n\")).format())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar_component",
+      "translated": true,
+      "python": "pillar.parts.new_pillar_component",
+      "loads": [],
+      "uses": [],
+      "done": "Stores one list element with an integer width and a minimum width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "letters a through c at width 1, and a wider component with a smaller minimum",
+        "r_ms": 0.10669231414794922,
+        "translated_ms": 0.006037000275682658,
+        "speedup": 17.67306762892015,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8, cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\none <- function() {\n  x <- new_pillar_component(list(letters[1:3]), width = 1)\n  y <- new_pillar_component(list(letters[1:3]), width = 5, min_width = 2)\n  list(\n    width = attr(x, \"width\"),\n    min_width = attr(x, \"min_width\"),\n    values = x[[1]],\n    width2 = attr(y, \"width\"),\n    min2 = attr(y, \"min_width\")\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8, \"cli.unicode\": True})\n\nfrom pillar.parts import new_pillar_component\n\n\ndef one():\n    x = new_pillar_component([[\"a\", \"b\", \"c\"]], width=1)\n    y = new_pillar_component([[\"a\", \"b\", \"c\"]], width=5, min_width=2)\n    return {\n        \"width\": x.width,\n        \"min_width\": x.min_width,\n        \"values\": x.x[0],\n        \"width2\": y.width,\n        \"min2\": y.min_width,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar_shaft",
+      "translated": true,
+      "python": "pillar.shaft.new_pillar_shaft",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Builds a shaft from a list and a width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "shaft <- new_pillar_shaft(c(\"a\", \"b\"), width = 5, min_width = 3, class = \"pillar_shaft_demo\")",
+        "r_ms": 0.07104873657226562,
+        "translated_ms": 0.004708001142716967,
+        "speedup": 15.091061879238142,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  shaft <- new_pillar_shaft(c(\"a\", \"b\"), width = 5, min_width = 3, class = \"pillar_shaft_demo\")\n  paste(c(class(shaft)[[1]], attr(shaft, \"width\"), attr(shaft, \"min_width\"), paste(as.character(shaft), collapse = \"|\")), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.shaft import new_pillar_shaft\n\n\ndef one():\n    shaft = new_pillar_shaft([\"a\", \"b\"], width=5, min_width=3, class_=\"pillar_shaft_demo\")\n    return \"\\n\".join([shaft.classes[0], str(shaft.width), str(shaft.min_width), \"|\".join(shaft.data)])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar_shaft_simple",
+      "translated": true,
+      "python": "pillar.shaft.new_pillar_shaft_simple",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Truncates a finished character shaft to the available width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "shaft <- new_pillar_shaft_simple(c(\"ab\", NA, \"cdef\"), width = 6, align = \"left\")",
+        "r_ms": 0.23734569549560547,
+        "translated_ms": 0.04385750071378425,
+        "speedup": 5.4117469448278115,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  shaft <- new_pillar_shaft_simple(c(\"ab\", NA, \"cdef\"), width = 6, align = \"left\")\n  paste(format(shaft, width = 4), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.shaft import new_pillar_shaft_simple\nfrom pillar._layout import lines_of\n\n\ndef one():\n    shaft = new_pillar_shaft_simple([\"ab\", None, \"cdef\"], width=6, align=\"left\")\n    return \"\\n\".join(lines_of(shaft.format(width=4)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar_title",
+      "translated": true,
+      "python": "pillar.parts.new_pillar_title",
+      "loads": [],
+      "uses": [],
+      "done": "Formats column titles. Girth is padded to the width of Height, and bold is off.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "trees names, letters, a truncated pair, and a null title",
+        "r_ms": 3.2747983932495117,
+        "translated_ms": 0.3085079997617868,
+        "speedup": 10.614954541788654,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8, cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.bold = FALSE, pillar.subtle = TRUE, pillar.min_title_chars = 20)\n\none <- function() {\n  list(\n    trees = format(new_pillar_title(names(trees))),\n    letters = format(new_pillar_title(\"letters\")),\n    trunc = format(new_pillar_title(c(\"hello\", \"hi\")), width = 4),\n    empty = format(new_pillar_title(NULL))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8, \"cli.unicode\": True})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.parts import new_pillar_title\n\npillar_options(\n    **{\"pillar.bold\": False, \"pillar.subtle\": True, \"pillar.min_title_chars\": 20}\n)\n\n\ndef one():\n    return {\n        \"trees\": new_pillar_title([\"Girth\", \"Height\", \"Volume\"]).format(),\n        \"letters\": new_pillar_title(\"letters\").format(),\n        \"trunc\": new_pillar_title([\"hello\", \"hi\"]).format(width=4),\n        \"empty\": new_pillar_title(None).format(),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "new_pillar_type",
+      "translated": true,
+      "python": "pillar.parts.new_pillar_type",
+      "loads": [],
+      "uses": [
+        "type_sum",
+        "format_type_sum"
+      ],
+      "done": "Formats a column type as subtle italic brackets, at least five columns wide.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "subtle italic chr and fct, and the width of letters",
+        "r_ms": 1.5321969985961914,
+        "translated_ms": 0.09206249978888081,
+        "speedup": 16.64300884844372,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8, cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.bold = FALSE, pillar.subtle = TRUE)\n\none <- function() {\n  kind <- new_pillar_type(letters)\n  list(\n    chr = format(new_pillar_type(\"a\")),\n    fct = format(new_pillar_type(factor(\"a\"))),\n    width = attr(kind, \"width\"),\n    min_width = attr(kind, \"min_width\")\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport string\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8, \"cli.unicode\": True})\n\nfrom pillar._options import options as pillar_options\nfrom pillar._vec import Factor\nfrom pillar.parts import new_pillar_type\n\npillar_options(**{\"pillar.bold\": False, \"pillar.subtle\": True})\n\n\ndef one():\n    kind = new_pillar_type(list(string.ascii_lowercase))\n    return {\n        \"chr\": new_pillar_type(\"a\").format(),\n        \"fct\": new_pillar_type(Factor([\"a\"])).format(),\n        \"width\": kind.width,\n        \"min_width\": kind.min_width,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "num",
+      "translated": true,
+      "python": "pillar.num.num",
+      "loads": [],
+      "uses": [
+        "set_num_opts"
+      ],
+      "done": "Stores floats on a pillar_num vector. The formatted attribute and the abbreviation match the installed type.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "num of a missing value, sigfig with a label, scientific digits, and an SI scale",
+        "r_ms": 1.115560531616211,
+        "translated_ms": 0.06809800015616929,
+        "speedup": 16.381692987428316,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar, lib.loc = \"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\"))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\natom <- function(v) {\n  if (is.na(v)) \"NA\" else as.character(v)\n}\n\nencode <- function(x) {\n  paste(\n    paste(vapply(as.vector(x), atom, \"\"), collapse = \",\"),\n    typeof(x),\n    paste(class(x), collapse = \"/\"),\n    format(attr(x, \"pillar\", exact = TRUE)),\n    vctrs::vec_ptype_abbr(x),\n    sep = \";\"\n  )\n}\n\none <- function() {\n  paste(\n    encode(num(c(1, 2.5, NA))),\n    encode(num(c(1, 2), sigfig = 4, label = \"kg\")),\n    encode(num(1, digits = 2, notation = \"sci\")),\n    encode(num(1, notation = \"si\", fixed_exponent = -3, scale = 10, label = \"m\")),\n    sep = \" || \"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue._text import r_character_double\nfrom pillar.num import num\n\n\ndef atom(value):\n    if value is None:\n        return \"NA\"\n    if isinstance(value, float):\n        return r_character_double(value)\n    return str(value)\n\n\ndef encode(value):\n    return \";\".join(\n        [\n            \",\".join(atom(item) for item in value.data),\n            value.typeof,\n            \"/\".join(value.classes),\n            value.pillar,\n            value.abbr,\n        ]\n    )\n\n\ndef one():\n    return \" || \".join(\n        [\n            encode(num([1, 2.5, None])),\n            encode(num([1, 2], sigfig=4, label=\"kg\")),\n            encode(num(1, digits=2, notation=\"sci\")),\n            encode(num(1, notation=\"si\", fixed_exponent=-3, scale=10, label=\"m\")),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "obj_sum",
+      "translated": true,
+      "python": "pillar.summary.obj_sum",
+      "loads": [],
+      "uses": [
+        "type_sum",
+        "size_sum"
+      ],
+      "done": "Joins the type abbreviation and the size, and keeps a short form for an array.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "obj_sum text and short form for a vector, a matrix, a data frame, and a function",
+        "r_ms": 4.243373870849609,
+        "translated_ms": 0.10288450084772194,
+        "speedup": 41.24405363185048,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\njson_chr <- function(xs) {\n  paste0(\"[\", paste(vapply(xs, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\njson_opt <- function(xs) {\n  parts <- character(length(xs))\n  for (i in seq_along(xs)) {\n    s <- xs[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else json_str(s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  xs <- list(\n    1:10,\n    matrix(1:10),\n    data.frame(a = 1),\n    Sys.Date(),\n    Sys.time(),\n    mean,\n    list(1, 2),\n    NULL,\n    new.env(),\n    Titanic\n  )\n  values <- character(length(xs))\n  shorts <- rep(NA_character_, length(xs))\n  for (i in seq_along(xs)) {\n    s <- obj_sum(xs[[i]])\n    values[[i]] <- as.character(s)\n    sh <- attr(s, \"short\", exact = TRUE)\n    if (!is.null(sh)) shorts[[i]] <- sh\n  }\n  list(value = values, short = shorts)\n}\n\npacked <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"short\":%s,\"median_ms\":%.17g}\\n',\n  json_chr(packed$value),\n  json_opt(packed$short),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom datetime import date, datetime\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Environment, List, Matrix, Table\nfrom pillar.summary import obj_sum\n\n\ndef mean(values):\n    return values\n\n\ndef one():\n    items = [\n        list(range(1, 11)),\n        Matrix(list(range(1, 11)), 10),\n        DataFrame({\"a\": [1]}),\n        date.today(),\n        datetime.now(),\n        mean,\n        List([1, 2]),\n        NULL,\n        Environment(),\n        Table((4, 2, 2, 2)),\n    ]\n    values = []\n    shorts = []\n    for item in items:\n        result = obj_sum(item)\n        values.append(str(result))\n        shorts.append(getattr(result, \"short\", None))\n    return {\"value\": values, \"short\": shorts}\n\n\npacked = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\n    \"value\": packed[\"value\"],\n    \"short\": packed[\"short\"],\n    \"median_ms\": statistics.median(elapsed),\n}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "pillar",
+      "translated": true,
+      "python": "pillar.column.pillar",
+      "loads": [],
+      "uses": [],
+      "done": "Formats one numeric column, including a missing value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(pillar(x, \"x\")), collapse = \"\\n\")",
+        "r_ms": 5.591154098510742,
+        "translated_ms": 0.8936155008996138,
+        "speedup": 6.256778326788264,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  x <- c(1.5, NA, 1000, -0.25, 1e10, -Inf, NaN)\n  paste(format(pillar(x, \"x\")), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.column import pillar\n\n\ndef one():\n    rows = pillar([1.5, None, 1000.0, -0.25, 1e10, float(\"-inf\"), float(\"nan\")], \"x\").format()\n    return \"\\n\".join(rows)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "pillar_component",
+      "translated": true,
+      "python": "pillar.parts.pillar_component",
+      "loads": [],
+      "uses": [
+        "new_pillar_component"
+      ],
+      "done": "Wraps a title or a type and copies its width and minimum width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "widths of a letters title and of the type of letters",
+        "r_ms": 0.8918046951293945,
+        "translated_ms": 0.0742169995646691,
+        "speedup": 12.01617823895345,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8, cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.bold = FALSE, pillar.min_title_chars = 20, pillar.subtle = TRUE)\n\none <- function() {\n  title <- pillar_component(new_pillar_title(\"letters\"))\n  kind <- pillar_component(new_pillar_type(letters))\n  list(\n    title_width = attr(title, \"width\"),\n    title_min_width = attr(title, \"min_width\"),\n    type_width = attr(kind, \"width\"),\n    type_min_width = attr(kind, \"min_width\")\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value, median_ms = median(elapsed) * 1000),\n  auto_unbox = TRUE,\n  digits = 16\n))\ncat(\"\\n\")\n",
+          "python": "import json\nimport statistics\nimport string\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8, \"cli.unicode\": True})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.parts import new_pillar_title, new_pillar_type, pillar_component\n\npillar_options(\n    **{\"pillar.bold\": False, \"pillar.subtle\": True, \"pillar.min_title_chars\": 20}\n)\n\n\ndef one():\n    title = pillar_component(new_pillar_title(\"letters\"))\n    kind = pillar_component(new_pillar_type(list(string.ascii_lowercase)))\n    return {\n        \"title_width\": title.width,\n        \"title_min_width\": title.min_width,\n        \"type_width\": kind.width,\n        \"type_min_width\": kind.min_width,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pillar_shaft",
+      "translated": true,
+      "python": "pillar.shaft.pillar_shaft",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Formats an atomic vector as a shaft.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(pillar_shaft(1:3), width = 1), collapse = \"\\n\")",
+        "r_ms": 2.020597457885742,
+        "translated_ms": 0.23746999977447558,
+        "speedup": 8.508853580682597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(format(pillar_shaft(1:3), width = 1), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.shaft import pillar_shaft\nfrom pillar._layout import lines_of\n\n\ndef one():\n    return \"\\n\".join(lines_of(pillar_shaft([1, 2, 3]).format(width=1)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "scale_x_num",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "scale_y_num",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "set_char_opts",
+      "translated": true,
+      "python": "pillar.char.set_char_opts",
+      "loads": [],
+      "uses": [],
+      "done": "Attaches the same options to the existing data and leaves a plain character vector unmarked.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_char_opts keeps the strings and formats the same five labels",
+        "r_ms": 0.6479024887084961,
+        "translated_ms": 0.014941500012355391,
+        "speedup": 43.362613403790384,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode_data <- function(x) {\n  if (!length(x)) return(\"[]\")\n  parts <- vapply(seq_along(x), function(i) {\n    if (is.na(x[[i]])) \"null\" else json_str(x[[i]])\n  }, \"\")\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\nencode <- function(items) {\n  parts <- vapply(items, function(item) {\n    paste0(\n      '{\"data\":', encode_data(item$data),\n      ',\"type\":', json_str(item$type), \"}\"\n    )\n  }, \"\")\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  items <- list(\n    set_char_opts(c(\"a\", \"bb\"), min_chars = 5, shorten = \"mid\"),\n    set_char_opts(c(\"a\", NA)),\n    set_char_opts(\"hello\", min_chars = 3, shorten = \"abbreviate\"),\n    set_char_opts(\"ab\", shorten = \"back\"),\n    set_char_opts(c(\"ab\", \"cd\"), min_chars = 2, shorten = \"front\")\n  )\n  lapply(items, function(x) {\n    list(data = x, type = format(attr(x, \"pillar\", exact = TRUE)))\n  })\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pillar.char import format_pillar_char_attr, set_char_opts\n\n\ndef snap(x):\n    data = x.data\n    if not isinstance(data, list):\n        data = [data]\n    return {\"data\": data, \"type\": format_pillar_char_attr(x.pillar)}\n\n\ndef one():\n    return [\n        snap(set_char_opts([\"a\", \"bb\"], min_chars=5, shorten=\"mid\")),\n        snap(set_char_opts([\"a\", None])),\n        snap(set_char_opts(\"hello\", min_chars=3, shorten=\"abbreviate\")),\n        snap(set_char_opts(\"ab\", shorten=\"back\")),\n        snap(set_char_opts([\"ab\", \"cd\"], min_chars=2, shorten=\"front\")),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "set_num_opts",
+      "translated": true,
+      "python": "pillar.num.set_num_opts",
+      "loads": [],
+      "uses": [],
+      "done": "Writes the pillar attribute and keeps the existing storage and class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_num_opts of a double and an integer, sigfig 2",
+        "r_ms": 0.5142688751220703,
+        "translated_ms": 0.030352999601745978,
+        "speedup": 16.942934203197773,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(pillar, lib.loc = \"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\"))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\natom <- function(v) {\n  if (is.na(v)) \"NA\" else as.character(v)\n}\n\nencode <- function(x) {\n  paste(\n    paste(vapply(as.vector(x), atom, \"\"), collapse = \",\"),\n    typeof(x),\n    paste(class(x), collapse = \"/\"),\n    format(attr(x, \"pillar\", exact = TRUE)),\n    vctrs::vec_ptype_abbr(x),\n    sep = \";\"\n  )\n}\n\none <- function() {\n  paste(\n    encode(set_num_opts(c(1, 2), sigfig = 2)),\n    encode(set_num_opts(1:2, sigfig = 2)),\n    sep = \" || \"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom glue._text import r_character_double\nfrom pillar.num import set_num_opts\n\n\ndef atom(value):\n    if value is None:\n        return \"NA\"\n    if isinstance(value, float):\n        return r_character_double(value)\n    return str(value)\n\n\ndef encode(value):\n    return \";\".join(\n        [\n            \",\".join(atom(item) for item in value.data),\n            value.typeof,\n            \"/\".join(value.classes),\n            value.pillar,\n            value.abbr,\n        ]\n    )\n\n\ndef one():\n    return \" || \".join(\n        [\n            encode(set_num_opts([1.0, 2.0], sigfig=2)),\n            encode(set_num_opts([1, 2], sigfig=2)),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "size_sum",
+      "translated": true,
+      "python": "pillar.summary.size_sum",
+      "loads": [],
+      "uses": [
+        "dim_desc"
+      ],
+      "done": "The size in brackets. An empty string when the object is not a vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "size_sum of 1:10, trees, Titanic, a scalar, and a function",
+        "r_ms": 0.8157491683959961,
+        "translated_ms": 0.034767499528243206,
+        "speedup": 23.462980641829773,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\none <- function() {\n  c(\n    size_sum(1:10),\n    size_sum(trees),\n    size_sum(Titanic),\n    size_sum(1),\n    size_sum(mean)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(vapply(value, json_str, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import DataFrame, Table\nfrom pillar.summary import size_sum\n\n\ndef mean(values):\n    return values\n\n\ndef one():\n    trees = DataFrame({name: list(range(31)) for name in (\"Girth\", \"Height\", \"Volume\")})\n    return [\n        size_sum(list(range(1, 11))),\n        size_sum(trees),\n        size_sum(Table((4, 2, 2, 2))),\n        size_sum(1),\n        size_sum(mean),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "squeeze",
+      "translated": true,
+      "python": "pillar.colonnade.squeeze",
+      "loads": [
+        "lifecycle"
+      ],
+      "uses": [],
+      "done": "Defunct since pillar 1.5.0. The call stops.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tryCatch(squeeze(), error = function(e) conditionMessage(e))",
+        "r_ms": 33.919692039489746,
+        "translated_ms": 0.016613501429674216,
+        "speedup": 2041.6943522154859,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tryCatch(squeeze(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom lifecycle import LifecycleError\nfrom pillar.colonnade import squeeze\n\n\ndef one():\n    try:\n        squeeze()\n    except LifecycleError as exc:\n        return str(exc)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "style_bold",
+      "translated": true,
+      "python": "pillar.styles.style_bold",
+      "loads": [],
+      "uses": [],
+      "done": "Bolds non-empty text when pillar.bold is true. A blank string stays blank.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_bold of Petal.Width, a blank, and NA, with pillar.bold true",
+        "r_ms": 0.04744529724121094,
+        "translated_ms": 0.011310500667605083,
+        "speedup": 4.194800799322806,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.bold = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() style_bold(c(\"Petal.Width\", \"\", NA))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import style_bold\n\npillar_options(**{\"pillar.bold\": True})\n\n\ndef one():\n    return style_bold([\"Petal.Width\", \"\", None])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "style_na",
+      "translated": true,
+      "python": "pillar.styles.style_na",
+      "loads": [],
+      "uses": [],
+      "done": "Paints every element red, including a blank string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_na of NA, a blank, and a missing string, at 8 colors",
+        "r_ms": 0.027060508728027344,
+        "translated_ms": 0.007289499990292825,
+        "speedup": 3.7122585587575125,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() style_na(c(\"NA\", \"\", NA))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar.styles import style_na\n\n\ndef one():\n    return style_na([\"NA\", \"\", None])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "style_neg",
+      "translated": true,
+      "python": "pillar.styles.style_neg",
+      "loads": [],
+      "uses": [],
+      "done": "Paints non-empty text red when pillar.neg is true. A blank string stays blank.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_neg of -1, a blank, and NA, at 8 colors",
+        "r_ms": 0.04470348358154297,
+        "translated_ms": 0.01099499968404416,
+        "speedup": 4.065801261132935,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.neg = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() style_neg(c(\"-1\", \"\", NA))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import style_neg\n\npillar_options(**{\"pillar.neg\": True})\n\n\ndef one():\n    return style_neg([\"-1\", \"\", None])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "style_num",
+      "translated": true,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "Significant digits stay plain or red. The rest go through style_subtle_num.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_num of 123 and 456, once significant and once not",
+        "r_ms": 0.16582012176513672,
+        "translated_ms": 0.04812600036530057,
+        "speedup": 3.4455412979777775,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.subtle_num = FALSE, pillar.neg = TRUE, pillar.subtle = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  c(\n    style_num(c(\"123\", \"456\"), negative = c(TRUE, FALSE)),\n    style_num(c(\"123\", \"456\"), negative = c(TRUE, FALSE), significant = c(FALSE, FALSE))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import style_num\n\npillar_options(**{\"pillar.subtle_num\": False, \"pillar.neg\": True, \"pillar.subtle\": True})\n\n\ndef one():\n    return (\n        style_num([\"123\", \"456\"], [True, False])\n        + style_num([\"123\", \"456\"], [True, False], [False, False])\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "style_subtle",
+      "translated": true,
+      "python": "pillar.styles.style_subtle",
+      "loads": [],
+      "uses": [],
+      "done": "Greys non-empty text when pillar.subtle is true. A blank string stays blank.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_subtle of a, a blank, and NA, at 8 colors",
+        "r_ms": 0.047206878662109375,
+        "translated_ms": 0.010292999832017813,
+        "speedup": 4.586309087003556,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.subtle = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() style_subtle(c(\"a\", \"\", NA))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import style_subtle\n\npillar_options(**{\"pillar.subtle\": True})\n\n\ndef one():\n    return style_subtle([\"a\", \"\", None])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "style_subtle_num",
+      "translated": true,
+      "python": "pillar.styles.style_subtle_num",
+      "loads": [],
+      "uses": [
+        "style_subtle",
+        "style_neg"
+      ],
+      "done": "Greys the whole vector when pillar.subtle_num is true. Otherwise it reds the negatives.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style_subtle_num of 0.01, 0.02, 0.03 with the first and third negative",
+        "r_ms": 0.10895729064941406,
+        "translated_ms": 0.05381049959396478,
+        "speedup": 2.0248332847969763,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.num_colors = 8)\nsuppressPackageStartupMessages(library(pillar))\noptions(pillar.subtle_num = FALSE, pillar.neg = TRUE)\n\njson_str <- function(s) {\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (!length(chars)) return('\"\"')\n  out <- vapply(chars, function(ch) {\n    code <- utf8ToInt(ch)\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\\"\") return(\"\\\\\\\"\")\n    if (code < 32L) return(sprintf(\"\\\\u%04x\", code))\n    ch\n  }, \"\")\n  paste0('\"', paste(out, collapse = \"\"), '\"')\n}\n\nencode <- function(value) {\n  if (length(value) == 1) return(json_str(value))\n  paste0(\"[\", paste(vapply(value, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() style_subtle_num(0.01 * 1:3, c(TRUE, FALSE, TRUE))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  encode(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.num_colors\": 8})\n\nfrom pillar._options import options as pillar_options\nfrom pillar.styles import style_subtle_num\n\npillar_options(**{\"pillar.subtle_num\": False, \"pillar.neg\": True})\n\n\ndef one():\n    return style_subtle_num([0.01 * i for i in (1, 2, 3)], [True, False, True])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_format_body",
+      "translated": true,
+      "python": "pillar.format_tbl.tbl_format_body",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Renders the body lines of a three-column data frame.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(tbl_format_body(df, setup), collapse = \"\\n\")",
+        "r_ms": 17.557859420776367,
+        "translated_ms": 1.6266985003312584,
+        "speedup": 10.793554808835756,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  setup <- tbl_format_setup(df, width = 30, n = 2)\n  paste(tbl_format_body(df, setup), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.format_tbl import tbl_format_body, tbl_format_setup\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    setup = tbl_format_setup(frame, width=30, n=2)\n    return \"\\n\".join(tbl_format_body(frame, setup))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_format_footer",
+      "translated": true,
+      "python": "pillar.format_tbl.tbl_format_footer",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Renders the extra-row footer.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(tbl_format_footer(df, setup), collapse = \"\\n\")",
+        "r_ms": 20.893216133117676,
+        "translated_ms": 1.5039450008771382,
+        "speedup": 13.892274066493277,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  setup <- tbl_format_setup(df, width = 30, n = 2)\n  paste(tbl_format_footer(df, setup), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.format_tbl import tbl_format_footer, tbl_format_setup\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    setup = tbl_format_setup(frame, width=30, n=2)\n    return \"\\n\".join(tbl_format_footer(frame, setup))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_format_header",
+      "translated": true,
+      "python": "pillar.format_tbl.tbl_format_header",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Renders the data-frame header.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(tbl_format_header(df, setup), collapse = \"\\n\")",
+        "r_ms": 20.365357398986816,
+        "translated_ms": 1.5274655015673488,
+        "speedup": 13.332777321706908,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  setup <- tbl_format_setup(df, width = 30, n = 2)\n  paste(tbl_format_header(df, setup), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.format_tbl import tbl_format_header, tbl_format_setup\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    setup = tbl_format_setup(frame, width=30, n=2)\n    return \"\\n\".join(tbl_format_header(frame, setup))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_format_setup",
+      "translated": true,
+      "python": "pillar.format_tbl.tbl_format_setup",
+      "loads": [
+        "cli"
+      ],
+      "uses": [],
+      "done": "Chooses the rows and columns, then the header and body can be formatted from that setup.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste(format(tbl_format_setup(df, width = 30, n = 2)), collapse = \"\\n\")",
+        "r_ms": 30.885934829711914,
+        "translated_ms": 2.0606595007848227,
+        "speedup": 14.9883737793404,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  paste(format(tbl_format_setup(df, width = 30, n = 2)), collapse = \"\\n\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.format_tbl import tbl_format_setup\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    return \"\\n\".join(tbl_format_setup(frame, width=30, n=2).format())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_nrow",
+      "translated": true,
+      "python": "pillar.format_tbl.tbl_nrow",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the number of rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tbl_nrow(df)",
+        "r_ms": 0.016808509826660156,
+        "translated_ms": 0.003454499164945446,
+        "speedup": 4.865686463966941,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- enc2utf8(as.character(s))\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\t\", \"\\\\t\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\ndf <- structure(\n  data.frame(\n    a = 1:3,\n    b = c(\"x\", \"yy\", \"zzz\"),\n    c = c(TRUE, FALSE, NA),\n    stringsAsFactors = FALSE\n  ),\n  class = c(\"tbl\", \"data.frame\")\n)\n\none <- function() {\n  tbl_nrow(df)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', format(value, scientific = FALSE), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Factor, List\n\nfrom pillar.format_tbl import tbl_nrow\n\n\ndef one():\n    frame = DataFrame({\"a\": [1, 2, 3], \"b\": [\"x\", \"yy\", \"zzz\"], \"c\": [True, False, None]})\n    return tbl_nrow(frame)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "tbl_sum",
+      "translated": true,
+      "python": "pillar.summary.tbl_sum",
+      "loads": [],
+      "uses": [
+        "obj_sum"
+      ],
+      "done": "One named string. The name is Description and the value is obj_sum.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tbl_sum name and text for a vector, a matrix, a data frame, and a function",
+        "r_ms": 2.444148063659668,
+        "translated_ms": 0.08691050061315764,
+        "speedup": 28.12258641264392,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\njson_chr <- function(xs) {\n  paste0(\"[\", paste(vapply(xs, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\njson_opt <- function(xs) {\n  parts <- character(length(xs))\n  for (i in seq_along(xs)) {\n    s <- xs[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else json_str(s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\n\none <- function() {\n  xs <- list(\n    1:10,\n    matrix(1:10),\n    data.frame(a = 1),\n    Sys.Date(),\n    Sys.time(),\n    mean\n  )\n  values <- character(length(xs))\n  labels <- character(length(xs))\n  shorts <- rep(NA_character_, length(xs))\n  for (i in seq_along(xs)) {\n    s <- tbl_sum(xs[[i]])\n    values[[i]] <- as.character(s)\n    labels[[i]] <- names(s)[[1]]\n    sh <- attr(s, \"short\", exact = TRUE)\n    if (!is.null(sh)) shorts[[i]] <- sh\n  }\n  list(value = values, name = labels, short = shorts)\n}\n\npacked <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"name\":%s,\"short\":%s,\"median_ms\":%.17g}\\n',\n  json_chr(packed$value),\n  json_chr(packed$name),\n  json_opt(packed$short),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom datetime import date, datetime\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import DataFrame, Matrix\nfrom pillar.summary import tbl_sum\n\n\ndef mean(values):\n    return values\n\n\ndef one():\n    items = [\n        list(range(1, 11)),\n        Matrix(list(range(1, 11)), 10),\n        DataFrame({\"a\": [1]}),\n        date.today(),\n        datetime.now(),\n        mean,\n    ]\n    values = []\n    names = []\n    shorts = []\n    for item in items:\n        result = tbl_sum(item)\n        values.append(str(result))\n        names.append(result.name)\n        shorts.append(getattr(result, \"short\", None))\n    return {\"value\": values, \"name\": names, \"short\": shorts}\n\n\npacked = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\n    \"value\": packed[\"value\"],\n    \"name\": packed[\"name\"],\n    \"short\": packed[\"short\"],\n    \"median_ms\": statistics.median(elapsed),\n}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "type_sum",
+      "translated": true,
+      "python": "pillar.summary.type_sum",
+      "loads": [],
+      "uses": [],
+      "done": "The short type name. An unordered factor is fct, with no shape suffix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "type_sum of the base vectors, a factor, a table, a function, and NULL",
+        "r_ms": 3.0635595321655273,
+        "translated_ms": 0.07187150004028808,
+        "speedup": 42.62551262250304,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\noptions(cli.unicode = TRUE)\nsuppressPackageStartupMessages(library(pillar))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0('\"', s, '\"')\n}\n\none <- function() {\n  c(\n    type_sum(factor(letters[1:3])),\n    type_sum(ordered(letters[1:3])),\n    type_sum(1:10),\n    type_sum(1.5),\n    type_sum(TRUE),\n    type_sum(\"a\"),\n    type_sum(1 + 2i),\n    type_sum(as.raw(1)),\n    type_sum(data.frame(a = 1)),\n    type_sum(matrix(1:4, nrow = 2)),\n    type_sum(Titanic),\n    type_sum(Sys.Date()),\n    type_sum(Sys.time()),\n    type_sum(list(1, 2)),\n    type_sum(mean),\n    type_sum(new.env()),\n    type_sum(NULL)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(vapply(value, json_str, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom datetime import date, datetime\n\nfrom cli._options import options as cli_options\n\ncli_options(**{\"cli.unicode\": True})\n\nfrom pillar._vec import NULL, DataFrame, Environment, Factor, List, Matrix, Table\nfrom pillar.summary import type_sum\n\n\ndef mean(values):\n    return values\n\n\ndef one():\n    return [\n        type_sum(Factor([\"a\", \"b\", \"c\"])),\n        type_sum(Factor([\"a\", \"b\", \"c\"], ordered=True)),\n        type_sum(list(range(1, 11))),\n        type_sum(1.5),\n        type_sum(True),\n        type_sum(\"a\"),\n        type_sum(1 + 2j),\n        type_sum(b\"\\x01\"),\n        type_sum(DataFrame({\"a\": [1]})),\n        type_sum(Matrix(list(range(1, 5)), 2)),\n        type_sum(Table((4, 2, 2, 2))),\n        type_sum(date.today()),\n        type_sum(datetime.now()),\n        type_sum(List([1, 2])),\n        type_sum(mean),\n        type_sum(Environment()),\n        type_sum(NULL),\n    ]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    }
+  ]
+}

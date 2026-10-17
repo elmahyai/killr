@@ -1,0 +1,1 @@
+`agfit4.c` leaves the last-stratum mean update inside the person loop, so the covariate on `sort2[0]` is subtracted from every used row. Keep that control flow. A true per-stratum mean changes the internal scale.

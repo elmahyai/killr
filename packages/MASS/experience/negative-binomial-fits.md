@@ -1,0 +1,1 @@
+`rnegbin` draws every gamma before every Poisson. `theta.md` and `theta.mm` subtract `del`; `theta.ml` adds it and needs SciPy `digamma`. `glm.nb` keeps the previous deviance on the last pass. `gamma.shape` needs decimal trigamma for the standard error.

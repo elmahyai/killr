@@ -1,0 +1,72 @@
+{
+  "name": "handler_txtprogressbar",
+  "title": "Progression Handler: Progress Reported as Plain Progress Bars (Text) in the Terminal",
+  "origin": {
+    "description": "Report progress with a utils text progress bar in the terminal.",
+    "usage": "handler_txtprogressbar(char = \"=\", style = 3L, file = stderr(), intrusiveness = getOption(\"progressr.intrusiveness.terminal\", 1), target = \"terminal\", ...)",
+    "arguments": [
+      {
+        "name": "char",
+        "text": "The symbol that forms the bar. ANSI color is kept in the symbol. The width is measured after that color is removed. The default is \"=\"."
+      },
+      {
+        "name": "style",
+        "text": "The utils txtProgressBar style, 1, 2, or 3. The default is 3."
+      },
+      {
+        "name": "file",
+        "text": "An open connection. The default is stderr()."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.terminal, or 1."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "...",
+        "text": "Further named arguments. make_progression_handler arguments stay on the handler. The rest are passed to txtProgressBar."
+      }
+    ],
+    "details": "A bar is created on initiate unless the handler is disabled or times is 1. A sticky message is erased, printed, and the bar is drawn again. clear TRUE erases the bar and sends the closing newline to a temporary file, which is then deleted. clear FALSE draws the bar at max_steps and leaves that newline on the connection. max equal to min is a void bar, which erase and redraw skip.",
+    "value": "A function of class progression_handler.",
+    "example": "path <- tempfile(\"txt\")\ncon <- file(path, open = \"wt\")\nhandler <- handler_txtprogressbar(style = 3L, file = con, enable = TRUE, clear = FALSE)\nwith_progress({\n  p <- progressor(steps = 4, on_exit = FALSE)\n  p(message = \"one\")\n  p(message = \"two\")\n  p(message = \"three\")\n  p(message = \"four\")\n}, handlers = handler, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\nclose(con)\nn <- nchar(readChar(path, file.info(path)$size, useBytes = TRUE))\ncat(\"handler_txtprogressbar wrote \", n, \" characters for four steps.\\n\", sep = \"\")\n",
+    "output": "output/handler_txtprogressbar-r.txt"
+  },
+  "translation": {
+    "description": "Report progress with the utils text progress bar.",
+    "usage": "handler_txtprogressbar(char=\"=\", style=3, file=None, intrusiveness=None, target=\"terminal\", **extra)",
+    "arguments": [
+      {
+        "name": "char",
+        "text": "The symbol that forms the bar. ANSI color is kept in the symbol. The width is measured after that color is removed. The default is \"=\"."
+      },
+      {
+        "name": "style",
+        "text": "The utils txtProgressBar style, 1, 2, or 3. The default is 3."
+      },
+      {
+        "name": "file",
+        "text": "A text stream with write(). The default is sys.stderr. An empty string is stdout."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.terminal, or 1."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "extra",
+        "text": "Further named arguments. make_progression_handler arguments stay on the handler, including enable and clear. The rest are passed to txtProgressBar."
+      }
+    ],
+    "details": "A bar is created on initiate unless the handler is disabled or times is 1. A sticky message is erased, printed, and the bar is drawn again. clear true erases the bar and sends the closing newline to a temporary file, which is then deleted. clear false draws the bar at max_steps and leaves that newline on the stream. max equal to min is a void bar, which erase and redraw skip.",
+    "value": "A calling handler.",
+    "example": "import os\nimport tempfile\n\nfrom progressr.bars import handler_txtprogressbar\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\n\npath = os.path.join(tempfile.mkdtemp(), \"txt.txt\")\nhandle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\nhandler = handler_txtprogressbar(style=3, file=handle, enable=True, clear=False)\n\ndef body():\n    progress = progressor(steps=4, on_exit=False)\n    progress(message=\"one\")\n    progress(message=\"two\")\n    progress(message=\"three\")\n    progress(message=\"four\")\n\nwith_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nhandle.close()\nn = len(open(path, \"rb\").read().decode(\"utf-8\"))\nprint(f\"handler_txtprogressbar wrote {n} characters for four steps.\")\n",
+    "output": "output/handler_txtprogressbar-python.txt"
+  }
+}

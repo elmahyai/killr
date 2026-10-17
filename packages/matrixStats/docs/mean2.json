@@ -1,0 +1,60 @@
+{
+  "name": "mean2",
+  "title": "Fast averaging over subset of vector elements",
+  "origin": {
+    "description": "Computes the sample mean of all or a subset of values.",
+    "usage": "mean2(x, idxs = NULL, na.rm = FALSE, refine = TRUE, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "refine",
+        "text": "If TRUE and x is numeric, then extra effort is used to calculate the average with greater numerical precision, otherwise not."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "mean2(x, idxs) gives equivalent results as mean(x[idxs]), but is faster and more memory efficient since it avoids the actual subsetting which requires copying of elements and garbage collection thereof. If x is numeric and refine = TRUE, then a two-pass scan is used to calculate the average. The first scan calculates the total sum and divides by the number of (non-missing) values. In the second scan, this average is refined by adding the residuals towards the first average. mean() uses this approach. mean2(..., refine = FALSE) is almost twice as fast as mean2(..., refine = TRUE).",
+    "value": "Returns a numeric scalar.",
+    "example": "x <- 1:10\nn <- length(x)\n\nidxs <- seq(from = 1, to = n, by = 2)\ns1 <- mean(x[idxs])                     # 25\ns2 <- mean2(x, idxs = idxs)             # 25\nstopifnot(identical(s1, s2))\n\nidxs <- seq(from = n, to = 1, by = -2)\ns1 <- mean(x[idxs])                     # 25\ns2 <- mean2(x, idxs = idxs)             # 25\nstopifnot(identical(s1, s2))\n\ns1 <- mean(x)                           # 55\ns2 <- mean2(x)                          # 55\nstopifnot(identical(s1, s2))",
+    "output": "output/mean2-r.txt"
+  },
+  "translation": {
+    "description": "Computes the sample mean of all or a subset of values.",
+    "usage": "mean2(x, idxs=None, na_rm=False, refine=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "Numeric or logical vector. Integer missing values are None. Double missing values are nan. Logical values are averaged as 0 and 1."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based positions to include, as in R. None selects every element. Zeros are dropped. Negative values exclude those positions. Missing and out-of-range positions contribute a missing value. This is idxs in R."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm in R."
+      },
+      {
+        "name": "refine",
+        "text": "If True and x is double, a second pass adds the mean of the residuals from the first average. Integer and logical data use one pass. The default is True."
+      }
+    ],
+    "details": "mean2(x, idxs) gives the same result as averaging the selected elements, without building that subset. The average is computed in the Rust crate mean2. For double data and refine=True, the first pass sums and divides by the number of non-missing values, and the second pass adds the mean residual. Index rules follow matrixStats validateIndices, with out-of-range positions allowed.",
+    "value": "A Python float. An empty mean is nan.",
+    "example": "import numpy as np\nfrom matrixstats.mean2 import mean2\n\nx = np.arange(1, 11)\nn = len(x)\nidxs = np.arange(1, n + 1, 2)\ns2 = mean2(x, idxs=idxs)         # 5.5\nidxs = np.arange(n, 0, -2)\ns2 = mean2(x, idxs=idxs)         # 5.5\ns2 = mean2(x)                    # 5.5",
+    "output": "output/mean2-python.txt"
+  }
+}

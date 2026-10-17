@@ -1,0 +1,928 @@
+{
+  "name": "remotes",
+  "cran_version": "2.5.0",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 38 exports are recorded. GitHub, GitLab, Bitbucket, and install_dev were compared as argument checks. Those downloads were not a successful install.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "add_metadata",
+      "translated": true,
+      "python": "remotes.add_metadata",
+      "loads": [],
+      "uses": [],
+      "done": "Writes DESCRIPTION, and updates Meta/package.rds so readRDS returns the same DESCRIPTION fields.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "package.rds DESCRIPTION names and values after RemoteType github and RemoteRepo foo, read back with readRDS",
+        "r_ms": 0.3420114517211914,
+        "translated_ms": 0.25512099909974495,
+        "speedup": 1.3405852631812358,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\npkg <- tempfile(\"addmeta\")\ndir.create(file.path(pkg, \"Meta\"), recursive = TRUE)\nrds <- file.path(pkg, \"Meta\", \"package.rds\")\nsaveRDS(\n  structure(list(DESCRIPTION = c(Package = \"foo\", Version = \"1.0.0\")), class = \"packageDescription2\"),\n  rds\n)\nmeta <- list(RemoteType = \"github\", RemoteRepo = \"foo\")\nadd_metadata(pkg, meta)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  add_metadata(pkg, meta)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ndesc <- readRDS(rds)$DESCRIPTION\ntext <- paste(sprintf(\"%s=%s\", names(desc), desc), collapse = \"\\n\")\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(text), median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport subprocess\nimport tempfile\nimport time\n\nfrom remotes.add_metadata import add_metadata\n\npkg = tempfile.mkdtemp()\nos.makedirs(os.path.join(pkg, \"Meta\"))\nrds = os.path.join(pkg, \"Meta\", \"package.rds\")\nsubprocess.check_call(\n    [\n        \"Rscript\",\n        \"--vanilla\",\n        \"-e\",\n        \"saveRDS(structure(list(DESCRIPTION = c(Package = 'foo', Version = '1.0.0')), class = 'packageDescription2'), commandArgs(TRUE)[[1]])\",\n        rds,\n    ]\n)\nmeta = {\"RemoteType\": \"github\", \"RemoteRepo\": \"foo\"}\nadd_metadata(pkg, meta)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    add_metadata(pkg, meta)\n    elapsed.append((time.perf_counter() - started) * 1000)\ntext = subprocess.check_output(\n    [\n        \"Rscript\",\n        \"--vanilla\",\n        \"-e\",\n        \"d <- readRDS(commandArgs(TRUE)[[1]])$DESCRIPTION; cat(paste(sprintf('%s=%s', names(d), d), collapse = '\\\\n'))\",\n        rds,\n    ],\n    text=True,\n)\nprint(json.dumps({\"value\": text, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "available_packages",
+      "translated": true,
+      "python": "remotes.available_packages",
+      "loads": [],
+      "uses": [],
+      "done": "Fetches the source PACKAGES index and caches it. cloud.r-project.org lists remotes 2.5.0 among 25325 rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cached available_packages(\"https://cloud.r-project.org\", \"source\"); remotes version and row count",
+        "r_ms": 0.027894973754882812,
+        "translated_ms": 0.0028060003387508914,
+        "speedup": 9.94118688071878,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(identical(as.character(packageVersion(\"remotes\")), \"2.5.0\"))\n\nurl <- \"https://cloud.r-project.org\"\navailable_packages_reset()\ndb <- available_packages(url, \"source\")\nhit <- match(\"remotes\", rownames(db))\nstopifnot(!is.na(hit))\npkg <- unname(db[hit, \"Package\"])\nver <- unname(db[hit, \"Version\"])\nrn <- rownames(db)[hit]\nn <- nrow(db)\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  available_packages(url, \"source\")\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nnamed <- available_packages_set(c(CRAN = url), \"source\", c(Package = \"other\"))\nstopifnot(identical(unname(named), \"other\"))\nagain <- available_packages(url, \"source\")\nstopifnot(identical(unname(again[\"remotes\", \"Version\"]), ver))\nstopifnot(identical(nrow(again), n))\n\ncat(sprintf(\n  \"{\\\"package\\\":\\\"%s\\\",\\\"version\\\":\\\"%s\\\",\\\"rowname\\\":\\\"%s\\\",\\\"nrow\\\":%d,\\\"median_ms\\\":%.17g}\\n\",\n  pkg, ver, rn, n, median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.available_packages import (\n    available_packages,\n    available_packages_reset,\n    available_packages_set,\n)\n\nurl = \"https://cloud.r-project.org\"\navailable_packages_reset()\ndb = available_packages(url, \"source\")\nhit = db.rownames.index(\"remotes\")\npackage = db[\"Package\"][hit]\nversion = db[\"Version\"][hit]\nrowname = db.rownames[hit]\nn = len(db)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    available_packages(url, \"source\")\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nnamed = available_packages_set({\"CRAN\": url}, \"source\", {\"Package\": \"other\"})\nif list(named.values()) != [\"other\"]:\n    raise SystemExit(\"named repos collided with the unnamed key\")\nagain = available_packages(url, \"source\")\nif again[\"Version\"][again.rownames.index(\"remotes\")] != version or len(again) != n:\n    raise SystemExit(\"cached database was replaced\")\n\nprint(json.dumps({\n    \"package\": package,\n    \"version\": version,\n    \"rowname\": rowname,\n    \"nrow\": n,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "available_packages_reset",
+      "translated": true,
+      "python": "remotes.available_packages_reset",
+      "loads": [],
+      "uses": [],
+      "done": "Removes every cached database and returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "reset after one insert of c(Package = \"digest\", Version = \"0.6.37\")",
+        "r_ms": 0.011920928955078125,
+        "translated_ms": 0.0005770002644567285,
+        "speedup": 20.660179361099967,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(identical(as.character(packageVersion(\"remotes\")), \"2.5.0\"))\n\nurl <- \"https://cran.r-project.org\"\ndb <- c(Package = \"digest\", Version = \"0.6.37\")\ninsert <- function() available_packages_set(url, \"source\", db)\none <- function() available_packages_reset()\n\ninvisible(insert())\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  insert()\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nstopifnot(is.null(value))\nfresh <- available_packages_set(url, \"source\", c(Package = \"kept\"))\nstopifnot(identical(unname(fresh), \"kept\"))\n\ncat(sprintf(\"{\\\"value\\\":null,\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.available_packages import available_packages_reset, available_packages_set\n\nurl = \"https://cran.r-project.org\"\ndb = {\"Package\": \"digest\", \"Version\": \"0.6.37\"}\n\n\ndef insert():\n    return available_packages_set(url, \"source\", db)\n\n\ndef one():\n    return available_packages_reset()\n\n\ninsert()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    insert()\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nif value is not None:\n    raise SystemExit(\"reset did not return None\")\nfresh = available_packages_set(url, \"source\", {\"Package\": \"kept\"})\nif list(fresh.values()) != [\"kept\"]:\n    raise SystemExit(\"reset did not clear the cache\")\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "available_packages_set",
+      "translated": true,
+      "python": "remotes.available_packages_set",
+      "loads": [],
+      "uses": [],
+      "done": "Keeps the first database stored for a repository and package type, and treats names on that pair as part of the key.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "first insert of c(Package = \"digest\", Version = \"0.6.37\") for https://cran.r-project.org and source after reset",
+        "r_ms": 0.032782554626464844,
+        "translated_ms": 0.0012509999578469433,
+        "speedup": 26.205080520454906,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(identical(as.character(packageVersion(\"remotes\")), \"2.5.0\"))\n\njson_str <- function(s) {\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_chr <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (length(x) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(unname(x), json_str, \"\"), collapse = \",\"), \"]\")\n}\n\nurl <- \"https://cran.r-project.org\"\ndb <- c(Package = \"digest\", Version = \"0.6.37\")\none <- function() available_packages_set(url, \"source\", db)\n\navailable_packages_reset()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  available_packages_reset()\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nsecond <- available_packages_set(url, \"source\", c(Package = \"digest\", Version = \"9\"))\nstopifnot(identical(unname(second), unname(db)))\n\navailable_packages_reset()\nfresh <- available_packages_set(url, \"source\", c(Package = \"digest\", Version = \"9\"))\nstopifnot(identical(unname(fresh), c(\"digest\", \"9\")))\nheld <- available_packages_set(url, \"source\", c(Package = \"digest\", Version = \"0\"))\nstopifnot(identical(unname(held), c(\"digest\", \"9\")))\n\nnamed <- available_packages_set(c(CRAN = url), \"source\", c(Package = \"other\"))\nstopifnot(identical(unname(named), \"other\"))\nunnamed_again <- available_packages_set(url, \"source\", c(Package = \"nope\"))\nstopifnot(identical(unname(unnamed_again), c(\"digest\", \"9\")))\n\navailable_packages_reset()\nnull_db <- available_packages_set(url, \"source\", NULL)\nreplaced <- available_packages_set(url, \"source\", c(Package = \"after-null\"))\nstopifnot(is.null(null_db))\nstopifnot(identical(unname(replaced), \"after-null\"))\n\ncat(sprintf(\n  \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_chr(names(value)),\n  json_chr(unname(value)),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.available_packages import available_packages_reset, available_packages_set\n\nurl = \"https://cran.r-project.org\"\ndb = {\"Package\": \"digest\", \"Version\": \"0.6.37\"}\n\n\ndef one():\n    return available_packages_set(url, \"source\", db)\n\n\navailable_packages_reset()\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    available_packages_reset()\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nsecond = available_packages_set(\n    url, \"source\", {\"Package\": \"digest\", \"Version\": \"9\"}\n)\nif list(second.values()) != [\"digest\", \"0.6.37\"]:\n    raise SystemExit(\"second insert replaced the cached database\")\n\navailable_packages_reset()\nfresh = available_packages_set(\n    url, \"source\", {\"Package\": \"digest\", \"Version\": \"9\"}\n)\nif list(fresh.values()) != [\"digest\", \"9\"]:\n    raise SystemExit(\"reset did not allow a new database\")\nheld = available_packages_set(\n    url, \"source\", {\"Package\": \"digest\", \"Version\": \"0\"}\n)\nif list(held.values()) != [\"digest\", \"9\"]:\n    raise SystemExit(\"new database was replaced\")\n\nnamed = available_packages_set({\"CRAN\": url}, \"source\", {\"Package\": \"other\"})\nif list(named.values()) != [\"other\"]:\n    raise SystemExit(\"named repos collided with the unnamed key\")\nunnamed_again = available_packages_set(url, \"source\", {\"Package\": \"nope\"})\nif list(unnamed_again.values()) != [\"digest\", \"9\"]:\n    raise SystemExit(\"unnamed key was replaced by the named repos insert\")\n\navailable_packages_reset()\nnull_db = available_packages_set(url, \"source\", None)\nreplaced = available_packages_set(url, \"source\", {\"Package\": \"after-null\"})\nif null_db is not None or list(replaced.values()) != [\"after-null\"]:\n    raise SystemExit(\"a stored None was kept\")\n\nprint(json.dumps({\n    \"names\": list(value.keys()),\n    \"values\": list(value.values()),\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "bioc_install_repos",
+      "translated": true,
+      "python": "remotes.bioc_install_repos",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the ordered repository URLs for a Bioconductor version, omitting workflows, extra, and books outside the version cuts.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bioc_install_repos(bioc_ver=\"3.6\") returns BioCsoft, BioCann, and BioCexp",
+        "r_ms": 0.44095516204833984,
+        "translated_ms": 0.028970499897695845,
+        "speedup": 15.220833731053808,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\none <- function() bioc_install_repos(bioc_ver = \"3.6\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\npairs <- vapply(seq_along(value), function(i) {\n  sprintf('[\"%s\",\"%s\"]', names(value)[[i]], value[[i]])\n}, \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(pairs, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.bioc import bioc_install_repos\n\n\ndef one():\n    return bioc_install_repos(bioc_ver=\"3.6\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "bioc_version",
+      "translated": true,
+      "python": "remotes.bioc_version",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the dotted Bioconductor version for an R version, from the builtin map through 4.4 and from the cached config.yaml after that.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bioc_version(\"3.4\") returns 3.6",
+        "r_ms": 0.33164024353027344,
+        "translated_ms": 0.011258499853283865,
+        "speedup": 29.456876835464097,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\none <- function() as.character(bioc_version(\"3.4\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.bioc import bioc_version\n\n\ndef one():\n    return bioc_version(\"3.4\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "dev_package_deps",
+      "translated": true,
+      "python": "remotes.dev_package_deps",
+      "loads": [],
+      "uses": [],
+      "done": "A package that imports remotes returns one row: remotes 2.5.0, diff 0, on CRAN.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dev_package_deps of a temp package with Imports: remotes, repos cloud.r-project.org, type source",
+        "r_ms": 1139.3235921859741,
+        "translated_ms": 0.3340795001349761,
+        "speedup": 3410.3367363925654,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_cell <- function(x) {\n  if (is.character(x) || is.factor(x)) {\n    if (length(x) == 0 || is.na(x[[1]])) return(\"null\")\n    return(json_str(as.character(x[[1]])))\n  }\n  if (is.logical(x)) {\n    if (length(x) == 0 || is.na(x[[1]])) return(\"null\")\n    return(if (isTRUE(x[[1]])) \"true\" else \"false\")\n  }\n  \"null\"\n}\n\ndir <- tempfile()\ndir.create(dir)\nwriteLines(c(\n  \"Package: toydeps\",\n  \"Version: 0.0.1\",\n  \"Imports: remotes\"\n), file.path(dir, \"DESCRIPTION\"))\n\none <- function() {\n  dev_package_deps(dir, repos = \"https://cloud.r-project.org\", type = \"source\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nrows <- character(nrow(value))\nfor (i in seq_len(nrow(value))) {\n  rows[[i]] <- paste0(\n    '{\"package\":', json_str(value$package[[i]]),\n    ',\"installed\":', json_cell(value$installed[[i]]),\n    ',\"available\":', json_cell(value$available[[i]]),\n    ',\"diff\":', format(value$diff[[i]], scientific = FALSE, trim = TRUE),\n    ',\"is_cran\":', if (isTRUE(value$is_cran[[i]])) \"true\" else \"false\",\n    \"}\"\n  )\n}\nbody <- if (length(rows) == 0) \"\" else paste(rows, collapse = \",\")\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', body, median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom remotes.deps import dev_package_deps\n\ndirectory = tempfile.mkdtemp()\nwith open(os.path.join(directory, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\") as handle:\n    handle.write(\"Package: toydeps\\nVersion: 0.0.1\\nImports: remotes\\n\")\n\n\ndef one():\n    return dev_package_deps(\n        directory, repos=\"https://cloud.r-project.org\", type=\"source\"\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "download_version",
+      "translated": true,
+      "python": "remotes.download_version",
+      "loads": [],
+      "uses": [],
+      "done": "Downloads the requested CRAN tarball to a temporary file and returns that path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "download_version(\"remotes\", \"2.5.0\", repos=\"https://cloud.r-project.org\", type=\"source\")",
+        "r_ms": 266.18123054504395,
+        "translated_ms": 157.69796849963313,
+        "speedup": 1.687917942618666,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nrepos <- \"https://cloud.r-project.org\"\ntype <- \"source\"\n\npath <- download_version(\"remotes\", \"2.5.0\", repos = repos, type = type)\nmagic <- readBin(path, \"raw\", n = 2L)\nstopifnot(identical(magic, as.raw(c(0x1f, 0x8b))))\nfiles <- untar(path, list = TRUE)\ndesc <- files[grepl(\"DESCRIPTION$\", files)]\nstopifnot(length(desc) >= 1L)\nex <- tempfile()\ndir.create(ex)\nuntar(path, files = desc[[1]], exdir = ex)\ndcf <- read.dcf(file.path(ex, desc[[1]]))\nbase <- paste0(dcf[1, \"Package\"], \"_\", dcf[1, \"Version\"], \".tar.gz\")\n\nurl <- remotes:::download_version_url(\"remotes\", \"2.5.0\", repos, type)\nstopifnot(identical(basename(url), base))\n\nsentence <- paste0(\n  \"download_version(\\\"remotes\\\", \\\"2.5.0\\\", repos = \\\"https://cloud.r-project.org\\\", type = \\\"source\\\") downloads \",\n  base,\n  \".\"\n)\nwriteLines(sentence, file.path(out_dir, \"download_version-r.txt\"))\n\ndest <- file.path(tempdir(), \"dv\")\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  remotes:::download(path = dest, url = url)\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\ncat(sprintf(\"{\\\"basename\\\":\\\"%s\\\",\\\"median_ms\\\":%.17g}\\n\", base, median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tarfile\nimport tempfile\nimport time\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[1]\nif str(ROOT) not in sys.path:\n    sys.path.insert(0, str(ROOT))\n\nfrom remotes.download_version import download, download_version, download_version_url\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"download_version-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\n\nrepos = \"https://cloud.r-project.org\"\nkind = \"source\"\n\n\ndef description_basename(path: str) -> str:\n    with tarfile.open(path, \"r:gz\") as archive:\n        name = next(item for item in archive.getnames() if item.endswith(\"DESCRIPTION\"))\n        text = archive.extractfile(name).read().decode()\n    fields = {}\n    for line in text.splitlines():\n        if \":\" in line and not line[:1].isspace():\n            key, value = line.split(\":\", 1)\n            fields[key] = value.strip()\n    return fields[\"Package\"] + \"_\" + fields[\"Version\"] + \".tar.gz\"\n\n\npath = download_version(\"remotes\", \"2.5.0\", repos=repos, type=kind)\nwith open(path, \"rb\") as handle:\n    magic = handle.read(2)\nif magic != b\"\\x1f\\x8b\":\n    raise SystemExit(\"downloaded file does not start with gzip magic\")\nbase = description_basename(path)\nurl = download_version_url(\"remotes\", \"2.5.0\", repos, kind)\nif os.path.basename(url) != base:\n    raise SystemExit(f\"{os.path.basename(url)} != {base}\")\n\nsentence = (\n    'download_version(\"remotes\", \"2.5.0\", repos = \"https://cloud.r-project.org\", '\n    f'type = \"source\") downloads {base}.'\n)\nout.write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\ndest = os.path.join(tempfile.gettempdir(), \"dv-py\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    download(dest, url)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"basename\": base, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "git_credentials",
+      "translated": true,
+      "python": "remotes.git_credentials",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the remotes.git_credentials option, or None when that key is missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "options(remotes.git_credentials = \"plain-token\"); git_credentials() returns plain-token",
+        "r_ms": 0.007152557373046875,
+        "translated_ms": 0.00044800026444136165,
+        "speedup": 15.965520426569004,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\noptions(remotes.git_credentials = NULL)\nstopifnot(is.null(git_credentials()))\n\noptions(remotes.git_credentials = \"plain-token\")\n\none <- function() git_credentials()\nvalue <- one()\nstopifnot(identical(value, \"plain-token\"))\nwriteLines(\n  paste0(\n    \"options(remotes.git_credentials = \\\"plain-token\\\"); git_credentials() returns \",\n    value,\n    \".\"\n  ),\n  file.path(out_dir, \"git_credentials-r.txt\")\n)\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":\\\"%s\\\",\\\"median_ms\\\":%.17g}\\n\",\n  value,\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom remotes.git_credentials import git_credentials, options\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"git_credentials-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\n\noptions.pop(\"remotes.git_credentials\", None)\nassert git_credentials() is None\n\noptions[\"remotes.git_credentials\"] = \"plain-token\"\n\n\ndef one():\n    return git_credentials()\n\n\nvalue = one()\nassert value == \"plain-token\"\nout.write_text(\n    'options[\"remotes.git_credentials\"] = \"plain-token\"; git_credentials() returns '\n    + value\n    + \".\\n\",\n    encoding=\"utf-8\",\n)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "github_pull",
+      "translated": true,
+      "python": "remotes.github_pull",
+      "loads": [],
+      "uses": [],
+      "done": "Stores the pull id and the class name github_pull.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "github_pull(\"42\")",
+        "r_ms": 0.01811981201171875,
+        "translated_ms": 0.0011464999261079356,
+        "speedup": 15.80445981643516,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() github_pull(\"42\")\nvalue <- one()\nwriteLines(capture.output(print(value)), file.path(out_dir, \"github_pull-r.txt\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\npull <- unclass(value)\nstopifnot(is.character(pull), length(pull) == 1L, !is.na(pull[[1]]))\ncls <- class(value)\nstopifnot(length(cls) == 1L)\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"pull\\\":%s,\\\"class\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(pull[[1]]),\n  json_escape(cls[[1]]),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom remotes.github_refs import github_pull\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"github_pull-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    return github_pull(\"42\")\n\n\nvalue = one()\nout.write_text(str(value) + \"\\n\", encoding=\"utf-8\")\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\n    \"pull\": value.pull,\n    \"class\": value.r_class,\n    \"median_ms\": statistics.median(elapsed),\n}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "github_release",
+      "translated": true,
+      "python": "remotes.github_release",
+      "loads": [],
+      "uses": [],
+      "done": "Stores None for NA_integer_ and the class name github_release.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "github_release()",
+        "r_ms": 0.01609325408935547,
+        "translated_ms": 0.0007019998520263471,
+        "speedup": 22.924868207452935,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() github_release()\nvalue <- one()\nwriteLines(capture.output(print(value)), file.path(out_dir, \"github_release-r.txt\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\ninteger_na <- is.integer(value) && length(value) == 1L && is.na(value[[1]]) && !is.nan(value[[1]])\ncls <- class(value)\nstopifnot(length(cls) == 1L)\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"integer_na\\\":%s,\\\"class\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  if (isTRUE(integer_na)) \"true\" else \"false\",\n  json_escape(cls[[1]]),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom remotes.github_refs import github_release\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"github_release-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    return github_release()\n\n\nvalue = one()\nout.write_text(str(value) + \"\\n\", encoding=\"utf-8\")\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ninteger_na = (\n    value.value is None\n    and value.integer_na is True\n    and value.na == \"NA_integer_\"\n)\n\nprint(json.dumps({\n    \"integer_na\": integer_na,\n    \"class\": value.r_class,\n    \"median_ms\": statistics.median(elapsed),\n}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "github_remote",
+      "translated": true,
+      "python": "remotes.github_remote",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a remote from a tag or branch, and resolves a pull or release through the GitHub API. A missing pull stops with the same HTTP 404 text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "github_remote(\"r-lib/remotes#7\", auth_token=NULL) stops with the same HTTP 404 message",
+        "r_ms": 43.66111755371094,
+        "translated_ms": 155.69807800056878,
+        "speedup": 0.28042168608883816,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() {\n  tryCatch(\n    github_remote(\"r-lib/remotes#7\", auth_token = NULL),\n    error = function(e) e\n  )\n}\n\nvalue <- one()\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\ntagged <- github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token = NULL)\nstopifnot(\n  identical(tagged$package, \"igraph\"),\n  identical(tagged$repo, \"rigraph\"),\n  identical(tagged$ref, \"v1.0.0\")\n)\nbranch <- github_remote(\"user/repo\", ref = \"branch\", auth_token = NULL)\nstopifnot(identical(branch$ref, \"branch\"))\nkept <- github_remote(\"user/repo/pkg@tag\", ref = \"branch\", auth_token = NULL)\nstopifnot(identical(kept$ref, \"tag\"))\nmissing_ref <- github_remote(\"user/repo\", ref = NULL, auth_token = NULL)\nstopifnot(identical(missing_ref$ref, \"HEAD\"))\n\ntag_line <- paste0(\n  \"github_remote(\\\"igraph=igraph/rigraph@v1.0.0\\\", auth_token = NULL) returns package \",\n  tagged$package, \", repo \", tagged$repo, \", ref \", tagged$ref, \".\"\n)\n\nif (inherits(value, \"error\")) {\n  username <- NULL\n  repo <- NULL\n  ref <- NULL\n  err <- conditionMessage(value)\n  pull_text <- paste0(\n    \"github_remote(\\\"r-lib/remotes#7\\\", auth_token = NULL) stops with:\\n\",\n    err\n  )\n} else {\n  username <- value$username\n  repo <- value$repo\n  ref <- value$ref\n  err <- NULL\n  pull_text <- paste0(\n    \"github_remote(\\\"r-lib/remotes#7\\\", auth_token = NULL) returns username \",\n    username, \", repo \", repo, \", ref \", ref, \".\"\n  )\n}\n\ncat(tag_line, \"\\n\", pull_text, \"\\n\", sep = \"\", file = file.path(out_dir, \"github_remote-r.txt\"))\n\njson_str <- function(s) {\n  if (is.null(s)) return(\"null\")\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"username\\\":%s,\\\"repo\\\":%s,\\\"ref\\\":%s,\\\"error\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_str(username),\n  json_str(repo),\n  json_str(ref),\n  json_str(err),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.github_remote import github_remote\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\" / \"github_remote-python.txt\"\nout.parent.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    try:\n        return github_remote(\"r-lib/remotes#7\", auth_token=None)\n    except RuntimeError as exc:\n        return exc\n\n\nvalue = one()\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ntagged = github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token=None)\nif (tagged.package, tagged.repo, tagged.ref) != (\"igraph\", \"rigraph\", \"v1.0.0\"):\n    raise SystemExit(\n        f\"tag case returned {tagged.package}, {tagged.repo}, {tagged.ref}\"\n    )\nbranch = github_remote(\"user/repo\", ref=\"branch\", auth_token=None)\nif branch.ref != \"branch\":\n    raise SystemExit(\"ref argument was not kept\")\nkept = github_remote(\"user/repo/pkg@tag\", ref=\"branch\", auth_token=None)\nif kept.ref != \"tag\":\n    raise SystemExit(\"parsed tag was replaced by the ref argument\")\nmissing_ref = github_remote(\"user/repo\", ref=None, auth_token=None)\nif missing_ref.ref != \"HEAD\":\n    raise SystemExit(\"None ref was not HEAD\")\n\ntag_line = (\n    'github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token = NULL) '\n    f\"returns package {tagged.package}, repo {tagged.repo}, ref {tagged.ref}.\"\n)\n\nif isinstance(value, RuntimeError):\n    username = None\n    repo = None\n    ref = None\n    err = str(value)\n    pull_text = (\n        'github_remote(\"r-lib/remotes#7\", auth_token = NULL) stops with:\\n' + err\n    )\nelse:\n    username = value.username\n    repo = value.repo\n    ref = value.ref\n    err = None\n    pull_text = (\n        'github_remote(\"r-lib/remotes#7\", auth_token = NULL) returns username '\n        f\"{username}, repo {repo}, ref {ref}.\"\n    )\n\nout.write_text(tag_line + \"\\n\" + pull_text + \"\\n\", encoding=\"utf-8\")\n\nprint(json.dumps({\n    \"username\": username,\n    \"repo\": repo,\n    \"ref\": ref,\n    \"error\": err,\n    \"median_ms\": statistics.median(elapsed),\n}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "gitlab_pat",
+      "translated": true,
+      "python": "remotes.gitlab_pat",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the GITLAB_PAT token when it is non-empty, and None when that variable is empty or unset.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "GITLAB_PAT=glpat-example returns glpat-example; an empty GITLAB_PAT returns NULL",
+        "r_ms": 0.009417533874511719,
+        "translated_ms": 0.0015569999050057959,
+        "speedup": 6.048512812514694,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_escape <- function(x) {\n  if (is.null(x)) return(\"null\")\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x <- gsub(\"\\r\", \"\\\\r\", x, fixed = TRUE)\n  x <- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  x <- gsub(\"\\t\", \"\\\\t\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\nSys.setenv(GITLAB_PAT = \"glpat-example\")\n\none <- function() {\n  gitlab_pat()\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nSys.setenv(GITLAB_PAT = \"\")\nstopifnot(is.null(gitlab_pat()))\nSys.unsetenv(\"GITLAB_PAT\")\nstopifnot(is.null(gitlab_pat()))\n\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport time\n\nfrom remotes.gitlab_pat import gitlab_pat\n\nos.environ[\"GITLAB_PAT\"] = \"glpat-example\"\n\n\ndef one():\n    return gitlab_pat()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nos.environ[\"GITLAB_PAT\"] = \"\"\nif gitlab_pat() is not None:\n    raise SystemExit(\"empty GITLAB_PAT should return None\")\ndel os.environ[\"GITLAB_PAT\"]\nif gitlab_pat() is not None:\n    raise SystemExit(\"unset GITLAB_PAT should return None\")\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_bioc",
+      "translated": true,
+      "python": "remotes.install_bioc",
+      "loads": [],
+      "uses": [],
+      "done": "Clones RELEASE_3_21 and installs BiocVersion 3.21.1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_bioc(3.21/BiocVersion), git=external, dependencies=FALSE, upgrade=never, quiet=TRUE, build=FALSE, temp lib",
+        "r_ms": 4646.31712436676,
+        "translated_ms": 4563.116575999629,
+        "speedup": 1.0182332725849557,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_bioc(\"3.21/BiocVersion\", dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib, git = \"external\")\n}\nvalue <- one()\nstopifnot(identical(value, \"BiocVersion\"))\nversion <- unname(read.dcf(file.path(lib, \"BiocVersion\", \"DESCRIPTION\"))[, \"Version\"])\nstopifnot(identical(version, \"3.21.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"BiocVersion\"))\n}\n\nsentence <- \"install_bioc() returns BiocVersion 3.21.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_bioc-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"BiocVersion\\\",\\\"version\\\":\\\"3.21.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_bioc import install_bioc\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_bioc(\n        \"3.21/BiocVersion\",\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        build=False,\n        lib=lib,\n        git=\"external\",\n    )\n\n\nvalue = one()\nif value != [\"BiocVersion\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"BiocVersion\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"3.21.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"BiocVersion\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_bioc() returns BiocVersion 3.21.1.\"\n(out / \"install_bioc-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"BiocVersion\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_bitbucket",
+      "translated": true,
+      "python": "remotes.install_bitbucket",
+      "loads": [],
+      "uses": [],
+      "done": "Parses djnavarro/lsr as username djnavarro, repo lsr, ref HEAD. The download was not compared: Bitbucket returned HTTP 429.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "local arguments of djnavarro/lsr; download not compared (HTTP 429)",
+        "r_ms": 1.1719465255737305,
+        "translated_ms": 0.018212999748357106,
+        "speedup": 64.3467051977226,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlib <- tempfile(\"lib\")\ndir.create(lib)\ninstalled <- tryCatch(\n  install_bitbucket(\"djnavarro/lsr\", dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib),\n  error = function(e) \"error\"\n)\n\none <- function() {\n  remote <- remotes:::bitbucket_remote(\"djnavarro/lsr\")\n  c(remote$username, remote$repo, remote$ref)\n}\nvalue <- one()\nstopifnot(identical(value, c(\"djnavarro\", \"lsr\", \"HEAD\")))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"install_bitbucket(\\\"djnavarro/lsr\\\") would install lsr from djnavarro/lsr at HEAD.\"\nwriteLines(sentence, file.path(out_dir, \"install_bitbucket-r.txt\"))\ninstalled_json <- if (identical(installed, \"lsr\")) \"\\\"lsr\\\"\" else \"\\\"error\\\"\"\ncat(sprintf(\"{\\\"username\\\":\\\"djnavarro\\\",\\\"repo\\\":\\\"lsr\\\",\\\"ref\\\":\\\"HEAD\\\",\\\"installed\\\":%s,\\\"median_ms\\\":%.17g}\\n\", installed_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_bitbucket import bitbucket_remote, install_bitbucket\nfrom remotes.install_core import InstallError\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nlib = tempfile.mkdtemp(prefix=\"lib\")\ntry:\n    installed = install_bitbucket(\n        \"djnavarro/lsr\", dependencies=False, upgrade=\"never\", quiet=True, build=False, lib=lib\n    )\nexcept InstallError:\n    installed = \"error\"\n\n\ndef one():\n    remote = bitbucket_remote(\"djnavarro/lsr\")\n    return (remote.username, remote.repo, remote.ref)\n\n\nvalue = one()\nif value != (\"djnavarro\", \"lsr\", \"HEAD\"):\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = 'install_bitbucket(\"djnavarro/lsr\") would install lsr from djnavarro/lsr at HEAD.'\n(out / \"install_bitbucket-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nshown = installed[0] if installed == [\"lsr\"] else \"error\"\nprint(json.dumps({\n    \"username\": \"djnavarro\",\n    \"repo\": \"lsr\",\n    \"ref\": \"HEAD\",\n    \"installed\": shown,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_cran",
+      "translated": true,
+      "python": "remotes.install_cran",
+      "loads": [],
+      "uses": [],
+      "done": "Installs minipkg 0.0.1 from a file:// CRAN-like repository.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "file:// mini CRAN, type=source, dependencies=FALSE, upgrade=never, quiet=TRUE, temp lib",
+        "r_ms": 2343.7750339508057,
+        "translated_ms": 2872.844555499796,
+        "speedup": 0.8158377485004764,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(pkg, \"NAMESPACE\"))\nroot <- tempfile(\"cran\")\ncontrib <- file.path(root, \"src\", \"contrib\")\ndir.create(contrib, recursive = TRUE)\nowd <- getwd()\nsetwd(contrib)\nstatus <- system2(\"R\", c(\"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"))\nsetwd(owd)\nstopifnot(identical(status, 0L))\nwriteLines(c(\"Package: minipkg\", \"Version: 0.0.1\"), file.path(contrib, \"PACKAGES\"))\nrepos <- paste0(\"file://\", normalizePath(root))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_cran(\"minipkg\", repos = repos, type = \"source\", dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib)\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\nversion <- unname(read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))[, \"Version\"])\nstopifnot(identical(version, \"0.0.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_cran() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_cran-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_cran import install_cran\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(pkg, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\nroot = tempfile.mkdtemp(prefix=\"cran\")\ncontrib = os.path.join(root, \"src\", \"contrib\")\nos.makedirs(contrib)\nsubprocess.run(\n    [\"R\", \"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"],\n    cwd=contrib,\n    check=True,\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nwith open(os.path.join(contrib, \"PACKAGES\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: minipkg\\nVersion: 0.0.1\\n\")\nrepos = \"file://\" + os.path.realpath(root)\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_cran(\n        \"minipkg\",\n        repos=repos,\n        type=\"source\",\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        build=False,\n        lib=lib,\n    )\n\n\nvalue = one()\nif value != [\"minipkg\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"minipkg\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_cran() returns minipkg 0.0.1.\"\n(out / \"install_cran-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_deps",
+      "translated": true,
+      "python": "remotes.install_deps",
+      "loads": [],
+      "uses": [],
+      "done": "With dependencies false, installs nothing and returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_deps(dependencies = FALSE) on a minimal package returns NULL",
+        "r_ms": 7.260918617248535,
+        "translated_ms": 0.12040950059599709,
+        "speedup": 60.30187469683699,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_deps(pkg, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, lib = lib)\n}\nvalue <- one()\nstopifnot(is.null(value))\nstopifnot(identical(list.files(lib), character()))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(is.null(got))\n}\nstopifnot(identical(list.files(lib), character()))\n\nsentence <- \"install_deps(dependencies = FALSE) returns NULL.\"\nwriteLines(sentence, file.path(out_dir, \"install_deps-r.txt\"))\ncat(sprintf(\"{\\\"value\\\":null,\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_deps import install_deps\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_deps(pkg, dependencies=False, upgrade=\"never\", quiet=True, lib=lib)\n\n\nvalue = one()\nif value is not None:\n    raise SystemExit(repr(value))\nif os.listdir(lib):\n    raise SystemExit(os.listdir(lib))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got is not None:\n        raise SystemExit(repr(got))\nif os.listdir(lib):\n    raise SystemExit(\"library was not left empty\")\n\nsentence = \"install_deps(dependencies = FALSE) returns NULL.\"\n(out / \"install_deps-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"value\": None, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_dev",
+      "translated": true,
+      "python": "remotes.install_dev",
+      "loads": [],
+      "uses": [],
+      "done": "A file:// DESCRIPTION whose URL is https://bitbucket.org/djnavarro/lsr is dispatched to install_bitbucket. The download was not compared: Bitbucket returned HTTP 429.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "fake file:// CRAN DESCRIPTION pointing at bitbucket djnavarro/lsr; download not compared (HTTP 429)",
+        "r_ms": 1.1414289474487305,
+        "translated_ms": 0.03575200025807135,
+        "speedup": 31.926296129152725,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\ncran <- tempfile(\"fakecran\")\ndesc_dir <- file.path(cran, \"web\", \"packages\", \"minipkg\")\ndir.create(desc_dir, recursive = TRUE)\nwriteLines(c(\n  \"Package: minipkg\",\n  \"Version: 0.0.1\",\n  \"URL: https://bitbucket.org/djnavarro/lsr\"\n), file.path(desc_dir, \"DESCRIPTION\"))\ncran_url <- paste0(\"file://\", normalizePath(cran))\nlib <- tempfile(\"lib\")\ndir.create(lib)\ninstalled <- tryCatch(\n  install_dev(\"minipkg\", cran_url = cran_url, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib),\n  error = function(e) \"error\"\n)\n\none <- function() {\n  refs <- remotes:::dev_split_ref(\"minipkg\")\n  desc <- read.dcf(file.path(cran, \"web\", \"packages\", refs[[\"pkg\"]], \"DESCRIPTION\"))\n  c(refs[[\"pkg\"]], unname(desc[, \"URL\"]))\n}\nvalue <- one()\nstopifnot(identical(value, c(\"minipkg\", \"https://bitbucket.org/djnavarro/lsr\")))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"install_dev() would install lsr from https://bitbucket.org/djnavarro/lsr.\"\nwriteLines(sentence, file.path(out_dir, \"install_dev-r.txt\"))\ninstalled_json <- if (identical(installed, \"lsr\")) \"\\\"lsr\\\"\" else \"\\\"error\\\"\"\ncat(sprintf(\"{\\\"package\\\":\\\"minipkg\\\",\\\"url\\\":\\\"https://bitbucket.org/djnavarro/lsr\\\",\\\"installed\\\":%s,\\\"median_ms\\\":%.17g}\\n\", installed_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_core import InstallError\nfrom remotes.install_dev import dev_split_ref, install_dev\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\ncran = tempfile.mkdtemp(prefix=\"fakecran\")\ndesc_dir = os.path.join(cran, \"web\", \"packages\", \"minipkg\")\nos.makedirs(desc_dir)\ndesc_path = os.path.join(desc_dir, \"DESCRIPTION\")\nwith open(desc_path, \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: minipkg\\nVersion: 0.0.1\\nURL: https://bitbucket.org/djnavarro/lsr\\n\")\ncran_url = \"file://\" + os.path.realpath(cran)\nlib = tempfile.mkdtemp(prefix=\"lib\")\ntry:\n    installed = install_dev(\n        \"minipkg\",\n        cran_url=cran_url,\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        build=False,\n        lib=lib,\n    )\nexcept InstallError:\n    installed = \"error\"\n\n\ndef one():\n    name, _ref = dev_split_ref(\"minipkg\")\n    with open(os.path.join(cran, \"web\", \"packages\", name, \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n        url = next(line.split(\":\", 1)[1].strip() for line in handle if line.startswith(\"URL:\"))\n    return (name, url)\n\n\nvalue = one()\nif value != (\"minipkg\", \"https://bitbucket.org/djnavarro/lsr\"):\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = \"install_dev() would install lsr from https://bitbucket.org/djnavarro/lsr.\"\n(out / \"install_dev-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nshown = installed[0] if installed == [\"lsr\"] else \"error\"\nprint(json.dumps({\n    \"package\": \"minipkg\",\n    \"url\": \"https://bitbucket.org/djnavarro/lsr\",\n    \"installed\": shown,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_git",
+      "translated": true,
+      "python": "remotes.install_git",
+      "loads": [],
+      "uses": [],
+      "done": "Clones a local file:// git repository and installs minipkg 0.0.1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "file:// git repo, git=external, dependencies=FALSE, upgrade=never, quiet=TRUE, build=FALSE, temp lib",
+        "r_ms": 2766.4719820022583,
+        "translated_ms": 2701.253466499111,
+        "speedup": 1.0241437970601375,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nrepo <- tempfile(\"gitpkg\")\ndir.create(repo)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(repo, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(repo, \"NAMESPACE\"))\ngit <- function(...) stopifnot(identical(system2(\"git\", c(\"-C\", repo, ...)), 0L))\ngit(\"init\", \"-q\")\ngit(\"config\", \"user.email\", \"a@b.c\")\ngit(\"config\", \"user.name\", \"a\")\ngit(\"add\", \"DESCRIPTION\", \"NAMESPACE\")\ngit(\"commit\", \"-q\", \"-m\", \"init\")\nurl <- paste0(\"file://\", normalizePath(repo))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_git(url, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib, git = \"external\")\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\nversion <- unname(read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))[, \"Version\"])\nstopifnot(identical(version, \"0.0.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_git() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_git-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_git import install_git\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nrepo = tempfile.mkdtemp(prefix=\"gitpkg\")\nwith open(os.path.join(repo, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(repo, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\n\n\ndef git(*args):\n    subprocess.run([\"git\", \"-C\", repo, *args], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n\n\ngit(\"init\", \"-q\")\ngit(\"config\", \"user.email\", \"a@b.c\")\ngit(\"config\", \"user.name\", \"a\")\ngit(\"add\", \"DESCRIPTION\", \"NAMESPACE\")\ngit(\"commit\", \"-q\", \"-m\", \"init\")\nurl = \"file://\" + os.path.realpath(repo)\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_git(\n        url, dependencies=False, upgrade=\"never\", quiet=True, build=False, lib=lib, git=\"external\"\n    )\n\n\nvalue = one()\nif value != [\"minipkg\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"minipkg\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_git() returns minipkg 0.0.1.\"\n(out / \"install_git-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_github",
+      "translated": true,
+      "python": "remotes.install_github",
+      "loads": [],
+      "uses": [],
+      "done": "Parses praise=gaborcsardi/praise as package praise from gaborcsardi/praise at HEAD. The download was not compared: both calls fail with HTTP 403.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "local arguments of praise=gaborcsardi/praise; install not compared (HTTP 403)",
+        "r_ms": 1.025557518005371,
+        "translated_ms": 0.015474500287382398,
+        "speedup": 66.27403140388259,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nspec <- \"praise=gaborcsardi/praise\"\nlib <- tempfile(\"lib\")\ndir.create(lib)\ninstalled <- tryCatch(\n  install_github(spec, auth_token = NULL, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib),\n  error = function(e) conditionMessage(e)\n)\n\none <- function() {\n  remote <- github_remote(spec, auth_token = NULL)\n  c(remote$package, remote$username, remote$repo, remote$ref)\n}\nvalue <- one()\nstopifnot(identical(value, c(\"praise\", \"gaborcsardi\", \"praise\", \"HEAD\")))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"install_github(\\\"praise=gaborcsardi/praise\\\") would install praise from gaborcsardi/praise at HEAD.\"\nwriteLines(sentence, file.path(out_dir, \"install_github-r.txt\"))\ninstalled_json <- if (is.null(installed)) \"null\" else if (is.character(installed) && length(installed) == 1 && !grepl(\"\\n\", installed)) paste0(\"\\\"\", installed, \"\\\"\") else \"\\\"error\\\"\"\ncat(sprintf(\"{\\\"package\\\":\\\"praise\\\",\\\"username\\\":\\\"gaborcsardi\\\",\\\"repo\\\":\\\"praise\\\",\\\"ref\\\":\\\"HEAD\\\",\\\"installed\\\":%s,\\\"median_ms\\\":%.17g}\\n\", installed_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.github_remote import github_remote\nfrom remotes.install_core import InstallError\nfrom remotes.install_github import install_github\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nspec = \"praise=gaborcsardi/praise\"\nlib = tempfile.mkdtemp(prefix=\"lib\")\ntry:\n    installed = install_github(\n        spec,\n        auth_token=None,\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        build=False,\n        lib=lib,\n    )\nexcept InstallError as exc:\n    installed = str(exc)\n\n\ndef one():\n    remote = github_remote(spec, auth_token=None)\n    return (remote.package, remote.username, remote.repo, remote.ref)\n\n\nvalue = one()\nif value != (\"praise\", \"gaborcsardi\", \"praise\", \"HEAD\"):\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = 'install_github(\"praise=gaborcsardi/praise\") would install praise from gaborcsardi/praise at HEAD.'\n(out / \"install_github-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nshown = installed\nif isinstance(shown, list):\n    shown = shown[0] if len(shown) == 1 else shown\nif isinstance(shown, str) and \"\\n\" in shown:\n    shown = \"error\"\nprint(json.dumps({\n    \"package\": \"praise\",\n    \"username\": \"gaborcsardi\",\n    \"repo\": \"praise\",\n    \"ref\": \"HEAD\",\n    \"installed\": shown,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_gitlab",
+      "translated": true,
+      "python": "remotes.install_gitlab",
+      "loads": [],
+      "uses": [],
+      "done": "Parses jimhester/covr as username jimhester, repo covr, ref HEAD. Both return covr and warn that installation had non-zero exit status, because covr imports rex and that dependency is not in the temp library.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "local arguments of jimhester/covr; install warns and does not finish",
+        "r_ms": 0.7823705673217773,
+        "translated_ms": 0.017563000255904626,
+        "speedup": 44.54652143267759,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nspec <- \"jimhester/covr\"\nlib <- tempfile(\"lib\")\ndir.create(lib)\ninstalled <- tryCatch(\n  install_gitlab(spec, auth_token = NULL, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib),\n  error = function(e) \"error\"\n)\n\none <- function() {\n  remote <- remotes:::gitlab_remote(spec)\n  c(remote$username, remote$repo, remote$ref)\n}\nvalue <- one()\nstopifnot(identical(value, c(\"jimhester\", \"covr\", \"HEAD\")))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"install_gitlab(\\\"jimhester/covr\\\") would install covr from jimhester/covr at HEAD.\"\nwriteLines(sentence, file.path(out_dir, \"install_gitlab-r.txt\"))\ninstalled_json <- if (is.null(installed)) \"null\" else if (identical(installed, \"covr\")) \"\\\"covr\\\"\" else \"\\\"error\\\"\"\ncat(sprintf(\"{\\\"username\\\":\\\"jimhester\\\",\\\"repo\\\":\\\"covr\\\",\\\"ref\\\":\\\"HEAD\\\",\\\"installed\\\":%s,\\\"median_ms\\\":%.17g}\\n\", installed_json, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_core import InstallError\nfrom remotes.install_gitlab import gitlab_remote, install_gitlab\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nspec = \"jimhester/covr\"\nlib = tempfile.mkdtemp(prefix=\"lib\")\ntry:\n    installed = install_gitlab(\n        spec,\n        auth_token=None,\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        build=False,\n        lib=lib,\n    )\nexcept InstallError:\n    installed = \"error\"\n\n\ndef one():\n    remote = gitlab_remote(spec)\n    return (remote.username, remote.repo, remote.ref)\n\n\nvalue = one()\nif value != (\"jimhester\", \"covr\", \"HEAD\"):\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = 'install_gitlab(\"jimhester/covr\") would install covr from jimhester/covr at HEAD.'\n(out / \"install_gitlab-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nshown = installed\nif isinstance(shown, list):\n    shown = shown[0] if shown == [\"covr\"] else \"error\"\nprint(json.dumps({\n    \"username\": \"jimhester\",\n    \"repo\": \"covr\",\n    \"ref\": \"HEAD\",\n    \"installed\": shown,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_local",
+      "translated": true,
+      "python": "remotes.install_local",
+      "loads": [],
+      "uses": [],
+      "done": "Installs a local source package into the given library with R CMD INSTALL. A minimal package returns its name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_local of minipkg 0.0.1 with dependencies false into a temp library",
+        "r_ms": 2213.442087173462,
+        "translated_ms": 2225.889166000343,
+        "speedup": 0.9944080419559942,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\",\n  \"Version: 0.0.1\",\n  \"Title: Minimal\",\n  \"Description: A minimal package for a check.\",\n  \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(pkg, \"NAMESPACE\"))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_local(pkg, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib)\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\nversion <- unname(read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))[, \"Version\"])\nstopifnot(identical(version, \"0.0.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_local() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_local-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_local import install_local\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(pkg, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_local(\n        pkg, dependencies=False, upgrade=\"never\", quiet=True, build=False, lib=lib\n    )\n\n\nvalue = one()\nif value != [\"minipkg\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"minipkg\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_local() returns minipkg 0.0.1.\"\n(out / \"install_local-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_remote",
+      "translated": true,
+      "python": "remotes.install_remote",
+      "loads": [],
+      "uses": [],
+      "done": "Installs a local remote and returns minipkg 0.0.1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_remote(local_remote(pkg)), dependencies=FALSE, upgrade=never, quiet=TRUE, build=FALSE, temp lib",
+        "r_ms": 2366.8450117111206,
+        "translated_ms": 2402.1474629989825,
+        "speedup": 0.9853037951118171,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(pkg, \"NAMESPACE\"))\nlib <- tempfile(\"lib\")\ndir.create(lib)\nremote <- remotes:::local_remote(pkg)\n\none <- function() {\n  install_remote(\n    remote,\n    dependencies = FALSE,\n    upgrade = \"never\",\n    force = FALSE,\n    quiet = TRUE,\n    build = FALSE,\n    build_opts = c(\"--no-resave-data\", \"--no-manual\", \"--no-build-vignettes\"),\n    build_manual = FALSE,\n    build_vignettes = FALSE,\n    repos = getOption(\"repos\"),\n    type = getOption(\"pkgType\"),\n    lib = lib\n  )\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\nversion <- unname(read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))[, \"Version\"])\nstopifnot(identical(version, \"0.0.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_remote() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_remote-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_local import local_remote\nfrom remotes.install_remote import install_remote\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(pkg, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\nlib = tempfile.mkdtemp(prefix=\"lib\")\nremote = local_remote(pkg)\n\n\ndef one():\n    return install_remote(\n        remote, dependencies=False, upgrade=\"never\", quiet=True, build=False, lib=lib\n    )\n\n\nvalue = one()\nif value != \"minipkg\":\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != \"minipkg\":\n        raise SystemExit(repr(got))\n\nsentence = \"install_remote() returns minipkg 0.0.1.\"\n(out / \"install_remote-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_svn",
+      "translated": true,
+      "python": "remotes.install_svn",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing-SVN message when the svn binary is absent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_svn fails because SVN is not installed",
+        "r_ms": 6.925344467163086,
+        "translated_ms": 0.10004500018112594,
+        "speedup": 69.22229451372016,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlib <- tempfile(\"lib\")\ndir.create(lib)\nexpected <- paste0(\n  \"Failed to install 'unknown package' from SVN:\\n\",\n  \"  SVN does not seem to be installed on your system.\"\n)\n\none <- function() {\n  tryCatch(\n    install_svn(\n      \"https://example.invalid/repo\",\n      dependencies = FALSE, upgrade = \"never\", quiet = TRUE, lib = lib\n    ),\n    error = function(e) conditionMessage(e)\n  )\n}\nvalue <- one()\nstopifnot(identical(value, expected))\nstopifnot(identical(list.files(lib), character()))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, expected))\n}\n\nsentence <- \"install_svn() fails with: SVN does not seem to be installed on your system.\"\nwriteLines(sentence, file.path(out_dir, \"install_svn-r.txt\"))\ncat(sprintf(\"{\\\"message\\\":\\\"svn-missing\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_core import InstallError\nfrom remotes.install_svn import install_svn\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nlib = tempfile.mkdtemp(prefix=\"lib\")\nexpected = (\n    \"Failed to install 'unknown package' from SVN:\\n\"\n    \"  SVN does not seem to be installed on your system.\"\n)\n\n\ndef one():\n    try:\n        install_svn(\n            \"https://example.invalid/repo\",\n            dependencies=False,\n            upgrade=\"never\",\n            quiet=True,\n            lib=lib,\n        )\n    except InstallError as exc:\n        return str(exc)\n    raise SystemExit(\"install_svn did not fail\")\n\n\nvalue = one()\nif value != expected:\n    raise SystemExit(value)\nif os.listdir(lib):\n    raise SystemExit(os.listdir(lib))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != expected:\n        raise SystemExit(got)\n\nsentence = \"install_svn() fails with: SVN does not seem to be installed on your system.\"\n(out / \"install_svn-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"message\": \"svn-missing\", \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_url",
+      "translated": true,
+      "python": "remotes.install_url",
+      "loads": [],
+      "uses": [],
+      "done": "Installs a source tarball from a URL into the given library. A minimal package returns its name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_url of minipkg 0.0.1 with dependencies false into a temp library",
+        "r_ms": 2395.9320783615112,
+        "translated_ms": 2406.4416170003824,
+        "speedup": 0.9956327473043076,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(pkg, \"NAMESPACE\"))\nbuilt <- tempfile(\"build\")\ndir.create(built)\nowd <- getwd()\nsetwd(built)\nstatus <- system2(\"R\", c(\"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"))\nsetwd(owd)\nstopifnot(identical(status, 0L))\ntar <- list.files(built, pattern = \"\\\\.tar\\\\.gz$\", full.names = TRUE)[[1]]\nurl <- paste0(\"file://\", normalizePath(tar))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_url(url, dependencies = FALSE, upgrade = \"never\", quiet = TRUE, build = FALSE, lib = lib)\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\ndesc <- read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))\nstopifnot(identical(unname(desc[, \"Version\"]), \"0.0.1\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_url() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_url-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_url import install_url\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(pkg, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\nbuilt = tempfile.mkdtemp(prefix=\"build\")\nsubprocess.run(\n    [\"R\", \"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"],\n    cwd=built,\n    check=True,\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\ntar = next(name for name in os.listdir(built) if name.endswith(\".tar.gz\"))\nurl = \"file://\" + os.path.realpath(os.path.join(built, tar))\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_url(url, dependencies=False, upgrade=\"never\", quiet=True, build=False, lib=lib)\n\n\nvalue = one()\nif value != [\"minipkg\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\":\n    raise SystemExit(version)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"minipkg\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_url() returns minipkg 0.0.1.\"\n(out / \"install_url-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "install_version",
+      "translated": true,
+      "python": "remotes.install_version",
+      "loads": [],
+      "uses": [],
+      "done": "Installs minipkg 0.0.1 from a file:// repository and drops RemoteType from the installed DESCRIPTION.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "install_version(minipkg, 0.0.1) from a file:// mini CRAN, temp lib",
+        "r_ms": 2711.204171180725,
+        "translated_ms": 2620.1855325007273,
+        "speedup": 1.0347374785300523,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npkg <- tempfile(\"minipkg\")\ndir.create(pkg)\nwriteLines(c(\n  \"Package: minipkg\", \"Version: 0.0.1\", \"Title: Minimal\",\n  \"Description: A minimal package for a check.\", \"License: MIT\"\n), file.path(pkg, \"DESCRIPTION\"))\nwriteLines(\"exportPattern(\\\"^[^.]\\\" )\", file.path(pkg, \"NAMESPACE\"))\nroot <- tempfile(\"cran\")\ncontrib <- file.path(root, \"src\", \"contrib\")\ndir.create(contrib, recursive = TRUE)\nowd <- getwd()\nsetwd(contrib)\nstatus <- system2(\"R\", c(\"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"))\nsetwd(owd)\nstopifnot(identical(status, 0L))\nwriteLines(c(\"Package: minipkg\", \"Version: 0.0.1\"), file.path(contrib, \"PACKAGES\"))\nrepos <- paste0(\"file://\", normalizePath(root))\nlib <- tempfile(\"lib\")\ndir.create(lib)\n\none <- function() {\n  install_version(\"minipkg\", \"0.0.1\", repos = repos, type = \"source\", dependencies = FALSE, upgrade = \"never\", quiet = TRUE, lib = lib)\n}\nvalue <- one()\nstopifnot(identical(value, \"minipkg\"))\ndesc <- read.dcf(file.path(lib, \"minipkg\", \"DESCRIPTION\"))\nstopifnot(identical(unname(desc[, \"Version\"]), \"0.0.1\"))\nstopifnot(!(\"RemoteType\" %in% colnames(desc)))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, \"minipkg\"))\n}\n\nsentence <- \"install_version() returns minipkg 0.0.1.\"\nwriteLines(sentence, file.path(out_dir, \"install_version-r.txt\"))\ncat(sprintf(\"{\\\"name\\\":\\\"minipkg\\\",\\\"version\\\":\\\"0.0.1\\\",\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport subprocess\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.install_version import install_version\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\npkg = tempfile.mkdtemp(prefix=\"minipkg\")\nwith open(os.path.join(pkg, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\n        \"Package: minipkg\\nVersion: 0.0.1\\nTitle: Minimal\\n\"\n        \"Description: A minimal package for a check.\\nLicense: MIT\\n\"\n    )\nwith open(os.path.join(pkg, \"NAMESPACE\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write('exportPattern(\"^[^.]\")\\n')\nroot = tempfile.mkdtemp(prefix=\"cran\")\ncontrib = os.path.join(root, \"src\", \"contrib\")\nos.makedirs(contrib)\nsubprocess.run(\n    [\"R\", \"CMD\", \"build\", pkg, \"--no-manual\", \"--no-build-vignettes\"],\n    cwd=contrib,\n    check=True,\n    stdout=subprocess.DEVNULL,\n    stderr=subprocess.DEVNULL,\n)\nwith open(os.path.join(contrib, \"PACKAGES\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: minipkg\\nVersion: 0.0.1\\n\")\nrepos = \"file://\" + os.path.realpath(root)\nlib = tempfile.mkdtemp(prefix=\"lib\")\n\n\ndef one():\n    return install_version(\n        \"minipkg\",\n        \"0.0.1\",\n        repos=repos,\n        type=\"source\",\n        dependencies=False,\n        upgrade=\"never\",\n        quiet=True,\n        lib=lib,\n    )\n\n\nvalue = one()\nif value != [\"minipkg\"]:\n    raise SystemExit(repr(value))\nwith open(os.path.join(lib, \"minipkg\", \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n    text = handle.read()\nversion = next(line.split(\":\", 1)[1].strip() for line in text.splitlines() if line.startswith(\"Version:\"))\nif version != \"0.0.1\" or any(line.startswith(\"RemoteType:\") for line in text.splitlines()):\n    raise SystemExit(text)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != [\"minipkg\"]:\n        raise SystemExit(repr(got))\n\nsentence = \"install_version() returns minipkg 0.0.1.\"\n(out / \"install_version-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"name\": \"minipkg\", \"version\": version, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "local_package_deps",
+      "translated": true,
+      "python": "remotes.local_package_deps",
+      "loads": [],
+      "uses": [],
+      "done": "Reads DESCRIPTION and returns stats, remotes, cli, and Rcpp. R is dropped and Suggests is not selected.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "DESCRIPTION with Depends R (>= 3.0.0) and stats, folded Imports of remotes and cli, and LinkingTo Rcpp",
+        "r_ms": 5.231738090515137,
+        "translated_ms": 0.15044350038806442,
+        "speedup": 34.7754344788577,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_val <- function(x) {\n  if (length(x) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\ndir <- tempfile()\ndir.create(dir)\nwriteLines(c(\n  \"Package: toy\",\n  \"Version: 0.0.1\",\n  \"Depends: R (>= 3.0.0), stats\",\n  \"Imports: remotes (>= 2.5.0),\",\n  \"    cli (>= 3.0.0)\",\n  \"LinkingTo: Rcpp\",\n  \"Suggests: testthat (>= 3.0.0)\"\n), file.path(dir, \"DESCRIPTION\"))\n\none <- function() local_package_deps(dir)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom remotes.deps import local_package_deps\n\ndirectory = tempfile.mkdtemp()\nwith open(os.path.join(directory, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\") as handle:\n    handle.write(\n        \"Package: toy\\n\"\n        \"Version: 0.0.1\\n\"\n        \"Depends: R (>= 3.0.0), stats\\n\"\n        \"Imports: remotes (>= 2.5.0),\\n\"\n        \"    cli (>= 3.0.0)\\n\"\n        \"LinkingTo: Rcpp\\n\"\n        \"Suggests: testthat (>= 3.0.0)\\n\"\n    )\n\n\ndef one():\n    return local_package_deps(directory)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "package_deps",
+      "translated": true,
+      "python": "remotes.package_deps",
+      "loads": [],
+      "uses": [],
+      "done": "Returns one row for remotes 2.5.0, installed and available, diff 0, on CRAN.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "package_deps(\"remotes\", repos=\"https://cloud.r-project.org\", type=\"source\")",
+        "r_ms": 1139.427661895752,
+        "translated_ms": 0.039393499719153624,
+        "speedup": 28924.255778720457,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_cell <- function(x) {\n  if (is.character(x) || is.factor(x)) {\n    if (length(x) == 0 || is.na(x[[1]])) return(\"null\")\n    return(json_str(as.character(x[[1]])))\n  }\n  if (is.logical(x)) {\n    if (length(x) == 0 || is.na(x[[1]])) return(\"null\")\n    return(if (isTRUE(x[[1]])) \"true\" else \"false\")\n  }\n  \"null\"\n}\n\none <- function() {\n  package_deps(\"remotes\", repos = \"https://cloud.r-project.org\", type = \"source\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\nrows <- character(nrow(value))\nfor (i in seq_len(nrow(value))) {\n  rows[[i]] <- paste0(\n    '{\"package\":', json_str(value$package[[i]]),\n    ',\"installed\":', json_cell(value$installed[[i]]),\n    ',\"available\":', json_cell(value$available[[i]]),\n    ',\"diff\":', format(value$diff[[i]], scientific = FALSE, trim = TRUE),\n    ',\"is_cran\":', if (isTRUE(value$is_cran[[i]])) \"true\" else \"false\",\n    \"}\"\n  )\n}\nbody <- if (length(rows) == 0) \"\" else paste(rows, collapse = \",\")\ncat(sprintf('{\"value\":[%s],\"median_ms\":%.17g}\\n', body, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.deps import package_deps\n\n\ndef one():\n    return package_deps(\n        \"remotes\", repos=\"https://cloud.r-project.org\", type=\"source\"\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, separators=(\",\", \":\")))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_github_repo_spec",
+      "translated": true,
+      "python": "remotes.parse_github_repo_spec",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the same seven fields as parse_repo_spec, which this name aliases.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "parse_github_repo_spec(\"igraph=igraph/rigraph\")",
+        "r_ms": 0.8623600006103516,
+        "translated_ms": 0.005248500201560091,
+        "speedup": 164.30598599463124,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  if (is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_obj <- function(x) {\n  parts <- vapply(names(x), function(nm) {\n    paste0(json_str(nm), \":\", json_str(x[[nm]]))\n  }, \"\")\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\n\none <- function() parse_github_repo_spec(\"igraph=igraph/rigraph\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_obj(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.parse import parse_github_repo_spec\n\n\ndef one():\n    return parse_github_repo_spec(\"igraph=igraph/rigraph\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_github_url",
+      "translated": true,
+      "python": "remotes.parse_github_url",
+      "loads": [],
+      "uses": [],
+      "done": "Parses a GitHub URL into username, repo, ref, pull, and release, and stores releases/tag/1.0.0 as ref 1.0.0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "parse_github_url(\"https://github.com/r-lib/remotes/releases/tag/1.0.0\")",
+        "r_ms": 0.7162094116210938,
+        "translated_ms": 0.004870500106335385,
+        "speedup": 147.0504868051378,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  if (is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_obj <- function(x) {\n  parts <- vapply(names(x), function(nm) {\n    paste0(json_str(nm), \":\", json_str(x[[nm]]))\n  }, \"\")\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\n\none <- function() {\n  parse_github_url(\"https://github.com/r-lib/remotes/releases/tag/1.0.0\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_obj(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.parse import parse_github_url\n\n\ndef one():\n    return parse_github_url(\n        \"https://github.com/r-lib/remotes/releases/tag/1.0.0\"\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "parse_repo_spec",
+      "translated": true,
+      "python": "remotes.parse_repo_spec",
+      "loads": [],
+      "uses": [],
+      "done": "Parses the git shorthand into package, username, repo, subdir, ref, pull, and release, with every omitted piece as an empty string.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "parse_repo_spec(\"igraph=igraph/rigraph\")",
+        "r_ms": 0.7880926132202148,
+        "translated_ms": 0.003591000222513685,
+        "speedup": 219.4632593669274,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  if (is.na(s)) return(\"null\")\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_obj <- function(x) {\n  parts <- vapply(names(x), function(nm) {\n    paste0(json_str(nm), \":\", json_str(x[[nm]]))\n  }, \"\")\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\n\none <- function() parse_repo_spec(\"igraph=igraph/rigraph\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%s,\"median_ms\":%.17g}\\n',\n  json_obj(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.parse import parse_repo_spec\n\n\ndef one():\n    return parse_repo_spec(\"igraph=igraph/rigraph\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "remote_download",
+      "translated": true,
+      "python": "remotes.remote_download",
+      "loads": [],
+      "uses": [],
+      "done": "On a local directory, copies the tree. The copy still says Package: foo.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "remote_download(local_remote(path)) DESCRIPTION Package: foo",
+        "r_ms": 0.19276142120361328,
+        "translated_ms": 0.25380199986102525,
+        "speedup": 0.7594952810031598,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npath <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\n\npkg_of <- function(bundle) {\n  unname(read.dcf(file.path(bundle, \"DESCRIPTION\"))[1, \"Package\"])\n}\n\none <- function() remotes:::remote_download(remotes:::local_remote(path))\nvalue <- pkg_of(one())\nstopifnot(identical(value, \"foo\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  bundle <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(pkg_of(bundle), value))\n}\n\nsentence <- \"remote_download on a local directory copies a directory whose DESCRIPTION says Package: foo.\"\nwriteLines(sentence, file.path(out_dir, \"remote_download-r.txt\"))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_str(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.remote import local_remote, remote_download\n\nout_dir = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\n\n\ndef package_of(bundle: str) -> str:\n    with open(os.path.join(bundle, \"DESCRIPTION\"), encoding=\"utf-8\") as handle:\n        for line in handle:\n            if line.startswith(\"Package:\"):\n                return line.split(\":\", 1)[1].strip()\n    raise SystemExit(\"DESCRIPTION has no Package field\")\n\n\ndef one():\n    return remote_download(local_remote(path))\n\n\nvalue = package_of(one())\nif value != \"foo\":\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    bundle = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if package_of(bundle) != value:\n        raise SystemExit(bundle)\n\nsentence = (\n    \"remote_download on a local directory copies a directory whose \"\n    \"DESCRIPTION says Package: foo.\"\n)\n(out_dir / \"remote_download-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "remote_metadata",
+      "translated": true,
+      "python": "remotes.remote_metadata",
+      "loads": [],
+      "uses": [],
+      "done": "On a local directory, returns RemoteType local and RemoteUrl equal to the normalized path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "remote_metadata(local_remote(path)) RemoteType local and RemoteUrl normalizePath",
+        "r_ms": 0.043272972106933594,
+        "translated_ms": 0.022930999875825364,
+        "speedup": 1.8870948646488557,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npath <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\n\none <- function() remotes:::remote_metadata(remotes:::local_remote(path))\nvalue <- one()\nstopifnot(identical(value$RemoteType, \"local\"))\nstopifnot(identical(value$RemoteUrl, normalizePath(path)))\nstopifnot(is.null(value$RemoteSubdir))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got$RemoteType, value$RemoteType))\n  stopifnot(identical(got$RemoteUrl, value$RemoteUrl))\n  stopifnot(is.null(got$RemoteSubdir))\n}\n\nsentence <- \"remote_metadata on a local directory returns RemoteType local and RemoteUrl equal to normalizePath.\"\nwriteLines(sentence, file.path(out_dir, \"remote_metadata-r.txt\"))\n\nurl_ok <- identical(value$RemoteUrl, normalizePath(path))\ncat(sprintf(\n  \"{\\\"value\\\":{\\\"RemoteType\\\":\\\"local\\\",\\\"url_matches\\\":%s,\\\"RemoteSubdir\\\":null},\\\"median_ms\\\":%.17g}\\n\",\n  if (isTRUE(url_ok)) \"true\" else \"false\",\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.remote import local_remote, remote_metadata\n\nout_dir = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\n\n\ndef one():\n    return remote_metadata(local_remote(path))\n\n\nvalue = one()\nurl_matches = value[\"RemoteUrl\"] == os.path.realpath(path)\nif value[\"RemoteType\"] != \"local\" or not url_matches or value[\"RemoteSubdir\"] is not None:\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = (\n    \"remote_metadata on a local directory returns RemoteType local \"\n    \"and RemoteUrl equal to normalizePath.\"\n)\n(out_dir / \"remote_metadata-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\nprint(json.dumps({\n    \"value\": {\n        \"RemoteType\": value[\"RemoteType\"],\n        \"url_matches\": url_matches,\n        \"RemoteSubdir\": value[\"RemoteSubdir\"],\n    },\n    \"median_ms\": statistics.median(elapsed),\n}))\n"
+        }
+      }
+    },
+    {
+      "name": "remote_package_name",
+      "translated": true,
+      "python": "remotes.remote_package_name",
+      "loads": [],
+      "uses": [],
+      "done": "On a local directory, returns the Package field. foo returns foo.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "remote_package_name(local_remote(path)) with Package: foo",
+        "r_ms": 0.6279945373535156,
+        "translated_ms": 0.048154500291275326,
+        "speedup": 13.041242948320994,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npath <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\n\none <- function() remotes:::remote_package_name(remotes:::local_remote(path))\nvalue <- one()\nstopifnot(identical(value, \"foo\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"remote_package_name on a local directory with Package: foo returns foo.\"\nwriteLines(sentence, file.path(out_dir, \"remote_package_name-r.txt\"))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_str(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.remote import local_remote, remote_package_name\n\nout_dir = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\n\n\ndef one():\n    return remote_package_name(local_remote(path))\n\n\nvalue = one()\nif value != \"foo\":\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = \"remote_package_name on a local directory with Package: foo returns foo.\"\n(out_dir / \"remote_package_name-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "remote_sha",
+      "translated": true,
+      "python": "remotes.remote_sha",
+      "loads": [],
+      "uses": [],
+      "done": "On a local directory, returns the Version field. 1.0.0 returns 1.0.0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "remote_sha(local_remote(path)) with Version: 1.0.0",
+        "r_ms": 0.5813837051391602,
+        "translated_ms": 0.05156249972060323,
+        "speedup": 11.2753204031893,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npath <- tempfile()\ndir.create(path)\nwriteLines(c(\"Package: foo\", \"Version: 1.0.0\"), file.path(path, \"DESCRIPTION\"))\n\none <- function() remotes:::remote_sha(remotes:::local_remote(path))\nvalue <- one()\nstopifnot(identical(value, \"1.0.0\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\nsentence <- \"remote_sha on a local directory with Version: 1.0.0 returns 1.0.0.\"\nwriteLines(sentence, file.path(out_dir, \"remote_sha-r.txt\"))\n\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\n\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_str(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.remote import local_remote, remote_sha\n\nout_dir = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\npath = tempfile.mkdtemp()\nwith open(os.path.join(path, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n    handle.write(\"Package: foo\\nVersion: 1.0.0\\n\")\n\n\ndef one():\n    return remote_sha(local_remote(path))\n\n\nvalue = one()\nif value != \"1.0.0\":\n    raise SystemExit(repr(value))\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got != value:\n        raise SystemExit(repr(got))\n\nsentence = \"remote_sha on a local directory with Version: 1.0.0 returns 1.0.0.\"\n(out_dir / \"remote_sha-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "standardise_dep",
+      "translated": true,
+      "python": "remotes.standardise_dep",
+      "loads": [],
+      "uses": [],
+      "done": "Maps a length-1 logical NA to Depends, Imports, and LinkingTo, TRUE to those plus Suggests, FALSE to an empty vector, and a character vector to hard, soft, or the known names in its order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "standardise_dep(c(\"Enhances\", \"Imports\", \"extra\"))",
+        "r_ms": 0.1322031021118164,
+        "translated_ms": 0.0037590002648357768,
+        "speedup": 35.169750677735614,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\n\njson_str <- function(s) {\n  bytes <- as.integer(charToRaw(enc2utf8(s)))\n  parts <- character(length(bytes))\n  for (i in seq_along(bytes)) {\n    b <- bytes[[i]]\n    parts[[i]] <- if (b == 34) paste0(\"\\\\\", '\"')\n      else if (b == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (b == 10) paste0(\"\\\\\", \"n\")\n      else if (b == 13) paste0(\"\\\\\", \"r\")\n      else if (b == 9) paste0(\"\\\\\", \"t\")\n      else if (b < 32 || b == 127) sprintf(\"\\\\u%04x\", b)\n      else intToUtf8(b)\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\njson_val <- function(x) {\n  if (length(x) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() standardise_dep(c(\"Enhances\", \"Imports\", \"extra\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom remotes.standardise_dep import standardise_dep\n\n\ndef one():\n    return standardise_dep([\"Enhances\", \"Imports\", \"extra\"])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "system_requirements",
+      "translated": true,
+      "python": "remotes.system_requirements",
+      "loads": [],
+      "uses": [],
+      "done": "Calls curl and the Posit sysreqs API, including match.arg and the package JSON parser.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ubuntu 16.04 with DESCRIPTION SystemRequirements: libcurl",
+        "r_ms": 736.1421585083008,
+        "translated_ms": 723.7337955002658,
+        "speedup": 1.0171449268849715,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nexpect_error <- function(expr, expected) {\n  got <- tryCatch(eval(expr, envir = parent.frame()), error = function(e) conditionMessage(e))\n  if (!identical(got, expected)) {\n    stop(sprintf(\"expected [%s] got [%s]\", expected, got), call. = FALSE)\n  }\n}\n\nos_choices <- c(\"ubuntu\", \"centos\", \"redhat\", \"opensuse\", \"sle\")\nos_msg <- tryCatch(match.arg(\"foo\", os_choices), error = function(e) conditionMessage(e))\nub_msg <- tryCatch(\n  match.arg(\"1\", c(\"14.04\", \"16.04\", \"18.04\", \"20.04\", \"22.04\")),\n  error = function(e) conditionMessage(e)\n)\ncurl_msg <- \"`curl` must be on the `PATH`.\"\nsplit_msg <- \"If os_release is missing, os must consist of name and release.\"\n\nexpect_error(quote(system_requirements(\"foo\", \"1\")), os_msg)\nexpect_error(quote(system_requirements(\"ubuntu\", \"1\")), ub_msg)\nexpect_error(quote(system_requirements(\"ubuntu\", \"2\")), ub_msg)\nexpect_error(quote(system_requirements(\"ubuntu\")), split_msg)\nexpect_error(quote(system_requirements(\"ubuntu-\")), split_msg)\nexpect_error(quote(system_requirements(\"ubuntu-16.04-extra\")), split_msg)\nexpect_error(quote(system_requirements(\"-16.04\")), os_msg)\nexpect_error(quote(system_requirements(\"foo-bar\")), os_msg)\nexpect_error(quote(system_requirements(\"ubuntu\", \"16.04\", curl = \"\")), curl_msg)\nexpect_error(quote(system_requirements(\"foo\", \"1\", curl = \"\")), os_msg)\nexpect_error(quote(system_requirements(\"u\", \"16\", curl = \"\")), curl_msg)\nexpect_error(quote(system_requirements(\"ubuntu-16.04\", curl = \"\")), curl_msg)\nexpect_error(quote(system_requirements(\"not-a-package-dir\", \"16.04\")), os_msg)\nexpect_error(\n  quote(system_requirements(\"ubuntu\", \"16.04\", \"not-a-package-dir\")),\n  \"`not-a-package-dir` must contain a package.\"\n)\n\nmake_pkg <- function(text) {\n  pkg <- tempfile()\n  dir.create(pkg)\n  writeLines(text, file.path(pkg, \"DESCRIPTION\"))\n  pkg\n}\n\nlib <- make_pkg(\"Package: testPkg\\nSystemRequirements: libcurl\")\nempty <- make_pkg(\"Package: testPkg\")\nbad <- make_pkg(\"Not parsable\")\n\none <- function() system_requirements(\"ubuntu\", \"16.04\", lib)\nvalue <- one()\nstopifnot(identical(value, \"apt-get install -y libcurl4-openssl-dev\"))\nstopifnot(identical(\n  system_requirements(\"redhat\", \"7\", lib),\n  \"yum install -y libcurl-devel\"\n))\nstopifnot(identical(system_requirements(\"ubuntu\", \"16.04\", empty), character()))\nexpect_error(\n  quote(system_requirements(\"ubuntu\", \"16.04\", bad)),\n  \"Could not parse DESCRIPTION: Bad line: 'Not parsable\\\\n' has no ':'\"\n)\n\nsentence <- paste0(\n  \"system_requirements(\\\"ubuntu\\\", \\\"16.04\\\") for SystemRequirements: libcurl returns \\\"\",\n  value,\n  \"\\\".\"\n)\nwriteLines(sentence, file.path(out_dir, \"system_requirements-r.txt\"))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(identical(got, value))\n}\n\njson_escape <- function(x) {\n  x <- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x <- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(vapply(value, json_escape, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.system_requirements import system_requirements\n\nout_dir = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout_dir.mkdir(parents=True, exist_ok=True)\n\nOS_MSG = (\n    \"'arg' should be one of \\u201cubuntu\\u201d, \\u201ccentos\\u201d, \"\n    \"\\u201credhat\\u201d, \\u201copensuse\\u201d, \\u201csle\\u201d\"\n)\nUB_MSG = (\n    \"'arg' should be one of \\u201c14.04\\u201d, \\u201c16.04\\u201d, \"\n    \"\\u201c18.04\\u201d, \\u201c20.04\\u201d, \\u201c22.04\\u201d\"\n)\nCURL_MSG = \"`curl` must be on the `PATH`.\"\nSPLIT_MSG = \"If os_release is missing, os must consist of name and release.\"\n\n\ndef expect_error(fn, expected: str) -> None:\n    try:\n        fn()\n    except RuntimeError as exc:\n        got = str(exc)\n    else:\n        raise AssertionError(f\"expected {expected!r}\")\n    if got != expected:\n        raise AssertionError(f\"expected {expected!r} got {got!r}\")\n\n\nexpect_error(lambda: system_requirements(\"foo\", \"1\"), OS_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu\", \"1\"), UB_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu\", \"2\"), UB_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu\"), SPLIT_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu-\"), SPLIT_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu-16.04-extra\"), SPLIT_MSG)\nexpect_error(lambda: system_requirements(\"-16.04\"), OS_MSG)\nexpect_error(lambda: system_requirements(\"foo-bar\"), OS_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu\", \"16.04\", curl=\"\"), CURL_MSG)\nexpect_error(lambda: system_requirements(\"foo\", \"1\", curl=\"\"), OS_MSG)\nexpect_error(lambda: system_requirements(\"u\", \"16\", curl=\"\"), CURL_MSG)\nexpect_error(lambda: system_requirements(\"ubuntu-16.04\", curl=\"\"), CURL_MSG)\nexpect_error(\n    lambda: system_requirements(\"ubuntu\", \"16.04\", \"not-a-package-dir\"),\n    \"`not-a-package-dir` must contain a package.\",\n)\n\n\ndef make_pkg(text: str) -> str:\n    directory = tempfile.mkdtemp()\n    with open(os.path.join(directory, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\", newline=\"\\n\") as handle:\n        handle.write(text if text.endswith(\"\\n\") else text + \"\\n\")\n    return directory\n\n\nlib = make_pkg(\"Package: testPkg\\nSystemRequirements: libcurl\")\nempty = make_pkg(\"Package: testPkg\")\nbad = make_pkg(\"Not parsable\")\n\n\ndef one():\n    return system_requirements(\"ubuntu\", \"16.04\", lib)\n\n\nvalue = one()\nassert value == [\"apt-get install -y libcurl4-openssl-dev\"]\nassert system_requirements(\"redhat\", \"7\", lib) == [\"yum install -y libcurl-devel\"]\nassert system_requirements(\"ubuntu\", \"16.04\", empty) == []\nexpect_error(\n    lambda: system_requirements(\"ubuntu\", \"16.04\", bad),\n    \"Could not parse DESCRIPTION: Bad line: 'Not parsable\\\\n' has no ':'\",\n)\n\nsentence = (\n    'system_requirements(\"ubuntu\", \"16.04\") for SystemRequirements: libcurl returns '\n    f'\"{value[0]}\".'\n)\n(out_dir / \"system_requirements-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    assert got == value\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "update_packages",
+      "translated": true,
+      "python": "remotes.update_packages",
+      "loads": [],
+      "uses": [],
+      "done": "With upgrade never, leaves a fresh library empty and returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "update_packages(\"remotes\", upgrade = \"never\") returns NULL and installs nothing",
+        "r_ms": 1113.6751174926758,
+        "translated_ms": 0.5674559997714823,
+        "speedup": 1962.575279741793,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(remotes))\nstopifnot(packageVersion(\"remotes\") == \"2.5.0\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nout_dir <- file.path(dirname(script), \"..\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nlib <- tempfile(\"lib\")\ndir.create(lib)\nstopifnot(is.null(update_packages(character(), lib = lib, quiet = TRUE, upgrade = \"never\")))\nstopifnot(identical(list.files(lib), character()))\n\none <- function() {\n  update_packages(\"remotes\", lib = lib, quiet = TRUE, upgrade = \"never\")\n}\nvalue <- one()\nstopifnot(is.null(value))\nstopifnot(identical(list.files(lib), character()))\n\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  got <- one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  stopifnot(is.null(got))\n}\nstopifnot(identical(list.files(lib), character()))\n\nsentence <- \"update_packages(\\\"remotes\\\", upgrade = \\\"never\\\") returns NULL.\"\nwriteLines(sentence, file.path(out_dir, \"update_packages-r.txt\"))\ncat(sprintf(\"{\\\"value\\\":null,\\\"median_ms\\\":%.17g}\\n\", median(elapsed) * 1000))\n",
+          "python": "import json\nimport os\nimport statistics\nimport sys\nimport tempfile\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom remotes.update_packages import update_packages\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nlib = tempfile.mkdtemp(prefix=\"lib\")\nif update_packages([], lib=lib, quiet=True, upgrade=\"never\") is not None:\n    raise SystemExit(\"character() did not return None\")\nif os.listdir(lib):\n    raise SystemExit(os.listdir(lib))\n\n\ndef one():\n    return update_packages(\"remotes\", lib=lib, quiet=True, upgrade=\"never\")\n\n\nvalue = one()\nif value is not None:\n    raise SystemExit(repr(value))\nif os.listdir(lib):\n    raise SystemExit(\"remotes was installed into the temp library\")\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    got = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    if got is not None:\n        raise SystemExit(repr(got))\nif os.listdir(lib):\n    raise SystemExit(\"library changed during timing\")\n\nsentence = 'update_packages(\"remotes\", upgrade = \"never\") returns NULL.'\n(out / \"update_packages-python.txt\").write_text(sentence + \"\\n\", encoding=\"utf-8\")\nprint(json.dumps({\"value\": None, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

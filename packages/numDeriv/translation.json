@@ -1,0 +1,118 @@
+{
+  "name": "numDeriv",
+  "cran_version": "2016.8-1.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 4 exports of numDeriv 2016.8-1.1 are done. Richardson extrapolation, the complex step, and the simple difference are a port of the R code. NumPy holds the tables. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "grad",
+      "translated": true,
+      "python": "numderiv.grad",
+      "loads": [],
+      "uses": [],
+      "done": "Numerical gradient by Richardson extrapolation, a complex step, or a simple difference.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sin on (0:10) * 2 * pi / 10",
+        "r_ms": 0.17344951629638672,
+        "translated_ms": 0.35542349723982625,
+        "speedup": 0.488008017599775,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(numDeriv))\n\none <- function() {\n  as.numeric(grad(sin, (0:10) * 2 * pi / 10))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom numderiv import grad\n\n\ndef one():\n    return np.ravel(grad(np.sin, np.arange(11) * 2 * np.pi / 10), order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\",\".join(\"%.17g\" % float(part) for part in value), statistics.median(elapsed))\n)\n"
+        }
+      }
+    },
+    {
+      "name": "jacobian",
+      "translated": true,
+      "python": "numderiv.jacobian",
+      "loads": [],
+      "uses": [],
+      "done": "Numerical Jacobian, with one column for each component of x.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "c(sin(x), cos(x)) at 0 and 2 * pi",
+        "r_ms": 0.4856586456298828,
+        "translated_ms": 0.5899099996895529,
+        "speedup": 0.8232758317124076,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(numDeriv))\n\none <- function() {\n  func2 <- function(x) c(sin(x), cos(x))\n  as.numeric(jacobian(func2, (0:1) * 2 * pi))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom numderiv import jacobian\n\n\ndef one():\n    def func2(x):\n        return np.concatenate([np.sin(x), np.cos(x)])\n\n    return np.ravel(jacobian(func2, np.arange(2) * 2 * np.pi), order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\",\".join(\"%.17g\" % float(part) for part in value), statistics.median(elapsed))\n)\n"
+        }
+      }
+    },
+    {
+      "name": "hessian",
+      "translated": true,
+      "python": "numderiv.hessian",
+      "loads": [],
+      "uses": [
+        "genD",
+        "grad",
+        "jacobian"
+      ],
+      "done": "Numerical Hessian. Richardson reads the second derivatives from genD.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x^2 + 3xy + y^2 at c(1, 1)",
+        "r_ms": 0.5805492401123047,
+        "translated_ms": 0.7241635012178449,
+        "speedup": 0.8016825470159428,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(numDeriv))\n\none <- function() {\n  func <- function(x) x[1]^2 + 3 * x[1] * x[2] + x[2]^2\n  as.numeric(hessian(func, c(1, 1)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom numderiv import hessian\n\n\ndef one():\n    def func(x):\n        return x[0] ** 2 + 3 * x[0] * x[1] + x[1] ** 2\n\n    return np.ravel(hessian(func, [1.0, 1.0]), order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\",\".join(\"%.17g\" % float(part) for part in value), statistics.median(elapsed))\n)\n"
+        }
+      }
+    },
+    {
+      "name": "genD",
+      "translated": true,
+      "python": "numderiv.genD",
+      "loads": [],
+      "uses": [],
+      "done": "Bates and Watts D matrix. The first columns are the Jacobian and the rest are the lower triangle of the second derivatives.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "c(x[1], x[1], x[2]^2) at c(2, 2, 5)",
+        "r_ms": 0.8454322814941406,
+        "translated_ms": 1.253074500709772,
+        "speedup": 0.6746863662258445,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(numDeriv))\n\none <- function() {\n  func <- function(x) c(x[1], x[1], x[2]^2)\n  as.numeric(genD(func, c(2, 2, 5))$D)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom numderiv import genD\n\n\ndef one():\n    def func(x):\n        return np.array([x[0], x[0], x[1] ** 2])\n\n    return np.ravel(genD(func, [2.0, 2.0, 5.0])[\"D\"], order=\"F\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\",\".join(\"%.17g\" % float(part) for part in value), statistics.median(elapsed))\n)\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "pbivnorm",
+  "cran_version": "0.6.0",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "pbivnorm"
+  ],
+  "resume": "Exports: 1. Translated: pbivnorm (wrapper matches R exactly). Complete.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "pbivnorm"
+    ]
+  },
+  "strategy": "small-low",
+  "functions": [
+    {
+      "name": "pbivnorm",
+      "translated": true,
+      "python": "pbivnorm.pbivnorm.pbivnorm",
+      "loads": [],
+      "uses": [],
+      "done": "Python wrapper matches R exactly (max abs diff 0), with R-compatible recycling, validation, matrix input, and infinite-limit substitution.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0.0,
+        "r_ms": 0.099063,
+        "translated_ms": 0.102579,
+        "speedup": 0.97,
+        "case": "Finite and infinite limits, recycled and matrix inputs (wrapper proof).",
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbivnorm))\n\nout_dir <- file.path(\"packages\", \"pbivnorm\", \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nx <- c(-Inf, -3, -1, 0, 1, 3, Inf, -Inf, 0, Inf, 2, -2)\ny <- c(Inf, 0.5, -0.5)\nrho <- c(0, 0.25, -0.75, 0.99)\n\nr_values <- pbivnorm(x, y, rho)\ntimes <- numeric(20)\nfor (i in seq_len(20)) {\n    t0 <- Sys.time()\n    r_values <- pbivnorm(x, y, rho)\n    times[i] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\"))\n}\n\nfmt <- function(v) sprintf(\"%.17g\", v)\nwrite.csv(data.frame(r_value = fmt(r_values)),\n          file.path(out_dir, \"wrapper_r_values.csv\"),\n          row.names = FALSE, quote = FALSE)\nwrite.csv(data.frame(seconds = fmt(times)),\n          file.path(out_dir, \"wrapper_r_timings.csv\"),\n          row.names = FALSE, quote = FALSE)\n",
+          "python": "\"\"\"Compare the Python wrapper with R on recycled and infinite inputs.\"\"\"\n\nimport csv\nimport importlib.util\nimport statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).parents[3]\nOUT = ROOT / \"packages\" / \"pbivnorm\" / \"docs\" / \"output\"\n\nspec = importlib.util.spec_from_file_location(\n    \"pbivnorm_wrapper\", ROOT / \"packages\" / \"pbivnorm\" / \"pbivnorm\" / \"pbivnorm.py\"\n)\nwrapper = importlib.util.module_from_spec(spec)\nassert spec.loader is not None\nspec.loader.exec_module(wrapper)\n\nx = np.array([-np.inf, -3, -1, 0, 1, 3, np.inf, -np.inf, 0, np.inf, 2, -2])\ny = np.array([np.inf, 0.5, -0.5])\nrho = np.array([0, 0.25, -0.75, 0.99])\n\n\ndef read_column(path):\n    with path.open(newline=\"\") as handle:\n        return np.array([float(row[\"r_value\"]) for row in csv.DictReader(handle)])\n\n\ndef read_times(path):\n    with path.open(newline=\"\") as handle:\n        return [float(row[\"seconds\"]) for row in csv.DictReader(handle)]\n\n\ndef main():\n    r_values = read_column(OUT / \"wrapper_r_values.csv\")\n    r_times = read_times(OUT / \"wrapper_r_timings.csv\")\n    py_values = wrapper.pbivnorm(x, y, rho)  # one untimed call\n    times = []\n    for _ in range(20):\n        t0 = time.perf_counter()\n        py_values = wrapper.pbivnorm(x, y, rho)\n        times.append(time.perf_counter() - t0)\n\n    both_nan = np.isnan(r_values) & np.isnan(py_values)\n    same_nan = np.isnan(r_values) == np.isnan(py_values)\n    finite_diff = np.abs(r_values - py_values)\n    finite_diff[both_nan] = 0.0\n    max_abs_diff = float(np.max(finite_diff))\n    matches = bool(np.all(same_nan) and max_abs_diff <= 1e-8)\n    r_ms = statistics.median(r_times) * 1000\n    py_ms = statistics.median(times) * 1000\n    speedup = r_ms / py_ms\n    summary = \"\\n\".join(\n        [\n            f\"matches: {'yes' if matches else 'no'}\",\n            f\"max abs diff: {max_abs_diff:.3e}\",\n            f\"R ms: {r_ms:.6f}\",\n            f\"Python ms: {py_ms:.6f}\",\n            f\"speedup: {speedup:.2f}x\",\n            \"\",\n        ]\n    )\n    (OUT / \"wrapper_proof_summary.txt\").write_text(summary)\n    print(summary)\n    if not matches:\n        raise SystemExit(\"proof failed\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+A qss1 proof failed by 69 until R printed row-major. R's `as.matrix` and `c()` of a matrix run column-major, and NumPy's `reshape(-1)` runs row-major. In the R proof, flatten with `as.vector(t(m))` so both sides list the same entries. Compare the matrix only after this, or the diff looks like a math error.

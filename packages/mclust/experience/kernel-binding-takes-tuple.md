@@ -1,0 +1,1 @@
+The `mclust_kernels` Rust binding takes one tuple argument, not positional arguments. Call `getattr(mclust_kernels, name)((a, b, ...))`. It returns a Python list with every argument in order, with the mutated ones updated, so read outputs by their argument index.

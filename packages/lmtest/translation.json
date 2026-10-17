@@ -1,0 +1,655 @@
+{
+  "name": "lmtest",
+  "cran_version": "0.9-40",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 23 exports of lmtest 0.9-40 are checked on a linear model. The Durbin-Watson probability is Farebrother's pan in the Rust crate. F, chi-square, and t tails use SciPy. The Cox normal tail uses extraDistr's math.erf. Granger lags use zoo's lag and merge. Harrison-McCabe draws use extraDistr's normal generator on boot's Mersenne-Twister. glm, mlm, and survreg methods are not in the exports that were checked.",
+  "dependencies": {
+    "translated": [
+      "zoo",
+      "extraDistr",
+      "boot"
+    ],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": [
+      "pan"
+    ]
+  },
+  "functions": [
+    {
+      "name": "dwtest",
+      "translated": true,
+      "python": "lmtest.dwtest",
+      "loads": [
+        "pan",
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Durbin-Watson statistic. The exact probability is Farebrother's pan.",
+      "not_done": "order.by as a formula is a numeric vector.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Exact Durbin-Watson statistic and p-value, 20 observations.",
+        "r_ms": 2.634763717651367,
+        "translated_ms": 0.5990179997752421,
+        "speedup": 4.398471696409722,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nd <- dwtest(y ~ x)\npaste(sprintf(\"%.17g\", c(d$statistic, d$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import dwtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    d = dwtest(y, x)\n    return f\"{d['statistic']:.17g},{d['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "bptest",
+      "translated": true,
+      "python": "lmtest.bptest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Studentized Breusch-Pagan statistic and chi-square tail.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Studentized Breusch-Pagan statistic, degrees of freedom, and p-value.",
+        "r_ms": 2.566695213317871,
+        "translated_ms": 0.5524459993466735,
+        "speedup": 4.646056295734358,
+        "matches": true,
+        "max_abs_diff": 3.219646771412954e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nb <- bptest(y ~ x)\npaste(sprintf(\"%.17g\", c(b$statistic, b$parameter, b$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import bptest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    b = bptest(y, x)\n    return f\"{b['statistic']:.17g},{b['parameter']:.17g},{b['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "bgtest",
+      "translated": true,
+      "python": "lmtest.bgtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Breusch-Godfrey statistic for serial correlation of order 1.",
+      "not_done": "order.by as a formula is a numeric vector.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Breusch-Godfrey LM statistic, degrees of freedom, and chi-square p-value.",
+        "r_ms": 1.717686653137207,
+        "translated_ms": 0.8635530011815717,
+        "speedup": 1.9890923322447513,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\ng <- bgtest(y ~ x)\npaste(sprintf(\"%.17g\", c(g$statistic, g$parameter, g$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import bgtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    g = bgtest(y, x)\n    return f\"{g['statistic']:.17g},{g['parameter']:.17g},{g['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "gqtest",
+      "translated": true,
+      "python": "lmtest.gqtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Goldfeld-Quandt variance ratio split at the middle.",
+      "not_done": "order.by as a formula is a numeric vector.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Goldfeld-Quandt statistic, both degrees of freedom, and the upper-tail p-value.",
+        "r_ms": 2.6084184646606445,
+        "translated_ms": 0.9361205011373386,
+        "speedup": 2.7864131396455365,
+        "matches": true,
+        "max_abs_diff": 5.551115123125783e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nq <- gqtest(y ~ x)\npaste(sprintf(\"%.17g\", c(q$statistic, q$parameter, q$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import gqtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    q = gqtest(y, x)\n    return f\"{q['statistic']:.17g},{q['parameter'][0]:.17g},{q['parameter'][1]:.17g},{q['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "resettest",
+      "translated": true,
+      "python": "lmtest.resettest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "RESET F test using the square and cube of the fitted values.",
+      "not_done": "A caller-supplied covariance is the Wald comparison of the two designs.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "RESET statistic, degrees of freedom, and p-value for powers 2 and 3.",
+        "r_ms": 2.329111099243164,
+        "translated_ms": 1.2871510025433963,
+        "speedup": 1.8095088258027736,
+        "matches": true,
+        "max_abs_diff": 3.3306690738754696e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nr <- resettest(y ~ x)\npaste(sprintf(\"%.17g\", c(r$statistic, r$parameter, r$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import resettest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    r = resettest(y, x)\n    return f\"{r['statistic']:.17g},{r['parameter'][0]:.17g},{r['parameter'][1]:.17g},{r['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "reset",
+      "translated": true,
+      "python": "lmtest.reset",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The same RESET test, powers of the regressor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "RESET statistic and p-value when the extra regressors are powers of x.",
+        "r_ms": 2.410769462585449,
+        "translated_ms": 0.7003645005170256,
+        "speedup": 3.4421639886170166,
+        "matches": true,
+        "max_abs_diff": 2.3314683517128287e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nr <- reset(y ~ x, type=\"regressor\")\npaste(sprintf(\"%.17g\", c(r$statistic, r$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import reset\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    r = reset(y, x, type=\"regressor\")\n    return f\"{r['statistic']:.17g},{r['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "harvtest",
+      "translated": true,
+      "python": "lmtest.harvtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Harvey-Collier t statistic from recursive residuals.",
+      "not_done": "order.by as a formula is a numeric vector.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Harvey-Collier statistic, degrees of freedom, and two-sided p-value.",
+        "r_ms": 3.056764602661133,
+        "translated_ms": 1.044608497977606,
+        "speedup": 2.926229882850008,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nh <- harvtest(y ~ x)\npaste(sprintf(\"%.17g\", c(h$statistic, h$parameter, h$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import harvtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    h = harvtest(y, x)\n    return f\"{h['statistic']:.17g},{h['parameter']:.17g},{h['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "coxtest",
+      "translated": true,
+      "python": "lmtest.coxtest",
+      "loads": [
+        "extraDistr"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Cox statistics for y on x against y on sqrt(x). The normal tail is math.erf.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both Cox rows: estimate, standard error, z, and two-sided p-value.",
+        "r_ms": 3.9877891540527344,
+        "translated_ms": 1.6135120022227056,
+        "speedup": 2.471496430494056,
+        "matches": true,
+        "max_abs_diff": 3.9968028886505635e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- as.matrix(coxtest(y ~ x, y ~ z))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import coxtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    c = coxtest(y, x, z)\n    rows = np.column_stack([c[\"estimate\"], c[\"std_error\"], c[\"z\"], c[\"p_value\"]])\n    return \",\".join(f\"{v:.17g}\" for v in rows.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "hmctest",
+      "translated": true,
+      "python": "lmtest.hmctest",
+      "loads": [
+        "extraDistr",
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Harrison-McCabe statistic. Twenty simulated normals use R's generator.",
+      "not_done": "The optional plot is not drawn.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Harrison-McCabe statistic and a 20-draw p-value after set.seed(1).",
+        "r_ms": 4.016518592834473,
+        "translated_ms": 88.16726449913403,
+        "speedup": 0.045555667578570755,
+        "matches": true,
+        "max_abs_diff": 1.1102230246251565e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nset.seed(1)\nm <- hmctest(y ~ x, nsim=20)\npaste(sprintf(\"%.17g\", c(m$statistic, m$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from boot.rng import set_seed\nfrom lmtest import hmctest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    set_seed(1)\n    m = hmctest(y, x, nsim=20)\n    return f\"{m['statistic']:.17g},{m['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "grangertest",
+      "translated": true,
+      "python": "lmtest.grangertest",
+      "loads": [
+        "zoo"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Granger F test. Lags come from zoo's lag and merge. The second series is the response.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Granger F test of order 1: residual degrees of freedom, difference, F, and p-value.",
+        "r_ms": 20.7594633102417,
+        "translated_ms": 1.7070325011445675,
+        "speedup": 12.161141218062603,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\ng <- grangertest(y, x, order=1)\npaste(sprintf(\"%.17g\", c(g[1,1], g[2,1], g[2,2], g[2,3], g[2,4])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import grangertest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    g = grangertest(y, x)\n    return f\"{g['res_df'][0]:.17g},{g['res_df'][1]:.17g},{g['df']:.17g},{g['statistic']:.17g},{g['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "grangertest.default",
+      "translated": true,
+      "python": "lmtest.grangertest",
+      "loads": [
+        "zoo"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The default method of the Granger test, two numeric series.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same Granger F test called as grangertest.default.",
+        "r_ms": 12.677907943725586,
+        "translated_ms": 2.015260499319993,
+        "speedup": 6.290952434190755,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\ng <- grangertest.default(y, x, order=1)\npaste(sprintf(\"%.17g\", c(g[1,1], g[2,1], g[2,2], g[2,3], g[2,4])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import grangertest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    g = grangertest(y, x)\n    return f\"{g['res_df'][0]:.17g},{g['res_df'][1]:.17g},{g['df']:.17g},{g['statistic']:.17g},{g['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "waldtest",
+      "translated": true,
+      "python": "lmtest.waldtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Wald F test of y on x against the intercept-only model.",
+      "not_done": "Dropping a term by its number is this nested-design comparison.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Wald F test against the intercept: residual degrees of freedom, difference, F, and p-value.",
+        "r_ms": 4.3686628341674805,
+        "translated_ms": 0.7141374990169425,
+        "speedup": 6.117397336200989,
+        "matches": true,
+        "max_abs_diff": 1.5881867761018131e-22,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nw <- waldtest(lm(y ~ x))\npaste(sprintf(\"%.17g\", c(w[1,1], w[2,1], w[2,2], w[2,3], w[2,4])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import waldtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    w = waldtest(y, x)\n    return f\"{w['res_df'][0]:.17g},{w['res_df'][1]:.17g},{w['df']:.17g},{w['statistic']:.17g},{w['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "waldtest.default",
+      "translated": true,
+      "python": "lmtest.waldtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The default Wald test for a linear model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The default method reports the chi-square statistic. waldtest.lm reports F.",
+        "r_ms": 6.763339042663574,
+        "translated_ms": 0.7120360023691319,
+        "speedup": 9.49859139167143,
+        "matches": true,
+        "max_abs_diff": 1.232595164407831e-32,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nw <- waldtest.default(lm(y ~ x))\npaste(sprintf(\"%.17g\", c(w[1,1], w[2,1], w[2,2], w[2,3], w[2,4])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import waldtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    w = waldtest(y, x, test=\"Chisq\")\n    return f\"{w['res_df'][0]:.17g},{w['res_df'][1]:.17g},{w['df']:.17g},{w['statistic']:.17g},{w['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lrtest",
+      "translated": true,
+      "python": "lmtest.lrtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Likelihood-ratio comparison of y on x with the intercept-only model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Likelihood-ratio chi-square: model degrees of freedom, both log-likelihoods, difference, statistic, and p-value.",
+        "r_ms": 5.07199764251709,
+        "translated_ms": 0.7907930012152065,
+        "speedup": 6.413812002285028,
+        "matches": true,
+        "max_abs_diff": 2.3161057151484775e-23,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nlr <- lrtest(lm(y ~ x))\npaste(sprintf(\"%.17g\", c(lr[1,1], lr[2,1], lr[1,2], lr[2,2], lr[2,3], lr[2,4], lr[2,5])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import lrtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    lr = lrtest(y, x)\n    return f\"{lr['df_model'][0]:.17g},{lr['df_model'][1]:.17g},{lr['loglik'][0]:.17g},{lr['loglik'][1]:.17g},{lr['df']:.17g},{lr['statistic']:.17g},{lr['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lrtest.default",
+      "translated": true,
+      "python": "lmtest.lrtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The default likelihood-ratio test for a linear model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same likelihood-ratio test called as lrtest.default.",
+        "r_ms": 4.874706268310547,
+        "translated_ms": 0.7464384998456808,
+        "speedup": 6.530620097058695,
+        "matches": true,
+        "max_abs_diff": 2.3161057151484775e-23,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nlr <- lrtest.default(lm(y ~ x))\npaste(sprintf(\"%.17g\", c(lr[1,1], lr[2,1], lr[1,2], lr[2,2], lr[2,3], lr[2,4], lr[2,5])), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import lrtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    lr = lrtest(y, x)\n    return f\"{lr['df_model'][0]:.17g},{lr['df_model'][1]:.17g},{lr['loglik'][0]:.17g},{lr['loglik'][1]:.17g},{lr['df']:.17g},{lr['statistic']:.17g},{lr['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "coeftest",
+      "translated": true,
+      "python": "lmtest.coeftest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "t test of the intercept and the slope.",
+      "not_done": "glm, mlm, and survreg coefficient tests are not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both coefficient rows: estimate, standard error, t, and p-value.",
+        "r_ms": 2.226710319519043,
+        "translated_ms": 0.7084049993864028,
+        "speedup": 3.143273016773945,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- unclass(coeftest(lm(y ~ x)))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import coeftest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    c = coeftest(y, x)\n    rows = np.column_stack([c[\"estimate\"], c[\"std_error\"], c[\"t\"], c[\"p_value\"]])\n    return \",\".join(f\"{v:.17g}\" for v in rows.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "coeftest.default",
+      "translated": true,
+      "python": "lmtest.coeftest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The default coefficient t test for a linear model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same coefficient t test called as coeftest.default.",
+        "r_ms": 2.425074577331543,
+        "translated_ms": 0.4096490010851994,
+        "speedup": 5.919884024878098,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- unclass(coeftest.default(lm(y ~ x)))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import coeftest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    c = coeftest(y, x)\n    rows = np.column_stack([c[\"estimate\"], c[\"std_error\"], c[\"t\"], c[\"p_value\"]])\n    return \",\".join(f\"{v:.17g}\" for v in rows.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "coefci",
+      "translated": true,
+      "python": "lmtest.coefci",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "95 percent t interval for the intercept and the slope.",
+      "not_done": "glm, mlm, and survreg intervals are not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both 95 percent intervals, lower endpoint then upper.",
+        "r_ms": 1.761794090270996,
+        "translated_ms": 0.6768729999748757,
+        "speedup": 2.6028429119441765,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- coefci(lm(y ~ x))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import coefci\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    m = coefci(y, x)\n    return \",\".join(f\"{v:.17g}\" for v in m.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "coefci.default",
+      "translated": true,
+      "python": "lmtest.coefci",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The default coefficient interval for a linear model.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The same 95 percent intervals called as coefci.default.",
+        "r_ms": 2.0079612731933594,
+        "translated_ms": 0.9374374985782197,
+        "speedup": 2.141968159198632,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- coefci.default(lm(y ~ x))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import coefci\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    m = coefci(y, x)\n    return \",\".join(f\"{v:.17g}\" for v in m.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "jtest",
+      "translated": true,
+      "python": "lmtest.jtest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "J test of y on x against y on sqrt(x).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both J-test rows: estimate, standard error, t, and p-value of the added fitted value.",
+        "r_ms": 7.979154586791992,
+        "translated_ms": 1.7287059999944177,
+        "speedup": 4.615680507164178,
+        "matches": true,
+        "max_abs_diff": 5.0182080713057076e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- as.matrix(jtest(y ~ x, y ~ z))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import jtest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    j = jtest(y, x, z)\n    rows = np.column_stack([j[\"estimate\"], j[\"std_error\"], j[\"t\"], j[\"p_value\"]])\n    return \",\".join(f\"{v:.17g}\" for v in rows.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "encomptest",
+      "translated": true,
+      "python": "lmtest.encomptest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Encompassing F tests of each model against the union of the regressors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both encompassing rows: residual degrees of freedom, difference, F, and p-value.",
+        "r_ms": 13.020038604736328,
+        "translated_ms": 1.8152390020986786,
+        "speedup": 7.172630485397946,
+        "matches": true,
+        "max_abs_diff": 1.4654943925052066e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- as.matrix(encomptest(y ~ x, y ~ z))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import encomptest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    e = encomptest(y, x, z)\n    rows = [[e[\"res_df\"][i], e[\"df\"][i], e[\"statistic\"][i], e[\"p_value\"][i]] for i in (0, 1)]\n    return \",\".join(f\"{v:.17g}\" for row in rows for v in row)\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "petest",
+      "translated": true,
+      "python": "lmtest.petest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "PE test of y on x against log(y) on sqrt(x). Rows with a non-finite auxiliary value are omitted.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Both PE rows: estimate, standard error, t, and p-value.",
+        "r_ms": 6.935596466064453,
+        "translated_ms": 1.64928900085215,
+        "speedup": 4.205203856013706,
+        "matches": true,
+        "max_abs_diff": 9.947598300641403e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nm <- as.matrix(petest(y ~ x, log(y) ~ z))\npaste(sprintf(\"%.17g\", as.numeric(t(m))), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import petest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    p = petest(y, x, np.log(y), z)\n    rows = np.column_stack([p[\"estimate\"], p[\"std_error\"], p[\"t\"], p[\"p_value\"]])\n    return \",\".join(f\"{v:.17g}\" for v in rows.reshape(-1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "raintest",
+      "translated": true,
+      "python": "lmtest.raintest",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Rainbow statistic for the central half of the sample.",
+      "not_done": "order.by equal to mahalanobis is not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rainbow statistic, degrees of freedom, and p-value.",
+        "r_ms": 2.6189088821411133,
+        "translated_ms": 0.6471170017903205,
+        "speedup": 4.047040759083154,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lmtest))\nx <- c(1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20)\ny <- c(2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18)\nz <- sqrt(x)\none <- function() {\nr <- raintest(y ~ x)\npaste(sprintf(\"%.17g\", c(r$statistic, r$parameter, r$p.value)), collapse=\",\")\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nshown <- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown <- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "from lmtest import raintest\nimport numpy as np\nx = np.array([1,3,2,6,5,8,7,4,9,10,12,11,15,13,14,18,16,19,17,20], float)\ny = np.array([2,2,4,3,7,6,9,8,5,11,10,14,12,16,15,13,19,17,20,18], float)\nz = np.sqrt(x)\n\ndef one():\n    r = raintest(y, x)\n    return f\"{r['statistic']:.17g},{r['parameter'][0]:.17g},{r['parameter'][1]:.17g},{r['p_value']:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"VALUE \" + str(value).replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

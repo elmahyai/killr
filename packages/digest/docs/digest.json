@@ -1,0 +1,46 @@
+{
+  "name": "digest",
+  "title": "Create hash function digests for arbitrary R objects or files",
+  "origin": {
+    "description": "Apply a hash to an R object or a file. By default the object is serialized first, and the 14-byte serialization header is skipped so the digest does not depend on the R version.",
+    "usage": "digest(object, algo = c(\"md5\", \"sha1\", \"crc32\", \"sha256\", \"sha512\", \"xxhash32\", \"xxhash64\", \"murmur32\", \"spookyhash\", \"blake3\", \"crc32c\", \"xxh3_64\", \"xxh3_128\"), serialize = TRUE, file = FALSE, length = Inf, skip = \"auto\", ascii = FALSE, raw = FALSE, seed = 0, errormode = c(\"stop\", \"warn\", \"silent\"), serializeVersion = .getSerializeVersion())",
+    "arguments": [
+      {"name": "object", "text": "An R object. Passed to serialize unless serialize is FALSE, in which case it must be a character string or a raw vector."},
+      {"name": "algo", "text": "Hash algorithm. A unique prefix is accepted. md5 is the default."},
+      {"name": "serialize", "text": "If TRUE, hash the version-2 serialization of the object."},
+      {"name": "file", "text": "If TRUE, object is a file path. A character file with object missing is treated the same way."},
+      {"name": "length", "text": "Number of bytes to process after skip. Inf means the whole input."},
+      {"name": "skip", "text": "Bytes to ignore before hashing. \"auto\" skips the 14-byte binary serialization header."},
+      {"name": "ascii", "text": "Passed to serialize when serialize is TRUE."},
+      {"name": "raw", "text": "If TRUE, return the digest as raw bytes instead of hex."},
+      {"name": "seed", "text": "Seed for xxhash32, xxhash64, murmur32, xxh3_64, and xxh3_128."},
+      {"name": "errormode", "text": "stop aborts. warn warns and returns NA. silent returns NULL."},
+      {"name": "serializeVersion", "text": "Serialization format. 2 is the default."}
+    ],
+    "details": "md5, sha1, sha256, and sha512 follow their published specifications. crc32 is the zlib checksum. xxhash32, xxhash64, xxh3_64, and xxh3_128 follow xxHash. murmur32 is MurmurHash3 x86 32. spookyhash is SpookyHash V2 and hashes the serialization itself, skipping with an 8-bit counter. blake3 is BLAKE3. crc32c is the Castagnoli checksum. This package is not meant for cryptographic use.",
+    "value": "A hex string, or raw bytes when raw is TRUE. Length 32 for md5, 40 for sha1, 8 for crc32, xxhash32, and murmur32, 16 for xxhash64 and xxh3_64, 64 for sha256 and blake3, 128 for sha512, and 32 for spookyhash and xxh3_128.",
+    "example": "digest(list(LETTERS, data.frame(a=letters[1:5], b=matrix(1:10,ncol=2))))",
+    "output": "output/digest-r.txt"
+  },
+  "translation": {
+    "description": "Apply a hash to a Python value that stands in for an R object, or to a file. By default the value is serialized in R's version-2 format and the 14-byte header is skipped.",
+    "usage": "digest(object, algo=\"md5\", serialize=True, file=False, length=math.inf, skip=\"auto\", ascii=False, raw=False, seed=0, errormode=\"stop\", serializeVersion=None)",
+    "arguments": [
+      {"name": "object", "text": "A str is a length-1 character vector. An int or float is a length-1 double. A bool is logical. None is NULL. bytes is a raw vector. A list is an R list. character(), integer(), real(), data_frame(), and integer_matrix() build the other vectors the example needs."},
+      {"name": "algo", "text": "Hash algorithm. A unique prefix is accepted. md5 is the default."},
+      {"name": "serialize", "text": "If True, hash the version-2 serialization of the object."},
+      {"name": "file", "text": "If True, object is a file path. Passing the path as file= with object omitted is treated the same way."},
+      {"name": "length", "text": "Number of bytes to process after skip. math.inf means the whole input."},
+      {"name": "skip", "text": "Bytes to ignore before hashing. \"auto\" skips the 14-byte binary header, or through the fourth newline of an ascii serialization."},
+      {"name": "ascii", "text": "If True, serialize as text. Integers are decimal lines, NA is the text NA, reals use %.16g, strings use C escapes, and raw bytes are two hex digits."},
+      {"name": "raw", "text": "If True, return the digest as bytes instead of hex."},
+      {"name": "seed", "text": "Seed for xxhash32, xxhash64, murmur32, xxh3_64, and xxh3_128. A negative seed sign-extends to 64 bits, matching as.integer passed to a uint64 parameter."},
+      {"name": "errormode", "text": "stop raises DigestError. warn warns and returns NA. silent returns None."},
+      {"name": "serializeVersion", "text": "Serialization format. None uses 2."}
+    ],
+    "details": "A Python int is an R double, matching the literal 1. integer() builds an R integer, matching 1L. NA is R's missing value and is distinct from a plain NaN. Data-frame matrices are split into columns the way data.frame() does, and automatic row names are stored as c(NA, -n).",
+    "value": "A hex string, or bytes when raw is True.",
+    "example": "from digest import character, data_frame, digest, integer_matrix\nprint(digest([\n    character(list(\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\")),\n    data_frame(\n        a=character(list(\"abcde\")),\n        b=integer_matrix(list(range(1, 11)), ncol=2),\n    ),\n]))",
+    "output": "output/digest-python.txt"
+  }
+}

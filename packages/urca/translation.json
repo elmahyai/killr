@@ -1,0 +1,640 @@
+{
+  "name": "urca",
+  "cran_version": "1.3-4",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked plotres, unitrootTable, blrtest, bh5lrtest, bh6lrtest, cajools, lttest, ur, ur, ur, ca, punitroot, and qunitroot.po, and cajolst.sp.za.ers. ur.df, ur.kpss, ur.pp, ca.po, and ca.jo match urca 1.3-4. The regressions are NumPy least squares. nlme is imported and unused. The cointegration tests and the MacKinnon p-values are still open. There is no crate. cajorls on Canada remains above tolerance because the normalised beta follows the eigenvector. Checked show, plot, summary, alphaols, alrtest, and ablrtest. All exports translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "ablrtest",
+      "translated": true,
+      "python": "urca.johansen.ablrtest",
+      "loads": [],
+      "uses": [],
+      "done": "Likelihood-ratio test of joint linear restrictions on the alpha and beta loading matrices.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark VECM with ecdet=const, eigen, K=2, long-run spec, season=4, help-page matrices HD1 and DA, and r=1.",
+        "r_ms": 11.499166488647461,
+        "translated_ms": 2.1893530001761974,
+        "speedup": 5.252312663934056,
+        "matches": true,
+        "max_abs_diff": 1.5625545302100363e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")]\n\none <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  hd1 <- matrix(c(1, -1, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 1), c(5, 3))\n  da <- matrix(c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1), c(4, 3))\n  res <- ablrtest(sjd.vecm, H = hd1, A = da, r = 1)\n  c(res@teststat, res@pval, res@lambda[1], as.numeric(res@V), as.numeric(res@W))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.johansen import ablrtest, ca_jo\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    sjd_vecm = ca_jo(sjd, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    hd1 = np.array(\n        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1]],\n        dtype=float,\n    )\n    da = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0], [0, 0, 1]], dtype=float)\n    res = ablrtest(sjd_vecm, hd1, da, r=1)\n    return np.concatenate(\n        [\n            [res.teststat, res.pval[0], res.pval[1], res.lambda_[0]],\n            np.ravel(res.V, order=\"F\"),\n            np.ravel(res.W, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "alphaols",
+      "translated": true,
+      "python": "urca.johansen.alphaols",
+      "loads": [],
+      "uses": [],
+      "done": "OLS estimates of the alpha loading matrix from the R-form VECM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Canada, constant, K=2; coefficients of alphaols for every equation and for equation 1",
+        "r_ms": 12.128949165344238,
+        "translated_ms": 2.039642999989155,
+        "speedup": 5.94660397207194,
+        "matches": true,
+        "max_abs_diff": 5.901599348101527e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(Canada, package = \"vars\")\n\none <- function() {\n  jo <- ca.jo(Canada, type = \"trace\", ecdet = \"const\", K = 2, spec = \"longrun\")\n  c(as.numeric(coef(alphaols(jo))), as.numeric(coef(alphaols(jo, reg.number = 1))))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/vars\")\nfrom urca.johansen import alphaols, ca_jo\nfrom vars import Canada\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    jo = ca_jo(Canada(), type=\"trace\", ecdet=\"const\", K=2, spec=\"longrun\")\n    fit = alphaols(jo)\n    fit1 = alphaols(jo, reg_number=1)\n    return np.concatenate(\n        [np.ravel(fit.coef, order=\"F\"), np.ravel(fit1.coef, order=\"F\")]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "alrtest",
+      "translated": true,
+      "python": "urca.johansen.alrtest",
+      "loads": [],
+      "uses": [],
+      "done": "Likelihood-ratio test of linear restrictions on the alpha loadings.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark data, long-run eigenvalues, K=2, season 4, and a restriction matrix A with r=1",
+        "r_ms": 7.526636123657227,
+        "translated_ms": 2.0467164995352505,
+        "speedup": 3.6774199677221078,
+        "matches": true,
+        "max_abs_diff": 4.0533620904170675e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")]\n\none <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  da <- matrix(c(1, 0, 0, 0), c(4, 1))\n  res <- alrtest(sjd.vecm, A = da, r = 1)\n  c(res@teststat, res@pval, res@lambda[1], as.numeric(res@V), as.numeric(res@W))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.johansen import alrtest, ca_jo\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    sjd_vecm = ca_jo(sjd, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    da = np.array([[1], [0], [0], [0]], dtype=float)\n    res = alrtest(sjd_vecm, da, r=1)\n    return np.concatenate(\n        [\n            [res.teststat, res.pval[0], res.pval[1], res.lambda_[0]],\n            np.ravel(res.V, order=\"F\"),\n            np.ravel(res.W, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "blrtest",
+      "translated": true,
+      "python": "urca.blrtest.blrtest",
+      "loads": [],
+      "uses": [],
+      "done": "Likelihood-ratio test of linear restrictions on the beta cointegration vectors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark series, ca.jo with ecdet=const, eigen, K=2, long-run spec, season=4, help-page HD0, and r=1.",
+        "r_ms": 7.747650146484375,
+        "translated_ms": 1.5379799997390364,
+        "speedup": 5.0375493490155865,
+        "matches": true,
+        "max_abs_diff": 1.9954382590725572e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")]\n\none <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  hd0 <- matrix(c(-1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1), c(5, 4))\n  res <- blrtest(sjd.vecm, H = hd0, r = 1)\n  c(res@teststat, res@pval, res@lambda[1], as.numeric(res@V), as.numeric(res@W))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.blrtest import blrtest\nfrom urca.johansen import ca_jo\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    sjd_vecm = ca_jo(sjd, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    hd0 = np.array(\n        [[-1, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],\n        dtype=float,\n    )\n    res = blrtest(sjd_vecm, hd0, r=1)\n    return np.concatenate(\n        [\n            [res.teststat, res.pval[0], res.pval[1], res.lambda_[0]],\n            np.ravel(res.V, order=\"F\"),\n            np.ravel(res.W, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "bh5lrtest",
+      "translated": true,
+      "python": "urca.bh5lrtest.bh5lrtest",
+      "loads": [],
+      "uses": [],
+      "done": "Likelihood-ratio test when some cointegration vectors are known and supplied in H.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark series, ca.jo with ecdet const, eigen, K=2, long-run spec, season 4, one known column H, and r=2.",
+        "r_ms": 10.872364044189453,
+        "translated_ms": 2.131412499693397,
+        "speedup": 5.101013551226447,
+        "matches": true,
+        "max_abs_diff": 1.4317151908471715e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")]\n\none <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  h51 <- matrix(c(1, -1, 0, 0, 0), ncol = 1)\n  res <- bh5lrtest(sjd.vecm, H = h51, r = 2)\n  c(res@teststat, res@pval, res@lambda[1], as.numeric(res@V), as.numeric(res@W))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.bh5lrtest import bh5lrtest\nfrom urca.johansen import ca_jo\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    sjd_vecm = ca_jo(sjd, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    h51 = np.array([[1], [-1], [0], [0], [0]], dtype=float)\n    res = bh5lrtest(sjd_vecm, h51, r=2)\n    return np.concatenate(\n        [\n            [res.teststat, res.pval[0], res.pval[1], res.lambda_[0]],\n            np.ravel(res.V, order=\"F\"),\n            np.ravel(res.W, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "bh6lrtest",
+      "translated": true,
+      "python": "urca.bh6lrtest.bh6lrtest",
+      "loads": [],
+      "uses": [],
+      "done": "Iterative likelihood-ratio test when some cointegration vectors are known.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "UKpppuip trace ca.jo with K=2, season=4, oil dummies, a 5 by 3 H, r=2, and r1=1.",
+        "r_ms": 13.38183879852295,
+        "translated_ms": 3.468705999694066,
+        "speedup": 3.8578763376611347,
+        "matches": true,
+        "max_abs_diff": 3.15512060922174e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(UKpppuip)\ndat1 <- as.matrix(UKpppuip[, c(\"p1\", \"p2\", \"e12\", \"i1\", \"i2\")])\ndat2 <- as.matrix(UKpppuip[, c(\"doilp0\", \"doilp1\")])\n\none <- function() {\n  h1 <- ca.jo(dat1, type = \"trace\", K = 2, season = 4, dumvar = dat2)\n  h6 <- matrix(c(1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0), ncol = 3)\n  res <- bh6lrtest(z = h1, H = h6, r = 2, r1 = 1, conv.val = 0.0001, max.iter = 50)\n  c(res@teststat, res@pval, res@lambda[1], as.numeric(res@V), as.numeric(res@W))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.bh6lrtest import bh6lrtest\nfrom urca.johansen import ca_jo\n\n_BIN1 = Path(__file__).with_name(\"ukpppuip_dat1.bin\")\n_BIN2 = Path(__file__).with_name(\"ukpppuip_dat2.bin\")\n\n\ndef _uk_data():\n    dat1 = np.fromfile(_BIN1, dtype=np.float64).reshape(-1, 5, order=\"F\")\n    dat2 = np.fromfile(_BIN2, dtype=np.float64).reshape(-1, 2, order=\"F\")\n    return dat1, dat2\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    dat1, dat2 = _uk_data()\n    h1 = ca_jo(dat1, type=\"trace\", K=2, season=4, dumvar=dat2)\n    h6 = np.array(\n        [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]],\n        dtype=float,\n    )\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        res = bh6lrtest(h1, h6, r=2, r1=1, conv_val=0.0001, max_iter=50)\n    return np.concatenate(\n        [\n            [res.teststat, res.pval[0], res.pval[1], res.lambda_[0]],\n            np.ravel(res.V, order=\"F\"),\n            np.ravel(res.W, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ca.jo",
+      "translated": true,
+      "python": "urca.ca_jo",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Trace statistic and eigenvalues on Canada with a trend. The pivoted Cholesky preserves the R-compatible eigenvalue gap and matches within 1e-8.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Canada trace test with a trend, K=2",
+        "r_ms": 13.69011402130127,
+        "translated_ms": 2.4664329994266154,
+        "speedup": 5.550572030330393,
+        "matches": true,
+        "max_abs_diff": 2.842170943040401e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(urca))\ndata(Canada, package=\"vars\")\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\none <- function() {\n  jo <- ca.jo(Canada, type=\"trace\", ecdet=\"trend\", K=2, spec=\"longrun\")\n  c(jo@teststat, jo@lambda)\n}\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) { t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time())-t0 }\ncat(value, \"\n\", sprintf(\"%.17g\", median(elapsed)*1000), \"\n\", sep=\"\")\n",
+          "python": "\nimport statistics, time\nimport numpy as np\nfrom vars import Canada\nfrom urca import ca_jo\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\ndef one():\n    jo = ca_jo(Canada(), type=\"trace\", ecdet=\"trend\", K=2, spec=\"longrun\")\n    return np.concatenate([jo.teststat, jo.lambda_])\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter(); one(); elapsed.append((time.perf_counter()-t0)*1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ca.po",
+      "translated": true,
+      "python": "urca.ca_po.ca_po",
+      "loads": [],
+      "uses": [],
+      "done": "Phillips-Ouliaris cointegration test with Pu and Pz statistics. The ECB proof uses full-precision deflated series in proof/ecb-capo.txt.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Deflated ECB money, GDP, and the short rate, type Pz, comparing the statistic, lag, critical values, and regression estimates.",
+        "r_ms": 9.177088737487793,
+        "translated_ms": 2.4390439994022017,
+        "speedup": 3.7625761321800897,
+        "matches": true,
+        "max_abs_diff": 2.7569058147491887e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(ecb)\nm3.real <- ecb[, \"m3\"] / ecb[, \"gdp.defl\"]\ngdp.real <- ecb[, \"gdp.nom\"] / ecb[, \"gdp.defl\"]\nrl <- ecb[, \"rl\"]\necb.data <- cbind(m3.real, gdp.real, rl)\n\none <- function() {\n  obj <- ca.po(ecb.data, type = \"Pz\")\n  est <- unlist(lapply(obj@testreg, function(s) s$coefficients[, 1]))\n  se <- unlist(lapply(obj@testreg, function(s) s$coefficients[, 2]))\n  c(as.numeric(obj@teststat), obj@lag, as.numeric(obj@cval), est, se)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.ca_po import ca_po\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\necb_data = np.loadtxt(Path(__file__).with_name(\"ecb-capo.txt\"))\n\n\ndef one():\n    obj = ca_po(ecb_data, type=\"Pz\")\n    estimates = []\n    standard_errors = []\n    for summary in obj.testreg:\n        table = summary[\"coefficients\"]\n        estimates.extend(table[:, 0].tolist())\n        standard_errors.extend(table[:, 1].tolist())\n    return (\n        [float(obj.teststat), float(obj.lag)]\n        + [float(v) for v in obj.cval.ravel()]\n        + estimates\n        + standard_errors\n    )\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "cajolst",
+      "translated": true,
+      "python": "urca.cajolst.cajolst",
+      "loads": [],
+      "uses": [],
+      "done": "Johansen trace test after a level shift at an unknown date.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark LRM, LRY, IBO, and IDE with trend, K=2, and season=4.",
+        "r_ms": 106.43,
+        "translated_ms": 9.65,
+        "speedup": 11.029015544041451,
+        "matches": true,
+        "max_abs_diff": 5.9e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")]\n\none <- function() {\n  fit <- cajolst(sjd, trend = TRUE, K = 2, season = 4)\n  c(\n    fit@bp,\n    fit@teststat,\n    fit@lambda,\n    as.numeric(fit@V),\n    as.numeric(fit@W),\n    as.numeric(fit@cval)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.cajolst import cajolst\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        fit = cajolst(sjd, trend=True, K=2, season=4)\n    parts = [\n        [float(fit.bp)],\n        np.ravel(fit.teststat, order=\"F\"),\n        np.ravel(fit.lambda_, order=\"F\"),\n        np.ravel(fit.V, order=\"F\"),\n        np.ravel(fit.W, order=\"F\"),\n    ]\n    if fit.cval is not None:\n        parts.append(np.ravel(fit.cval, order=\"F\"))\n    return np.concatenate(parts).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "cajools",
+      "translated": true,
+      "python": "urca.cajools.cajools",
+      "loads": [],
+      "uses": [],
+      "done": "OLS of each unrestricted VECM equation on lagged differences and cointegrating levels.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Canada Johansen trace test, constant in the cointegration space, K=2, comparing coef for all equations and equation 1.",
+        "r_ms": 17.534494400024414,
+        "translated_ms": 2.6601950003168895,
+        "speedup": 6.591431980714067,
+        "matches": true,
+        "max_abs_diff": 8.759570846450515e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(Canada, package = \"vars\")\n\none <- function() {\n  jo <- ca.jo(Canada, type = \"trace\", ecdet = \"const\", K = 2, spec = \"longrun\")\n  c(as.numeric(coef(cajools(jo))), as.numeric(coef(cajools(jo, reg.number = 1))))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/vars\")\nfrom urca.cajools import cajools\nfrom urca.johansen import ca_jo\nfrom vars import Canada\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    jo = ca_jo(Canada(), type=\"trace\", ecdet=\"const\", K=2, spec=\"longrun\")\n    fit = cajools(jo)\n    fit1 = cajools(jo, reg_number=1)\n    return np.concatenate(\n        [np.ravel(fit.coef, order=\"F\"), np.ravel(fit1.coef, order=\"F\")]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "cajorls",
+      "translated": true,
+      "python": "urca.cajorls",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Normalised beta and the first four restricted least-squares coefficients. The coefficient gap follows the eigenvector gap.",
+      "not_done": "The Canada proof remains above the 1e-8 tolerance because the last normalised beta differs by 7.21e-8.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Canada, constant, K=2, rank 1",
+        "r_ms": 14.081239700317383,
+        "translated_ms": 3.900422498190892,
+        "speedup": 3.61018318062943,
+        "matches": false,
+        "max_abs_diff": 7.211542651930358e-08,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(urca))\ndata(Canada, package=\"vars\")\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\none <- function() {\n  jo <- ca.jo(Canada, type=\"trace\", ecdet=\"const\", K=2, spec=\"longrun\")\n  fit <- cajorls(jo, r=1)\n  c(as.numeric(fit$beta), as.numeric(coef(fit$rlm))[1:4])\n}\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) { t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time())-t0 }\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed)*1000), \"\\n\", sep=\"\")\n",
+          "python": "\nimport statistics, time\nimport numpy as np\nfrom vars import Canada\nfrom urca import ca_jo, cajorls\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\ndef one():\n    jo = ca_jo(Canada(), type=\"trace\", ecdet=\"const\", K=2, spec=\"longrun\")\n    fit = cajorls(jo, r=1)\n    return np.concatenate([np.ravel(fit[\"beta\"], order=\"F\"), np.ravel(fit[\"rlm\"][\"coef\"], order=\"F\")[:4]])\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter(); one(); elapsed.append((time.perf_counter()-t0)*1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lttest",
+      "translated": true,
+      "python": "urca.lttest.lttest",
+      "loads": [],
+      "uses": [
+        "ca_jo"
+      ],
+      "done": "Likelihood-ratio test of no linear trend in a Johansen VECM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark ca.jo with ecdet const, K=2, season=4, then lttest at r=1.",
+        "r_ms": 15.17021656036377,
+        "translated_ms": 2.7811445006591384,
+        "speedup": 5.454666795187517,
+        "matches": true,
+        "max_abs_diff": 1.8308687899093457e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- as.matrix(denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")])\n\none <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  z <- sjd.vecm\n  r <- 1L\n  idx <- r + 1\n  df <- length(idx:z@P)\n  N <- nrow(z@Z0)\n  test1 <- ca.jo(z@x, ecdet = \"const\", K = z@lag, season = z@season, dumvar = z@dumvar)\n  test2 <- ca.jo(z@x, ecdet = \"none\", K = z@lag, season = z@season, dumvar = z@dumvar)\n  teststat <- -N * sum(log((1 - test1@lambda[idx:z@P]) / (1 - test2@lambda[idx:z@P])))\n  pval <- 1 - pchisq(teststat, df)\n  c(teststat, pval)\n}\n\ntime_one <- function() {\n  sjd.vecm <- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  capture.output(lttest(sjd.vecm, r = 1))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  time_one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.johansen import ca_jo\nfrom urca.lttest import lttest\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    sjd = _denmark_sjd()\n    sjd_vecm = ca_jo(sjd, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    with contextlib.redirect_stdout(io.StringIO()):\n        res = lttest(sjd_vecm, r=1)\n    return [float(res[0, 0]), float(res[0, 1])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    with contextlib.redirect_stdout(io.StringIO()):\n        one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "plotres",
+      "translated": true,
+      "python": "urca.plotres.plotres",
+      "loads": [],
+      "uses": [],
+      "done": "Draws VAR residual series and their correlations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Denmark ca.jo eigen, K=2, longrun, season 4.",
+        "r_ms": 27.614474296569824,
+        "translated_ms": 747.8622384996925,
+        "speedup": 0.03692454689511801,
+        "matches": true,
+        "max_abs_diff": 8.067158052682544e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\ndata(denmark)\nsjd <- as.matrix(denmark[, c(\"LRM\", \"LRY\", \"IBO\", \"IDE\")])\n\ndrawn <- function(x) {\n  resids <- x@Z0 - x@Z1 %*% t(x@GAMMA) - x@ZK %*% t(x@PI)\n  parts <- as.numeric(resids)\n  for (i in seq_len(x@P)) {\n    a <- acf(x@R0[, i], plot = FALSE)\n    p <- pacf(x@R0[, i], plot = FALSE)\n    clim <- qnorm((1 + 0.95) / 2) / sqrt(a$n.used)\n    ylim_acf <- range(c(-clim, clim, a$acf), na.rm = TRUE)\n    ylim_pacf <- range(c(-clim, clim, p$acf), na.rm = TRUE)\n    parts <- c(parts, as.numeric(a$acf), as.numeric(p$acf), ylim_acf, ylim_pacf, clim)\n  }\n  parts\n}\n\nvecm <- NULL\none <- function() {\n  vecm <<- ca.jo(sjd, ecdet = \"const\", type = \"eigen\", K = 2, spec = \"longrun\", season = 4)\n  plotres(vecm)\n}\n\nout <- \"/home/ahmed/killr_projects/killr/packages/urca/docs/output\"\nsvg(file.path(out, \"plotres-r-%02d.svg\"), width = 7, height = 7, onefile = FALSE)\none()\nvalue <- drawn(vecm)\ninvisible(dev.off())\n\ntmp <- tempfile()\npdf(tmp)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ninvisible(dev.off())\nunlink(tmp)\n\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.johansen import ca_jo\nfrom urca.plotres import plotres\n\n_BIN = Path(__file__).with_name(\"denmark_sjd.bin\")\n_OUT = Path(\"/home/ahmed/killr_projects/killr/packages/urca/docs/output\")\n\n\ndef _denmark_sjd():\n    raw = np.fromfile(_BIN, dtype=np.float64)\n    return raw.reshape(-1, 4, order=\"F\")\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    series = _denmark_sjd()\n    fitted = ca_jo(series, ecdet=\"const\", type=\"eigen\", K=2, spec=\"longrun\", season=4)\n    return plotres(fitted)\n\n\ndef _save(result):\n    _OUT.mkdir(parents=True, exist_ok=True)\n    for index, figure in enumerate(result.figures, start=1):\n        figure.savefig(_OUT / f\"plotres-python-{index}.svg\")\n\n\nresult = one()\n_save(result)\nvalue = clean(result.values)\nfor figure in result.figures:\n    plt.close(figure)\n\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    timed = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    for figure in timed.figures:\n        plt.close(figure)\n\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      },
+      "translation": {
+        "output": "output/plotres-python-2.svg"
+      }
+    },
+    {
+      "name": "punitroot",
+      "translated": true,
+      "python": "urca.punitroot.punitroot",
+      "loads": [],
+      "uses": [],
+      "done": "MacKinnon cumulative probability for a unit-root statistic.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page asymptotic and finite-sample probabilities, including a vector of three statistics.",
+        "r_ms": 13.904809951782227,
+        "translated_ms": 5.750276501203189,
+        "speedup": 2.4181115375708946,
+        "matches": true,
+        "max_abs_diff": 1.4776915802094948e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\n\none <- function() {\n  c(\n    punitroot(1.2836, trend = \"nc\", statistic = \"t\"),\n    punitroot(1.2836, N = 100, trend = \"nc\", statistic = \"n\"),\n    punitroot(c(1.2836, -2.5, 0), trend = \"c\", statistic = \"t\"),\n    punitroot(-3.1, N = 250, trend = \"ct\", statistic = \"t\"),\n    punitroot(-1.95, N = 50, trend = \"ctt\", statistic = \"n\")\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.punitroot import punitroot\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        punitroot(1.2836, trend=\"nc\", statistic=\"t\"),\n        punitroot(1.2836, n=100, trend=\"nc\", statistic=\"n\"),\n        punitroot([1.2836, -2.5, 0.0], trend=\"c\", statistic=\"t\"),\n        punitroot(-3.1, n=250, trend=\"ct\", statistic=\"t\"),\n        punitroot(-1.95, n=50, trend=\"ctt\", statistic=\"n\"),\n    ]\n    return np.concatenate([np.ravel(part) for part in parts]).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "qunitroot",
+      "translated": true,
+      "python": "urca.qunitroot.qunitroot",
+      "loads": [],
+      "uses": [],
+      "done": "MacKinnon quantile of a unit-root statistic.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page asymptotic and finite-sample quantiles, including a vector of three probabilities.",
+        "r_ms": 14.776825904846191,
+        "translated_ms": 5.303274499965482,
+        "speedup": 2.786358862801156,
+        "matches": true,
+        "max_abs_diff": 4.5416115312946204e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\n\none <- function() {\n  c(\n    qunitroot(0.95, trend = \"nc\", statistic = \"t\"),\n    qunitroot(0.95, N = 100, trend = \"nc\", statistic = \"n\"),\n    qunitroot(c(0.05, 0.5, 0.95), trend = \"c\", statistic = \"t\"),\n    qunitroot(0.10, N = 250, trend = \"ct\", statistic = \"t\"),\n    qunitroot(0.025, N = 50, trend = \"ctt\", statistic = \"n\")\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.qunitroot import qunitroot\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        qunitroot(0.95, trend=\"nc\", statistic=\"t\"),\n        qunitroot(0.95, n=100, trend=\"nc\", statistic=\"n\"),\n        qunitroot([0.05, 0.5, 0.95], trend=\"c\", statistic=\"t\"),\n        qunitroot(0.10, n=250, trend=\"ct\", statistic=\"t\"),\n        qunitroot(0.025, n=50, trend=\"ctt\", statistic=\"n\"),\n    ]\n    return np.concatenate([np.ravel(part) for part in parts]).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "unitrootTable",
+      "translated": true,
+      "python": "urca.unitroot_table.unitrootTable",
+      "loads": [],
+      "uses": [
+        "qunitroot"
+      ],
+      "done": "MacKinnon's finite-sample unit-root critical-value table.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The help-page trend nc table plus three other trend and statistic pairs.",
+        "r_ms": 384.6466541290283,
+        "translated_ms": 193.75259100161202,
+        "speedup": 1.9852465050432697,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\n\none <- function() {\n  parts <- list(\n    unitrootTable(trend = \"nc\"),\n    unitrootTable(trend = \"c\", statistic = \"n\"),\n    unitrootTable(trend = \"ct\"),\n    unitrootTable(trend = \"ctt\", statistic = \"n\")\n  )\n  unlist(lapply(parts, function(tbl) as.vector(tbl)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.unitroot_table import unitrootTable\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    parts = [\n        unitrootTable(trend=\"nc\"),\n        unitrootTable(trend=\"c\", statistic=\"n\"),\n        unitrootTable(trend=\"ct\"),\n        unitrootTable(trend=\"ctt\", statistic=\"n\"),\n    ]\n    return np.concatenate([np.ravel(part, order=\"F\") for part in parts]).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.ers",
+      "translated": true,
+      "python": "urca.ur_ers.ur_ers",
+      "loads": [],
+      "uses": [],
+      "done": "Elliott-Rothenberg-Stock unit-root test, DF-GLS and the P-test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A fixed 40-point series, DF-GLS and P-test under constant and trend, lag.max=4.",
+        "r_ms": 36.86380386352539,
+        "translated_ms": 4.4907319997946615,
+        "speedup": 8.208863023937074,
+        "matches": true,
+        "max_abs_diff": 5.329070518200751e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\n  dfgls_c <- ur.ers(x, type = \"DF-GLS\", model = \"constant\", lag.max = 4)\n  dfgls_t <- ur.ers(x, type = \"DF-GLS\", model = \"trend\", lag.max = 4)\n  ptest_c <- ur.ers(x, type = \"P-test\", model = \"constant\", lag.max = 4)\n  ptest_t <- ur.ers(x, type = \"P-test\", model = \"trend\", lag.max = 4)\n  c(\n    as.numeric(dfgls_c@teststat), as.numeric(dfgls_c@cval), as.numeric(dfgls_c@lag),\n    as.numeric(dfgls_t@teststat), as.numeric(dfgls_t@cval), as.numeric(dfgls_t@lag),\n    as.numeric(ptest_c@teststat), as.numeric(ptest_c@cval), as.numeric(ptest_c@lag),\n    as.numeric(ptest_t@teststat), as.numeric(ptest_t@cval), as.numeric(ptest_t@lag)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.ur_ers import ur_ers\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\n\ndef one():\n    dfgls_c = ur_ers(x, type=\"DF-GLS\", model=\"constant\", lag_max=4)\n    dfgls_t = ur_ers(x, type=\"DF-GLS\", model=\"trend\", lag_max=4)\n    ptest_c = ur_ers(x, type=\"P-test\", model=\"constant\", lag_max=4)\n    ptest_t = ur_ers(x, type=\"P-test\", model=\"trend\", lag_max=4)\n    return [\n        float(dfgls_c.teststat),\n        *[float(v) for v in dfgls_c.cval[0]],\n        float(dfgls_c.lag),\n        float(dfgls_t.teststat),\n        *[float(v) for v in dfgls_t.cval[0]],\n        float(dfgls_t.lag),\n        float(ptest_c.teststat),\n        *[float(v) for v in ptest_c.cval[0]],\n        float(ptest_c.lag),\n        float(ptest_t.teststat),\n        *[float(v) for v in ptest_t.cval[0]],\n        float(ptest_t.lag),\n    ]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.kpss",
+      "translated": true,
+      "python": "urca.ur_kpss",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The partial-sum numerator is divided by the Bartlett long-run variance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mu and tau KPSS statistics of a length-40 random walk",
+        "r_ms": 4.1980743408203125,
+        "translated_ms": 0.635529000646784,
+        "speedup": 6.605637723137562,
+        "matches": true,
+        "max_abs_diff": 6.661338147750939e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\nmu <- ur.kpss(x, type = \"mu\", lags = \"short\")\ntau <- ur.kpss(x, type = \"tau\", lags = \"nil\")\nc(as.numeric(mu@teststat), as.numeric(mu@cval), as.numeric(tau@teststat), as.numeric(tau@lag))\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca import ur_df, ur_kpss, ur_pp\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\ndef one():\n    mu = ur_kpss(x, type=\"mu\", lags=\"short\")\n    tau = ur_kpss(x, type=\"tau\", lags=\"nil\")\n    return [float(v) for v in mu.teststat] + [float(v) for v in mu.cval[0]] + [float(v) for v in tau.teststat] + [float(tau.lag)]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.pp",
+      "translated": true,
+      "python": "urca.ur_pp",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The Phillips-Perron correction uses the same Bartlett long-run variance as KPSS.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Phillips-Perron Z-tau and Z-alpha of a length-40 random walk",
+        "r_ms": 6.976008415222168,
+        "translated_ms": 0.9901480007101782,
+        "speedup": 7.0454198869448454,
+        "matches": true,
+        "max_abs_diff": 2.4868995751603507e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\ntau <- ur.pp(x, type = \"Z-tau\", model = \"constant\", lags = \"short\")\nalpha <- ur.pp(x, type = \"Z-alpha\", model = \"trend\", lags = \"long\")\nc(as.numeric(tau@teststat), as.numeric(tau@cval), as.numeric(alpha@teststat), as.numeric(alpha@lag))\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca import ur_df, ur_kpss, ur_pp\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\ndef one():\n    tau = ur_pp(x, type=\"Z-tau\", model=\"constant\", lags=\"short\")\n    alpha = ur_pp(x, type=\"Z-alpha\", model=\"trend\", lags=\"long\")\n    return [float(v) for v in tau.teststat] + [float(v) for v in tau.cval[0]] + [float(v) for v in alpha.teststat] + [float(alpha.lag)]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.df",
+      "translated": true,
+      "python": "urca.ur_df",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The lag argument is stored as given, then increased by one before the lagged differences are built.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "drift statistic and critical values of a length-40 random walk, with the no-drift and trend statistics",
+        "r_ms": 33.39958190917969,
+        "translated_ms": 2.334277000045404,
+        "speedup": 14.308319838875178,
+        "matches": true,
+        "max_abs_diff": 5.329070518200751e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\nnone <- ur.df(x, type = \"none\", lags = 0)\ndrift <- ur.df(x, type = \"drift\", lags = 1)\ntrend <- ur.df(x, type = \"trend\", lags = 2, selectlags = \"AIC\")\nc(as.numeric(none@teststat), as.numeric(drift@teststat), as.numeric(drift@cval), as.numeric(trend@teststat))\n\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca import ur_df, ur_kpss, ur_pp\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\ndef one():\n    none = ur_df(x, type=\"none\", lags=0)\n    drift = ur_df(x, type=\"drift\", lags=1)\n    trend = ur_df(x, type=\"trend\", lags=2, selectlags=\"AIC\")\n    cval = [value for column in zip(*drift.cval) for value in column]\n    return [float(v) for v in none.teststat] + [float(v) for v in drift.teststat] + cval + [float(v) for v in trend.teststat]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.sp",
+      "translated": true,
+      "python": "urca.ur_sp.ur_sp",
+      "loads": [],
+      "uses": [],
+      "done": "Schmidt-Phillips unit-root test with tau and rho statistics.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A fixed 40-point series at three polynomial degrees, plus the correction residuals.",
+        "r_ms": 19.779205322265625,
+        "translated_ms": 1.614499999959662,
+        "speedup": 12.250978831068322,
+        "matches": true,
+        "max_abs_diff": 1.865174681370263e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\n  tau1 <- ur.sp(x, type = \"tau\", pol.deg = 1, signif = 0.01)\n  rho2 <- ur.sp(x, type = \"rho\", pol.deg = 2, signif = 0.05)\n  tau4 <- ur.sp(x, type = \"tau\", pol.deg = 4, signif = 0.1)\n  c(\n    as.numeric(tau1@teststat), as.numeric(tau1@cval), as.numeric(tau1@polynomial),\n    as.numeric(rho2@teststat), as.numeric(rho2@cval), as.numeric(rho2@polynomial),\n    as.numeric(tau4@teststat), as.numeric(tau4@cval), as.numeric(tau4@polynomial),\n    as.numeric(tau1@res)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.ur_sp import ur_sp\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\n\ndef one():\n    tau1 = ur_sp(x, type=\"tau\", pol_deg=1, signif=0.01)\n    rho2 = ur_sp(x, type=\"rho\", pol_deg=2, signif=0.05)\n    tau4 = ur_sp(x, type=\"tau\", pol_deg=4, signif=0.1)\n    return (\n        [float(tau1.teststat), float(tau1.cval), float(tau1.polynomial)]\n        + [float(rho2.teststat), float(rho2.cval), float(rho2.polynomial)]\n        + [float(tau4.teststat), float(tau4.cval), float(tau4.polynomial)]\n        + [float(v) for v in tau1.res]\n    )\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "ur.za",
+      "translated": true,
+      "python": "urca.ur_za.ur_za",
+      "loads": [],
+      "uses": [],
+      "done": "Zivot-Andrews unit-root test with a single break, fitted by rolling regressions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A fixed length-40 series, model both, lag 2.",
+        "r_ms": 100.62146186828613,
+        "translated_ms": 16.105500999401556,
+        "speedup": 6.247645563588801,
+        "matches": true,
+        "max_abs_diff": 3.375077994860476e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\n  za <- ur.za(x, model = \"both\", lag = 2)\n  c(\n    as.numeric(za@teststat),\n    as.numeric(za@cval),\n    as.numeric(za@bpoint),\n    as.numeric(za@tstats),\n    as.numeric(za@res)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.ur_za import ur_za\n\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nx = [-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912]\n\n\ndef one():\n    za = ur_za(x, model=\"both\", lag=2)\n    return (\n        [float(za.teststat)]\n        + [float(v) for v in za.cval]\n        + [float(za.bpoint)]\n        + [float(v) for v in za.tstats]\n        + [float(v) for v in za.res]\n    )\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "show",
+      "translated": true,
+      "python": "urca.display.show",
+      "loads": [],
+      "uses": [],
+      "done": "Prints urca test objects.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Captured text for ur.df, ur.kpss, ca.jo",
+        "r_ms": 27.199268341064453,
+        "translated_ms": 4.538947499895585,
+        "speedup": 5.992417480415923,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nsuppressPackageStartupMessages(library(vars))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\\n\"))\n  cps <- utf8ToInt(s)\n  parts <- vapply(cps, function(cp) {\n    if (cp == 34) paste0(\"\\\\\", '\"')\n    else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n    else if (cp == 10) paste0(\"\\\\\", \"n\")\n    else if (cp == 13) paste0(\"\\\\\", \"r\")\n    else if (cp == 9) paste0(\"\\\\\", \"t\")\n    else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n    else intToUtf8(cp)\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\nnormalize <- function(text) {\n  lines <- strsplit(text, \"\\n\", fixed = TRUE)[[1]]\n  lines <- trimws(lines, which = \"right\")\n  lines <- gsub(\" +\", \" \", lines, perl = TRUE)\n  out <- character(0)\n  prev_blank <- FALSE\n  for (line in lines) {\n    blank <- nchar(line) == 0\n    if (blank && prev_blank) next\n    out <- c(out, line)\n    prev_blank <- blank\n  }\n  paste(out, collapse = \"\\n\")\n}\none <- function() {\n  df <- ur.df(x, type = \"drift\", lags = 1)\n  kp <- ur.kpss(x, type = \"mu\", lags = \"short\")\n  jo <- ca.jo(Canada, type = \"trace\", ecdet = \"const\", K = 2, spec = \"longrun\")\n  parts <- c(\n    capture.output(show(df)),\n    capture.output(show(kp)),\n    capture.output(show(jo)),\n    capture.output(show(summary(df)))\n  )\n  normalize(paste(parts, collapse = \"\\n\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/vars\")\n\nfrom urca.display import show_text, summary\nfrom urca.johansen import ca_jo\nfrom urca.tests import ur_df, ur_kpss\nfrom vars import Canada\n\nx = [\n    -0.62645381074233242,\n    -0.44281048652025018,\n    -1.2784390989302974,\n    0.31684170320749422,\n    0.64634947502285467,\n    -0.17411890909516053,\n    0.31331014333332474,\n    1.051634848462542,\n    1.6274162001160344,\n    1.3220278129596783,\n    2.8338089814105265,\n    3.2236522178219573,\n    2.6024116372801536,\n    0.3877117501026538,\n    1.5126426682457619,\n    1.4677090592305311,\n    1.451518796131585,\n    2.3953550068168843,\n    3.2165762019149726,\n    3.8104775231324814,\n    4.7294548947406998,\n    5.5115911954717669,\n    5.5861561788369576,\n    3.5968044829735848,\n    4.2166302308682955,\n    4.1605014913392946,\n    4.004705984633965,\n    2.5339536007346903,\n    2.0558035456260702,\n    2.4737451058257727,\n    3.8324246573548164,\n    3.7296369300118211,\n    4.1173085415711901,\n    4.0635035009882854,\n    2.6864439441596786,\n    2.2714493808599987,\n    1.8771594271496495,\n    1.8178460304384638,\n    2.9178714024223469,\n    3.6810471508798912,\n]\n\n\ndef normalize(text: str) -> str:\n    import re\n\n    out = []\n    prev_blank = False\n    for line in text.splitlines():\n        line = line.rstrip()\n        line = re.sub(r\" +\", \" \", line) if line else line\n        blank = line == \"\"\n        if blank and prev_blank:\n            continue\n        out.append(line)\n        prev_blank = blank\n    return \"\\n\".join(out)\n\n\ndef one():\n    df = ur_df(x, type=\"drift\", lags=1)\n    kp = ur_kpss(x, type=\"mu\", lags=\"short\")\n    jo = ca_jo(Canada(), type=\"trace\", ecdet=\"const\", K=2, spec=\"longrun\")\n    parts = [\n        show_text(df),\n        show_text(kp),\n        show_text(jo),\n        show_text(summary(df)),\n    ]\n    return normalize(\"\\n\".join(parts))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "plot",
+      "translated": true,
+      "python": "urca.display.plot_values",
+      "loads": [
+        "matplotlib"
+      ],
+      "uses": [],
+      "done": "Plot coordinate vectors for urca tests.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Numeric plot output",
+        "r_ms": 17.34912395477295,
+        "translated_ms": 240.6421939995198,
+        "speedup": 0.07209510379882744,
+        "matches": true,
+        "max_abs_diff": 9.992007221626409e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\ndrawn <- function(obj) {\n  res <- obj@res\n  a <- acf(res, plot = FALSE)\n  p <- pacf(res, plot = FALSE)\n  clim <- qnorm((1 + 0.95) / 2) / sqrt(a$n.used)\n  ylim_acf <- range(c(-clim, clim, a$acf), na.rm = TRUE)\n  ylim_pacf <- range(c(-clim, clim, p$acf), na.rm = TRUE)\n  c(as.numeric(res), as.numeric(a$acf), as.numeric(p$acf), ylim_acf, ylim_pacf, clim)\n}\none <- function() {\n  df <- ur.df(x, type = \"drift\", lags = 1)\n  pdf(tempfile())\n  plot(df)\n  invisible(dev.off())\n  drawn(df)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.display import plot\nfrom urca.tests import ur_df\n\nx = [\n    -0.62645381074233242,\n    -0.44281048652025018,\n    -1.2784390989302974,\n    0.31684170320749422,\n    0.64634947502285467,\n    -0.17411890909516053,\n    0.31331014333332474,\n    1.051634848462542,\n    1.6274162001160344,\n    1.3220278129596783,\n    2.8338089814105265,\n    3.2236522178219573,\n    2.6024116372801536,\n    0.3877117501026538,\n    1.5126426682457619,\n    1.4677090592305311,\n    1.451518796131585,\n    2.3953550068168843,\n    3.2165762019149726,\n    3.8104775231324814,\n    4.7294548947406998,\n    5.5115911954717669,\n    5.5861561788369576,\n    3.5968044829735848,\n    4.2166302308682955,\n    4.1605014913392946,\n    4.004705984633965,\n    2.5339536007346903,\n    2.0558035456260702,\n    2.4737451058257727,\n    3.8324246573548164,\n    3.7296369300118211,\n    4.1173085415711901,\n    4.0635035009882854,\n    2.6864439441596786,\n    2.2714493808599987,\n    1.8771594271496495,\n    1.8178460304384638,\n    2.9178714024223469,\n    3.6810471508798912,\n]\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    df = ur_df(x, type=\"drift\", lags=1)\n    result = plot(df)\n    for figure in result.figures:\n        plt.close(figure)\n    return result.values.tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    result = plot(ur_df(x, type=\"drift\", lags=1))\n    for figure in result.figures:\n        plt.close(figure)\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "summary",
+      "translated": true,
+      "python": "urca.display.summary",
+      "loads": [],
+      "uses": [],
+      "done": "Summary statistic vector for urca tests.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Numeric summary ur.df, ur.kpss, ca.jo",
+        "r_ms": 14.537692070007324,
+        "translated_ms": 0.6192345008457778,
+        "speedup": 23.47687677309824,
+        "matches": true,
+        "max_abs_diff": 5.329070518200751e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), path.expand(\"~/R/x86_64-pc-linux-gnu-library/4.5\"), .libPaths()))\nsuppressPackageStartupMessages(library(urca))\nif (as.character(packageVersion(\"urca\")) != \"1.3.4\") stop(\"expected urca 1.3-4\")\noptions(warn = -1)\nx <- c(-0.62645381074233242, -0.44281048652025018, -1.2784390989302974, 0.31684170320749422, 0.64634947502285467, -0.17411890909516053, 0.31331014333332474, 1.051634848462542, 1.6274162001160344, 1.3220278129596783, 2.8338089814105265, 3.2236522178219573, 2.6024116372801536, 0.3877117501026538, 1.5126426682457619, 1.4677090592305311, 1.451518796131585, 2.3953550068168843, 3.2165762019149726, 3.8104775231324814, 4.7294548947406998, 5.5115911954717669, 5.5861561788369576, 3.5968044829735848, 4.2166302308682955, 4.1605014913392946, 4.004705984633965, 2.5339536007346903, 2.0558035456260702, 2.4737451058257727, 3.8324246573548164, 3.7296369300118211, 4.1173085415711901, 4.0635035009882854, 2.6864439441596786, 2.2714493808599987, 1.8771594271496495, 1.8178460304384638, 2.9178714024223469, 3.6810471508798912)\none <- function() {\n  df <- ur.df(x, type = \"drift\", lags = 1)\n  kp <- ur.kpss(x, type = \"mu\", lags = \"short\")\n  s1 <- summary(df)\n  s2 <- summary(kp)\n  c(as.numeric(s1@teststat), as.numeric(s1@cval), as.numeric(s2@teststat), as.numeric(s2@cval))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/urca\")\nfrom urca.display import summary\nfrom urca.tests import ur_df, ur_kpss\n\nx = [\n    -0.62645381074233242,\n    -0.44281048652025018,\n    -1.2784390989302974,\n    0.31684170320749422,\n    0.64634947502285467,\n    -0.17411890909516053,\n    0.31331014333332474,\n    1.051634848462542,\n    1.6274162001160344,\n    1.3220278129596783,\n    2.8338089814105265,\n    3.2236522178219573,\n    2.6024116372801536,\n    0.3877117501026538,\n    1.5126426682457619,\n    1.4677090592305311,\n    1.451518796131585,\n    2.3953550068168843,\n    3.2165762019149726,\n    3.8104775231324814,\n    4.7294548947406998,\n    5.5115911954717669,\n    5.5861561788369576,\n    3.5968044829735848,\n    4.2166302308682955,\n    4.1605014913392946,\n    4.004705984633965,\n    2.5339536007346903,\n    2.0558035456260702,\n    2.4737451058257727,\n    3.8324246573548164,\n    3.7296369300118211,\n    4.1173085415711901,\n    4.0635035009882854,\n    2.6864439441596786,\n    2.2714493808599987,\n    1.8771594271496495,\n    1.8178460304384638,\n    2.9178714024223469,\n    3.6810471508798912,\n]\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    df = ur_df(x, type=\"drift\", lags=1)\n    kp = ur_kpss(x, type=\"mu\", lags=\"short\")\n    s1 = summary(df)\n    s2 = summary(kp)\n    return np.concatenate(\n        [\n            np.ravel(s1.teststat),\n            np.ravel(s1.cval, order=\"F\"),\n            np.ravel(s2.teststat),\n            np.ravel(s2.cval, order=\"F\"),\n        ]\n    ).tolist()\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

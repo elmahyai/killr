@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>killr: Kill CRAN</title>
+<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R.">
+<style>
+  :root {
+    --bg: #0b0d17;
+    --panel: rgba(255,255,255,0.05);
+    --line: rgba(255,255,255,0.12);
+    --text: #e8ebf7;
+    --muted: #9aa3c7;
+    --a: #7c5cff;
+    --b: #00d4ff;
+    --c: #ff5c8a;
+    --ok: #3ddc97;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+  }
+  a { color: var(--b); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  header.hero {
+    position: relative; overflow: hidden; padding: 96px 0 72px;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(124,92,255,0.35), transparent 60%),
+      radial-gradient(800px 500px at 95% 0%, rgba(0,212,255,0.22), transparent 60%),
+      radial-gradient(700px 400px at 50% 120%, rgba(255,92,138,0.18), transparent 60%),
+      var(--bg);
+  }
+  .eyebrow {
+    display: inline-block; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px;
+    color: var(--muted); font-size: 14px; background: var(--panel);
+  }
+  h1 {
+    font-size: clamp(56px, 10vw, 128px); line-height: 0.95; margin: 22px 0 12px; letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #fff 0%, var(--b) 45%, var(--a) 80%, var(--c) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { font-size: clamp(18px, 2.2vw, 24px); max-width: 760px; color: #cfd5f0; margin: 0 0 32px; }
+  .cta { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 14px 22px; border-radius: 12px; text-decoration: none; font-weight: 600;
+    border: 1px solid var(--line); color: var(--text); background: var(--panel);
+  }
+  .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn { transition: transform .15s ease; }
+
+  section { padding: 72px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 12px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 36px; max-width: 760px; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
+  .stat {
+    padding: 26px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
+    position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--a), var(--b));
+  }
+  .num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; }
+  .label { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .card { padding: 26px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
+  .card h3 { margin: 0 0 8px; font-size: 20px; }
+  .card p { margin: 0; color: var(--muted); }
+  .tag { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--b); }
+
+  /* Pipeline */
+  .pipeline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .step {
+    padding: 14px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .arrow { color: var(--a); font-size: 22px; }
+
+  /* Todo */
+  .todo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .todo .card h3 span { color: var(--c); font-size: 13px; font-weight: 600; margin-left: 6px; }
+  ul.tick { list-style: none; padding: 0; margin: 0; }
+  ul.tick li { padding: 6px 0 6px 28px; position: relative; color: #cfd5f0; }
+  ul.tick li::before { content: "\25A2"; position: absolute; left: 0; color: var(--b); }
+
+  /* Dashboard */
+  .frame {
+    border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #fff;
+  }
+  iframe { width: 100%; height: 1100px; border: 0; display: block; }
+
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Proof of concept · An agent system for R to Python and Rust</span>
+    <h1>killr</h1>
+    <p class="lead">
+      R has the best statistics packages in the world, and they are trapped in R.
+      killr is an agent system that translates the CRAN catalog into Python and Rust,
+      and proves every translated function against the original R output.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="#dashboard">See the live dashboard</a>
+      <a class="btn" href="strategy.md">How the agents work</a>
+      <a class="btn" href="roadmap.md">What is next</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Where we are</h2>
+    <p class="sub">Numbers from the translation registry at the time of this snapshot. They refresh on each dashboard build.</p>
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="185">0</div><div class="label">CRAN packages in scope</div><div class="note">133 complete, 14 in progress</div></div>
+      <div class="stat"><div class="num" data-count="133">0</div><div class="label">packages fully translated</div><div class="note">38 more are replaced by a mature library</div></div>
+      <div class="stat"><div class="num" data-count="6097">0</div><div class="label">functions translated</div><div class="note">Python first, Rust where it computes</div></div>
+      <div class="stat"><div class="num" data-count="5999">0</div><div class="label">proof checks match R</div><div class="note">of 6,006 recorded checks</div></div>
+      <div class="stat"><div class="num">1.96x</div><div class="label">median speedup over R</div><div class="note">63% of checks are faster than R</div></div>
+      <div class="stat"><div class="num" data-count="132">0</div><div class="label">Rust kernel crates</div><div class="note">about 96,000 lines of Rust</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p class="sub">Statistics runs on R, but production runs on Python and Rust. Porting by hand is slow, and every port drifts from the original.</p>
+    <div class="cards">
+      <div class="card"><div class="tag">01</div><h3>Locked in R</h3><p>Core algorithms live in R and C and Fortran code that most teams cannot maintain or ship in their own stack.</p></div>
+      <div class="card"><div class="tag">02</div><h3>Slow to port</h3><p>Thousands of functions across hundreds of packages. A manual port takes years and is never finished.</p></div>
+      <div class="card"><div class="tag">03</div><h3>Silent drift</h3><p>A port that looks right can still give different numbers. Without a check against R, nobody knows.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The approach</h2>
+    <p class="sub">An orchestrator hands each package to translation agents. Each agent works under a written constitution and a strategy that matches the package size. Every function must match R before it counts as done.</p>
+    <div class="pipeline">
+      <div class="step">CRAN catalog</div><span class="arrow">→</span>
+      <div class="step">Orchestrator</div><span class="arrow">→</span>
+      <div class="step">Translation agents</div><span class="arrow">→</span>
+      <div class="step">Proof vs R (1e-8)</div><span class="arrow">→</span>
+      <div class="step">Registry</div><span class="arrow">→</span>
+      <div class="step">Dashboard</div>
+    </div>
+    <div class="cards" style="margin-top:28px">
+      <div class="card"><div class="tag">Orchestrator</div><h3>Decides what runs</h3><p>Picks the next package by dependencies and download rank, and caps how many run at once.</p></div>
+      <div class="card"><div class="tag">Constitution</div><h3>Sets the law</h3><p>One document of rules: the order, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
+      <div class="card"><div class="tag">Strategies</div><h3>Fits the size</h3><p>Small, medium, large, and huge packages each get their own plan. Packages with compiled code get a -low variant.</p></div>
+      <div class="card"><div class="tag">Experience</div><h3>Learns from mistakes</h3><p>Each pitfall an agent hits becomes a lesson that later agents read before they start.</p></div>
+    </div>
+    <p class="sub" style="margin-top:28px">The full flow, with a graph, is in <a href="strategy.md">the strategy document</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Rust coverage</h2>
+    <p class="sub">Python carries the translation. Rust takes the compiled kernels, the Fortran and C that do the computing, and it is where we grow next.</p>
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="132">0</div><div class="label">Rust crates</div><div class="note">each holds one Fortran or C kernel</div></div>
+      <div class="stat"><div class="num" data-count="32">0</div><div class="label">packages with Rust dependencies</div><div class="note">the Rust layer is already in use</div></div>
+      <div class="stat"><div class="num" data-count="63">0</div><div class="label">native libraries agreed</div><div class="note">NumPy, Matplotlib, Polars and others</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What is next</h2>
+    <p class="sub">This is a proof of concept. The agents are fast, not finished. The work ahead is review, coverage, and quality.</p>
+    <div class="todo">
+      <div class="card">
+        <h3>More review rounds <span>open</span></h3>
+        <p>Every translated package gets another review pass, so the first translation is not the last word.</p>
+        <ul class="tick" style="margin-top:12px">
+          <li>Review the 133 complete packages again</li>
+          <li>Check the 7 proof checks that do not match yet</li>
+          <li>Finish the 14 packages in progress</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Raise Rust coverage <span>open</span></h3>
+        <p>More of the compiled code moves into Rust, so the heavy numerics run without a C or Fortran toolchain.</p>
+        <ul class="tick" style="margin-top:12px">
+          <li>Turn more Fortran and C kernels into crates</li>
+          <li>Measure Rust coverage on the dashboard</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Decisions still open <span>open</span></h3>
+        <p>Some choices need agreement before the work can go on.</p>
+        <ul class="tick" style="margin-top:12px">
+          <li>Which big libraries stand in for R frameworks</li>
+          <li>Which of the 38 replaced packages need a second look</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:28px">The full list is in <a href="roadmap.md">the roadmap</a>.</p>
+  </div>
+</section>
+
+<section id="dashboard">
+  <div class="wrap">
+    <h2>The live dashboard</h2>
+    <p class="sub">Every package, crate, and proof, built from the registry. Use it to browse the work directly.</p>
+    <div class="frame">
+      <iframe src="dashboard/index.html" title="killr dashboard" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    killr · proof of concept · built on the translation registry in this repository.
+  </div>
+</footer>
+
+<script>
+  // Count up the big numbers when they scroll into view.
+  const counters = document.querySelectorAll('[data-count]');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = Number(el.dataset.count);
+      const start = performance.now();
+      const dur = 1200;
+      const tick = (now) => {
+        const t = Math.min(1, (now - start) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3))).toLocaleString('en-US');
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      io.unobserve(el);
+    });
+  }, { threshold: 0.4 });
+  counters.forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

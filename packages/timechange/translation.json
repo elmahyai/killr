@@ -1,0 +1,288 @@
+{
+  "name": "timechange",
+  "cran_version": "0.4.0",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN timechange 0.4.0 is translated. Civil arithmetic follows the bundled CCTZ normalization. Time zones are Python zoneinfo, which reads the same system zoneinfo files. A skipped civil time inverts CCTZ pre and post.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "zoneinfo"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "time_add",
+      "translated": true,
+      "python": "timechange.time_add",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Civil addition through zoneinfo. A skipped hour uses the post-transition offset when roll_dst is post.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2010-03-14 01:02:03 America/New_York plus 1 hour and 50 minutes, roll_dst post",
+        "r_ms": 0.08940696716308594,
+        "translated_ms": 0.09507699905952904,
+        "speedup": 0.9403637898489726,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2010-03-14 01:02:03\", tz = \"America/New_York\")\none <- function() time_add(x, hours = 1, minutes = 50, roll_dst = \"post\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(warm)), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1268546523, \"America/New_York\")\ndef one():\n    return time_add(x, hour=1, minute=50, roll_dst=\"post\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_subtract",
+      "translated": true,
+      "python": "timechange.time_subtract",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Subtraction negates the periods and calls time_add.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2010-03-15 01:02:03 America/New_York minus 22 hours and 50 minutes, roll_dst post",
+        "r_ms": 0.12743473052978516,
+        "translated_ms": 0.2951635005956632,
+        "speedup": 0.431742848531786,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2010-03-15 01:02:03\", tz = \"America/New_York\")\none <- function() time_subtract(x, hours = 22, minutes = 50, roll_dst = \"post\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(warm)), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1268629323, \"America/New_York\")\ndef one():\n    return time_subtract(x, hour=22, minute=50, roll_dst=\"post\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_update",
+      "translated": true,
+      "python": "timechange.time_update",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Absolute component update. An invalid day rolls to the first of the following month at midnight.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2000-01-31 America/Chicago, month set to 2, roll_month boundary",
+        "r_ms": 0.0845193862915039,
+        "translated_ms": 0.06740049957443262,
+        "speedup": 1.2539875345903977,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2000-01-31 01:02:03\", tz = \"America/Chicago\")\none <- function() time_update(x, month = 2, roll_month = \"boundary\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(warm)), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(949302123, \"America/Chicago\")\ndef one():\n    return time_update(x, month=2, roll_month=\"boundary\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_get",
+      "translated": true,
+      "python": "timechange.time_get",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Year, month, yday, mday, wday, hour, minute, and second. wday is 0 on the week start.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2000-01-31 01:02:03 America/Chicago, all components",
+        "r_ms": 1.732945442199707,
+        "translated_ms": 0.033274999623245094,
+        "speedup": 52.07950298485095,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2000-01-31 01:02:03\", tz = \"America/Chicago\")\none <- function() time_get(x)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", unlist(warm)), collapse = \" \"), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(949302123, \"America/Chicago\")\ndef one():\n    return time_get(x)\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = \" \".join(\"%.17g\" % float(v) for v in warm.values())\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_force_tz",
+      "translated": true,
+      "python": "timechange.time_force_tz",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "The clock time is kept and the zone changes. A skipped 02:05 lands on the transition.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2010-03-14 02:05:05 UTC forced to America/New_York, roll_dst boundary",
+        "r_ms": 0.05030632019042969,
+        "translated_ms": 0.277957999969658,
+        "speedup": 0.1809853294235861,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2010-03-14 02:05:05\", tz = \"UTC\")\none <- function() time_force_tz(x, \"America/New_York\", roll_dst = \"boundary\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(warm)), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1268532305, \"UTC\")\ndef one():\n    return time_force_tz(x, \"America/New_York\", roll_dst=\"boundary\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_at_tz",
+      "translated": true,
+      "python": "timechange.time_at_tz",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "The instant stays the same. Only the zone attribute changes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2000-01-31 01:02:03 America/Chicago relabeled UTC",
+        "r_ms": 0.033855438232421875,
+        "translated_ms": 0.0031760000638314523,
+        "speedup": 10.659772528965085,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2000-01-31 01:02:03\", tz = \"America/Chicago\")\none <- function() time_at_tz(x, \"UTC\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(warm)), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(949302123, \"America/Chicago\")\ndef one():\n    return time_at_tz(x, \"UTC\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_clock_at_tz",
+      "translated": true,
+      "python": "timechange.time_clock_at_tz",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Seconds from local midnight to the instant.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2000-01-31 01:02:03 America/Chicago, seconds since midnight",
+        "r_ms": 0.0826120376586914,
+        "translated_ms": 0.02457549999235198,
+        "speedup": 3.3615608099286156,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2000-01-31 01:02:03\", tz = \"America/Chicago\")\none <- function() time_clock_at_tz(x)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", warm), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(949302123, \"America/Chicago\")\ndef one():\n    return time_clock_at_tz(x)\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_floor",
+      "translated": true,
+      "python": "timechange.time_floor",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Civil floor. The minute floor drops the seconds.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2009-08-03 12:01:59.23 UTC floored to the minute",
+        "r_ms": 0.0673532485961914,
+        "translated_ms": 0.07725750128884101,
+        "speedup": 0.8718020576976625,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2009-08-03 12:01:59.23\", tz = \"UTC\")\none <- function() time_floor(x, \"minute\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(as.POSIXct(warm))), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1249300919.23, \"UTC\")\ndef one():\n    return time_floor(x, \"minute\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_ceiling",
+      "translated": true,
+      "python": "timechange.time_ceiling",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "Civil ceiling. A time that is not on the boundary moves to the next minute.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2009-08-03 12:01:59.23 UTC ceiling to the minute",
+        "r_ms": 0.06890296936035156,
+        "translated_ms": 0.135761500132503,
+        "speedup": 0.507529522678391,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2009-08-03 12:01:59.23\", tz = \"UTC\")\none <- function() time_ceiling(x, \"minute\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(as.POSIXct(warm))), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1249300919.23, \"UTC\")\ndef one():\n    return time_ceiling(x, \"minute\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    },
+    {
+      "name": "time_round",
+      "translated": true,
+      "python": "timechange.time_round",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "zoneinfo"
+      ],
+      "done": "The nearer of floor and ceiling. A tie takes the ceiling.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "2009-08-03 12:01:59.23 UTC rounded to the minute",
+        "r_ms": 0.1291036605834961,
+        "translated_ms": 0.19168749986420153,
+        "speedup": 0.6735111088357764,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(timechange))\nstopifnot(packageDescription(\"timechange\")$Version == \"0.4.0\")\n\nx <- as.POSIXct(\"2009-08-03 12:01:59.23\", tz = \"UTC\")\none <- function() time_round(x, \"minute\")\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time()); one(); elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\", unclass(as.POSIXct(warm))), \"\\n\")\n",
+          "python": "import statistics\nimport time\nfrom timechange import (\n    time_add, time_at_tz, time_ceiling, time_clock_at_tz, time_floor,\n    time_force_tz, time_get, time_round, time_subtract, time_update,\n)\nfrom timechange.civil import Posixct\n\nx = Posixct(1249300919.23, \"UTC\")\ndef one():\n    return time_round(x, \"minute\")\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\ngot = [float(warm.seconds)]\nprint(got if isinstance(got, str) else \" \".join(\"%.17g\" % v for v in got))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "name": "mime",
+  "cran_version": "0.13",
+  "inventory": "complete",
+  "status": "complete",
+  "strategy": "small",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Exports: 3. All translated. Complete.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "guess_type",
+      "translated": true,
+      "python": "mime.api.guess_type",
+      "loads": [],
+      "uses": [],
+      "done": "Guesses the MIME type from a file name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0,
+        "r_ms": 0.2507,
+        "translated_ms": 0.00816,
+        "speedup": 30.72,
+        "proof": {
+          "r": "library(mime)\nx <- list(\n  basic=guess_type(c('a/b/c.html','d.pdf','e.odt','foo.docx','tex')),\n  extra=guess_type(c('a.md','b.R')),\n  override=guess_type('tex', mime_extra=c(tex='text/plain')),\n  unknown=guess_type('foo.zzz'),\n  empty=guess_type('Makefile'),\n  subtype=guess_type(c('abc.html','def.htm'), subtype=c('charset=UTF-8',''))\n)\nprint(x)\n",
+          "python": "import sys, pathlib\nsys.path.insert(0, str(pathlib.Path(__file__).parents[1]))\nfrom mime.api import guess_type\nx = dict(basic=guess_type(['a/b/c.html','d.pdf','e.odt','foo.docx','tex']),\n         extra=guess_type(['a.md','b.R']),\n         override=guess_type('tex', mime_extra={'tex':'text/plain'}),\n         unknown=guess_type('foo.zzz'), empty=guess_type('Makefile'),\n         subtype=guess_type(['abc.html','def.htm'], subtype=['charset=UTF-8','']))\nprint(x)\n"
+        },
+        "case": "basic=guess_type(c('a/b/c.html','d.pdf','e.odt','foo.docx','tex')),"
+      }
+    },
+    {
+      "name": "mimemap",
+      "translated": true,
+      "python": "mime.api.mimemap",
+      "loads": [],
+      "uses": [],
+      "done": "The MIME extension map.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0,
+        "r_ms": 0.0174,
+        "translated_ms": 0.0144,
+        "speedup": 1.21,
+        "proof": {
+          "r": "library(mime)\ncat('length=',length(mimemap),'pdf=',unname(mimemap['pdf']),'html=',unname(mimemap['html']),'js=',unname(mimemap['js']),'\\n',sep='')\n",
+          "python": "import sys, pathlib\nsys.path.insert(0, str(pathlib.Path(__file__).parents[1]))\nfrom mime.api import mimemap\nm=mimemap(); print(f\"length={len(m)} pdf={m.get('pdf')} html={m.get('html')} js={m.get('js')}\")\n"
+        },
+        "case": "mimemap() on fixed inputs, compared with R."
+      }
+    },
+    {
+      "name": "parse_multipart",
+      "translated": true,
+      "python": "mime.api.parse_multipart",
+      "loads": [],
+      "uses": [],
+      "done": "Parses a multipart request body.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "tolerance": 1e-08,
+        "max_abs_diff": 0,
+        "r_ms": 1.9405,
+        "translated_ms": 0.1035,
+        "speedup": 18.75,
+        "proof": {
+          "r": "library(mime)\nraw <- charToRaw(paste0('--x\\r\\nContent-Disposition: form-data; name=\"a\"\\r\\n\\r\\none\\r\\n--x\\r\\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nhello\\r\\n--x--\\r\\n'))\npos <- 1L\ninp <- new.env()\ninp$read <- function(n) { z <- raw[pos:min(length(raw),pos+n-1L)]; pos <<- pos+length(z); z }\ninp$rewind <- function() pos <<- 1L\nenv <- list(CONTENT_TYPE='multipart/form-data; boundary=x', CONTENT_LENGTH=length(raw), rook.input=inp)\nz <- parse_multipart(env)\nz$f$datapath <- 'FILE'\nprint(z)\n",
+          "python": "import io, sys, pathlib\nsys.path.insert(0, str(pathlib.Path(__file__).parents[1]))\nfrom mime.api import parse_multipart\nclass I(io.BytesIO):\n    def rewind(self): self.seek(0)\nbody=(b'--x\\r\\nContent-Disposition: form-data; name=\"a\"\\r\\n\\r\\none\\r\\n'\n      b'--x\\r\\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\\r\\n'\n      b'Content-Type: text/plain\\r\\n\\r\\nhello\\r\\n--x--\\r\\n')\nz=parse_multipart({'CONTENT_TYPE':'multipart/form-data; boundary=x','CONTENT_LENGTH':len(body),'rook.input':I(body)})\nz['f'][0]['datapath']='FILE'\nprint(z)\n"
+        },
+        "case": "z <- parse_multipart(env)"
+      }
+    }
+  ]
+}

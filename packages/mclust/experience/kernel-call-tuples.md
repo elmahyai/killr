@@ -1,0 +1,1 @@
+The `mclust_kernels` functions take one tuple of the Fortran arguments, in `.Fortran` order: `esvei((x, mu, scale, shape, pro, n, p, G, vinv, 0.0, z))`. Passing them as separate positional arguments raises `takes 1 positional arguments`. Each call returns a list of every argument, so read the outputs by position (for `esvei`, `hood` is index 9 and `z` is index 10).

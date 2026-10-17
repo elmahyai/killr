@@ -1,0 +1,64 @@
+{
+  "name": "handler_newline",
+  "title": "Progression Handler: Progress Reported as a New Line (Text) in the Terminal",
+  "origin": {
+    "description": "Report progress by writing a symbol, by default a newline, to a connection.",
+    "usage": "handler_newline(symbol = \"\\n\", file = stderr(), intrusiveness = getOption(\"progressr.intrusiveness.debug\", 0), target = \"terminal\", ...)",
+    "arguments": [
+      {
+        "name": "symbol",
+        "text": "The text written for each reported step. The default is a newline."
+      },
+      {
+        "name": "file",
+        "text": "A connection. The default is stderr()."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.debug, or 0."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to make_progression_handler()."
+      }
+    ],
+    "details": "initiate, update, and finish each write the symbol, including a zero amount. interrupt writes a blank line, the condition message, and a blank line. hide and unhide do nothing.",
+    "value": "A function of class progression_handler.",
+    "example": "path <- tempfile(\"nl\")\ncon <- file(path, open = \"wt\")\nhandler <- handler_newline(symbol = \"|\", file = con, enable = TRUE)\nwith_progress({\n  p <- progressor(steps = 2, on_exit = FALSE)\n  p(message = \"a\")\n  p(message = \"b\")\n}, handlers = handler, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\nclose(con)\ncat(\"handler_newline wrote \", nchar(readChar(path, 100, useBytes = TRUE)), \" bars.\\n\", sep = \"\")\n",
+    "output": "output/handler_newline-r.txt"
+  },
+  "translation": {
+    "description": "Report progress by writing a symbol, by default a newline, to a text stream.",
+    "usage": "handler_newline(symbol=\"\\n\", file=None, intrusiveness=None, target=\"terminal\", **extra)",
+    "arguments": [
+      {
+        "name": "symbol",
+        "text": "The text written for each reported step. The default is a newline."
+      },
+      {
+        "name": "file",
+        "text": "A text stream with write(). The default is sys.stderr. A path string is opened and truncated on each write."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.debug, or 0."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments passed to make_progression_handler(), including enable."
+      }
+    ],
+    "details": "initiate, update, and finish each write the symbol, including a zero amount. interrupt writes a blank line, the condition message, and a blank line. hide and unhide do nothing.",
+    "value": "A calling handler.",
+    "example": "import os\nimport tempfile\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_newline\n\npath = os.path.join(tempfile.mkdtemp(), \"newline.txt\")\nhandle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\nhandler = handler_newline(symbol=\"|\", file=handle, enable=True)\n\ndef body():\n    progress = progressor(steps=2, on_exit=False)\n    progress(message=\"a\")\n    progress(message=\"b\")\n\nwith_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nhandle.close()\nprint(f\"handler_newline wrote {len(open(path, encoding='utf-8').read())} bars.\")\n",
+    "output": "output/handler_newline-python.txt"
+  }
+}

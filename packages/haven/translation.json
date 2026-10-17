@@ -1,0 +1,712 @@
+{
+  "name": "haven",
+  "cran_version": "2.5.5",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All twenty-eight exports are done. ReadStat reads and writes SPSS, Stata, and SAS. Labelled vectors, tagged missing values, and the zappers match haven.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": [
+      "havenio"
+    ]
+  },
+  "functions": [
+    {
+      "name": "as_factor",
+      "translated": true,
+      "python": "haven.as_factor",
+      "loads": [],
+      "uses": [],
+      "done": "Builds factor levels from labels, sorted by the labelled value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default levels of 1, 2, 10, 9 labelled Unknown and Refused",
+        "r_ms": 0.4634857177734375,
+        "translated_ms": 0.060597999436140526,
+        "speedup": 7.648531669133215,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled(c(1, 2, 1, 2, 10, 9), c(Unknown = 9, Refused = 10))\n  f <- as_factor(x)\n  c(as.character(f), levels(f))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = labelled([1, 2, 1, 2, 10, 9], {\"Unknown\": 9, \"Refused\": 10})\n    f = as_factor(x)\n    return list(f.values) + list(f.levels)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "format_tagged_na",
+      "translated": true,
+      "python": "haven.format_tagged_na",
+      "loads": [],
+      "uses": [],
+      "done": "Prints a tagged missing value as NA(letter), right-justified with the other numbers.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:5, tagged a and z, and a plain NA",
+        "r_ms": 0.13005733489990234,
+        "translated_ms": 0.0250844996116939,
+        "speedup": 5.184768957451006,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- c(1:5, tagged_na(\"a\"), tagged_na(\"z\"), NA)\n  format_tagged_na(x)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = [1, 2, 3, 4, 5] + tagged_na(\"a\", \"z\") + [float(\"nan\")]\n    return format_tagged_na(x)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is.labelled",
+      "translated": true,
+      "python": "haven.is_labelled",
+      "loads": [],
+      "uses": [],
+      "done": "True for a haven_labelled vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a labelled vector and a plain number",
+        "r_ms": 0.12230873107910156,
+        "translated_ms": 0.006090500392019749,
+        "speedup": 20.08188542921039,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  c(is.labelled(labelled(1, c(a = 1))), is.labelled(1))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return [is_labelled(labelled([1], {\"a\": 1})), is_labelled(1)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "is_tagged_na",
+      "translated": true,
+      "python": "haven.is_tagged_na",
+      "loads": [],
+      "uses": [],
+      "done": "True only when the missing value carries the requested tag.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tags a and b, then the number 1, tested for tag a",
+        "r_ms": 0.010013580322265625,
+        "translated_ms": 0.007888000254752114,
+        "speedup": 1.2694700809920687,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  is_tagged_na(c(tagged_na(\"a\"), tagged_na(\"b\"), 1), \"a\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return is_tagged_na(tagged_na(\"a\", \"b\") + [1.0], \"a\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "labelled",
+      "translated": true,
+      "python": "haven.labelled",
+      "loads": [],
+      "uses": [],
+      "done": "Stores numeric or character values with named labels and one variable label.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "codes 1, 1, 2 labelled Male and Female",
+        "r_ms": 0.21326541900634766,
+        "translated_ms": 0.011562000509002246,
+        "speedup": 18.445373604706024,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled(c(1, 1, 2), c(Male = 1, Female = 2), label = \"Assigned sex at birth\")\n  c(as.character(x), names(attr(x, \"labels\")), attr(x, \"label\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = labelled([1, 1, 2], {\"Male\": 1, \"Female\": 2}, label=\"Assigned sex at birth\")\n    return [str(int(v)) for v in x.values] + [name for _v, name in x.labels] + [x.label]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "labelled_spss",
+      "translated": true,
+      "python": "haven.labelled_spss",
+      "loads": [],
+      "uses": [],
+      "done": "Treats SPSS na_values and an inclusive na_range as missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:10 with na_values 9 and 10",
+        "r_ms": 0.3370046615600586,
+        "translated_ms": 0.02087500070047099,
+        "speedup": 16.143935341398812,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled_spss(1:10, c(Good = 1, Bad = 8), na_values = c(9, 10))\n  as.integer(is.na(x))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = labelled_spss(list(range(1, 11)), {\"Good\": 1, \"Bad\": 8}, na_values=[9, 10])\n    return [int(flag) for flag in is_missing(x)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "na_tag",
+      "translated": true,
+      "python": "haven.na_tag",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the tag letter, or nothing for a plain number or a plain NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1, tagged a, plain NA",
+        "r_ms": 0.023484230041503906,
+        "translated_ms": 0.005820998921990395,
+        "speedup": 4.034398624055038,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- na_tag(c(1, tagged_na(\"a\"), NA))\n  ifelse(is.na(x), \"\", x)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return [\"\" if item is None else item for item in na_tag([1.0] + tagged_na(\"a\") + [float(\"nan\")])]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "print_labels",
+      "translated": true,
+      "python": "haven.print_labels",
+      "loads": [],
+      "uses": [],
+      "done": "Prints the value and label table for a labelled vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Male/Female labels named s1",
+        "r_ms": 2.1865367889404297,
+        "translated_ms": 0.019866500224452466,
+        "speedup": 110.06149871577051,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  s1 <- labelled(c(\"M\", \"M\", \"F\"), c(Male = \"M\", Female = \"F\"))\n  paste(capture.output(print_labels(s1, \"s1\")), collapse = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    import io, contextlib\n    s1 = labelled([\"M\", \"M\", \"F\"], {\"Male\": \"M\", \"Female\": \"F\"})\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        print_labels(s1, \"s1\")\n    return buf.getvalue().rstrip(\"\\n\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "print_tagged_na",
+      "translated": true,
+      "python": "haven.print_tagged_na",
+      "loads": [],
+      "uses": [],
+      "done": "Prints tagged missing values as NA(letter).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:5, tagged a and z, and a plain NA",
+        "r_ms": 0.4247426986694336,
+        "translated_ms": 0.027938000130234286,
+        "speedup": 15.203045912000707,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- c(1:5, tagged_na(\"a\"), tagged_na(\"z\"), NA)\n  paste(capture.output(print_tagged_na(x)), collapse = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    import io, contextlib\n    x = [1, 2, 3, 4, 5] + tagged_na(\"a\", \"z\") + [float(\"nan\")]\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        print_tagged_na(x)\n    return buf.getvalue().rstrip(\"\\n\")\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_dta",
+      "translated": true,
+      "python": "haven.read_dta",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads a Stata file, including the column label and a column selection.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iris.dta species only",
+        "r_ms": 3.0716657638549805,
+        "translated_ms": 0.34196150136267534,
+        "speedup": 8.982489992630056,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_dta(\"/home/ahmed/R/library/haven/examples/iris.dta\", col_select = \"species\")\n  c(names(d), as.character(nrow(d)), as.character(d$species[1]))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_dta(\"/home/ahmed/R/library/haven/examples/iris.dta\", col_select=\"species\")\n    return d.names + [str(d.nrow), d.columns[0].values[0]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_por",
+      "translated": true,
+      "python": "haven.read_por",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads an SPSS portable file.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two rows of VAR1",
+        "r_ms": 0.8033514022827148,
+        "translated_ms": 0.7945235001898254,
+        "speedup": 1.011110938934821,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_por(\"/home/ahmed/killr_projects/killr/packages/haven/proof/fixtures/sample.por\")\n  c(names(d), as.character(d$VAR1))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_por(\"/home/ahmed/killr_projects/killr/packages/haven/proof/fixtures/sample.por\")\n    return d.names + [str(int(v)) for v in d.columns[0].values]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_sas",
+      "translated": true,
+      "python": "haven.read_sas",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads a sas7bdat file and skips the requested rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iris.sas7bdat with skip 1",
+        "r_ms": 0.9244680404663086,
+        "translated_ms": 0.2526264997868566,
+        "speedup": 3.6594262329814615,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_sas(\"/home/ahmed/R/library/haven/examples/iris.sas7bdat\", skip = 1)\n  c(names(d)[1], as.character(nrow(d)), sprintf(\"%.1f\", d[[1]][1]))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_sas(\"/home/ahmed/R/library/haven/examples/iris.sas7bdat\", skip=1)\n    return [d.names[0], str(d.nrow), f\"{d.columns[0].values[0]:.1f}\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_sav",
+      "translated": true,
+      "python": "haven.read_sav",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads an SPSS .sav file, stopping after n_max rows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iris.sav n_max 2",
+        "r_ms": 0.8075237274169922,
+        "translated_ms": 0.16940250043262495,
+        "speedup": 4.766893790556308,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_sav(\"/home/ahmed/R/library/haven/examples/iris.sav\", n_max = 2)\n  c(as.character(nrow(d)), sprintf(\"%.1f\", d[[1]][1]), sprintf(\"%.1f\", d[[1]][2]))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_sav(\"/home/ahmed/R/library/haven/examples/iris.sav\", n_max=2)\n    return [str(d.nrow), f\"{d.columns[0].values[0]:.1f}\", f\"{d.columns[0].values[1]:.1f}\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_spss",
+      "translated": true,
+      "python": "haven.read_spss",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Chooses the SPSS reader from the file extension.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iris.sav through read_spss",
+        "r_ms": 1.088857650756836,
+        "translated_ms": 0.41055100064113503,
+        "speedup": 2.65218608420495,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_spss(\"/home/ahmed/R/library/haven/examples/iris.sav\")\n  c(names(d)[1], as.character(nrow(d)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_spss(\"/home/ahmed/R/library/haven/examples/iris.sav\")\n    return [d.names[0], str(d.nrow)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_stata",
+      "translated": true,
+      "python": "haven.read_stata",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads a Stata file. This is read_dta.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iris.dta row count and first sepal length label",
+        "r_ms": 1.529097557067871,
+        "translated_ms": 0.45796299946232466,
+        "speedup": 3.338910695543354,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  d <- read_stata(\"/home/ahmed/R/library/haven/examples/iris.dta\")\n  c(as.character(nrow(d)), attr(d[[1]], \"label\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    d = read_stata(\"/home/ahmed/R/library/haven/examples/iris.dta\")\n    return [str(d.nrow), d.columns[0].label]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "read_xpt",
+      "translated": true,
+      "python": "haven.read_xpt",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Reads a SAS transport file.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a version-8 file with 1, 2, 3.5 and a, b, c",
+        "r_ms": 11.229276657104492,
+        "translated_ms": 5.22530800117238,
+        "speedup": 2.1490171784294874,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  tmp <- tempfile(fileext = \".xpt\")\n  on.exit(unlink(tmp))\n  write_xpt(tibble::tibble(num = c(1, 2, 3.5), txt = c(\"a\", \"b\", \"c\")), tmp, version = 8, name = \"T\")\n  d <- read_xpt(tmp)\n  c(sprintf(\"%.1f\", d$num), d$txt)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    tmp = tempfile.NamedTemporaryFile(suffix=\".xpt\", delete=False)\n    tmp.close()\n    num = Vector([1.0, 2.0, 3.5], \"double\")\n    txt = Vector([\"a\", \"b\", \"c\"], \"string\")\n    write_xpt(new_tibble([num, txt], nrow=3, names=[\"num\", \"txt\"]), tmp.name, version=8, name=\"T\")\n    d = read_xpt(tmp.name)\n    os.unlink(tmp.name)\n    return [f\"{v:.1f}\" for v in d.columns[0].values] + list(d.columns[1].values)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "tagged_na",
+      "translated": true,
+      "python": "haven.tagged_na",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a missing double whose tag byte is the given letter.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tag a, read back with na_tag",
+        "r_ms": 0.0133514404296875,
+        "translated_ms": 0.006763500095985364,
+        "speedup": 1.974043060576367,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  na_tag(tagged_na(\"a\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return na_tag(tagged_na(\"a\"))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "vec_arith.haven_labelled",
+      "translated": true,
+      "python": "haven.vec_arith_haven_labelled",
+      "loads": [],
+      "uses": [],
+      "done": "Adds the underlying numbers and keeps the left tagged missing value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tagged a plus tagged z, and 2 plus 3",
+        "r_ms": 0.026941299438476562,
+        "translated_ms": 0.020664999283326324,
+        "speedup": 1.3037164467851836,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  c(na_tag(tagged_na(\"a\") + tagged_na(\"z\")), as.character(2 + 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return [na_tag(vec_arith_haven_labelled(\"+\", tagged_na(\"a\"), tagged_na(\"z\")))[0], str(int(vec_arith_haven_labelled(\"+\", 2, 3)[0]))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_dta",
+      "translated": true,
+      "python": "haven.write_dta",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Writes a Stata file and keeps a tagged missing value and the file label.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "file label hello, value 1, and tag a",
+        "r_ms": 5.4836273193359375,
+        "translated_ms": 0.7191135000539361,
+        "speedup": 7.625537997721702,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  tmp <- tempfile(fileext = \".dta\")\n  on.exit(unlink(tmp))\n  x <- labelled(c(1, tagged_na(\"a\")), c(ok = 1, ABC = tagged_na(\"a\")), label = \"lab\")\n  write_dta(tibble::tibble(x = x), tmp, label = \"hello\")\n  d <- read_dta(tmp)\n  c(attr(d, \"label\"), attr(d$x, \"label\"), na_tag(d$x)[2], as.character(d$x[1]))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    tmp = tempfile.NamedTemporaryFile(suffix=\".dta\", delete=False)\n    tmp.close()\n    tag = tagged_na(\"a\")[0]\n    x = labelled([1.0, tag], {\"ok\": 1.0, \"ABC\": tag}, label=\"lab\")\n    write_dta(new_tibble([x], nrow=2, names=[\"x\"]), tmp.name, label=\"hello\")\n    d = read_dta(tmp.name)\n    os.unlink(tmp.name)\n    col = d.columns[0]\n    return [d.label, col.label, na_tag(col)[1], str(int(col.values[0]))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_sas",
+      "translated": true,
+      "python": "haven.write_sas",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Writes a sas7bdat file. The call warns that write_xpt replaces it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "round-trip of 1, 2, 3.5",
+        "r_ms": 4.514336585998535,
+        "translated_ms": 0.33985800018854206,
+        "speedup": 13.283008148974364,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  tmp <- tempfile(fileext = \".sas7bdat\")\n  on.exit(unlink(tmp))\n  suppressWarnings(write_sas(tibble::tibble(num = c(1, 2, 3.5)), tmp))\n  sprintf(\"%.1f\", read_sas(tmp)$num)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    tmp = tempfile.NamedTemporaryFile(suffix=\".sas7bdat\", delete=False)\n    tmp.close()\n    num = Vector([1.0, 2.0, 3.5], \"double\")\n    write_sas(new_tibble([num], nrow=3, names=[\"num\"]), tmp.name)\n    d = read_sas(tmp.name)\n    os.unlink(tmp.name)\n    return [f\"{v:.1f}\" for v in d.columns[0].values]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_sav",
+      "translated": true,
+      "python": "haven.write_sav",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Writes an SPSS sav file, including user-missing values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "values 1, 9, 11 with na value 9 and range 10 to 12",
+        "r_ms": 4.073023796081543,
+        "translated_ms": 0.6480000001829467,
+        "speedup": 6.285530547733991,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  tmp <- tempfile(fileext = \".sav\")\n  on.exit(unlink(tmp))\n  x <- labelled_spss(c(1, 9, 11), c(Good = 1), na_values = 9, na_range = c(10, 12), label = \"q\")\n  write_sav(tibble::tibble(q = x), tmp)\n  d <- read_sav(tmp, user_na = TRUE)\n  c(as.character(d$q), as.character(attr(d$q, \"na_values\")), as.character(attr(d$q, \"na_range\")), attr(d$q, \"label\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    tmp = tempfile.NamedTemporaryFile(suffix=\".sav\", delete=False)\n    tmp.close()\n    x = labelled_spss([1, 9, 11], {\"Good\": 1}, na_values=[9], na_range=[10, 12], label=\"q\")\n    write_sav(new_tibble([x], nrow=3, names=[\"q\"]), tmp.name)\n    col = read_sav(tmp.name, user_na=True).columns[0]\n    os.unlink(tmp.name)\n    return [str(int(v)) for v in col.values] + [str(int(v)) for v in col.na_values] + [str(int(v)) for v in col.na_range] + [col.label]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "write_xpt",
+      "translated": true,
+      "python": "haven.write_xpt",
+      "loads": [
+        "havenio"
+      ],
+      "uses": [],
+      "done": "Writes a SAS transport file of version 5 or 8.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "version 8 member T with 1 and 2",
+        "r_ms": 3.3140182495117188,
+        "translated_ms": 0.5733859998144908,
+        "speedup": 5.77973346154931,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  tmp <- tempfile(fileext = \".xpt\")\n  on.exit(unlink(tmp))\n  write_xpt(tibble::tibble(num = c(1, 2)), tmp, version = 8, name = \"T\")\n  sprintf(\"%.0f\", read_xpt(tmp)$num)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    tmp = tempfile.NamedTemporaryFile(suffix=\".xpt\", delete=False)\n    tmp.close()\n    num = Vector([1.0, 2.0], \"double\")\n    write_xpt(new_tibble([num], nrow=2, names=[\"num\"]), tmp.name, version=8, name=\"T\")\n    d = read_xpt(tmp.name)\n    os.unlink(tmp.name)\n    return [f\"{v:.0f}\" for v in d.columns[0].values]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_empty",
+      "translated": true,
+      "python": "haven.zap_empty",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces an empty string with a missing value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a, empty, c",
+        "r_ms": 0.048160552978515625,
+        "translated_ms": 0.0020600009520421736,
+        "speedup": 23.378898408164257,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- zap_empty(c(\"a\", \"\", \"c\"))\n  ifelse(is.na(x), \"NA\", x)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    return [\"NA\" if item is None else item for item in zap_empty([\"a\", \"\", \"c\"])]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_formats",
+      "translated": true,
+      "python": "haven.zap_formats",
+      "loads": [],
+      "uses": [],
+      "done": "Drops format.stata, format.spss, and format.sas and keeps the labels.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a stata format on a labelled vector",
+        "r_ms": 0.18095970153808594,
+        "translated_ms": 0.013132999811205082,
+        "speedup": 13.77900739659579,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled(1:3, c(a = 1))\n  attr(x, \"format.stata\") <- \"%9.0g\"\n  z <- zap_formats(x)\n  c(as.integer(is.null(attr(z, \"format.stata\"))), as.integer(!is.null(attr(z, \"labels\"))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = labelled([1, 2, 3], {\"a\": 1})\n    x.format_stata = \"%9.0g\"\n    z = zap_formats(x)\n    return [int(z.format_stata is None), int(bool(z.labels))]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_label",
+      "translated": true,
+      "python": "haven.zap_label",
+      "loads": [],
+      "uses": [],
+      "done": "Drops the variable label and keeps the values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "label sex on values 1, 2",
+        "r_ms": 0.22113323211669922,
+        "translated_ms": 0.01009599964163499,
+        "speedup": 21.903054671749963,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled(c(1, 2), c(a = 1), label = \"sex\")\n  z <- zap_label(x)\n  c(as.character(z), ifelse(is.null(attr(z, \"label\", exact = TRUE)), \"\", attr(z, \"label\", exact = TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = labelled([1, 2], {\"a\": 1}, label=\"sex\")\n    z = zap_label(x)\n    return [str(int(v)) for v in z.values] + [\"\" if z.label is None else z.label]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_labels",
+      "translated": true,
+      "python": "haven.zap_labels",
+      "loads": [],
+      "uses": [],
+      "done": "Drops value labels. SPSS user missings become NA unless user_na is true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:4 and 9, with 9 a user missing",
+        "r_ms": 0.3981590270996094,
+        "translated_ms": 0.023499500457546674,
+        "speedup": 16.943297489191682,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled_spss(c(1:4, 9), c(good = 1, bad = 5), na_values = 9)\n  z <- zap_labels(x)\n  ifelse(is.na(z), \"NA\", as.character(z))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    from haven.tagged import is_na_double\n    x = labelled_spss([1, 2, 3, 4, 9], {\"good\": 1, \"bad\": 5}, na_values=[9])\n    z = zap_labels(x)\n    return [\"NA\" if is_na_double(v) else str(int(v)) for v in z.values]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_missing",
+      "translated": true,
+      "python": "haven.zap_missing",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces user missings with plain NA and drops the SPSS missing class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1, 2, 9 with 9 a user missing",
+        "r_ms": 0.5041360855102539,
+        "translated_ms": 0.02642799972818466,
+        "speedup": 19.0758320983562,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- labelled_spss(c(1, 2, 9), c(a = 1), na_values = 9)\n  z <- zap_missing(x)\n  c(ifelse(is.na(z), \"NA\", as.character(z)), as.character(inherits(z, \"haven_labelled_spss\")), as.character(inherits(z, \"haven_labelled\")))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    from haven.tagged import is_na_double\n    x = labelled_spss([1, 2, 9], {\"a\": 1}, na_values=[9])\n    z = zap_missing(x)\n    vals = [\"NA\" if is_na_double(v) else str(int(v)) for v in z.values]\n    return vals + [\"TRUE\" if \"haven_labelled_spss\" in z.class_ else \"FALSE\", \"TRUE\" if \"haven_labelled\" in z.class_ else \"FALSE\"]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "zap_widths",
+      "translated": true,
+      "python": "haven.zap_widths",
+      "loads": [],
+      "uses": [],
+      "done": "Drops display_width.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "display width 12 cleared",
+        "r_ms": 0.011801719665527344,
+        "translated_ms": 0.0034065005820593797,
+        "speedup": 3.464470174372518,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(haven))\nsuppressPackageStartupMessages(library(jsonlite))\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  toJSON(x, auto_unbox = TRUE, null = \"null\", digits = 17)\n}\n\none <- function() {\n  x <- 1:3\n  attr(x, \"display_width\") <- 12\n  z <- zap_widths(x)\n  as.integer(is.null(attr(z, \"display_width\")))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json, statistics, time, os, tempfile, warnings\nwarnings.filterwarnings(\"ignore\", category=DeprecationWarning)\nfrom haven import (\n    as_factor, format_tagged_na, is_labelled, is_tagged_na, labelled, labelled_spss,\n    na_tag, print_labels, print_tagged_na, read_dta, read_por, read_sas, read_sav,\n    read_spss, read_stata, read_xpt, tagged_na, vec_arith_haven_labelled,\n    write_dta, write_sas, write_sav, write_xpt, zap_empty, zap_formats, zap_label,\n    zap_labels, zap_missing, zap_widths,\n)\nfrom haven.labelled import Vector, is_missing\nfrom tibble import new_tibble\n\ndef one():\n    x = Vector([1, 2, 3], \"double\")\n    x.display_width = 12\n    z = zap_widths(x)\n    return [int(z.display_width is None)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

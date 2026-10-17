@@ -1,0 +1,1 @@
+`mvrnorm` needs descending `eigen` and R's inversion normal. `dose.p` keeps `cf` 1-based until the subscript. `mca` class indicators follow column order. See `column-major-arrays` and `r-random-generators`.

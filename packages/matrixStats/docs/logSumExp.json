@@ -1,0 +1,52 @@
+{
+  "name": "logSumExp",
+  "title": "Accurately computes the logarithm of the sum of exponentials",
+  "origin": {
+    "description": "Accurately computes the logarithm of the sum of exponentials, that is, log(sum(exp(lx))). If lx = log(x), then this is equivalently to calculating log(sum(x)).",
+    "usage": "logSumExp(lx, idxs = NULL, na.rm = FALSE, ...)",
+    "arguments": [
+      {
+        "name": "lx",
+        "text": "A numeric vector. Typically lx are log(x) values."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "This function, which avoid numerical underflow, is often used when computing the logarithm of the sum of small numbers (|x| << 1) such as probabilities. This is function is more accurate than log(sum(exp(lx))) when the values of x = exp(lx) are |x| << 1. The implementation finds the maximum value of lx and subtracts it from the remaining values in lx, using log(a + b) = la + log(1 + exp(lb - la)) when la > lb. The method is optimized for correctness, that avoiding underflowing. It is implemented in native code that is optimized for speed and memory. References: R Core Team, Writing R Extensions, v3.0.0, April 2013. Laurent El Ghaoui, Hyper-Textbook: Optimization Models and Applications, University of California at Berkeley, August 2012, chapter Log-Sum-Exp (LSE) Function and Properties. R-help thread logsumexp function in R, 2011-02-17, https://stat.ethz.ch/pipermail/r-help/2011-February/269205.html.",
+    "value": "Returns a numeric scalar.",
+    "example": "## EXAMPLE #1\nlx <- c(1000.01, 1000.02)\ny0 <- log(sum(exp(lx)))\nprint(y0) ## Inf\n\ny1 <- logSumExp(lx)\nprint(y1) ## 1000.708\n\n\n## EXAMPLE #2\nlx <- c(-1000.01, -1000.02)\ny0 <- log(sum(exp(lx)))\nprint(y0) ## -Inf\n\ny1 <- logSumExp(lx)\nprint(y1) ## -999.3218\n\n\n## EXAMPLE #3\n## R-help thread 'Beyond double-precision?' on May 9, 2009.\n\nset.seed(1)\nx <- runif(50)\n\n## The logarithm of the harmonic mean\ny0 <- log(1 / mean(1 / x))\nprint(y0)  ## -1.600885\n\nlx <- log(x)\ny1 <- log(length(x)) - logSumExp(-lx)\nprint(y1)  ## [1] -1.600885\n\n# Sanity check\nstopifnot(all.equal(y1, y0))",
+    "output": "output/logSumExp-r.txt"
+  },
+  "translation": {
+    "description": "Accurately computes the logarithm of the sum of exponentials, that is, log(sum(exp(lx))). If lx = log(x), then this is equivalently to calculating log(sum(x)).",
+    "usage": "logSumExp(lx, idxs=None, na_rm=False)",
+    "arguments": [
+      {
+        "name": "lx",
+        "text": "Numeric vector. Typically lx are log(x) values. A missing double is NaN. A matrix is read in column-major order, as R's as.numeric does."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based subset of elements to operate over. None uses every element. Integer, numeric, and logical subscripts follow the matrixStats index rules: zeros are dropped, negative indices exclude positions, and a positive index past the vector is missing."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm in R."
+      }
+    ],
+    "details": "This function, which avoids numerical underflow, is often used when computing the logarithm of the sum of small numbers (|x| << 1) such as probabilities. It is more accurate than log(sum(exp(lx))) when the values of x = exp(lx) are |x| << 1. The implementation finds the maximum value of lx and subtracts it from the remaining values in lx, using log(a + b) = la + log(1 + exp(lb - la)) when la > lb. That max-subtraction sum, and the 1-based index rules, live in the Rust crate logsumexp. References: R Core Team, Writing R Extensions, v3.0.0, April 2013. Laurent El Ghaoui, Hyper-Textbook: Optimization Models and Applications, University of California at Berkeley, August 2012, chapter Log-Sum-Exp (LSE) Function and Properties. R-help thread logsumexp function in R, 2011-02-17, https://stat.ethz.ch/pipermail/r-help/2011-February/269205.html.",
+    "value": "One float.",
+    "example": "import numpy as np\nfrom matrixstats.logsumexp import logSumExp\n\nlx = np.array([1000.01, 1000.02])\nwith np.errstate(over=\"ignore\"):\n    y0 = np.log(np.sum(np.exp(lx)))\nprint(y0)  # inf\ny1 = logSumExp(lx)\nprint(y1)  # 1000.708\n\nlx = np.array([-1000.01, -1000.02])\nwith np.errstate(under=\"ignore\", divide=\"ignore\"):\n    y0 = np.log(np.sum(np.exp(lx)))\nprint(y0)  # -inf\ny1 = logSumExp(lx)\nprint(y1)  # -999.3218",
+    "output": "output/logSumExp-python.txt"
+  }
+}

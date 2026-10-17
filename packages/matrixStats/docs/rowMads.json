@@ -1,0 +1,92 @@
+{
+  "name": "rowMads",
+  "title": "Standard deviation estimates for each row (column) in a matrix",
+  "origin": {
+    "description": "Standard deviation estimates for each row (column) in a matrix.",
+    "usage": "rowMads(x, rows = NULL, cols = NULL, center = NULL, constant = 1.4826,\n  na.rm = FALSE, dim. = dim(x), ..., useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "center",
+        "text": "The center, defaults to the row medians for the MAD estimators. A scalar is defunct unless it already has one value per row."
+      },
+      {
+        "name": "constant",
+        "text": "A scale factor. See stats::mad for details. The default is 1.4826."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when not a matrix. The argument is named with a period so it does not clash with dim."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "With center NULL, each row is constant times the median of the absolute deviations from the row median, the estimator stats::mad uses. The installed C routine returns 0 for a single counted value and does not multiply that 0 by constant. A row with no counted value, or any missing value when na.rm is FALSE, is R's NA. Integer values stay in 32-bit arithmetic until the scale is applied. When the two central order statistics differ by an even integer, their mean wraps.",
+    "value": "A numeric vector of length N, one median absolute deviation per selected row.",
+    "example": "x <- matrix(1:12, nrow = 4, ncol = 3)\nrowMads(x)",
+    "output": "output/rowMads-r.txt"
+  },
+  "translation": {
+    "description": "Standard deviation estimates for each row in a matrix.",
+    "usage": "rowMads(x, rows=None, cols=None, center=None, constant=1.4826, na_rm=False,\n  dim=None, use_names=True)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. A 1-d vector is accepted when dim is set; it is filled column-major, as R stores a matrix. Integer values use the 32-bit path. Floating values are computed as float64. Logical input is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and logical values are recycled."
+      },
+      {
+        "name": "cols",
+        "text": "1-based column subscripts. None selects every column. The values of a row are taken in this order."
+      },
+      {
+        "name": "center",
+        "text": "One center per row. None uses each row's own median, the stats::mad default. A single number is an error unless the matrix has one row. After rows is applied, the selected centers are subtracted and the median of the absolute values is scaled by constant."
+      },
+      {
+        "name": "constant",
+        "text": "Scale factor, default 1.4826, the same default as stats::mad. It multiplies the median absolute deviation. A one-value row returns 0 without using this factor."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm. False turns a missing value into R's NA."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the number of rows and columns. This is dim. in R. None uses the shape of a 2-d x. A 1-d x is filled in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for the R argument useNames. It must be TRUE or FALSE. The result is a plain array, with no names attached."
+      }
+    ],
+    "details": "The scan lives in the Rust crate rowmads, ported from matrixStats src/rowMads.c with byrow TRUE and hasNA TRUE. constant defaults to 1.4826. A missing double or integer becomes R's NA, payload 1954, rather than keeping a plain NaN. One counted value returns 0. On integers, an even gap between the two central values takes their mean with wrapping 32-bit addition. When center is set, the absolute deviations are centered first and then passed through the rowMedians rule: an empty row is a plain NaN times constant, and an integer overflow on that subtraction is NA.",
+    "value": "A float64 vector of length N, one median absolute deviation per selected row.",
+    "example": "import numpy as np\nfrom matrixstats.rowmads import rowMads\n\nx = np.arange(1, 13).reshape((4, 3), order=\"F\")\nrowMads(x)",
+    "output": "output/rowMads-python.txt"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "with_",
+  "title": "Make a with_ function",
+  "origin": {
+    "description": "Build a function that sets state, runs code, and restores the state.",
+    "usage": "with_(...)",
+    "arguments": [
+      {
+        "name": "set",
+        "text": "Callable that installs the new state and returns the old one."
+      },
+      {
+        "name": "reset",
+        "text": "Callable that restores the old state."
+      },
+      {
+        "name": "get",
+        "text": "Optional callable that reads the old state before set."
+      },
+      {
+        "name": "new",
+        "text": "When false, the built function takes code first."
+      }
+    ],
+    "details": "code is a callable. R forces the expression after set, which is why the translation cannot take an already-computed value. Extra arguments of set follow code.",
+    "value": "Whatever code returns.",
+    "example": "res <- integer()\nset <- function(new) res <<- c(res, 1L)\nreset <- function(old) res <<- c(res, 3L)\nbody <- function() res <<- c(res, 2L)\nfn <- with_(set, reset)\nfn(NULL, body())\nres\n",
+    "output": "output/with_-r.txt"
+  },
+  "translation": {
+    "description": "Build a function that sets state, runs code, and restores the state.",
+    "usage": "with_(...)",
+    "arguments": [
+      {
+        "name": "set",
+        "text": "Callable that installs the new state and returns the old one."
+      },
+      {
+        "name": "reset",
+        "text": "Callable that restores the old state."
+      },
+      {
+        "name": "get",
+        "text": "Optional callable that reads the old state before set."
+      },
+      {
+        "name": "new",
+        "text": "When false, the built function takes code first."
+      }
+    ],
+    "details": "code is a callable. R forces the expression after set, which is why the translation cannot take an already-computed value. Extra arguments of set follow code. code is a callable, and local_* is a context manager.",
+    "value": "Whatever code returns.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\nres = []\ndef set_fn(new):\n    res.append(1)\ndef reset_fn(old):\n    res.append(3)\nfn = with_(set_fn, reset_fn)\nfn(None, lambda: res.append(2))\nreturn res\n",
+    "output": "output/with_-python.txt"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "png",
+  "cran_version": "0.1-9",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked readPNG and writePNG. writePNG is listed and not translated. All exports translated.",
+  "functions": [
+    {
+      "name": "writePNG",
+      "translated": true,
+      "python": "png.writePNG.writePNG",
+      "loads": [],
+      "uses": [],
+      "done": "Writes real or native rasters to PNG bytes, files, or binary streams via libpng, with optional text chunks and R.metadata serialization when metadata is supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rlogo.png round-trip through raw bytes",
+        "r_ms": 5.8182477951049805,
+        "translated_ms": 6.775654999728431,
+        "speedup": 0.8586989442848221,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(png))\np <- system.file(\"img\", \"Rlogo.png\", package = \"png\")\none <- function() {\n  img <- readPNG(p)\n  r <- writePNG(img)\n  img2 <- readPNG(r)\n  c(as.integer(identical(img, img2)), max(abs(img - img2)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat('{\"value\":[')\ncat(sprintf(\"%.17g\", value), sep = \",\")\ncat(sprintf('],\"median_ms\":%.17g}\\n', median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom png.readPNG import readPNG\nfrom png.writePNG import writePNG\n\nlogo = Path(__file__).resolve().parents[1] / \"png\" / \"img\" / \"Rlogo.png\"\n\n\ndef one():\n    img = readPNG(logo)\n    raw = writePNG(img)\n    img2 = readPNG(raw)\n    identical = bool(np.array_equal(img, img2))\n    diff = float(np.max(np.abs(np.asarray(img) - np.asarray(img2))))\n    return [int(identical), diff]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "readPNG",
+      "translated": true,
+      "python": "png.readPNG.readPNG",
+      "loads": [],
+      "uses": [],
+      "done": "Reads a PNG file or raw vector through libpng into an array or a native raster, including the info tags and R.metadata.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rlogo.png as a 76 by 100 by 4 array",
+        "r_ms": 1.0845661163330078,
+        "translated_ms": 9.87263349998102,
+        "speedup": 0.10985580659254623,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(png))\np <- system.file(\"img\", \"Rlogo.png\", package = \"png\")\none <- function() {\n  img <- readPNG(p)\n  c(dim(img), as.numeric(img))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat('{\"value\":[')\ncat(sprintf(\"%.17g\", value), sep = \",\")\ncat(sprintf('],\"median_ms\":%.17g}\\n', median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom png.readPNG import readPNG\n\nlogo = Path(__file__).resolve().parents[1] / \"png\" / \"img\" / \"Rlogo.png\"\n\n\ndef one():\n    img = readPNG(logo)\n    flat = img.ravel(order=\"F\")\n    return [int(v) for v in img.shape] + [float(v) for v in flat]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

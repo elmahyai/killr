@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>class · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>class</h1>
+<p class="note">CRAN 7.3-24</p>
+<p>All 15 exports match class 7.3-24. Draws use boot&#x27;s generator, the same Mersenne Twister as set.seed. There is no crate.</p>
+<p class="note">15 of 15 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#knn">knn</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Majority label of the k nearest training rows. The check has no distance tie.</td></tr>
+<tr><td><a href="#knn1">knn1</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Label of the single nearest training row.</td></tr>
+<tr><td><a href="#knn.cv">knn.cv</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Leave-one-out nearest label.</td></tr>
+<tr><td><a href="#batchSOM">batchSOM</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Radius 0.1 keeps the two codes apart. The initial codes are supplied.</td></tr>
+<tr><td><a href="#condense">condense</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>1-based indexes of the condensed store.</td></tr>
+<tr><td><a href="#lvq1">lvq1</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Six steps from a two-vector codebook. The row order is R&#x27;s sample.</td></tr>
+<tr><td><a href="#lvq2">lvq2</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Moves the two nearest codes when they disagree and sit in the window.</td></tr>
+<tr><td><a href="#lvq3">lvq3</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Also nudges two agreeing codes toward the row.</td></tr>
+<tr><td><a href="#lvqinit">lvqinit</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Keeps the one self-classified row of each class. This case does not draw.</td></tr>
+<tr><td><a href="#lvqtest">lvqtest</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Nearest codebook label.</td></tr>
+<tr><td><a href="#multiedit">multiedit</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Stops before editing when fewer than 5V rows remain.</td></tr>
+<tr><td><a href="#olvq1">olvq1</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Each code keeps its own step size.</td></tr>
+<tr><td><a href="#reduce.nn">reduce.nn</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>1-based indexes still required.</td></tr>
+<tr><td><a href="#SOM">SOM</a></td><td><span class='yes'>translated</span></td><td>—</td><td>boot solved</td><td>Two online steps. The presented row is R&#x27;s unif_rand.</td></tr>
+<tr><td><a href="#somgrid">somgrid</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Hexagonal 2 by 2 grid, x varying fastest.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>knn</td><td>k = 3 on four points</td><td>0.233</td><td>0.0576</td><td><button type="button" class="proof-toggle" data-name="knn"><span class='yes'>+304%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:24.7%'></span></div></td></tr>
+<tr><td>knn1</td><td>nearest label of two test rows</td><td>0.175</td><td>0.0199</td><td><button type="button" class="proof-toggle" data-name="knn1"><span class='yes'>+783%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.3%'></span></div></td></tr>
+<tr><td>knn.cv</td><td>leave-one-out on four points</td><td>0.319</td><td>0.0794</td><td><button type="button" class="proof-toggle" data-name="knn.cv"><span class='yes'>+301%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:24.9%'></span></div></td></tr>
+<tr><td>batchSOM</td><td>two separated codes</td><td>0.98</td><td>0.0863</td><td><button type="button" class="proof-toggle" data-name="batchSOM"><span class='yes'>+1036%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.8%'></span></div></td></tr>
+<tr><td>condense</td><td>six rows, seed 1</td><td>0.901</td><td>1.61</td><td><button type="button" class="proof-toggle" data-name="condense"><span class='slower'>-44%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:56.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>lvq1</td><td>six steps, seed 1</td><td>0.151</td><td>1.13</td><td><button type="button" class="proof-toggle" data-name="lvq1"><span class='slower'>-87%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:13.4%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>lvq2</td><td>six steps, seed 1</td><td>0.0886</td><td>0.901</td><td><button type="button" class="proof-toggle" data-name="lvq2"><span class='slower'>-90%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:9.8%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>lvq3</td><td>six steps, seed 1</td><td>0.125</td><td>0.911</td><td><button type="button" class="proof-toggle" data-name="lvq3"><span class='slower'>-86%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:13.7%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>lvqinit</td><td>one kept row in each class</td><td>0.33</td><td>0.0946</td><td><button type="button" class="proof-toggle" data-name="lvqinit"><span class='yes'>+249%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:28.6%'></span></div></td></tr>
+<tr><td>lvqtest</td><td>two test rows</td><td>0.149</td><td>0.0233</td><td><button type="button" class="proof-toggle" data-name="lvqtest"><span class='yes'>+538%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:15.7%'></span></div></td></tr>
+<tr><td>multiedit</td><td>six rows and V = 2</td><td>0.14</td><td>0.54</td><td><button type="button" class="proof-toggle" data-name="multiedit"><span class='slower'>-74%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:25.8%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>olvq1</td><td>six steps, seed 1</td><td>0.0858</td><td>0.953</td><td><button type="button" class="proof-toggle" data-name="olvq1"><span class='slower'>-91%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:9.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>reduce.nn</td><td>stored rows 1 and 4, seed 1</td><td>0.403</td><td>1.14</td><td><button type="button" class="proof-toggle" data-name="reduce.nn"><span class='slower'>-65%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:35.3%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>SOM</td><td>two steps, seed 1</td><td>0.873</td><td>1.34</td><td><button type="button" class="proof-toggle" data-name="SOM"><span class='slower'>-35%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:65.4%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>somgrid</td><td>a 2 by 2 hexagonal grid</td><td>0.712</td><td>0.0119</td><td><button type="button" class="proof-toggle" data-name="somgrid"><span class='yes'>+5905%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.7%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "knn", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\none \u003c- function() {\n  as.integer(knn(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), matrix(c(0.1,0.1, 9,0.1), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\")), k=3))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/class\"]\npkg = importlib.import_module(\"class\")\n\ntrain = [[0, 0], [1, 0], [0, 3], [10, 0]]\ntest = [[0.1, 0.1], [9, 0.1]]\nclasses = [\"a\", \"b\", \"a\", \"b\"]\nlevels = []\nfor item in classes:\n    if item not in levels:\n        levels.append(item)\n\n\ndef codes(labels):\n    return [levels.index(item) + 1 for item in labels]\ndef one():\n    return codes(pkg.knn(train, test, classes, k=3))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "knn1", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\none \u003c- function() {\n  as.integer(knn1(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), matrix(c(0.1,0.1, 9,0.1), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\"))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/class\"]\npkg = importlib.import_module(\"class\")\n\ntrain = [[0, 0], [1, 0], [0, 3], [10, 0]]\ntest = [[0.1, 0.1], [9, 0.1]]\nclasses = [\"a\", \"b\", \"a\", \"b\"]\nlevels = []\nfor item in classes:\n    if item not in levels:\n        levels.append(item)\n\n\ndef codes(labels):\n    return [levels.index(item) + 1 for item in labels]\ndef one():\n    return codes(pkg.knn1(train, test, classes))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "knn.cv", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\none \u003c- function() {\n  as.integer(knn.cv(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\")), k=1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/class\"]\npkg = importlib.import_module(\"class\")\n\ntrain = [[0, 0], [1, 0], [0, 3], [10, 0]]\ntest = [[0.1, 0.1], [9, 0.1]]\nclasses = [\"a\", \"b\", \"a\", \"b\"]\nlevels = []\nfor item in classes:\n    if item not in levels:\n        levels.append(item)\n\n\ndef codes(labels):\n    return [levels.index(item) + 1 for item in labels]\ndef one():\n    return codes(pkg.knn_cv(train, classes, k=1))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "batchSOM", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  data \u003c- matrix(c(0,0, 0.05,0, 10,0, 10.1,0), ncol=2, byrow=TRUE)\n  init \u003c- matrix(c(0,0, 10,0), ncol=2, byrow=TRUE)\n  as.numeric(batchSOM(data, somgrid(2, 1), radii=0.1, init=init)$codes)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    data = [[0,0],[0.05,0],[10,0],[10.1,0]]\n    init = [[0,0],[10,0]]\n    return col(pkg.batchSOM(data, pkg.somgrid(2, 1), radii=[0.1], init=init)[\"codes\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "condense", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  condense(rows, c(1L,1L,1L,2L,2L,2L), trace=FALSE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.condense(rows, [1,1,1,2,2,2])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "lvq1", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq1(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2)$x)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq1(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2)[\"x\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "lvq2", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq2(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2, win=0.3)$x)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq2(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2, win=0.3)[\"x\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "lvq3", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq3(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2, win=0.3, epsilon=0.1)$x)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq3(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2, win=0.3, epsilon=0.1)[\"x\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "lvqinit", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  rows \u003c- matrix(c(0,0, 1,0, 1.2,0, 10,0), ncol=2, byrow=TRUE)\n  as.numeric(lvqinit(rows, c(1L,1L,2L,2L), size=4, k=1)$x)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    rows = [[0,0],[1,0],[1.2,0],[10,0]]\n    return col(pkg.lvqinit(rows, [1,1,2,2], size=4, k=1)[\"x\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "lvqtest", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.integer(lvqtest(book, matrix(c(0.1,0.1, 5.1,5.1), ncol=2, byrow=TRUE)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return [int(label) for label in pkg.lvqtest(book, [[0.1,0.1],[5.1,5.1]])]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "multiedit", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  multiedit(rows, c(1L,1L,1L,2L,2L,2L), k=1, V=2, I=2, trace=FALSE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.multiedit(rows, [1,1,1,2,2,2], k=1, V=2, I=2)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "olvq1", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(olvq1(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.3)$x)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.olvq1(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.3)[\"x\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "reduce.nn", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  reduce.nn(rows, c(1L,4L), c(1L,1L,1L,2L,2L,2L))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.reduce_nn(rows, [1, 4], [1,1,1,2,2,2])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "SOM", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\n  set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  init \u003c- matrix(c(0,0, 1,0, 0,1, 1,1), ncol=2, byrow=TRUE)\n  as.numeric(SOM(rows, somgrid(2, 2), alpha=c(0.5, 0.1), radii=c(2, 1), init=init)$codes)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    init = [[0,0],[1,0],[0,1],[1,1]]\n    return col(pkg.SOM(rows, pkg.somgrid(2, 2), alpha=[0.5, 0.1], radii=[2, 1], init=init)[\"codes\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "somgrid", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(class))\nif (packageDescription(\"class\")$Version != \"7.3-24\") stop(\"expected class 7.3-24\")\njson_num \u003c- function(x) paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse=\",\"), \"]\")\n\none \u003c- function() {\nas.numeric(somgrid(2, 2, \"hexagonal\")$pts)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n", "python": "import importlib\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/class\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\npkg = importlib.import_module(\"class\")\n\n\ndef col(rows):\n    return [value for column in zip(*rows) for value in column]\n\ndef one():\n    return col(pkg.somgrid(2, 2, \"hexagonal\")[\"pts\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Depends</h3><p>stats</p><p><a href="utils.html">utils</a></p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Packages</h3><p><a href="boot.html">boot</a> <span class="note">finished</span></p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "knn", "translated": true, "not_done": "", "title": "k-nearest neighbors", "origin": {"description": "Majority label of the k nearest training rows.", "usage": "knn(train, test, cl, k=1, l=0, prob=FALSE, use.all=TRUE)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "test", "text": "Rows to label."}, {"name": "cl", "text": "Class label of each training row."}, {"name": "k", "text": "Number of neighbors."}], "details": "The checked rows have one nearest class. A tied vote keeps the smallest class code.", "value": "One label code per test row.", "example": "cat(as.integer(knn(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), matrix(c(0.1,0.1, 9,0.1), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\")), k=3)), \"\\n\")", "output": "output/knn-r.txt", "output_blocks": [{"text": "1 2 "}]}, "translation": {"description": "Majority label of the k nearest training rows.", "usage": "knn(train, test, cl, k=1, l=0, prob=False, use_all=True)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "test", "text": "Rows to label."}, {"name": "cl", "text": "Class label of each training row."}, {"name": "k", "text": "Number of neighbors."}], "details": "The checked rows have one nearest class. A tied vote keeps the smallest class code.", "value": "One label code per test row.", "example": "print(\" \".join(str(v) for v in codes(knn(train, test, classes, k=3))))", "output": "output/knn-python.txt", "output_blocks": [{"text": "1 2"}]}}, {"name": "knn1", "translated": true, "not_done": "", "title": "Nearest neighbor", "origin": {"description": "Label of the single nearest training row.", "usage": "knn1(train, test, cl)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "test", "text": "Rows to label."}, {"name": "cl", "text": "Class label of each training row."}], "details": "Distance ties within a relative band of 1e-4 share one neighborhood.", "value": "One label code per test row.", "example": "cat(as.integer(knn1(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), matrix(c(0.1,0.1, 9,0.1), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\")))), \"\\n\")", "output": "output/knn1-r.txt", "output_blocks": [{"text": "1 2 "}]}, "translation": {"description": "Label of the single nearest training row.", "usage": "knn1(train, test, cl)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "test", "text": "Rows to label."}, {"name": "cl", "text": "Class label of each training row."}], "details": "Distance ties within a relative band of 1e-4 share one neighborhood.", "value": "One label code per test row.", "example": "print(\" \".join(str(v) for v in codes(knn1(train, test, classes))))", "output": "output/knn1-python.txt", "output_blocks": [{"text": "1 2"}]}}, {"name": "knn.cv", "translated": true, "not_done": "", "title": "Leave-one-out neighbors", "origin": {"description": "Leave-one-out nearest label.", "usage": "knn.cv(train, cl, k=1, l=0, prob=FALSE, use.all=TRUE)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "cl", "text": "Class label of each training row."}, {"name": "k", "text": "Number of neighbors."}], "details": "Each row is left out of its own search.", "value": "One label code per training row.", "example": "cat(as.integer(knn.cv(matrix(c(0,0, 1,0, 0,3, 10,0), ncol=2, byrow=TRUE), factor(c(\"a\",\"b\",\"a\",\"b\")), k=1)), \"\\n\")", "output": "output/knn.cv-r.txt", "output_blocks": [{"text": "2 1 1 2 "}]}, "translation": {"description": "Leave-one-out nearest label.", "usage": "knn_cv(train, cl, k=1, l=0, prob=False, use_all=True)", "arguments": [{"name": "train", "text": "Training rows."}, {"name": "cl", "text": "Class label of each training row."}, {"name": "k", "text": "Number of neighbors."}], "details": "Each row is left out of its own search.", "value": "One label code per training row.", "example": "print(\" \".join(str(v) for v in codes(knn_cv(train, classes, k=1))))", "output": "output/knn.cv-python.txt", "output_blocks": [{"text": "2 1 1 2"}]}}, {"name": "batchSOM", "translated": true, "not_done": "", "title": "batchSOM", "origin": {"description": "Radius 0.1 keeps the two codes apart. The initial codes are supplied.", "usage": "batchSOM", "arguments": [], "details": "Radius 0.1 keeps the two codes apart. The initial codes are supplied.", "value": "The checked numbers.", "example": "cat(data \u003c- matrix(c(0,0, 0.05,0, 10,0, 10.1,0), ncol=2, byrow=TRUE)\n  init \u003c- matrix(c(0,0, 10,0), ncol=2, byrow=TRUE)\n  as.numeric(batchSOM(data, somgrid(2, 1), radii=0.1, init=init)$codes), \"\\n\")", "output": "output/batchSOM-r.txt", "output_blocks": [{"text": "0.025 10.05 0 0 "}]}, "translation": {"description": "Radius 0.1 keeps the two codes apart. The initial codes are supplied.", "usage": "class.batchSOM", "arguments": [], "details": "Radius 0.1 keeps the two codes apart. The initial codes are supplied.", "value": "The checked numbers.", "example": "data = [[0,0],[0.05,0],[10,0],[10.1,0]]\n    init = [[0,0],[10,0]]\n    return col(pkg.batchSOM(data, pkg.somgrid(2, 1), radii=[0.1], init=init)[\"codes\"])", "output": "output/batchSOM-python.txt", "output_blocks": [{"text": "0.025 10.05 0.0 0.0"}]}}, {"name": "condense", "translated": true, "not_done": "", "title": "condense", "origin": {"description": "1-based indexes of the condensed store.", "usage": "condense", "arguments": [], "details": "1-based indexes of the condensed store.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  condense(rows, c(1L,1L,1L,2L,2L,2L), trace=FALSE), \"\\n\")", "output": "output/condense-r.txt", "output_blocks": [{"text": "1 6 "}]}, "translation": {"description": "1-based indexes of the condensed store.", "usage": "class.condense", "arguments": [], "details": "1-based indexes of the condensed store.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.condense(rows, [1,1,1,2,2,2])", "output": "output/condense-python.txt", "output_blocks": [{"text": "1 6"}]}}, {"name": "lvq1", "translated": true, "not_done": "", "title": "lvq1", "origin": {"description": "Six steps from a two-vector codebook. The row order is R's sample.", "usage": "lvq1", "arguments": [], "details": "Six steps from a two-vector codebook. The row order is R's sample.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq1(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2)$x), \"\\n\")", "output": "output/lvq1-r.txt", "output_blocks": [{"text": "0.006666667 5 0.1 5.066667 "}]}, "translation": {"description": "Six steps from a two-vector codebook. The row order is R's sample.", "usage": "class.lvq1", "arguments": [], "details": "Six steps from a two-vector codebook. The row order is R's sample.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq1(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2)[\"x\"])", "output": "output/lvq1-python.txt", "output_blocks": [{"text": "0.006666666666666667 5.0 0.10000000000000002 5.066666666666666"}]}}, {"name": "lvq2", "translated": true, "not_done": "", "title": "lvq2", "origin": {"description": "Moves the two nearest codes when they disagree and sit in the window.", "usage": "lvq2", "arguments": [], "details": "Moves the two nearest codes when they disagree and sit in the window.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq2(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2, win=0.3)$x), \"\\n\")", "output": "output/lvq2-r.txt", "output_blocks": [{"text": "0 5 0 5 "}]}, "translation": {"description": "Moves the two nearest codes when they disagree and sit in the window.", "usage": "class.lvq2", "arguments": [], "details": "Moves the two nearest codes when they disagree and sit in the window.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq2(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2, win=0.3)[\"x\"])", "output": "output/lvq2-python.txt", "output_blocks": [{"text": "0.0 5.0 0.0 5.0"}]}}, {"name": "lvq3", "translated": true, "not_done": "", "title": "lvq3", "origin": {"description": "Also nudges two agreeing codes toward the row.", "usage": "lvq3", "arguments": [], "details": "Also nudges two agreeing codes toward the row.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(lvq3(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.2, win=0.3, epsilon=0.1)$x), \"\\n\")", "output": "output/lvq3-r.txt", "output_blocks": [{"text": "0 5 0 5 "}]}, "translation": {"description": "Also nudges two agreeing codes toward the row.", "usage": "class.lvq3", "arguments": [], "details": "Also nudges two agreeing codes toward the row.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.lvq3(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.2, win=0.3, epsilon=0.1)[\"x\"])", "output": "output/lvq3-python.txt", "output_blocks": [{"text": "0.0 5.0 0.0 5.0"}]}}, {"name": "lvqinit", "translated": true, "not_done": "", "title": "lvqinit", "origin": {"description": "Keeps the one self-classified row of each class. This case does not draw.", "usage": "lvqinit", "arguments": [], "details": "Keeps the one self-classified row of each class. This case does not draw.", "value": "The checked numbers.", "example": "cat(rows \u003c- matrix(c(0,0, 1,0, 1.2,0, 10,0), ncol=2, byrow=TRUE)\n  as.numeric(lvqinit(rows, c(1L,1L,2L,2L), size=4, k=1)$x), \"\\n\")", "output": "output/lvqinit-r.txt", "output_blocks": [{"text": "0 10 0 0 "}]}, "translation": {"description": "Keeps the one self-classified row of each class. This case does not draw.", "usage": "class.lvqinit", "arguments": [], "details": "Keeps the one self-classified row of each class. This case does not draw.", "value": "The checked numbers.", "example": "rows = [[0,0],[1,0],[1.2,0],[10,0]]\n    return col(pkg.lvqinit(rows, [1,1,2,2], size=4, k=1)[\"x\"])", "output": "output/lvqinit-python.txt", "output_blocks": [{"text": "0.0 10.0 0.0 0.0"}]}}, {"name": "lvqtest", "translated": true, "not_done": "", "title": "lvqtest", "origin": {"description": "Nearest codebook label.", "usage": "lvqtest", "arguments": [], "details": "Nearest codebook label.", "value": "The checked numbers.", "example": "cat(book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.integer(lvqtest(book, matrix(c(0.1,0.1, 5.1,5.1), ncol=2, byrow=TRUE))), \"\\n\")", "output": "output/lvqtest-r.txt", "output_blocks": [{"text": "1 2 "}]}, "translation": {"description": "Nearest codebook label.", "usage": "class.lvqtest", "arguments": [], "details": "Nearest codebook label.", "value": "The checked numbers.", "example": "book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return [int(label) for label in pkg.lvqtest(book, [[0.1,0.1],[5.1,5.1]])]", "output": "output/lvqtest-python.txt", "output_blocks": [{"text": "1 2"}]}}, {"name": "multiedit", "translated": true, "not_done": "", "title": "multiedit", "origin": {"description": "Stops before editing when fewer than 5V rows remain.", "usage": "multiedit", "arguments": [], "details": "Stops before editing when fewer than 5V rows remain.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  multiedit(rows, c(1L,1L,1L,2L,2L,2L), k=1, V=2, I=2, trace=FALSE), \"\\n\")", "output": "output/multiedit-r.txt", "output_blocks": [{"text": "1 2 3 4 5 6 "}]}, "translation": {"description": "Stops before editing when fewer than 5V rows remain.", "usage": "class.multiedit", "arguments": [], "details": "Stops before editing when fewer than 5V rows remain.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.multiedit(rows, [1,1,1,2,2,2], k=1, V=2, I=2)", "output": "output/multiedit-python.txt", "output_blocks": [{"text": "1 2 3 4 5 6"}]}}, {"name": "olvq1", "translated": true, "not_done": "", "title": "olvq1", "origin": {"description": "Each code keeps its own step size.", "usage": "olvq1", "arguments": [], "details": "Each code keeps its own step size.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  book \u003c- list(x=matrix(c(0,0, 5,5), ncol=2, byrow=TRUE), cl=c(1L,2L))\n  as.numeric(olvq1(rows, c(1L,1L,1L,2L,2L,2L), book, niter=6, alpha=0.3)$x), \"\\n\")", "output": "output/olvq1-r.txt", "output_blocks": [{"text": "0.03157895 5 0.1736842 5.230769 "}]}, "translation": {"description": "Each code keeps its own step size.", "usage": "class.olvq1", "arguments": [], "details": "Each code keeps its own step size.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    book = {\"x\": [[0,0],[5,5]], \"cl\": [1,2]}\n    return col(pkg.olvq1(rows, [1,1,1,2,2,2], book, niter=6, alpha=0.3)[\"x\"])", "output": "output/olvq1-python.txt", "output_blocks": [{"text": "0.03157894736842105 5.0 0.17368421052631577 5.230769230769231"}]}}, {"name": "reduce.nn", "translated": true, "not_done": "", "title": "reduce.nn", "origin": {"description": "1-based indexes still required.", "usage": "reduce.nn", "arguments": [], "details": "1-based indexes still required.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  reduce.nn(rows, c(1L,4L), c(1L,1L,1L,2L,2L,2L)), \"\\n\")", "output": "output/reduce.nn-r.txt", "output_blocks": [{"text": "1 4 "}]}, "translation": {"description": "1-based indexes still required.", "usage": "class.reduce_nn", "arguments": [], "details": "1-based indexes still required.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    return pkg.reduce_nn(rows, [1, 4], [1,1,1,2,2,2])", "output": "output/reduce.nn-python.txt", "output_blocks": [{"text": "1 4"}]}}, {"name": "SOM", "translated": true, "not_done": "", "title": "SOM", "origin": {"description": "Two online steps. The presented row is R's unif_rand.", "usage": "SOM", "arguments": [], "details": "Two online steps. The presented row is R's unif_rand.", "value": "The checked numbers.", "example": "cat(set.seed(1)\n  rows \u003c- matrix(c(0,0, 0,1, 0.2,0.1, 5,5, 5,6, 5.2,4.8), ncol=2, byrow=TRUE)\n  init \u003c- matrix(c(0,0, 1,0, 0,1, 1,1), ncol=2, byrow=TRUE)\n  as.numeric(SOM(rows, somgrid(2, 2), alpha=c(0.5, 0.1), radii=c(2, 1), init=init)$codes), \"\\n\")", "output": "output/SOM-r.txt", "output_blocks": [{"text": "0.02 0.47 0.02 0.5 0.46 0.46 0.91 1 "}]}, "translation": {"description": "Two online steps. The presented row is R's unif_rand.", "usage": "class.SOM", "arguments": [], "details": "Two online steps. The presented row is R's unif_rand.", "value": "The checked numbers.", "example": "set_seed(1)\n    rows = [[0,0],[0,1],[0.2,0.1],[5,5],[5,6],[5.2,4.8]]\n    init = [[0,0],[1,0],[0,1],[1,1]]\n    return col(pkg.SOM(rows, pkg.somgrid(2, 2), alpha=[0.5, 0.1], radii=[2, 1], init=init)[\"codes\"])", "output": "output/SOM-python.txt", "output_blocks": [{"text": "0.020000000000000004 0.47 0.020000000000000004 0.5 0.45999999999999996 0.45999999999999996 0.91 1.0"}]}}, {"name": "somgrid", "translated": true, "not_done": "", "title": "somgrid", "origin": {"description": "Hexagonal 2 by 2 grid, x varying fastest.", "usage": "somgrid", "arguments": [], "details": "Hexagonal 2 by 2 grid, x varying fastest.", "value": "The checked numbers.", "example": "cat(as.numeric(somgrid(2, 2, \"hexagonal\")$pts), \"\\n\")", "output": "output/somgrid-r.txt", "output_blocks": [{"text": "1.5 2.5 1 2 0.8660254 0.8660254 1.732051 1.732051 "}]}, "translation": {"description": "Hexagonal 2 by 2 grid, x varying fastest.", "usage": "class.somgrid", "arguments": [], "details": "Hexagonal 2 by 2 grid, x varying fastest.", "value": "The checked numbers.", "example": "return col(pkg.somgrid(2, 2, \"hexagonal\")[\"pts\"])", "output": "output/somgrid-python.txt", "output_blocks": [{"text": "1.5 2.5 1.0 2.0 0.8660254037844386 0.8660254037844386 1.7320508075688772 1.7320508075688772"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

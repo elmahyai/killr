@@ -1,0 +1,6 @@
+.libPaths(c("/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5", .libPaths()))
+suppressPackageStartupMessages(library(rstudioapi))
+stopifnot(identical(as.character(packageVersion("rstudioapi")), "0.19.0"))
+rng <- document_range(c(1, 2, 3, 4))
+print(as.document_range(rng))
+print(as.document_range(c(5, 6, 7, 8)))

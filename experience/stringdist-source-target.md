@@ -1,0 +1,1 @@
+`stringdist` scores source then target, so the deletion weight applies to `b`. `stringsim` passes the raw `q`, including a fraction, into normalization, while the distance truncates `q`. `seq_qgrams` compares q-grams as unsigned, so `NA_integer_` sorts high. `seq_dist` of a bare numeric vector is one sequence. `phonetic` and `printable_ascii` reuse the helpers in `stringdist.py`.

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>abind · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>abind</h1>
+<p class="note">CRAN 1.4-8</p>
+<p>Exports: 5. All translated. Complete.</p>
+<p class="note">5 of 5 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#abind">abind</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Binds vectors, matrices, and arrays along one margin, inserting a dimension when along falls outside the current rank, and builds dimnames from argument names and the inputs.</td></tr>
+<tr><td><a href="#asub">asub</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Builds R-style combined indexing on selected dimensions, honors drop=FALSE, and drops all singleton dimensions when drop is omitted.</td></tr>
+<tr><td><a href="#afill<-">afill&lt;-</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Assigns into arrays by matching value dimnames on omitted index slots, and honors excess_ok. Uses asub.</td></tr>
+<tr><td><a href="#adrop">adrop</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Drops length-1 margins named in drop, adjusts dimnames, and returns an array or a named vector.</td></tr>
+<tr><td><a href="#acorn">acorn</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Builds corner index lists and subsets with asub, optionally labeling blank dimnames. Uses asub.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>abind</td><td>15 by 16 matrices bound along 1.5, 1, 2, and 0</td><td>2.25</td><td>0.871</td><td><button type="button" class="proof-toggle" data-name="abind"><span class='yes'>+158%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:38.7%'></span></div></td></tr>
+<tr><td>asub</td><td>3D and 8D arrays subset with asub on several margins</td><td>9.14</td><td>25.5</td><td><button type="button" class="proof-toggle" data-name="asub"><span class='slower'>-64%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:35.8%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>afill&lt;-</td><td>Matrix and 3D arrays filled via dimnames, TRUE margins, replication, and excess_ok</td><td>2.39</td><td>1.82</td><td><button type="button" class="proof-toggle" data-name="afill&lt;-"><span class='yes'>+31%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:76.3%'></span></div></td></tr>
+<tr><td>adrop</td><td>3D array slices with numeric, logical, and NULL drop, plus a named vector versus a 1-D array</td><td>1.38</td><td>0.985</td><td><button type="button" class="proof-toggle" data-name="adrop"><span class='yes'>+40%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:71.4%'></span></div></td></tr>
+<tr><td>acorn</td><td>Flattened corners of a 4 by 3 by 2 array, named-vector head and tail, and a 4D margin count</td><td>1.56</td><td>1.03</td><td><button type="button" class="proof-toggle" data-name="acorn"><span class='yes'>+52%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:65.8%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "abind", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\none \u003c- function() {\n  x \u003c- matrix(1:240, 15, 16)\n  y \u003c- matrix(241:480, 15, 16)\n  along15 \u003c- abind(x, y, along = 1.5)\n  along1 \u003c- abind(x, y, along = 1)\n  along2 \u003c- abind(x, y, along = 2)\n  along0 \u003c- abind(x, y, along = 0)\n  c(dim(along15), dim(along1), dim(along2), dim(along0), as.numeric(along15), as.numeric(along1), as.numeric(along2), as.numeric(along0))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import abind\n\n\ndef one():\n    x = np.arange(1, 241).reshape((15, 16), order=\"F\")\n    y = np.arange(241, 481).reshape((15, 16), order=\"F\")\n    parts = [\n        abind(x, y, along=1.5),\n        abind(x, y, along=1),\n        abind(x, y, along=2),\n        abind(x, y, along=0),\n    ]\n    dims = []\n    values = []\n    for part in parts:\n        data = np.asarray(part.data, dtype=float)\n        dims.extend(float(size) for size in data.shape)\n        values.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return dims + values\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "asub", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\none \u003c- function() {\n  x \u003c- array(1:24, dim = c(2, 3, 4))\n  y \u003c- array(seq_len(prod(1:8)), dim = 1:8)\n  parts \u003c- list(\n    asub(x, 1, 1, drop = FALSE),\n    asub(x, list(1:2, 3:4), c(1, 3)),\n    asub(x, list(1:2, 2, 1:2), c(1, 2, 3)),\n    asub(y, 1, 1),\n    asub(y, 1, 2),\n    asub(y, 1, 3),\n    asub(y, 1, 3, drop = FALSE),\n    asub(y, list(1, 1), c(3, 5), drop = FALSE),\n    asub(y, list(1, 1), c(3, 5))\n  )\n  out \u003c- c()\n  for (part in parts) {\n    d \u003c- dim(part)\n    if (is.null(d)) d \u003c- length(part)\n    out \u003c- c(out, d, as.numeric(part))\n  }\n  out\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.asub import asub\n\n\ndef one():\n    x = np.arange(1, 25, dtype=float).reshape((2, 3, 4), order=\"F\")\n    y = np.arange(1, int(np.prod(np.arange(1, 9))) + 1, dtype=float).reshape(\n        tuple(range(1, 9)), order=\"F\"\n    )\n    parts = [\n        asub(x, 1, 1, drop=False),\n        asub(x, [np.array([1, 2]), np.array([3, 4])], dims=[1, 3]),\n        asub(\n            x,\n            [np.array([1, 2]), np.array([2]), np.array([1, 2])],\n            dims=[1, 2, 3],\n        ),\n        asub(y, 1, 1),\n        asub(y, 1, 2),\n        asub(y, 1, 3),\n        asub(y, 1, 3, drop=False),\n        asub(y, [np.array([1]), np.array([1])], dims=[3, 5], drop=False),\n        asub(y, [np.array([1]), np.array([1])], dims=[3, 5]),\n    ]\n    out = []\n    for part in parts:\n        data = np.asarray(part.data if hasattr(part, \"data\") else part, dtype=float)\n        if data.ndim == 0:\n            dims = [1]\n        else:\n            dims = list(data.shape)\n        out.extend(float(size) for size in dims)\n        out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "afill\u003c-", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\none \u003c- function() {\n  out \u003c- c()\n\n  x \u003c- matrix(0, ncol = 3, nrow = 4, dimnames = list(letters[1:4], LETTERS[24:26]))\n  y \u003c- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))\n  afill(x) \u003c- y\n  out \u003c- c(out, as.numeric(x))\n\n  x3 \u003c- array(0, dim = c(2, 4, 3), dimnames = list(LETTERS[1:2], letters[1:4], LETTERS[24:26]))\n  y3 \u003c- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))\n  afill(x3, 1, , ) \u003c- y3\n  out \u003c- c(out, as.numeric(x3))\n\n  x4 \u003c- array(0, dim = c(2, 4, 3), dimnames = list(LETTERS[1:2], letters[1:4], LETTERS[24:26]))\n  afill(x4, TRUE, , ) \u003c- y3\n  out \u003c- c(out, as.numeric(x4))\n\n  x5 \u003c- array(0, dim = c(2, 3, 4), dimnames = list(letters[1:2], LETTERS[1:3], letters[23:26]))\n  afill(x5, TRUE, , ) \u003c- matrix(1:6, ncol = 3, dimnames = list(c(\"A\", \"B\"), c(\"w\", \"x\", \"y\")))\n  out \u003c- c(out, as.numeric(x5))\n\n  x6 \u003c- array(1:24, dim = c(6, 4), dimnames = list(LETTERS[1:6], letters[23:26]))\n  afill(x6) \u003c- array(-(1:6), dim = c(3, 2), dimnames = list(LETTERS[2:4], letters[24:25]))\n  out \u003c- c(out, as.numeric(x6))\n\n  x7 \u003c- array(1:24, dim = c(6, 4), dimnames = list(LETTERS[1:6], letters[23:26]))\n  afill(x7, excess.ok = TRUE) \u003c- array(-(1:6), dim = c(3, 2), dimnames = list(LETTERS[5:7], letters[24:25]))\n  out \u003c- c(out, as.numeric(x7))\n\n  xv \u003c- c(A = 0, B = 0, C = 0, D = 0)\n  afill(xv) \u003c- c(B = 1, C = 2)\n  out \u003c- c(out, as.numeric(xv))\n\n  out\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.afill_replacement import afill_replacement\n\n\ndef one():\n    out = []\n\n    x = Array(\n        np.zeros((4, 3), order=\"F\"),\n        dimnames=[list(\"abcd\"), list(\"XYZ\")],\n    )\n    y = Array(\n        np.arange(1, 5, dtype=float).reshape((2, 2), order=\"F\"),\n        dimnames=[list(\"bc\"), list(\"YZ\")],\n    )\n    afill_replacement(x, value=y)\n    out.extend(float(v) for v in np.ravel(x.data, order=\"F\"))\n\n    x3 = Array(\n        np.zeros((2, 4, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"abcd\"), list(\"XYZ\")],\n    )\n    y3 = Array(\n        np.arange(1, 5, dtype=float).reshape((2, 2), order=\"F\"),\n        dimnames=[list(\"bc\"), list(\"YZ\")],\n    )\n    afill_replacement(x3, 1, None, None, value=y3)\n    out.extend(float(v) for v in np.ravel(x3.data, order=\"F\"))\n\n    x4 = Array(\n        np.zeros((2, 4, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"abcd\"), list(\"XYZ\")],\n    )\n    afill_replacement(x4, True, None, None, value=y3)\n    out.extend(float(v) for v in np.ravel(x4.data, order=\"F\"))\n\n    x5 = Array(\n        np.zeros((2, 3, 4), order=\"F\"),\n        dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n    )\n    y5 = Array(\n        np.arange(1, 7, dtype=float).reshape((2, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"wxy\")],\n    )\n    afill_replacement(x5, True, None, None, value=y5)\n    out.extend(float(v) for v in np.ravel(x5.data, order=\"F\"))\n\n    x6 = Array(\n        np.arange(1, 25, dtype=float).reshape((6, 4), order=\"F\"),\n        dimnames=[list(\"ABCDEF\"), list(\"wxyz\")],\n    )\n    y6 = Array(\n        -np.arange(1, 7, dtype=float).reshape((3, 2), order=\"F\"),\n        dimnames=[list(\"BCD\"), list(\"xy\")],\n    )\n    afill_replacement(x6, value=y6)\n    out.extend(float(v) for v in np.ravel(x6.data, order=\"F\"))\n\n    x7 = Array(\n        np.arange(1, 25, dtype=float).reshape((6, 4), order=\"F\"),\n        dimnames=[list(\"ABCDEF\"), list(\"wxyz\")],\n    )\n    y7 = Array(\n        -np.arange(1, 7, dtype=float).reshape((3, 2), order=\"F\"),\n        dimnames=[list(\"EFG\"), list(\"xy\")],\n    )\n    afill_replacement(x7, excess_ok=True, value=y7)\n    out.extend(float(v) for v in np.ravel(x7.data, order=\"F\"))\n\n    xv = Array(np.zeros(4), names=list(\"ABCD\"))\n    afill_replacement(xv, value=Array(np.array([1.0, 2.0]), names=list(\"BC\")))\n    out.extend(float(v) for v in np.ravel(xv.data, order=\"F\"))\n\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "adrop", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\nflatten \u003c- function(z) {\n  out \u003c- c()\n  d \u003c- dim(z)\n  if (is.null(d)) {\n    out \u003c- c(out, 0, length(z))\n    nm \u003c- names(z)\n    if (is.null(nm)) {\n      out \u003c- c(out, 0)\n    } else {\n      out \u003c- c(out, 1, utf8ToInt(paste(nm, collapse = \"\\n\")))\n    }\n    out \u003c- c(out, as.numeric(z))\n    return(out)\n  }\n  out \u003c- c(out, length(d), d)\n  dn \u003c- dimnames(z)\n  if (is.null(dn)) {\n    out \u003c- c(out, 0)\n  } else {\n    out \u003c- c(out, 1, length(dn))\n    for (margin in dn) {\n      if (is.null(margin)) {\n        out \u003c- c(out, 0)\n      } else {\n        out \u003c- c(out, 1, utf8ToInt(paste(margin, collapse = \"\\n\")))\n      }\n    }\n  }\n  out \u003c- c(out, as.numeric(z))\n  out\n}\n\none \u003c- function() {\n  x \u003c- array(\n    1:24,\n    dim = c(2, 3, 4),\n    dimnames = list(letters[1:2], LETTERS[1:3], letters[23:26])\n  )\n  parts \u003c- list(\n    adrop(x[1, , , drop = FALSE], drop = 1),\n    adrop(x[, 1, , drop = FALSE], drop = 2),\n    adrop(x[, , 1, drop = FALSE], drop = 3),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 2),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 3),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2, one.d = TRUE),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2, named = FALSE),\n    adrop(x[1, 1, 1, drop = FALSE], drop = NULL),\n    adrop(x[1, 1, , drop = FALSE], drop = c(FALSE, TRUE, FALSE))\n  )\n  out \u003c- c()\n  for (part in parts) {\n    out \u003c- c(out, flatten(part))\n  }\n  out\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.adrop import adrop\nfrom abind.asub import asub\n\n\ndef flatten(part):\n    out = []\n    if isinstance(part, Array):\n        data = part.data\n        names = part.names\n        dimnames = part.dimnames\n    else:\n        data = np.asarray(part)\n        names = None\n        dimnames = None\n\n    if data.ndim == 0:\n        out.extend([0, 1])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.append(float(data.reshape(-1)[0]))\n        return out\n\n    r_dim = getattr(part, \"_r_dim\", None) if isinstance(part, Array) else list(data.shape)\n    if isinstance(part, Array) and part._r_dim is None and data.ndim == 1:\n        out.extend([0, int(data.size)])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.extend(float(value) for value in data.reshape(-1))\n        return out\n\n    shape = list(r_dim if isinstance(part, Array) and part._r_dim is not None else data.shape)\n    out.extend([len(shape), *shape])\n    if dimnames is None:\n        out.append(0)\n    else:\n        out.append(1)\n        out.append(len(dimnames))\n        for margin in dimnames:\n            if margin is None:\n                out.append(0)\n            else:\n                out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in margin)]])\n    out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\ndef one():\n    base = Array(\n        np.arange(1, 25, dtype=float).reshape((2, 3, 4), order=\"F\"),\n        dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n    )\n    scalar = asub(asub(asub(base, 1, 1, drop=False), 1, 2, drop=False), 1, 3, drop=False)\n    parts = [\n        adrop(asub(base, 1, 1, drop=False), drop=1),\n        adrop(asub(base, 1, 2, drop=False), drop=2),\n        adrop(asub(base, 1, 3, drop=False), drop=3),\n        adrop(scalar, drop=1),\n        adrop(scalar, drop=2),\n        adrop(scalar, drop=3),\n        adrop(scalar, drop=[1, 2]),\n        adrop(scalar, drop=[1, 2], one_d_array=True),\n        adrop(scalar, drop=[1, 2], named_vector=False),\n        adrop(scalar, drop=None),\n        adrop(asub(asub(base, 1, 1, drop=False), 1, 2, drop=False), drop=[False, True, False]),\n    ]\n    out = []\n    for part in parts:\n        out.extend(flatten(part))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "acorn", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\nflatten \u003c- function(z) {\n  out \u003c- c()\n  d \u003c- dim(z)\n  if (is.null(d)) {\n    out \u003c- c(out, 0, length(z))\n    nm \u003c- names(z)\n    if (is.null(nm)) {\n      out \u003c- c(out, 0)\n    } else {\n      out \u003c- c(out, 1, utf8ToInt(paste(nm, collapse = \"\\n\")))\n    }\n    out \u003c- c(out, as.numeric(z))\n    return(out)\n  }\n  out \u003c- c(out, length(d), d)\n  dn \u003c- dimnames(z)\n  if (is.null(dn)) {\n    out \u003c- c(out, 0)\n  } else {\n    out \u003c- c(out, 1, length(dn))\n    for (margin in dn) {\n      if (is.null(margin)) {\n        out \u003c- c(out, 0)\n      } else {\n        out \u003c- c(out, 1, utf8ToInt(paste(margin, collapse = \"\\n\")))\n      }\n    }\n  }\n  out \u003c- c(out, as.numeric(z))\n  out\n}\n\none \u003c- function() {\n  x \u003c- array(\n    1:24,\n    dim = c(4, 3, 2),\n    dimnames = rev(list(letters[1:2], LETTERS[1:3], letters[23:26]))\n  )\n  w \u003c- 1:10\n  names(w) \u003c- letters[1:10]\n  y4 \u003c- array(1:16, dim = c(2, 2, 2, 2))\n  parts \u003c- list(\n    acorn(x),\n    acorn(x, 3),\n    acorn(x, -3),\n    acorn(x, 3, -2),\n    acorn(x, addrownums = FALSE),\n    acorn(w, 4),\n    acorn(w, -3),\n    acorn(y4, 1, 1, 1, 2),\n    acorn(y4, -1, -1, -1, -2)\n  )\n  out \u003c- c()\n  for (part in parts) {\n    out \u003c- c(out, flatten(part))\n  }\n  out\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n", "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.acorn import acorn\n\n\ndef flatten(part):\n    out = []\n    if isinstance(part, Array):\n        data = part.data\n        names = part.names\n        dimnames = part.dimnames\n    else:\n        data = np.asarray(part)\n        names = None\n        dimnames = None\n\n    if data.ndim == 0:\n        out.extend([0, 1])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.append(float(data.reshape(-1)[0]))\n        return out\n\n    r_dim = getattr(part, \"_r_dim\", None) if isinstance(part, Array) else list(data.shape)\n    if isinstance(part, Array) and part._r_dim is None and data.ndim == 1:\n        out.extend([0, int(data.size)])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.extend(float(value) for value in data.reshape(-1))\n        return out\n\n    shape = list(r_dim if isinstance(part, Array) and part._r_dim is not None else data.shape)\n    out.extend([len(shape), *shape])\n    if dimnames is None:\n        out.append(0)\n    else:\n        out.append(1)\n        out.append(len(dimnames))\n        for margin in dimnames:\n            if margin is None:\n                out.append(0)\n            else:\n                out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in margin)]])\n    out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\ndef one():\n    x = Array(\n        np.arange(1, 25, dtype=float).reshape((4, 3, 2), order=\"F\"),\n        dim=(4, 3, 2),\n        dimnames=[list(\"wxyz\"), list(\"ABC\"), list(\"ab\")],\n    )\n    w = Array(np.arange(1, 11, dtype=float), names=list(\"abcdefghij\"))\n    y4 = Array(np.arange(1, 17, dtype=float).reshape((2, 2, 2, 2), order=\"F\"), dim=(2, 2, 2, 2))\n    parts = [\n        acorn(x),\n        acorn(x, 3),\n        acorn(x, -3),\n        acorn(x, 3, -2),\n        acorn(x, addrownums=False),\n        acorn(w, 4),\n        acorn(w, -3),\n        acorn(y4, 1, 1, 1, 2),\n        acorn(y4, -1, -1, -1, -2),\n    ]\n    out = []\n    for part in parts:\n        out.extend(flatten(part))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>methods</p><p><a href="utils.html">utils</a></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "abind", "translated": true, "not_done": "", "title": "Combine multi-dimensional arrays", "origin": {"description": "Bind vectors, matrices, and arrays along one margin. This is a generalization of cbind and rbind.", "usage": "abind(..., along=N, rev.along=NULL, new.names=NULL, force.array=TRUE, make.names=use.anon.names, use.anon.names=FALSE, use.first.dimnames=FALSE, hier.names=FALSE, use.dnns=FALSE)", "arguments": [{"name": "...", "text": "Vectors, matrices, arrays, or data frames. Every dimension must agree except the one named by along. One list is accepted in place of several arguments."}, {"name": "along", "text": "The margin to bind on. The default is the last dimension. A fraction, a number below 1, or a number past the current rank inserts a new dimension."}, {"name": "rev.along", "text": "Sets along to N + 1 - rev.along and ignores a supplied along. rev.along = 0 adds a dimension after the last."}, {"name": "new.names", "text": "A list supplies dimnames. A character vector supplies argument names, and empty strings are ignored."}, {"name": "force.array", "text": "When false and the result is two-dimensional, the call is passed to cbind or rbind."}, {"name": "hier.names", "text": "before, after, or none. TRUE is before. FALSE leaves the margin names unchanged."}, {"name": "use.first.dimnames", "text": "Take dimnames from the first argument that has them. The default keeps the last, as cbind and rbind do."}, {"name": "use.dnns", "text": "Keep names of the dimnames. use.first.dimnames chooses which source wins."}], "details": "A vector is treated as one dimension. An argument with one fewer dimension gains a size-1 margin at along. Dimension names on the bound margin come from existing names, otherwise from the argument name.", "value": "An array. The length of its dim is the common rank, or one more when along creates a dimension.", "example": "print(abind(x = 1:4, y = 5:8))\n", "output": "output/abind-r.txt", "output_blocks": [{"text": "x1 x2 x3 x4 y1 y2 y3 y4 \n 1  2  3  4  5  6  7  8 "}]}, "translation": {"description": "Bind vectors, matrices, and arrays along one margin. This is a generalization of cbind and rbind.", "usage": "abind(*arrays, along=None, rev_along=None, new_names=None, force_array=True, make_names=None, use_anon_names=False, use_first_dimnames=False, hier_names=False, use_dnns=False, **named)", "arguments": [{"name": "*arrays", "text": "Vectors, matrices, arrays, or data frames. Every dimension must agree except the one named by along. One list or dict of arrays is the single list argument."}, {"name": "along", "text": "The margin to bind on. The default is the last dimension. A fraction, a number below 1, or a number past the current rank inserts a new dimension."}, {"name": "rev_along", "text": "Sets along to N + 1 - rev_along and ignores a supplied along. rev_along = 0 adds a dimension after the last."}, {"name": "new_names", "text": "A nested list supplies dimnames. A list of strings supplies argument names, and empty strings are ignored."}, {"name": "force_array", "text": "When false and the result is two-dimensional, the call follows cbind or rbind."}, {"name": "hier_names", "text": "before, after, or none. True is before. False leaves the margin names unchanged."}, {"name": "use_first_dimnames", "text": "Take dimnames from the first argument that has them. The default keeps the last, as cbind and rbind do."}, {"name": "use_dnns", "text": "Keep names of the dimnames. use_first_dimnames chooses which source wins."}], "details": "A vector is treated as one dimension. An argument with one fewer dimension gains a size-1 margin at along. Dimension names on the bound margin come from existing names, otherwise from the argument name. Keyword arguments other than the formals are those names.", "value": "An array. The length of its dim is the common rank, or one more when along creates a dimension.", "example": "import numpy as np\nfrom abind.abind import abind\nprint(abind(x=np.arange(1, 5), y=np.arange(5, 9)))\n", "output": "output/abind-python.txt", "output_blocks": [{"text": "x1 x2 x3 x4 y1 y2 y3 y4\n1 2 3 4 5 6 7 8"}]}}, {"name": "asub", "translated": true, "not_done": "", "title": "Arbitrary subsetting of array-like objects at specified indices", "origin": {"description": "Subset array-like objects at specified indices. asub() is a S3 generic, with one method, asub.default, supplied in the abind package.", "usage": "asub(x, idx, dims = seq(length.out = max(length(dim(x)), 1)), drop = NULL, ...)", "arguments": [{"name": "x", "text": "The object to index."}, {"name": "idx", "text": "A list of indices (e.g., a list of a mixture of integer, character, and logical vectors, but can actually be anything). Can be just a vector in the case that length(dims)==1. NULL entries in the list will be treated as empty indices."}, {"name": "dims", "text": "The dimensions on which to index (a numeric or integer vector). The default is all of the dimensions."}, {"name": "drop", "text": "The drop argument to index with (the default is to not supply a drop argument)."}, {"name": "...", "text": "There are no additional arguments allowed for asub.default but other methods may use them."}], "details": "Constructs and evaluates an expression to do the requested indexing. E.g., for x with length(dim(x))==4 the call asub(x, list(c(\"a\",\"b\"), 3:5), 2:3) will construct and evaluate the expression x[, c(\"a\",\"b\"), 3:5, ], and the call asub(x, 1, 2, drop=FALSE) will construct and evaluate the expression x[, 1, , , drop=FALSE]. asub checks that the elements of dims are in the range 1 to length(dim(x)) (in the case that x is a vector, length(x) is used for dim(x)). Other than that, no checks are made on the suitability of components of idx as indices for x.", "value": "A subset of x, as returned by x[...].", "example": "x \u003c- array(1:24,dim=c(2,3,4),dimnames=list(letters[1:2],LETTERS[1:3],letters[23:26]))\nprint(asub(x, 1, 1, drop=FALSE))\nprint(asub(x, list(1:2,3:4), c(1,3)))\n", "output": "output/asub-r.txt", "output_blocks": [{"text": ", , w\n\n  A B C\na 1 3 5\n\n, , x\n\n  A B  C\na 7 9 11\n\n, , y\n\n   A  B  C\na 13 15 17\n\n, , z\n\n   A  B  C\na 19 21 23\n\n, , y\n\n   A  B  C\na 13 15 17\nb 14 16 18\n\n, , z\n\n   A  B  C\na 19 21 23\nb 20 22 24"}]}, "translation": {"description": "Subset array-like objects at specified indices. This follows asub.default from abind.", "usage": "asub(x, idx, dims=None, drop=None, **kwargs)", "arguments": [{"name": "x", "text": "The object to index, as a NumPy array or abind Array."}, {"name": "idx", "text": "Indices for the dimensions in dims. Use a list when len(dims) > 1; a vector is accepted when only one dimension is indexed. None entries in a list mean an empty index on that dimension."}, {"name": "dims", "text": "1-based dimension numbers to index. The default is every dimension of x."}, {"name": "drop", "text": "When False, keep length-1 dimensions like R's drop=FALSE. When None, R's default drop applies and all singleton dimensions are removed."}, {"name": "**kwargs", "text": "Not allowed for this method; extra keywords raise an error."}], "details": "Builds R-style combined indexing on column-major data. Character indices use dimnames on an Array. With drop=None, singleton dimensions are dropped after indexing, matching R's default [ behavior.", "value": "A subset of x with the same type as the input when x is an Array; otherwise a NumPy array.", "example": "import numpy as np\nfrom abind.abind import Array\nfrom abind.asub import asub\n\nx = Array(\n    np.arange(1, 25).reshape((2, 3, 4), order=\"F\"),\n    dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n)\nprint(asub(x, 1, 1, drop=False))\nprint(asub(x, [np.array([1, 2]), np.array([3, 4])], dims=[1, 3]))\n", "output": "output/asub-python.txt", "output_blocks": [{"text": ", , w\n\n  A B C\na 1 3 5\n\n, , x\n\n  A B  C\na 7 9 11\n\n, , y\n\n   A  B  C\na 13 15 17\n\n, , z\n\n   A  B  C\na 19 21 23\n\n, , y\n\n   A  B  C\na 13 15 17\nb 14 16 18\n\n, , z\n\n   A  B  C\na 19 21 23\nb 20 22 24"}]}}, {"name": "afill\u003c-", "translated": true, "not_done": "", "title": "afill\u003c-", "origin": null, "translation": {"description": "Assigns into arrays by matching value dimnames on omitted index slots, and honors excess_ok.", "usage": "abind.afill_replacement.afill_replacement", "output_blocks": []}}, {"name": "adrop", "translated": true, "not_done": "", "title": "Drop dimensions of an array object", "origin": {"description": "Drop degenerate dimensions of an array object. Offers less automaticity and more control than the base drop() function. adrop() is a S3 generic, with one method, adrop.default, supplied in the abind package.", "usage": "adrop(x, drop = TRUE, named.vector = TRUE, one.d.array = FALSE, ...)", "arguments": [{"name": "x", "text": "An array (including a matrix)."}, {"name": "drop", "text": "A logical or numeric vector describing exactly which dimensions to drop. It is intended that this argument be supplied always. The default is very rarely useful (drop=TRUE means drop the first dimension of a 1-d array)."}, {"name": "named.vector", "text": "Optional, defaults to TRUE. Controls whether a vector result has names derived from the dimnames of x."}, {"name": "one.d.array", "text": "Optional, defaults to FALSE. If TRUE, a one-dimensional array result will be an object with a dim attribute of length 1, and possibly a dimnames attribute. If FALSE, a one-dimensional result will be a vector object (named if named.vector==TRUE)."}, {"name": "...", "text": "There are no additional arguments allowed for adrop.default but other methods may use them."}], "details": "Dimensions can only be dropped if their extent is one, i.e., dimension i of array x can be dropped only if dim(x)[i]==1. It is an error to request adrop to drop a dimension whose extent is not 1. A 1-d array can be converted to a named vector by supplying drop=NULL (which means drop no dimensions, and return a 1-d array result as a named vector).", "value": "If x is an object with a dim attribute (e.g., a matrix or array), then adrop returns an object like x, but with the requested extents of length one removed. Any accompanying dimnames attribute is adjusted and returned with x.", "example": "x \u003c- array(1:24,dim=c(2,3,4),dimnames=list(letters[1:2],LETTERS[1:3],letters[23:26]))\nprint(adrop(x[1,,,drop=FALSE],drop=1))\nprint(adrop(x[,1,,drop=FALSE],drop=2))\nprint(adrop(x[,,1,drop=FALSE],drop=3))\nprint(adrop(x[1,1,1,drop=FALSE],drop=1))\nprint(adrop(x[1,1,1,drop=FALSE],drop=2))\nprint(adrop(x[1,1,1,drop=FALSE],drop=3))\nprint(adrop(x[1,1,1,drop=FALSE],drop=1:2))\nprint(adrop(x[1,1,1,drop=FALSE],drop=1:2,one.d=TRUE))\nprint(adrop(x[1,1,1,drop=FALSE],drop=1:2,named=FALSE))\nprint(dim(adrop(x[1,1,1,drop=FALSE],drop=1:2,one.d=TRUE)))\nprint(dimnames(adrop(x[1,1,1,drop=FALSE],drop=1:2,one.d=TRUE)))\nprint(names(adrop(x[1,1,1,drop=FALSE],drop=1:2,one.d=TRUE)))\nprint(dim(adrop(x[1,1,1,drop=FALSE],drop=1:2)))\nprint(dimnames(adrop(x[1,1,1,drop=FALSE],drop=1:2)))\nprint(names(adrop(x[1,1,1,drop=FALSE],drop=1:2)))\n", "output": "output/adrop-r.txt", "output_blocks": [{"text": "  w  x  y  z\nA 1  7 13 19\nB 3  9 15 21\nC 5 11 17 23\n  w x  y  z\na 1 7 13 19\nb 2 8 14 20\n  A B C\na 1 3 5\nb 2 4 6\n  w\nA 1\n  w\na 1\n  A\na 1\nw \n1 \nw \n1 \n[1] 1\n[1] 1\n[[1]]\n[1] \"w\"\n\n[1] \"w\"\nNULL\nNULL\n[1] \"w\""}]}, "translation": {"description": "Drop degenerate dimensions of an array object with explicit control over which margins are removed. This follows adrop.default from abind.", "usage": "adrop(x, drop=True, named_vector=True, one_d_array=False, **kwargs)", "arguments": [{"name": "x", "text": "An abind Array or NumPy array with at least two dimensions (matrices and higher-rank arrays)."}, {"name": "drop", "text": "Dimension numbers to remove, a logical mask with one entry per dimension, character names of dimensions, or None to drop no dimensions."}, {"name": "named_vector", "text": "When a single dimension remains, return an R-style named vector from the surviving dimnames if True."}, {"name": "one_d_array", "text": "When a single dimension remains, keep a one-dimensional array with dim and dimnames instead of a vector."}, {"name": "**kwargs", "text": "Not allowed for this method; extra keywords raise an error."}], "details": "Only margins of length one may be dropped. Logical drop masks must match rank. Character drop matches names on the R dim vector when present. Results preserve column-major layout and dimnames on abind Array inputs.", "value": "An abind Array when x is an Array; otherwise a NumPy array. One-dimensional results may be vectors or arrays depending on named_vector and one_d_array.", "example": "import numpy as np\nfrom abind.abind import Array\nfrom abind.adrop import adrop\nfrom abind.asub import asub\n\nx = Array(\n    np.arange(1, 25).reshape((2, 3, 4), order=\"F\"),\n    dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n)\nscalar = asub(asub(asub(x, 1, 1, drop=False), 1, 2, drop=False), 1, 3, drop=False)\nprint(adrop(asub(x, 1, 1, drop=False), drop=1))\nprint(adrop(asub(x, 1, 2, drop=False), drop=2))\nprint(adrop(asub(x, 1, 3, drop=False), drop=3))\nprint(adrop(scalar, drop=1))\nprint(adrop(scalar, drop=2))\nprint(adrop(scalar, drop=3))\nprint(adrop(scalar, drop=[1, 2]))\nprint(adrop(scalar, drop=[1, 2], one_d_array=True))\nprint(adrop(scalar, drop=[1, 2], named_vector=False))\n", "output": "output/adrop-python.txt", "output_blocks": [{"text": "  w  x  y  z\nA 1  7 13 19\nB 3  9 15 21\nC 5 11 17 23\n  w x  y  z\na 1 7 13 19\nb 2 8 14 20\n  A B C\na 1 3 5\nb 2 4 6\n  w\nA 1\n  w\na 1\n  A\na 1\nw\n1\nw\n1\n1\n[1] 1\n[[1]]\n[1] \"w\"\nNULL\nNULL\n[[1]]\n[1] \"w\"\n[1] \"w\""}]}}, {"name": "acorn", "translated": true, "not_done": "", "title": "acorn", "origin": null, "translation": {"description": "Builds corner index lists and subsets with asub, optionally labeling blank dimnames.", "usage": "abind.acorn.acorn", "output_blocks": []}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

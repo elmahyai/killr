@@ -1,0 +1,40 @@
+{
+  "name": "add_metadata",
+  "title": "Add remote metadata to DESCRIPTION",
+  "origin": {
+    "description": "Record how a package was obtained by merging fields into its DESCRIPTION.",
+    "usage": "add_metadata(pkg_path, meta)",
+    "arguments": [
+      {
+        "name": "pkg_path",
+        "text": "Directory of a source package."
+      },
+      {
+        "name": "meta",
+        "text": "Named list of fields. A value overwrites the same name. NULL drops the field. A nested list updates that field element by element."
+      }
+    ],
+    "details": "DESCRIPTION is read as DCF and written back with every field kept white, so continuation lines stay in the file. A blank line in a value is written as a line containing a dot. If Meta/package.rds exists, that DESCRIPTION vector is updated the same way and stored with saveRDS.",
+    "value": "NULL, invisibly. The result is the updated file.",
+    "example": "pkg <- tempfile(\"addmeta\")\ndir.create(file.path(pkg, \"Meta\"), recursive = TRUE)\nsaveRDS(structure(list(DESCRIPTION = c(Package = \"foo\", Version = \"1.0.0\")), class = \"packageDescription2\"), file.path(pkg, \"Meta\", \"package.rds\"))\nadd_metadata(pkg, list(RemoteType = \"github\", RemoteRepo = \"foo\"))\ndesc <- readRDS(file.path(pkg, \"Meta\", \"package.rds\"))$DESCRIPTION\ncat(\"readRDS()$DESCRIPTION is Package foo, Version 1.0.0, RemoteType github, RemoteRepo foo.\\n\")\ncat(sprintf(\"%s: %s\\n\", names(desc), desc), sep = \"\")\n",
+    "output": "output/add_metadata-r.txt"
+  },
+  "translation": {
+    "description": "Record how a package was obtained by merging fields into its DESCRIPTION.",
+    "usage": "add_metadata(pkg_path, meta)",
+    "arguments": [
+      {
+        "name": "pkg_path",
+        "text": "Directory of a source package."
+      },
+      {
+        "name": "meta",
+        "text": "Dict of fields. A value overwrites the same name. None drops the field. A nested dict updates that field element by element."
+      }
+    ],
+    "details": "DESCRIPTION is read as DCF and written back with every field kept white. A newline that is not followed by space or tab gains a space, and a blank line becomes a line containing a dot. If Meta/package.rds exists, its DESCRIPTION vector is updated the same way and written as an RDS file that readRDS accepts.",
+    "value": "None. The result is the updated file.",
+    "example": "import os\nimport subprocess\nimport tempfile\nfrom remotes.add_metadata import add_metadata\npkg = tempfile.mkdtemp()\nos.makedirs(os.path.join(pkg, \"Meta\"))\nrds = os.path.join(pkg, \"Meta\", \"package.rds\")\nsubprocess.check_call([\"Rscript\", \"--vanilla\", \"-e\", \"saveRDS(structure(list(DESCRIPTION = c(Package = 'foo', Version = '1.0.0')), class = 'packageDescription2'), commandArgs(TRUE)[[1]])\", rds])\nadd_metadata(pkg, {\"RemoteType\": \"github\", \"RemoteRepo\": \"foo\"})\ntext = subprocess.check_output([\"Rscript\", \"--vanilla\", \"-e\", \"d <- readRDS(commandArgs(TRUE)[[1]])$DESCRIPTION; cat(sprintf('%s: %s\\\\n', names(d), d), sep = '')\", rds], text=True)\nprint(\"readRDS()$DESCRIPTION is Package foo, Version 1.0.0, RemoteType github, RemoteRepo foo.\")\nprint(text, end=\"\")\n",
+    "output": "output/add_metadata-python.txt"
+  }
+}

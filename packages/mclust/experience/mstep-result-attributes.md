@@ -1,0 +1,1 @@
+`mstepVEI`, `mstepVII`, and `mstepVVI` return `info` and `returnCode` as attributes of the result, set by `structure()`, not as list elements. `m$returnCode` and `m$info` are `NULL` in R. The R proof reads them with `attr(m, "returnCode")` and `attr(m, "info")`. `mstepVII` and `mstepVVI` have no `info`, so the proof leaves it out.

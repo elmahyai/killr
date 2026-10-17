@@ -1,0 +1,32 @@
+{
+  "name": "without_progress",
+  "title": "Evaluate an expression without progress",
+  "origin": {
+    "description": "Evaluate an expression while progression conditions are muffled.",
+    "usage": "without_progress(expr)",
+    "arguments": [
+      {
+        "name": "expr",
+        "text": "An R expression. Progress updates signaled inside it are muffled."
+      }
+    ],
+    "details": "The call allows a progressor in the global environment for the duration, then muffles progression conditions. A recording handler outside the call sees nothing. The value of the expression is returned.",
+    "value": "The value of expr.",
+    "example": "seen <- 0L\nhandler <- make_progression_handler(\"rec\", reporter = list(\n  initiate = function(...) { seen <<- seen + 1L },\n  update = function(...) { seen <<- seen + 1L }\n), enable = TRUE, target = \"file\", interval = 0)\ntotal <- withCallingHandlers({\n  without_progress({\n    p <- progressor(along = 1:5)\n    s <- 0\n    for (x in 1:5) {\n      s <- s + x\n      p(message = as.character(x))\n    }\n    s\n  })\n}, progression = handler)\ncat(total, \"\\n\", sep = \"\")\ncat(\"seen \", seen, \"\\n\", sep = \"\")\n",
+    "output": "output/without_progress-r.txt"
+  },
+  "translation": {
+    "description": "Call a zero-argument function while progression conditions are muffled.",
+    "usage": "without_progress(expr)",
+    "arguments": [
+      {
+        "name": "expr",
+        "text": "A zero-argument callable. R delays the expression; Python would evaluate it before the call, so pass a function."
+      }
+    ],
+    "details": "The call allows a progressor in the module frame for the duration, then muffles progression conditions with the muffleProgression restart. A recording handler outside the call sees nothing. The callable's return value is returned.",
+    "value": "The value returned by expr.",
+    "example": "from progressr.condition import with_calling_handlers\nfrom progressr.evaluate import without_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\nseen = []\nhandler = make_progression_handler(\n    \"rec\",\n    reporter={\n        \"initiate\": lambda **kwargs: seen.append(\"seen\"),\n        \"update\": lambda **kwargs: seen.append(\"seen\"),\n    },\n    enable=True,\n    target=\"file\",\n    interval=0,\n)\n\ndef body():\n    progress = progressor(along=range(1, 6))\n    total = 0\n    for value in range(1, 6):\n        total += value\n        progress(message=str(value))\n    return total\n\ndef wrapped():\n    return without_progress(body)\n\nprint(with_calling_handlers(wrapped, progression=handler))\nprint(\"seen\", len(seen))\n",
+    "output": "output/without_progress-python.txt"
+  }
+}

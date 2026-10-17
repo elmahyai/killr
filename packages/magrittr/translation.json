@@ -1,0 +1,1024 @@
+{
+  "name": "magrittr",
+  "cran_version": "2.0.5",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 42 exports are done. Indexing is 1-based, and the pipes return the value Python can assign. There is no compiled code in the Python port.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "%!>%",
+      "translated": true,
+      "python": "magrittr.eager",
+      "loads": [],
+      "uses": [],
+      "done": "Pipes a value and evaluates each step immediately, so side effects run forward.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:10 %!>% sum, 10 %!>% fsub(3), 10 %!>% fsub(3, .); messages foo, bar, baz",
+        "r_ms": 0.032783,
+        "translated_ms": 0.010655,
+        "speedup": 3.077,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"1:10 %!>% sum returns 55.\",\n  file.path(root, \"docs\", \"output\", \"%!>%-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\nfsub <- function(a, b) a - b\none <- function() c(1:10 %!>% sum, 10 %!>% fsub(3), 10 %!>% fsub(3, .))\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %!>% f() %!>% g() %!>% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import DOT, eager\n\n\ndef fsub(a, b):\n    return a - b\n\n\ndef one():\n    return [\n        eager(list(range(1, 11)), sum),\n        eager(10, (fsub, (3,), {})),\n        eager(10, (fsub, (3, DOT), {})),\n    ]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"1:10 %!>% sum returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/%!>%-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    eager(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%<>%",
+      "translated": true,
+      "python": "magrittr.compound",
+      "loads": [],
+      "uses": [],
+      "done": "Pipes a value and writes it back when given a dict and a name.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x <- 1:10; x %<>% sum returns the result and the stored value; messages baz, bar, foo",
+        "r_ms": 0.015259,
+        "translated_ms": 0.003805,
+        "speedup": 4.011,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"x <- 1:10; x %<>% sum returns 55.\",\n  file.path(root, \"docs\", \"output\", \"%<>%-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  x <- 1:10\n  got <- x %<>% sum\n  c(got, x)\n}\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(type = \"message\", {\n  z <- NULL\n  invisible(z %<>% f() %>% g() %>% h())\n})\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import compound\n\n\ndef one():\n    namespace = {\"x\": list(range(1, 11))}\n    got = compound(namespace, \"x\", sum)\n    return [got, namespace[\"x\"]]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"x <- 1:10; x %<>% sum returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/%<>%-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    compound({\"z\": None}, \"z\", foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%>%",
+      "translated": true,
+      "python": "magrittr.pipe",
+      "loads": [],
+      "uses": [],
+      "done": "Pipes a value through functions. A dot marks the argument, and side effects run from the last step backward.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:10 %>% sum, 10 %>% fsub(3), 10 %>% fsub(3, .); messages baz, bar, foo",
+        "r_ms": 0.025511,
+        "translated_ms": 0.014175,
+        "speedup": 1.8,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"1:10 %>% sum returns 55.\",\n  file.path(root, \"docs\", \"output\", \"%>%-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\nfsub <- function(a, b) a - b\none <- function() c(1:10 %>% sum, 10 %>% fsub(3), 10 %>% fsub(3, .))\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %>% f() %>% g() %>% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import DOT, pipe\n\n\ndef fsub(a, b):\n    return a - b\n\n\ndef one():\n    return [\n        pipe(list(range(1, 11)), sum),\n        pipe(10, (fsub, (3,), {})),\n        pipe(10, (fsub, (3, DOT), {})),\n    ]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"1:10 %>% sum returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/%>%-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    pipe(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%$%",
+      "translated": true,
+      "python": "magrittr.exposition",
+      "loads": [],
+      "uses": [],
+      "done": "Calls a function with the mapping entries that match its parameter names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "data.frame(z = 1:3) %$% sum(z)",
+        "r_ms": 0.260353,
+        "translated_ms": 0.029773,
+        "speedup": 8.744,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"data.frame(z = 1:3) %$% sum(z) returns 6.\",\n  file.path(root, \"docs\", \"output\", \"%$%-r.txt\")\n)\n\none <- function() data.frame(z = 1:3) %$% sum(z)\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%.17g],\\\"median_ms\\\":%.17g}\\n\",\n  as.numeric(value),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom magrittr.pipe import exposition\n\n\ndef one():\n    return exposition({\"z\": [1, 2, 3]}, lambda z: sum(z))\n\n\nsentence = \"data.frame(z = 1:3) %$% sum(z) returns 6.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/%$%-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": [value], \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%T>%",
+      "translated": true,
+      "python": "magrittr.tee",
+      "loads": [],
+      "uses": [],
+      "done": "Runs the steps for their effect and returns the original value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "1:10 %T>% sum returns 1 through 10; messages baz, bar, foo",
+        "r_ms": 0.015378,
+        "translated_ms": 0.003306,
+        "speedup": 4.652,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"1:10 %T>% sum returns 1:10.\",\n  file.path(root, \"docs\", \"output\", \"%T>%-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\none <- function() as.numeric(1:10 %T>% sum)\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %T>% f() %T>% g() %T>% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import tee\n\n\ndef one():\n    return list(tee(list(range(1, 11)), sum))\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"1:10 %T>% sum returns 1:10.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/%T>%-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    tee(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "add",
+      "translated": true,
+      "python": "magrittr.add",
+      "loads": [],
+      "uses": [],
+      "done": "Adds the operands and keeps names from the longer vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "add(c(a=1, b=2, c=3, d=4), c(10, 20))",
+        "r_ms": 0.007867813110351562,
+        "translated_ms": 0.012910999430459924,
+        "speedup": 0.6093883864474224,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  add(c(a = 1, b = 2, c = 3, d = 4), c(10, 20))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"add(2, 3) returns 5.\", file.path(out_dir, \"add-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Vector, add, describe\n\n\ndef one():\n    return add(Vector([1, 2, 3, 4], [\"a\", \"b\", \"c\", \"d\"]), [10, 20])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/add-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('add(2, 3) returns 5.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "and",
+      "translated": true,
+      "python": "magrittr.and_",
+      "loads": [],
+      "uses": [],
+      "done": "Combines logical values elementwise, so false wins over a missing value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "and(c(TRUE, TRUE, FALSE, FALSE), c(TRUE, FALSE, TRUE, FALSE))",
+        "r_ms": 0.006794929504394531,
+        "translated_ms": 0.016337000033672666,
+        "speedup": 0.4159227208416052,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  and(c(TRUE, TRUE, FALSE, FALSE), c(TRUE, FALSE, TRUE, FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"and(c(TRUE, FALSE), c(TRUE, TRUE)) returns TRUE, FALSE.\", file.path(out_dir, \"and-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import and_, describe\n\n\ndef one():\n    return and_([True, True, False, False], [True, False, True, False])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/and-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('and(c(TRUE, FALSE), c(TRUE, TRUE)) returns TRUE, FALSE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "debug_fseq",
+      "translated": true,
+      "python": "magrittr.debug_fseq",
+      "loads": [],
+      "uses": [],
+      "done": "Marks the selected functions and returns None. An invalid index errors.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "second of three functions is marked",
+        "r_ms": 0.04649162292480469,
+        "translated_ms": 0.00648949981041369,
+        "speedup": 7.164130408047728,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\ncmd <- commandArgs(trailingOnly = FALSE)\nfile_arg <- sub(\"^--file=\", \"\", cmd[grepl(\"^--file=\", cmd)])\nroot <- dirname(dirname(normalizePath(file_arg)))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nf <- . %>% sqrt %>% log %>% exp\none <- function() debug_fseq(f, 2)\ninvisible(one())\nvalue <- as.numeric(\n  isdebugged(functions(f)[[2]]) &&\n    !isdebugged(functions(f)[[1]]) &&\n    !isdebugged(functions(f)[[3]])\n)\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%.17g,\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\nwriteLines(\"debug_fseq(fseq, 2) returns NULL.\", file.path(out_dir, \"debug_fseq-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr._fseq import FSeq\nfrom magrittr.fseq import _is_debugged, debug_fseq\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\n\ndef first(value):\n    return value\n\n\ndef second(value):\n    return value\n\n\ndef third(value):\n    return value\n\n\nfseq = FSeq([first, second, third])\n\n\ndef one():\n    return debug_fseq(fseq, 2)\n\n\none()\nvalue = float(\n    _is_debugged(second) and not _is_debugged(first) and not _is_debugged(third)\n)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n(out / \"debug_fseq-python.txt\").write_text(\"debug_fseq(fseq, 2) returns None.\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "debug_pipe",
+      "translated": true,
+      "python": "magrittr.debug_pipe",
+      "loads": [],
+      "uses": [],
+      "done": "Prints the batch browser lines and returns the value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "debug_pipe(5)",
+        "r_ms": 0.052928924560546875,
+        "translated_ms": 0.035259999549452914,
+        "speedup": 1.501103948861738,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\ncmd <- commandArgs(trailingOnly = FALSE)\nfile_arg <- sub(\"^--file=\", \"\", cmd[grepl(\"^--file=\", cmd)])\nroot <- dirname(dirname(normalizePath(file_arg)))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\n{\n  suppressPackageStartupMessages(library(magrittr))\n  one <- function() debug_pipe(5)\n  value <- one()\n  elapsed <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- as.numeric(Sys.time())\n    one()\n    elapsed[[i]] <- as.numeric(Sys.time()) - t0\n  }\n  cat(sprintf('{\"value\":%.17g,\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\n  writeLines(\n    c(\n      \"Called from: debug_pipe(5)\",\n      \"debug: x\",\n      \"debug_pipe(5) returns 5.\"\n    ),\n    file.path(out_dir, \"debug_pipe-r.txt\")\n  )\n}\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\nfrom contextlib import redirect_stdout\nfrom pathlib import Path\n\nfrom magrittr.fseq import debug_pipe\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    return debug_pipe(5)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n\ncaptured = io.StringIO()\nwith redirect_stdout(captured):\n    result = debug_pipe(5)\n(out / \"debug_pipe-python.txt\").write_text(\n    captured.getvalue() + f\"debug_pipe(5) returns {result}.\\n\"\n)\n"
+        }
+      }
+    },
+    {
+      "name": "divide_by",
+      "translated": true,
+      "python": "magrittr.divide_by",
+      "loads": [],
+      "uses": [],
+      "done": "Divides elementwise and returns floating-point quotients.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "divide_by(c(1, 2, 3), 2)",
+        "r_ms": 0.006556510925292969,
+        "translated_ms": 0.014403500244952738,
+        "speedup": 0.4552026114340155,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  divide_by(c(1, 2, 3), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"divide_by(3, 2) returns 1.5.\", file.path(out_dir, \"divide_by-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, divide_by\n\n\ndef one():\n    return divide_by([1, 2, 3], 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/divide_by-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('divide_by(3, 2) returns 1.5.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "divide_by_int",
+      "translated": true,
+      "python": "magrittr.divide_by_int",
+      "loads": [],
+      "uses": [],
+      "done": "Floors the quotient toward negative infinity, so -7 divided by 2 is -4.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "divide_by_int(c(-7, 7, -8, 8), c(2, -3))",
+        "r_ms": 0.006198883056640625,
+        "translated_ms": 0.013342999864107696,
+        "speedup": 0.4645794139079211,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  divide_by_int(c(-7, 7, -8, 8), c(2, -3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"divide_by_int(-7, 2) returns -4.\", file.path(out_dir, \"divide_by_int-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, divide_by_int\n\n\ndef one():\n    return divide_by_int([-7, 7, -8, 8], [2, -3])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/divide_by_int-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('divide_by_int(-7, 2) returns -4.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "equals",
+      "translated": true,
+      "python": "magrittr.equals",
+      "loads": [],
+      "uses": [],
+      "done": "Compares elementwise, and a missing value compares as missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "equals(c(1, 2, 3), c(1, 0, 3))",
+        "r_ms": 0.0073909759521484375,
+        "translated_ms": 0.013980999938212335,
+        "speedup": 0.5286443018962974,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  equals(c(1, 2, 3), c(1, 0, 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"equals(c(1, 2), c(1, 0)) returns TRUE, FALSE.\", file.path(out_dir, \"equals-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, equals\n\n\ndef one():\n    return equals([1, 2, 3], [1, 0, 3])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/equals-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('equals(c(1, 2), c(1, 0)) returns TRUE, FALSE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "extract",
+      "translated": true,
+      "python": "magrittr.extract",
+      "loads": [],
+      "uses": [],
+      "done": "Subsets with one-based indexes and keeps the selected names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "extract(c(a=10, b=20, c=30, d=40), c(2, 4))",
+        "r_ms": 0.011205673217773438,
+        "translated_ms": 0.025840499802143313,
+        "speedup": 0.4336476965837942,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  extract(c(a = 10, b = 20, c = 30, d = 40), c(2, 4))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"extract(c(10, 20, 30), 2) returns 20.\", file.path(out_dir, \"extract-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Vector, describe, extract\n\n\ndef one():\n    return extract(Vector([10, 20, 30, 40], [\"a\", \"b\", \"c\", \"d\"]), [2, 4])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/extract-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('extract(c(10, 20, 30), 2) returns 20.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "extract2",
+      "translated": true,
+      "python": "magrittr.extract2",
+      "loads": [],
+      "uses": [],
+      "done": "Returns one element with a one-based index, unwrapped.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "extract2(list(a=1, b=c(2, 3), c=4), 2)",
+        "r_ms": 0.014066696166992188,
+        "translated_ms": 0.003965000360039994,
+        "speedup": 3.5477162395138597,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  extract2(list(a = 1, b = c(2, 3), c = 4), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"extract2(list(a = 1, b = 2), 2) returns 2.\", file.path(out_dir, \"extract2-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import RList, describe, extract2\n\n\ndef one():\n    return extract2(RList([1, [2, 3], 4], [\"a\", \"b\", \"c\"]), 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/extract2-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('extract2(list(a = 1, b = 2), 2) returns 2.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "freduce",
+      "translated": true,
+      "python": "magrittr.freduce",
+      "loads": [],
+      "uses": [],
+      "done": "Applies each function in turn. An empty list raises R's subscript error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sqrt then log of 16",
+        "r_ms": 0.010609626770019531,
+        "translated_ms": 0.0011120000635855831,
+        "speedup": 9.541030722434828,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\ncmd <- commandArgs(trailingOnly = FALSE)\nfile_arg <- sub(\"^--file=\", \"\", cmd[grepl(\"^--file=\", cmd)])\nroot <- dirname(dirname(normalizePath(file_arg)))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\none <- function() freduce(16, list(sqrt, log))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%.17g,\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\nwriteLines(\"freduce(16, list(sqrt)) returns 4.\", file.path(out_dir, \"freduce-r.txt\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.fseq import freduce\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\n\ndef one():\n    return freduce(16, [math.sqrt, math.log])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n(out / \"freduce-python.txt\").write_text(\"freduce(16, [math.sqrt]) returns 4.\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "functions",
+      "translated": true,
+      "python": "magrittr.functions",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the function list, or rejects an object that is not a functional sequence.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "extracted sqrt then log of 16",
+        "r_ms": 0.010967254638671875,
+        "translated_ms": 0.0007465000635420438,
+        "speedup": 14.691565579557631,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\ncmd <- commandArgs(trailingOnly = FALSE)\nfile_arg <- sub(\"^--file=\", \"\", cmd[grepl(\"^--file=\", cmd)])\nroot <- dirname(dirname(normalizePath(file_arg)))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nf <- . %>% sqrt %>% log\none <- function() functions(f)\nfns <- one()\nvalue <- fns[[2]](fns[[1]](16))\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%.17g,\"median_ms\":%.17g}\\n', value, median(elapsed) * 1000))\nwriteLines(\"functions(fseq) returns 2 functions.\", file.path(out_dir, \"functions-r.txt\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr._fseq import FSeq\nfrom magrittr.fseq import functions\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\nfseq = FSeq([math.sqrt, math.log])\n\n\ndef one():\n    return functions(fseq)\n\n\nfns = one()\nvalue = fns[1](fns[0](16))\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n(out / \"functions-python.txt\").write_text(\"functions(fseq) returns 2 functions.\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "inset",
+      "translated": true,
+      "python": "magrittr.inset",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces one-based positions and returns the vector with its names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "inset(c(a=1, b=2, c=3, d=4), c(2, 4), c(20, 40))",
+        "r_ms": 0.009179115295410156,
+        "translated_ms": 0.013884000054531498,
+        "speedup": 0.6611290160874245,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  inset(c(a = 1, b = 2, c = 3, d = 4), c(2, 4), c(20, 40))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"inset(c(1, 2, 3), 2, 9) returns 1, 9, 3.\", file.path(out_dir, \"inset-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Vector, describe, inset\n\n\ndef one():\n    return inset(Vector([1, 2, 3, 4], [\"a\", \"b\", \"c\", \"d\"]), [2, 4], [20, 40])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/inset-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('inset(c(1, 2, 3), 2, 9) returns 1, 9, 3.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "inset2",
+      "translated": true,
+      "python": "magrittr.inset2",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces one list element at a one-based index and keeps the names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "inset2(list(a=1, b=2, c=3), 2, 99)",
+        "r_ms": 0.0059604644775390625,
+        "translated_ms": 0.005216499630478211,
+        "speedup": 1.1426176363004268,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  inset2(list(a = 1, b = 2, c = 3), 2, 99)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"inset2(list(a = 1, b = 2), 2, 9) returns a = 1, b = 9.\", file.path(out_dir, \"inset2-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import RList, describe, inset2\n\n\ndef one():\n    return inset2(RList([1, 2, 3], [\"a\", \"b\", \"c\"]), 2, 99)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/inset2-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('inset2(list(a = 1, b = 2), 2, 9) returns a = 1, b = 9.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "is_greater_than",
+      "translated": true,
+      "python": "magrittr.is_greater_than",
+      "loads": [],
+      "uses": [],
+      "done": "Tests elementwise whether each left value is greater.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is_greater_than(c(1, 2, 3), 2)",
+        "r_ms": 0.006198883056640625,
+        "translated_ms": 0.012299999980314169,
+        "speedup": 0.503974233053803,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  is_greater_than(c(1, 2, 3), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"is_greater_than(3, 2) returns TRUE.\", file.path(out_dir, \"is_greater_than-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, is_greater_than\n\n\ndef one():\n    return is_greater_than([1, 2, 3], 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/is_greater_than-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('is_greater_than(3, 2) returns TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "is_in",
+      "translated": true,
+      "python": "magrittr.is_in",
+      "loads": [],
+      "uses": [],
+      "done": "Tests membership once for each value on the left.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is_in(c(1, 3, 5, 3), c(3, 5, 7))",
+        "r_ms": 0.012874603271484375,
+        "translated_ms": 0.009358500392409042,
+        "speedup": 1.3757122115341631,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  is_in(c(1, 3, 5, 3), c(3, 5, 7))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"is_in(c(1, 3), c(3, 5)) returns FALSE, TRUE.\", file.path(out_dir, \"is_in-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, is_in\n\n\ndef one():\n    return is_in([1, 3, 5, 3], [3, 5, 7])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/is_in-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('is_in(c(1, 3), c(3, 5)) returns FALSE, TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "is_less_than",
+      "translated": true,
+      "python": "magrittr.is_less_than",
+      "loads": [],
+      "uses": [],
+      "done": "Tests elementwise whether each left value is smaller.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is_less_than(c(1, 2, 3), 2)",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.008688999969308497,
+        "speedup": 0.6585390630278575,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  is_less_than(c(1, 2, 3), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"is_less_than(2, 3) returns TRUE.\", file.path(out_dir, \"is_less_than-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, is_less_than\n\n\ndef one():\n    return is_less_than([1, 2, 3], 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/is_less_than-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('is_less_than(2, 3) returns TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "is_weakly_greater_than",
+      "translated": true,
+      "python": "magrittr.is_weakly_greater_than",
+      "loads": [],
+      "uses": [],
+      "done": "Tests elementwise whether each left value is greater or equal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is_weakly_greater_than(c(1, 2, 3), 2)",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.008670499937579734,
+        "speedup": 0.6599441715738874,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  is_weakly_greater_than(c(1, 2, 3), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"is_weakly_greater_than(2, 2) returns TRUE.\", file.path(out_dir, \"is_weakly_greater_than-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, is_weakly_greater_than\n\n\ndef one():\n    return is_weakly_greater_than([1, 2, 3], 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/is_weakly_greater_than-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('is_weakly_greater_than(2, 2) returns TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "is_weakly_less_than",
+      "translated": true,
+      "python": "magrittr.is_weakly_less_than",
+      "loads": [],
+      "uses": [],
+      "done": "Tests elementwise whether each left value is smaller or equal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "is_weakly_less_than(c(1, 2, 3), 2)",
+        "r_ms": 0.0059604644775390625,
+        "translated_ms": 0.009324499842477962,
+        "speedup": 0.6392261867372271,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  is_weakly_less_than(c(1, 2, 3), 2)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"is_weakly_less_than(2, 2) returns TRUE.\", file.path(out_dir, \"is_weakly_less_than-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, is_weakly_less_than\n\n\ndef one():\n    return is_weakly_less_than([1, 2, 3], 2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/is_weakly_less_than-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('is_weakly_less_than(2, 2) returns TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "mod",
+      "translated": true,
+      "python": "magrittr.mod",
+      "loads": [],
+      "uses": [],
+      "done": "Takes the remainder with the sign of the divisor, as R does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mod(c(-7, 7, 8, -8), c(2, -3))",
+        "r_ms": 0.007033348083496094,
+        "translated_ms": 0.007686000117246294,
+        "speedup": 0.9150856071045664,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  mod(c(-7, 7, 8, -8), c(2, -3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"mod(-7, 2) returns 1.\", file.path(out_dir, \"mod-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, mod\n\n\ndef one():\n    return mod([-7, 7, 8, -8], [2, -3])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/mod-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('mod(-7, 2) returns 1.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "multiply_by",
+      "translated": true,
+      "python": "magrittr.multiply_by",
+      "loads": [],
+      "uses": [],
+      "done": "Multiplies elementwise and recycles the shorter operand.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "multiply_by(c(2, 3, 4, 5), c(10, 0.5))",
+        "r_ms": 0.009775161743164062,
+        "translated_ms": 0.008949500170274405,
+        "speedup": 1.0922578420225162,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  multiply_by(c(2, 3, 4, 5), c(10, 0.5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"multiply_by(4, 3) returns 12.\", file.path(out_dir, \"multiply_by-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, multiply_by\n\n\ndef one():\n    return multiply_by([2, 3, 4, 5], [10, 0.5])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/multiply_by-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('multiply_by(4, 3) returns 12.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "multiply_by_matrix",
+      "translated": true,
+      "python": "magrittr.multiply_by_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "Multiplies matrices filled down columns, matching R storage.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "matrix(1:6, 2, 3) %*% matrix(1:6, 3, 2)",
+        "r_ms": 0.019788742065429688,
+        "translated_ms": 0.021334499706426868,
+        "speedup": 0.9275465718780586,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  multiply_by_matrix(matrix(1:6, nrow = 2, ncol = 3), matrix(1:6, nrow = 3, ncol = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"multiply_by_matrix(matrix(1:6, 2, 3), matrix(1:6, 3, 2)) returns 22, 49, 28, 64.\", file.path(out_dir, \"multiply_by_matrix-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Matrix, describe, multiply_by_matrix\n\n\ndef one():\n    return multiply_by_matrix(Matrix([1, 2, 3, 4, 5, 6], nrow=2), Matrix([1, 2, 3, 4, 5, 6], nrow=3))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/multiply_by_matrix-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('multiply_by_matrix(matrix(1:6, 2, 3), matrix(1:6, 3, 2)) returns 22, 49, 28, 64.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "n'est pas",
+      "translated": true,
+      "python": "magrittr.nest_pas",
+      "loads": [],
+      "uses": [],
+      "done": "Negates each value, the same function as not_.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "n'est pas(c(TRUE, FALSE, TRUE))",
+        "r_ms": 0.010251998901367188,
+        "translated_ms": 0.004030499439977575,
+        "speedup": 2.54360509262947,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  `n'est pas`(c(TRUE, FALSE, TRUE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"n'est pas(c(FALSE, TRUE)) returns TRUE, FALSE.\", file.path(out_dir, \"n'est pas-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, nest_pas\n\n\ndef one():\n    return nest_pas([True, False, True])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path(\"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/n'est pas-python.txt\")\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text(\"n'est pas(c(FALSE, TRUE)) returns TRUE, FALSE.\" + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "not",
+      "translated": true,
+      "python": "magrittr.not_",
+      "loads": [],
+      "uses": [],
+      "done": "Negates each value, treating zero as false and any other number as true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "not(c(0, 2, 1))",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.00797949996922398,
+        "speedup": 0.7170932916231315,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  not(c(0, 2, 1))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"not(c(TRUE, FALSE)) returns FALSE, TRUE.\", file.path(out_dir, \"not-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, not_\n\n\ndef one():\n    return not_([0, 2, 1])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/not-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('not(c(TRUE, FALSE)) returns FALSE, TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "or",
+      "translated": true,
+      "python": "magrittr.or_",
+      "loads": [],
+      "uses": [],
+      "done": "Combines logical values elementwise, so true wins over a missing value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "or(c(TRUE, TRUE, FALSE, FALSE), c(TRUE, FALSE, TRUE, FALSE))",
+        "r_ms": 0.007867813110351562,
+        "translated_ms": 0.013766000392934075,
+        "speedup": 0.5715395093545121,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  or(c(TRUE, TRUE, FALSE, FALSE), c(TRUE, FALSE, TRUE, FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"or(c(FALSE, TRUE), c(FALSE, FALSE)) returns FALSE, TRUE.\", file.path(out_dir, \"or-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, or_\n\n\ndef one():\n    return or_([True, True, False, False], [True, False, True, False])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/or-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('or(c(FALSE, TRUE), c(FALSE, FALSE)) returns FALSE, TRUE.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "pipe_eager_lexical",
+      "translated": true,
+      "python": "magrittr.pipe_eager_lexical",
+      "loads": [],
+      "uses": [],
+      "done": "The same function as the eager pipe. Each step runs immediately.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "same three numbers as %!>%; messages foo, bar, baz",
+        "r_ms": 0.041127,
+        "translated_ms": 0.008969,
+        "speedup": 4.585,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"pipe_eager_lexical(1:10, sum) returns 55.\",\n  file.path(root, \"docs\", \"output\", \"pipe_eager_lexical-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\n`%E%` <- pipe_eager_lexical\nfsub <- function(a, b) a - b\none <- function() c(1:10 %E% sum, 10 %E% fsub(3), 10 %E% fsub(3, .))\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %E% f() %E% g() %E% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import DOT, pipe_eager_lexical\n\n\ndef fsub(a, b):\n    return a - b\n\n\ndef one():\n    return [\n        pipe_eager_lexical(list(range(1, 11)), sum),\n        pipe_eager_lexical(10, (fsub, (3,), {})),\n        pipe_eager_lexical(10, (fsub, (3, DOT), {})),\n    ]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"pipe_eager_lexical(1:10, sum) returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/pipe_eager_lexical-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    pipe_eager_lexical(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pipe_lazy_masking",
+      "translated": true,
+      "python": "magrittr.pipe_lazy_masking",
+      "loads": [],
+      "uses": [],
+      "done": "Lazy pipe with the same result as %>%. Side effects run from the last step backward.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "same three numbers as %>%; messages baz, bar, foo",
+        "r_ms": 0.035763,
+        "translated_ms": 0.017097,
+        "speedup": 2.092,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"pipe_lazy_masking(1:10, sum) returns 55.\",\n  file.path(root, \"docs\", \"output\", \"pipe_lazy_masking-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\n`%L%` <- pipe_lazy_masking\nfsub <- function(a, b) a - b\none <- function() c(1:10 %L% sum, 10 %L% fsub(3), 10 %L% fsub(3, .))\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %L% f() %L% g() %L% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import DOT, pipe_lazy_masking\n\n\ndef fsub(a, b):\n    return a - b\n\n\ndef one():\n    return [\n        pipe_lazy_masking(list(range(1, 11)), sum),\n        pipe_lazy_masking(10, (fsub, (3,), {})),\n        pipe_lazy_masking(10, (fsub, (3, DOT), {})),\n    ]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"pipe_lazy_masking(1:10, sum) returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/pipe_lazy_masking-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    pipe_lazy_masking(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pipe_nested",
+      "translated": true,
+      "python": "magrittr.pipe_nested",
+      "loads": [],
+      "uses": [],
+      "done": "Nested pipe. Pure functions match %>%, and two dots in one step are an error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "same three numbers as %>%; messages baz, bar, foo",
+        "r_ms": 0.031114,
+        "translated_ms": 0.019889,
+        "speedup": 1.564,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\nroot <- \"/home/ahmed/killr_projects/killr/packages/magrittr\"\ndir.create(file.path(root, \"docs\", \"output\"), recursive = TRUE, showWarnings = FALSE)\nwriteLines(\n  \"pipe_nested(1:10, sum) returns 55.\",\n  file.path(root, \"docs\", \"output\", \"pipe_nested-r.txt\")\n)\n\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\njson_str <- function(s) {\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub(\"\\\"\", \"\\\\\\\"\", s, fixed = TRUE)\n  paste0(\"\\\"\", s, \"\\\"\")\n}\njson_msgs <- function(lines) {\n  if (length(lines) == 0) return(\"[]\")\n  paste0(\"[\", paste(vapply(lines, json_str, \"\"), collapse = \",\"), \"]\")\n}\n\n`%N%` <- pipe_nested\nfsub <- function(a, b) a - b\none <- function() c(1:10 %N% sum, 10 %N% fsub(3), 10 %N% fsub(3, .))\n\nf <- function(x) { message(\"foo\"); x }\ng <- function(x) { message(\"bar\"); x }\nh <- function(x) { message(\"baz\"); invisible(x) }\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmessages <- capture.output(\n  type = \"message\",\n  invisible(NULL %N% f() %N% g() %N% h())\n)\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"messages\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_num(value),\n  json_msgs(messages),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom magrittr.pipe import DOT, pipe_nested\n\n\ndef fsub(a, b):\n    return a - b\n\n\ndef one():\n    return [\n        pipe_nested(list(range(1, 11)), sum),\n        pipe_nested(10, (fsub, (3,), {})),\n        pipe_nested(10, (fsub, (3, DOT), {})),\n    ]\n\n\ndef foo(value):\n    print(\"foo\")\n    return value\n\n\ndef bar(value):\n    print(\"bar\")\n    return value\n\n\ndef baz(value):\n    print(\"baz\")\n    return value\n\n\nsentence = \"pipe_nested(1:10, sum) returns 55.\\n\"\npath = \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/pipe_nested-python.txt\"\nwith open(path, \"w\", encoding=\"utf-8\") as handle:\n    handle.write(sentence)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nbuffer = io.StringIO()\nwith contextlib.redirect_stdout(buffer):\n    pipe_nested(None, foo, bar, baz)\nmessages = buffer.getvalue().splitlines()\nprint(json.dumps({\"value\": value, \"messages\": messages, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "raise_to_power",
+      "translated": true,
+      "python": "magrittr.raise_to_power",
+      "loads": [],
+      "uses": [],
+      "done": "Raises each left value to the matching right power.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "raise_to_power(c(2, 3, 4), c(3, 2, 0.5))",
+        "r_ms": 0.0064373016357421875,
+        "translated_ms": 0.008922500001062872,
+        "speedup": 0.7214683816167395,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  raise_to_power(c(2, 3, 4), c(3, 2, 0.5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"raise_to_power(2, 3) returns 8.\", file.path(out_dir, \"raise_to_power-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, raise_to_power\n\n\ndef one():\n    return raise_to_power([2, 3, 4], [3, 2, 0.5])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/raise_to_power-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('raise_to_power(2, 3) returns 8.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_attr",
+      "translated": true,
+      "python": "magrittr.set_attr",
+      "loads": [],
+      "uses": [],
+      "done": "Sets one attribute and leaves the values in order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_attr(c(1, 2, 3), 'color', 'red')",
+        "r_ms": 0.0059604644775390625,
+        "translated_ms": 0.002569499429228017,
+        "speedup": 2.319698696850783,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_attr(c(1, 2, 3), \"color\", \"red\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_attr(c(1, 2, 3), color, red) returns color red.\", file.path(out_dir, \"set_attr-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, set_attr\n\n\ndef one():\n    return set_attr([1, 2, 3], \"color\", \"red\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_attr-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_attr(c(1, 2, 3), color, red) returns color red.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_attributes",
+      "translated": true,
+      "python": "magrittr.set_attributes",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces every attribute, keeping names and values in the same order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_attributes(c(1, 2, 3), list(names=c('a','b','c'), color='red'))",
+        "r_ms": 0.00858306884765625,
+        "translated_ms": 0.0051564998102549,
+        "speedup": 1.6645145279724087,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_attributes(c(1, 2, 3), list(names = c(\"a\", \"b\", \"c\"), color = \"red\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_attributes(c(1, 2, 3), list(names = c(a, b, c), color = red)) returns a = 1, b = 2, c = 3 with color red.\", file.path(out_dir, \"set_attributes-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, set_attributes\n\n\ndef one():\n    return set_attributes([1, 2, 3], {\"names\": [\"a\", \"b\", \"c\"], \"color\": \"red\"})\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_attributes-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_attributes(c(1, 2, 3), list(names = c(a, b, c), color = red)) returns a = 1, b = 2, c = 3 with color red.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_class",
+      "translated": true,
+      "python": "magrittr.set_class",
+      "loads": [],
+      "uses": [],
+      "done": "Attaches a class without changing the values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_class(c(1, 2, 3), 'myclass')",
+        "r_ms": 0.005602836608886719,
+        "translated_ms": 0.002485499862814322,
+        "speedup": 2.2542091804996716,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_class(c(1, 2, 3), \"myclass\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_class(c(1, 2, 3), myclass) returns class myclass.\", file.path(out_dir, \"set_class-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, set_class\n\n\ndef one():\n    return set_class([1, 2, 3], \"myclass\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_class-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_class(c(1, 2, 3), myclass) returns class myclass.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_colnames",
+      "translated": true,
+      "python": "magrittr.set_colnames",
+      "loads": [],
+      "uses": [],
+      "done": "Sets one column name per column, leaving the cells in column-major order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_colnames(matrix(1:6, 2, 3), c('p', 'q', 'r'))",
+        "r_ms": 0.030755996704101562,
+        "translated_ms": 0.009457000032853102,
+        "speedup": 3.2521937820933604,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_colnames(matrix(1:6, 2, 3), c(\"p\", \"q\", \"r\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_colnames(matrix(1:4, 2, 2), c(p, q)) returns columns p and q.\", file.path(out_dir, \"set_colnames-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Matrix, describe, set_colnames\n\n\ndef one():\n    return set_colnames(Matrix(list(range(1, 7)), nrow=2), [\"p\", \"q\", \"r\"])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_colnames-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_colnames(matrix(1:4, 2, 2), c(p, q)) returns columns p and q.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_names",
+      "translated": true,
+      "python": "magrittr.set_names",
+      "loads": [],
+      "uses": [],
+      "done": "Sets names in order and pads a short name vector with missing names.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_names(c(1, 2, 3), c('a', 'b', 'c'))",
+        "r_ms": 0.012278556823730469,
+        "translated_ms": 0.003718000698427204,
+        "speedup": 3.302462215492474,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_names(c(1, 2, 3), c(\"a\", \"b\", \"c\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_names(c(1, 2), c(a, b)) returns a = 1, b = 2.\", file.path(out_dir, \"set_names-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import describe, set_names\n\n\ndef one():\n    return set_names([1, 2, 3], [\"a\", \"b\", \"c\"])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_names-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_names(c(1, 2), c(a, b)) returns a = 1, b = 2.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "set_rownames",
+      "translated": true,
+      "python": "magrittr.set_rownames",
+      "loads": [],
+      "uses": [],
+      "done": "Sets one row name per row of a column-major matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set_rownames(matrix(1:6, 2, 3), c('u', 'v'))",
+        "r_ms": 0.018596649169921875,
+        "translated_ms": 0.009165000392385991,
+        "speedup": 2.0290942033533805,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  set_rownames(matrix(1:6, 2, 3), c(\"u\", \"v\"))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"set_rownames(matrix(1:4, 2, 2), c(u, v)) returns rows u and v.\", file.path(out_dir, \"set_rownames-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Matrix, describe, set_rownames\n\n\ndef one():\n    return set_rownames(Matrix(list(range(1, 7)), nrow=2), [\"u\", \"v\"])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/set_rownames-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('set_rownames(matrix(1:4, 2, 2), c(u, v)) returns rows u and v.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "subtract",
+      "translated": true,
+      "python": "magrittr.subtract",
+      "loads": [],
+      "uses": [],
+      "done": "Subtracts elementwise and keeps names from the left operand.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "subtract(c(a=5, b=1), c(2, 3))",
+        "r_ms": 0.007987022399902344,
+        "translated_ms": 0.009616999705031049,
+        "speedup": 0.8305108292479206,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  subtract(c(a = 5, b = 1), c(2, 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"subtract(5, 2) returns 3.\", file.path(out_dir, \"subtract-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import Vector, describe, subtract\n\n\ndef one():\n    return subtract(Vector([5, 1], [\"a\", \"b\"]), [2, 3])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/subtract-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('subtract(5, 2) returns 3.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    },
+    {
+      "name": "undebug_fseq",
+      "translated": true,
+      "python": "magrittr.undebug_fseq",
+      "loads": [],
+      "uses": [],
+      "done": "Clears debug marks and returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "clear the mark and return NULL",
+        "r_ms": 0.024557113647460938,
+        "translated_ms": 0.0021705000108340755,
+        "speedup": 11.314035256799736,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\ncmd <- commandArgs(trailingOnly = FALSE)\nfile_arg <- sub(\"^--file=\", \"\", cmd[grepl(\"^--file=\", cmd)])\nroot <- dirname(dirname(normalizePath(file_arg)))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nf <- . %>% sqrt %>% log\ndebug_fseq(f, 1)\none <- function() undebug_fseq(f)\nvalue <- one()\nif (!is.null(value)) stop(\"expected NULL\")\nif (any(vapply(functions(f), isdebugged, logical(1)))) stop(\"still marked\")\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":null,\"median_ms\":%.17g}\\n', median(elapsed) * 1000))\nwriteLines(\"undebug_fseq(fseq) returns NULL.\", file.path(out_dir, \"undebug_fseq-r.txt\"))\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr._fseq import FSeq\nfrom magrittr.fseq import _is_debugged, debug_fseq, undebug_fseq\n\nout = Path(__file__).resolve().parents[1] / \"docs\" / \"output\"\nout.mkdir(parents=True, exist_ok=True)\n\n\ndef first(value):\n    return value\n\n\ndef second(value):\n    return value\n\n\nfseq = FSeq([first, second])\ndebug_fseq(fseq, 1)\n\n\ndef one():\n    return undebug_fseq(fseq)\n\n\nvalue = one()\nif value is not None:\n    raise RuntimeError(\"expected None\")\nif _is_debugged(first) or _is_debugged(second):\n    raise RuntimeError(\"still marked\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n(out / \"undebug_fseq-python.txt\").write_text(\"undebug_fseq(fseq) returns None.\\n\")\n"
+        }
+      }
+    },
+    {
+      "name": "use_series",
+      "translated": true,
+      "python": "magrittr.use_series",
+      "loads": [],
+      "uses": [],
+      "done": "Reads one element by name, accepting a unique prefix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "use_series(list(apple=1, banana=c(2, 3), pear=4), banana)",
+        "r_ms": 0.012516975402832031,
+        "translated_ms": 0.005860999863216421,
+        "speedup": 2.1356382349346994,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(magrittr))\n\njson_nums <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else sprintf(\"%.17g\", as.numeric(v))\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_logical <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    v <- x[[i]]\n    parts[[i]] <- if (is.na(v)) \"null\" else if (isTRUE(v)) \"true\" else \"false\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_chars <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    s <- x[[i]]\n    parts[[i]] <- if (is.na(s)) \"null\" else sprintf(\"\\\"%s\\\"\", s)\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_list <- function(x) {\n  parts <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (is.logical(el)) parts[[i]] <- json_logical(el)\n    else if (is.numeric(el) && length(el) == 1 && !is.na(el)) parts[[i]] <- sprintf(\"%.17g\", as.numeric(el))\n    else if (is.numeric(el)) parts[[i]] <- json_nums(el)\n    else if (is.character(el) && length(el) == 1) parts[[i]] <- sprintf(\"\\\"%s\\\"\", el)\n    else parts[[i]] <- \"null\"\n  }\n  paste0(\"[\", paste(parts, collapse = \",\"), \"]\")\n}\njson_obj <- function(extra) {\n  parts <- character(length(extra))\n  nms <- names(extra)\n  for (i in seq_along(extra)) {\n    el <- extra[[i]]\n    encoded <- if (is.character(el) && length(el) == 1) sprintf(\"\\\"%s\\\"\", el) else json_nums(el)\n    parts[[i]] <- sprintf(\"\\\"%s\\\":%s\", nms[[i]], encoded)\n  }\n  paste0(\"{\", paste(parts, collapse = \",\"), \"}\")\n}\nemit <- function(value, median_ms) {\n  names_json <- \"null\"\n  values_json <- \"null\"\n  cells_json <- \"null\"\n  rownames_json <- \"null\"\n  colnames_json <- \"null\"\n  class_json <- \"null\"\n  attr_json <- \"null\"\n  if (is.matrix(value)) {\n    rows <- character(nrow(value))\n    for (i in seq_len(nrow(value))) rows[[i]] <- json_nums(value[i, ])\n    cells_json <- paste0(\"[\", paste(rows, collapse = \",\"), \"]\")\n    if (!is.null(rownames(value))) rownames_json <- json_chars(rownames(value))\n    if (!is.null(colnames(value))) colnames_json <- json_chars(colnames(value))\n  } else if (is.list(value)) {\n    values_json <- json_list(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  } else {\n    values_json <- if (is.logical(value)) json_logical(value) else json_nums(value)\n    if (!is.null(names(value))) names_json <- json_chars(names(value))\n  }\n  cls <- attr(value, \"class\")\n  if (!is.null(cls)) class_json <- json_chars(cls)\n  extra <- attributes(value)\n  if (!is.null(extra)) {\n    drop <- c(\"names\", \"class\", \"dim\", \"dimnames\")\n    extra <- extra[setdiff(names(extra), drop)]\n    if (length(extra)) attr_json <- json_obj(extra)\n  }\n  cat(sprintf(\n    \"{\\\"names\\\":%s,\\\"values\\\":%s,\\\"cells\\\":%s,\\\"rownames\\\":%s,\\\"colnames\\\":%s,\\\"class\\\":%s,\\\"attr\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n    names_json, values_json, cells_json, rownames_json, colnames_json, class_json, attr_json, median_ms\n  ))\n}\n\none <- function() {\n  use_series(list(apple = 1, banana = c(2, 3), pear = 4), banana)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nout_dir <- \"/home/ahmed/killr_projects/killr/packages/magrittr/docs/output\"\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\nwriteLines(\"use_series(list(banana = c(2, 3)), banana) returns 2, 3.\", file.path(out_dir, \"use_series-r.txt\"))\nemit(value, median(elapsed) * 1000)\n",
+          "python": "import json\nimport statistics\nimport time\nfrom pathlib import Path\n\nfrom magrittr.aliases import RList, describe, use_series\n\n\ndef one():\n    return use_series(RList([1, [2, 3], 4], [\"apple\", \"banana\", \"pear\"]), \"banana\")\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nout = Path('/home/ahmed/killr_projects/killr/packages/magrittr/docs/output/use_series-python.txt')\nout.parent.mkdir(parents=True, exist_ok=True)\nout.write_text('use_series(list(banana = c(2, 3)), banana) returns 2, 3.' + \"\\n\")\npayload = describe(value)\npayload[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(payload))\n"
+        }
+      }
+    }
+  ]
+}

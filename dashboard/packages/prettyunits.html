@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prettyunits · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>prettyunits</h1>
+<p class="note">CRAN 1.2.0</p>
+<p>All 14 exports translated and matched. Shared helpers in _r.py and time.py follow R internals. Two R error cases are reproduced.</p>
+<p class="note">14 of 14 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#compute_bytes">compute_bytes</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#compute_num">compute_num</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_bytes">pretty_bytes</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_color">pretty_color</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_colour">pretty_colour</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_dt">pretty_dt</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_ms">pretty_ms</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_num">pretty_num</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_p_value">pretty_p_value</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_round">pretty_round</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_sec">pretty_sec</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#pretty_signif">pretty_signif</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#time_ago">time_ago</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+<tr><td><a href="#vague_dt">vague_dt</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>compute_bytes</td><td>a &lt;- compute_bytes(x)</td><td>1.48</td><td>0.22</td><td><button type="button" class="proof-toggle" data-name="compute_bytes"><span class='yes'>+573%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:14.9%'></span></div></td></tr>
+<tr><td>compute_num</td><td>a &lt;- compute_num(y)</td><td>1.33</td><td>0.14</td><td><button type="button" class="proof-toggle" data-name="compute_num"><span class='yes'>+850%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:10.5%'></span></div></td></tr>
+<tr><td>pretty_bytes</td><td>default = pretty_bytes(x),</td><td>4.1</td><td>0.78</td><td><button type="button" class="proof-toggle" data-name="pretty_bytes"><span class='yes'>+426%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:19.0%'></span></div></td></tr>
+<tr><td>pretty_color</td><td>r &lt;- try_val(pretty_color(col))</td><td>12.6</td><td>21</td><td><button type="button" class="proof-toggle" data-name="pretty_color"><span class='slower'>-40%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:59.9%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>pretty_colour</td><td>r &lt;- try_val(pretty_colour(col))</td><td>11.6</td><td>20.2</td><td><button type="button" class="proof-toggle" data-name="pretty_colour"><span class='slower'>-43%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:57.2%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>pretty_dt</td><td>default = pretty_dt(dt),</td><td>5.22</td><td>5.52</td><td><button type="button" class="proof-toggle" data-name="pretty_dt"><span class='slower'>-5%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:94.6%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>pretty_ms</td><td>default = pretty_ms(ms),</td><td>2.45</td><td>6.29</td><td><button type="button" class="proof-toggle" data-name="pretty_ms"><span class='slower'>-61%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:39.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>pretty_num</td><td>default = pretty_num(y),</td><td>5.61</td><td>0.57</td><td><button type="button" class="proof-toggle" data-name="pretty_num"><span class='yes'>+884%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:10.2%'></span></div></td></tr>
+<tr><td>pretty_p_value</td><td>default = pretty_p_value(x),</td><td>0.97</td><td>0.28</td><td><button type="button" class="proof-toggle" data-name="pretty_p_value"><span class='yes'>+246%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:28.9%'></span></div></td></tr>
+<tr><td>pretty_round</td><td>d3_sci5 = try_val(pretty_round(x, digits = 3, sci_range = 5)),</td><td>3.4</td><td>0.74</td><td><button type="button" class="proof-toggle" data-name="pretty_round"><span class='yes'>+359%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:21.8%'></span></div></td></tr>
+<tr><td>pretty_sec</td><td>default = pretty_sec(sec),</td><td>2.72</td><td>6.15</td><td><button type="button" class="proof-toggle" data-name="pretty_sec"><span class='slower'>-56%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:44.2%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>pretty_signif</td><td>default = pretty_signif(x),</td><td>5.4</td><td>0.73</td><td><button type="button" class="proof-toggle" data-name="pretty_signif"><span class='yes'>+640%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:13.5%'></span></div></td></tr>
+<tr><td>time_ago</td><td>default = time_ago(d),</td><td>4.46</td><td>0.29</td><td><button type="button" class="proof-toggle" data-name="time_ago"><span class='yes'>+1438%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:6.5%'></span></div></td></tr>
+<tr><td>vague_dt</td><td>try_val(vague_dt(as.difftime(s, units = &quot;secs&quot;), format = f))</td><td>9.02</td><td>0.73</td><td><button type="button" class="proof-toggle" data-name="vague_dt"><span class='yes'>+1136%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.1%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "compute_bytes", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.bytes.compute_bytes\nx \u003c- c(NA, NaN, -1, 0, 1, 999, 1000, 1e4, 999949, 999950, 1e6, -1e5,\n       1.5e9, 2.5e12, 1e18, 1e24, Inf, -Inf)\n\none \u003c- function() {\n  a \u003c- compute_bytes(x)\n  b \u003c- compute_bytes(x, smallest_unit = \"kB\")\n  list(\n    default = list(amount = a$amount, unit = a$unit, negative = a$negative),\n    kB = list(amount = b$amount, unit = b$unit, negative = b$negative)\n  )\n}\n\nrun_proof(\"compute_bytes\", one)\n", "python": "\"\"\"Proof: prettyunits.bytes.compute_bytes against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof\n\nfrom prettyunits.bytes import compute_bytes\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nX = [None, NAN, -1.0, 0.0, 1.0, 999.0, 1000.0, 1e4, 999949.0, 999950.0, 1e6, -1e5,\n     1.5e9, 2.5e12, 1e18, 1e24, INF, -INF]\n\n\ndef one():\n    a = compute_bytes(X)\n    b = compute_bytes(X, smallest_unit=\"kB\")\n    return {\n        \"default\": {\"amount\": a.amount, \"unit\": a.unit, \"negative\": a.negative},\n        \"kB\": {\"amount\": b.amount, \"unit\": b.unit, \"negative\": b.negative},\n    }\n\n\nrun_proof(\"compute_bytes\", one)\n"}, {"name": "compute_num", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.numbers.compute_num\ny \u003c- c(NA, NaN, -1, 0, 1e-25, 1.3333e-5, 999, 1000, 999950, 1e6, -2.5e9,\n       1e30, 1e-30, Inf, -Inf, 0.5, 1e-300, -1e-17)\n\none \u003c- function() {\n  a \u003c- compute_num(y)\n  b \u003c- compute_num(y, smallest_prefix = \"m\")\n  list(\n    default = list(amount = a$amount, prefix = a$prefix, negative = a$negative),\n    m = list(amount = b$amount, prefix = b$prefix, negative = b$negative)\n  )\n}\n\nrun_proof(\"compute_num\", one)\n", "python": "\"\"\"Proof: prettyunits.numbers.compute_num against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof\n\nfrom prettyunits.numbers import compute_num\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nY = [None, NAN, -1.0, 0.0, 1e-25, 1.3333e-5, 999.0, 1000.0, 999950.0, 1e6, -2.5e9,\n     1e30, 1e-30, INF, -INF, 0.5, 1e-300, -1e-17]\n\n\ndef one():\n    a = compute_num(Y)\n    b = compute_num(Y, smallest_prefix=\"m\")\n    return {\n        \"default\": {\"amount\": a.amount, \"prefix\": a.prefix, \"negative\": a.negative},\n        \"m\": {\"amount\": b.amount, \"prefix\": b.prefix, \"negative\": b.negative},\n    }\n\n\nrun_proof(\"compute_num\", one)\n"}, {"name": "pretty_bytes", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.bytes.pretty_bytes\nx \u003c- c(NA, NaN, -1, 0, 1, 999, 1000, 1e4, 999949, 999950, 1e6, -1e5,\n       1.5e9, 2.5e12, 1e18, 1e24)\n\none \u003c- function() {\n  list(\n    default = pretty_bytes(x),\n    nopad = pretty_bytes(x, style = \"nopad\"),\n    six = pretty_bytes(x, style = \"6\"),\n    short = pretty_bytes(c(1337, 1.5e6, 0)),\n    inf_default = try_val(pretty_bytes(c(Inf, -Inf))),\n    single = pretty_bytes(1337)\n  )\n}\n\nrun_proof(\"pretty_bytes\", one)\n", "python": "\"\"\"Proof: prettyunits.bytes.pretty_bytes against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.bytes import pretty_bytes\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nX = [None, NAN, -1.0, 0.0, 1.0, 999.0, 1000.0, 1e4, 999949.0, 999950.0, 1e6, -1e5,\n     1.5e9, 2.5e12, 1e18, 1e24]\n\n\ndef one():\n    return {\n        \"default\": pretty_bytes(X),\n        \"nopad\": pretty_bytes(X, style=\"nopad\"),\n        \"six\": pretty_bytes(X, style=\"6\"),\n        \"short\": pretty_bytes([1337.0, 1.5e6, 0.0]),\n        \"inf_default\": try_val(pretty_bytes, [INF, -INF]),\n        \"single\": [pretty_bytes([1337.0])[0]],\n    }\n\n\nrun_proof(\"pretty_bytes\", one)\n"}, {"name": "pretty_color", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.color.pretty_color\ncolors \u003c- list(\n  \"red\", \"#FF0000\", \"navy\", \"gray50\", \"grey50\", \"transparent\", \"#12345678\",\n  \"blue\", \"darkolivegreen\", \"chartreuse3\", \"#ABCDEF\", \"white\", \"black\",\n  \"steelblue\", \"#0000FF80\", \"NA\", \"\", \"nonsense\", NA_character_,\n  factor(\"red\"), 5\n)\n\none \u003c- function() {\n  lapply(colors, function(col) {\n    r \u003c- try_val(pretty_color(col))\n    if (identical(r, \"__error__\")) return(\"__error__\")\n    list(value = as.character(r), alt = attr(r, \"alt\"))\n  })\n}\n\nrun_proof(\"pretty_color\", one)\n", "python": "\"\"\"Proof: prettyunits.color.pretty_color against the R prettyunits 1.2.0 result.\n\nThe R case passes factor(\"red\"). Python has no factor, so the same color name\n\"red\" is passed. Both sides return the same name.\n\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.color import pretty_color\n\nCOLORS = [\n    \"red\", \"#FF0000\", \"navy\", \"gray50\", \"grey50\", \"transparent\", \"#12345678\",\n    \"blue\", \"darkolivegreen\", \"chartreuse3\", \"#ABCDEF\", \"white\", \"black\",\n    \"steelblue\", \"#0000FF80\", \"NA\", \"\", \"nonsense\", None,\n    \"red\", 5,\n]\n\n\ndef one():\n    out = []\n    for col in COLORS:\n        result = try_val(pretty_color, col)\n        if result == \"__error__\":\n            out.append(\"__error__\")\n        else:\n            out.append({\"value\": result.name, \"alt\": result.alt})\n    return out\n\n\nrun_proof(\"pretty_color\", one)\n"}, {"name": "pretty_colour", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.color.pretty_colour (the same function as pretty_color)\ncolors \u003c- list(\n  \"red\", \"#FF0000\", \"navy\", \"gray50\", \"grey50\", \"transparent\", \"#12345678\",\n  \"blue\", \"darkolivegreen\", \"chartreuse3\", \"#ABCDEF\", \"white\", \"black\",\n  \"steelblue\", \"#0000FF80\", \"NA\", \"\", \"nonsense\", NA_character_,\n  factor(\"red\"), 5\n)\n\none \u003c- function() {\n  lapply(colors, function(col) {\n    r \u003c- try_val(pretty_colour(col))\n    if (identical(r, \"__error__\")) return(\"__error__\")\n    list(value = as.character(r), alt = attr(r, \"alt\"))\n  })\n}\n\nrun_proof(\"pretty_colour\", one)\n", "python": "\"\"\"Proof: prettyunits.color.pretty_colour against the R prettyunits 1.2.0 result.\n\nThe R case passes factor(\"red\"). Python has no factor, so the same color name\n\"red\" is passed. Both sides return the same name.\n\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.color import pretty_colour\n\nCOLORS = [\n    \"red\", \"#FF0000\", \"navy\", \"gray50\", \"grey50\", \"transparent\", \"#12345678\",\n    \"blue\", \"darkolivegreen\", \"chartreuse3\", \"#ABCDEF\", \"white\", \"black\",\n    \"steelblue\", \"#0000FF80\", \"NA\", \"\", \"nonsense\", None,\n    \"red\", 5,\n]\n\n\ndef one():\n    out = []\n    for col in COLORS:\n        result = try_val(pretty_colour, col)\n        if result == \"__error__\":\n            out.append(\"__error__\")\n        else:\n            out.append({\"value\": result.name, \"alt\": result.alt})\n    return out\n\n\nrun_proof(\"pretty_colour\", one)\n"}, {"name": "pretty_dt", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.time.pretty_dt\ndt \u003c- as.difftime(c(1000, 0, 0.5, 59.99, 3600, 86400 * 3 + 5, NA, NaN, -90,\n                    1e9, 1337, 0.9999, 2.5), units = \"secs\")\ndtm \u003c- as.difftime(c(2, 1.5, 0), units = \"mins\")\n\none \u003c- function() {\n  list(\n    default = pretty_dt(dt),\n    compact = pretty_dt(dt, compact = TRUE),\n    mins = pretty_dt(dtm),\n    mins_compact = pretty_dt(dtm, compact = TRUE),\n    days = pretty_dt(as.difftime(2, units = \"days\")),\n    not_difftime = try_val(pretty_dt(1000))\n  )\n}\n\nrun_proof(\"pretty_dt\", one)\n", "python": "\"\"\"Proof: prettyunits.time.pretty_dt against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits._difftime import Difftime\nfrom prettyunits.time import pretty_dt\n\nNAN = float(\"nan\")\nDT = Difftime(\n    [1000.0, 0.0, 0.5, 59.99, 3600.0, 86400.0 * 3 + 5, None, NAN, -90.0,\n     1e9, 1337.0, 0.9999, 2.5],\n    units=\"secs\",\n)\nDTM = Difftime([2.0, 1.5, 0.0], units=\"mins\")\n\n\ndef one():\n    return {\n        \"default\": pretty_dt(DT),\n        \"compact\": pretty_dt(DT, compact=True),\n        \"mins\": pretty_dt(DTM),\n        \"mins_compact\": pretty_dt(DTM, compact=True),\n        \"days\": pretty_dt(Difftime(2.0, units=\"days\")),\n        \"not_difftime\": try_val(pretty_dt, 1000.0),\n    }\n\n\nrun_proof(\"pretty_dt\", one)\n"}, {"name": "pretty_ms", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.time.pretty_ms\nms \u003c- c(0, 0.4, 999.9999, 1000, 1337, 13370, 133700, 1337000, 1337000000, -5,\n        NA, NaN, 2 * 86400000 + 5 * 3600000 + 7 * 60000 + 1234.5, 59999.96,\n        3599999.9, 86400000, 1, 6.445565082178481e+20, -3.231135713311895e-24)\n\none \u003c- function() {\n  list(\n    default = pretty_ms(ms),\n    compact = pretty_ms(ms, compact = TRUE)\n  )\n}\n\nrun_proof(\"pretty_ms\", one)\n", "python": "\"\"\"Proof: prettyunits.time.pretty_ms against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof\n\nfrom prettyunits.time import pretty_ms\n\nNAN = float(\"nan\")\nMS = [0.0, 0.4, 999.9999, 1000.0, 1337.0, 13370.0, 133700.0, 1337000.0,\n      1337000000.0, -5.0, None, NAN, 2 * 86400000.0 + 5 * 3600000.0 + 7 * 60000.0 + 1234.5,\n      59999.96, 3599999.9, 86400000.0, 1.0, 6.445565082178481e+20, -3.231135713311895e-24]\n\n\ndef one():\n    return {\n        \"default\": pretty_ms(MS),\n        \"compact\": pretty_ms(MS, compact=True),\n    }\n\n\nrun_proof(\"pretty_ms\", one)\n"}, {"name": "pretty_num", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.numbers.pretty_num\ny \u003c- c(NA, NaN, -1, 0, 1e-25, 1.3333e-5, 999, 1000, 999950, 1e6, -2.5e9,\n       1e30, 1e-30, 0.5, 1e-300, -1e-17)\n\none \u003c- function() {\n  list(\n    default = pretty_num(y),\n    nopad = pretty_num(y, style = \"nopad\"),\n    six = pretty_num(y, style = \"6\"),\n    docs = pretty_num(c(1337, 1.3333e-5, 13333337, 1333333337, 133333333337)),\n    inf_default = try_val(pretty_num(c(Inf, -Inf))),\n    single = pretty_num(1337)\n  )\n}\n\nrun_proof(\"pretty_num\", one)\n", "python": "\"\"\"Proof: prettyunits.numbers.pretty_num against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.numbers import pretty_num\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nY = [None, NAN, -1.0, 0.0, 1e-25, 1.3333e-5, 999.0, 1000.0, 999950.0, 1e6, -2.5e9,\n     1e30, 1e-30, 0.5, 1e-300, -1e-17]\n\n\ndef one():\n    return {\n        \"default\": pretty_num(Y),\n        \"nopad\": pretty_num(Y, style=\"nopad\"),\n        \"six\": pretty_num(Y, style=\"6\"),\n        \"docs\": pretty_num([1337.0, 1.3333e-5, 13333337.0, 1333333337.0, 133333333337.0]),\n        \"inf_default\": try_val(pretty_num, [INF, -INF]),\n        \"single\": [pretty_num([1337.0])[0]],\n    }\n\n\nrun_proof(\"pretty_num\", one)\n"}, {"name": "pretty_p_value", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.p_value.pretty_p_value\nx \u003c- c(1, 0, NA, 0.01, 0.0000001, 0.0001, 0.00015, 0.5, 0.99995,\n       0.00009999, NaN, 0.123456)\n\none \u003c- function() {\n  list(\n    default = pretty_p_value(x),\n    minval_05 = pretty_p_value(x, minval = 0.05),\n    minval_001 = pretty_p_value(x, minval = 0.001),\n    all_na = pretty_p_value(c(NA, NA)),\n    out_of_range = try_val(pretty_p_value(c(1.5))),\n    bad_minval = try_val(pretty_p_value(0.5, minval = 1))\n  )\n}\n\nrun_proof(\"pretty_p_value\", one)\n", "python": "\"\"\"Proof: prettyunits.p_value.pretty_p_value against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.p_value import pretty_p_value\n\nNAN = float(\"nan\")\nX = [1.0, 0.0, None, 0.01, 0.0000001, 0.0001, 0.00015, 0.5, 0.99995,\n     0.00009999, NAN, 0.123456]\n\n\ndef one():\n    return {\n        \"default\": pretty_p_value(X),\n        \"minval_05\": pretty_p_value(X, minval=0.05),\n        \"minval_001\": pretty_p_value(X, minval=0.001),\n        \"all_na\": pretty_p_value([None, None]),\n        \"out_of_range\": try_val(pretty_p_value, [1.5]),\n        \"bad_minval\": try_val(pretty_p_value, [0.5], minval=1.0),\n    }\n\n\nrun_proof(\"pretty_p_value\", one)\n"}, {"name": "pretty_round", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.rounding.pretty_round\n# In R 4.5 a scalar digits argument with two or more values in scientific\n# notation fails inside formatC. Those whole-vector calls are wrapped in\n# try_val, and the same values are also run one at a time.\nx \u003c- c(123.05, 1234567, NA, NaN, Inf, -Inf, -0.0001, 0, 2.5, 3.5, -2.675,\n       0.1234567, 99.999, 1e-7, 6.02e23, -0.4)\n\none \u003c- function() {\n  list(\n    d3_sci5 = try_val(pretty_round(x, digits = 3, sci_range = 5)),\n    d3_sci5_each = vapply(x, function(v) pretty_round(v, digits = 3, sci_range = 5), \"\"),\n    d0 = pretty_round(x),\n    d_neg2 = pretty_round(x, digits = -2),\n    sci0_x10 = try_val(pretty_round(x, digits = 2, sci_range = 0, sci_sep = \"x10^\")),\n    sci0_x10_each = vapply(x, function(v) pretty_round(v, digits = 2, sci_range = 0, sci_sep = \"x10^\"), \"\"),\n    vec_digits = pretty_round(c(1.23456, 2.5, 1234.5678), digits = c(2, 0, 1)),\n    scalar = pretty_round(3.14159, 2),\n    one_sci = pretty_round(1234567, digits = 3, sci_range = 5),\n    neg_zero = pretty_round(c(-0.0001, -0.4), digits = 0),\n    bad_digits = try_val(pretty_round(c(1, 2, 3), digits = c(1, 2)))\n  )\n}\n\nrun_proof(\"pretty_round\", one)\n", "python": "\"\"\"Proof: prettyunits.rounding.pretty_round against the R prettyunits 1.2.0 result.\n\nIn R 4.5 a scalar digits argument with two or more values in scientific\nnotation fails inside formatC. The Python port raises in the same case, so\nthose whole-vector calls are wrapped in try_val on both sides.\n\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.rounding import pretty_round\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nX = [123.05, 1234567.0, None, NAN, INF, -INF, -0.0001, 0.0, 2.5, 3.5, -2.675,\n     0.1234567, 99.999, 1e-7, 6.02e23, -0.4]\n\n\ndef one():\n    return {\n        \"d3_sci5\": try_val(pretty_round, X, digits=3, sci_range=5),\n        \"d3_sci5_each\": [pretty_round(v, digits=3, sci_range=5) for v in X],\n        \"d0\": pretty_round(X),\n        \"d_neg2\": pretty_round(X, digits=-2),\n        \"sci0_x10\": try_val(pretty_round, X, digits=2, sci_range=0, sci_sep=\"x10^\"),\n        \"sci0_x10_each\": [pretty_round(v, digits=2, sci_range=0, sci_sep=\"x10^\") for v in X],\n        \"vec_digits\": pretty_round([1.23456, 2.5, 1234.5678], digits=[2, 0, 1]),\n        \"scalar\": pretty_round(3.14159, 2),\n        \"one_sci\": pretty_round(1234567.0, digits=3, sci_range=5),\n        \"neg_zero\": pretty_round([-0.0001, -0.4], digits=0),\n        \"bad_digits\": try_val(pretty_round, [1.0, 2.0, 3.0], digits=[1, 2]),\n    }\n\n\nrun_proof(\"pretty_round\", one)\n"}, {"name": "pretty_sec", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.time.pretty_sec\nsec \u003c- c(0, 0.0004, 0.9999, 1.337, 13.37, 133.7, 1337, 13370, 133700,\n         1337000, 13370000, -2.5, NA, NaN, 86400 * 1.5, 59.96,\n         -2.601329396065269e+16, -1.3009319809382128e-23)\n\none \u003c- function() {\n  list(\n    default = pretty_sec(sec),\n    compact = pretty_sec(sec, compact = TRUE)\n  )\n}\n\nrun_proof(\"pretty_sec\", one)\n", "python": "\"\"\"Proof: prettyunits.time.pretty_sec against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof\n\nfrom prettyunits.time import pretty_sec\n\nNAN = float(\"nan\")\nSEC = [0.0, 0.0004, 0.9999, 1.337, 13.37, 133.7, 1337.0, 13370.0, 133700.0,\n       1337000.0, 13370000.0, -2.5, None, NAN, 86400.0 * 1.5, 59.96,\n       -2.601329396065269e+16, -1.3009319809382128e-23]\n\n\ndef one():\n    return {\n        \"default\": pretty_sec(SEC),\n        \"compact\": pretty_sec(SEC, compact=True),\n    }\n\n\nrun_proof(\"pretty_sec\", one)\n"}, {"name": "pretty_signif", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.rounding.pretty_signif\nx \u003c- c(0, 123456.789, 0.000123456, 1e-7, 9.9999, 99.9999, 999999.5, -0.0004,\n       1234567, NA, NaN, Inf, -Inf, 0.1 + 0.2, 5e-324, -0)\n\none \u003c- function() {\n  list(\n    default = pretty_signif(x),\n    d2 = pretty_signif(x, digits = 2),\n    d3_inf = pretty_signif(x, digits = 3, sci_range = Inf),\n    d4_sci0 = pretty_signif(x, digits = 4, sci_range = 0, sci_sep = \"x10^\"),\n    vec = pretty_signif(c(0.99999, 9.9999e-5), digits = 3)\n  )\n}\n\nrun_proof(\"pretty_signif\", one)\n", "python": "\"\"\"Proof: prettyunits.rounding.pretty_signif against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof\n\nfrom prettyunits.rounding import pretty_signif\n\nNAN = float(\"nan\")\nINF = float(\"inf\")\nX = [0.0, 123456.789, 0.000123456, 1e-7, 9.9999, 99.9999, 999999.5, -0.0004,\n     1234567.0, None, NAN, INF, -INF, 0.1 + 0.2, 5e-324, -0.0]\n\n\ndef one():\n    return {\n        \"default\": pretty_signif(X),\n        \"d2\": pretty_signif(X, digits=2),\n        \"d3_inf\": pretty_signif(X, digits=3, sci_range=float(\"inf\")),\n        \"d4_sci0\": pretty_signif(X, digits=4, sci_range=0, sci_sep=\"x10^\"),\n        \"vec\": pretty_signif([0.99999, 9.9999e-5], digits=3),\n    }\n\n\nrun_proof(\"pretty_signif\", one)\n"}, {"name": "time_ago", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.ago.time_ago\n# The offsets sit in the middle of each bucket, so the answer does not\n# depend on the few milliseconds between the R and Python calls.\noffsets \u003c- c(5, 30, 14 * 60, 5 * 3600, 25 * 3600, 5 * 86400, 30 * 86400,\n             365 * 86400, 3650 * 86400)\n\none \u003c- function() {\n  now \u003c- Sys.time()\n  d \u003c- now - offsets\n  list(\n    default = time_ago(d),\n    short = time_ago(d, format = \"short\"),\n    terse = time_ago(d, format = \"terse\"),\n    bad_format = try_val(time_ago(now, format = \"nope\"))\n  )\n}\n\nrun_proof(\"time_ago\", one)\n", "python": "\"\"\"Proof: prettyunits.ago.time_ago against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom datetime import datetime, timedelta\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits.ago import time_ago\n\n# The offsets sit in the middle of each bucket, so the answer does not\n# depend on the few milliseconds between the R and Python calls.\nOFFSETS = [5, 30, 14 * 60, 5 * 3600, 25 * 3600, 5 * 86400, 30 * 86400,\n           365 * 86400, 3650 * 86400]\n\n\ndef one():\n    now = datetime.now()\n    dates = [now - timedelta(seconds=s) for s in OFFSETS]\n    return {\n        \"default\": time_ago(dates),\n        \"short\": time_ago(dates, format=\"short\"),\n        \"terse\": time_ago(dates, format=\"terse\"),\n        \"bad_format\": try_val(time_ago, now, format=\"nope\"),\n    }\n\n\nrun_proof(\"time_ago\", one)\n"}, {"name": "vague_dt", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(prettyunits))  # 1.2.0\n.here \u003c- dirname(normalizePath(sub(\"^--file=\", \"\", grep(\"^--file=\", commandArgs(FALSE), value = TRUE))))\nsource(file.path(.here, \"harness.R\"))\n\n# Python: prettyunits.ago.vague_dt\n# vague_dt takes one interval at a time in R 4.5, so each value is its own call.\nsecs \u003c- c(-30, 0, 5, 9.9, 10, 30, 44.9, 50, 60, 89, 90, 600, 2699, 2700,\n          3599, 5400, 7200, 42 * 3600 - 1, 42 * 3600, 86400, 24 * 3600,\n          30 * 86400, 45 * 86400, 335 * 86400, 365 * 86400,\n          1.5 * 365.25 * 86400, 3650 * 86400, NA, NaN)\n\none \u003c- function() {\n  out \u003c- list()\n  for (f in c(\"default\", \"short\", \"terse\")) {\n    out[[f]] \u003c- vapply(secs, function(s) {\n      try_val(vague_dt(as.difftime(s, units = \"secs\"), format = f))\n    }, \"\")\n  }\n  out$empty \u003c- vague_dt(as.difftime(numeric(0), units = \"secs\"))\n  out\n}\n\nrun_proof(\"vague_dt\", one)\n", "python": "\"\"\"Proof: prettyunits.ago.vague_dt against the R prettyunits 1.2.0 result.\"\"\"\n\nfrom harness import run_proof, try_val\n\nfrom prettyunits._difftime import Difftime\nfrom prettyunits.ago import vague_dt\n\nNAN = float(\"nan\")\nSECS = [-30.0, 0.0, 5.0, 9.9, 10.0, 30.0, 44.9, 50.0, 60.0, 89.0, 90.0, 600.0,\n        2699.0, 2700.0, 3599.0, 5400.0, 7200.0, 42 * 3600.0 - 1, 42 * 3600.0,\n        86400.0, 24 * 3600.0, 30 * 86400.0, 45 * 86400.0, 335 * 86400.0,\n        365 * 86400.0, 1.5 * 365.25 * 86400, 3650 * 86400.0, None, NAN]\n\n\ndef one():\n    out = {}\n    for fmt in (\"default\", \"short\", \"terse\"):\n        out[fmt] = [try_val(vague_dt, Difftime(s, units=\"secs\"), format=fmt) for s in SECS]\n    out[\"empty\"] = vague_dt(Difftime([], units=\"secs\"))\n    return out\n\n\nrun_proof(\"vague_dt\", one)\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><p class="note">None.</p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "compute_bytes", "translated": true, "not_done": "", "title": "compute_bytes", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.bytes.compute_bytes", "output_blocks": []}}, {"name": "compute_num", "translated": true, "not_done": "", "title": "compute_num", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.numbers.compute_num", "output_blocks": []}}, {"name": "pretty_bytes", "translated": true, "not_done": "", "title": "pretty_bytes", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.bytes.pretty_bytes", "output_blocks": []}}, {"name": "pretty_color", "translated": true, "not_done": "", "title": "pretty_color", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.color.pretty_color", "output_blocks": []}}, {"name": "pretty_colour", "translated": true, "not_done": "", "title": "pretty_colour", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.color.pretty_colour", "output_blocks": []}}, {"name": "pretty_dt", "translated": true, "not_done": "", "title": "pretty_dt", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.time.pretty_dt", "output_blocks": []}}, {"name": "pretty_ms", "translated": true, "not_done": "", "title": "pretty_ms", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.time.pretty_ms", "output_blocks": []}}, {"name": "pretty_num", "translated": true, "not_done": "", "title": "pretty_num", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.numbers.pretty_num", "output_blocks": []}}, {"name": "pretty_p_value", "translated": true, "not_done": "", "title": "pretty_p_value", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.p_value.pretty_p_value", "output_blocks": []}}, {"name": "pretty_round", "translated": true, "not_done": "", "title": "pretty_round", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.rounding.pretty_round", "output_blocks": []}}, {"name": "pretty_sec", "translated": true, "not_done": "", "title": "pretty_sec", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.time.pretty_sec", "output_blocks": []}}, {"name": "pretty_signif", "translated": true, "not_done": "", "title": "pretty_signif", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.rounding.pretty_signif", "output_blocks": []}}, {"name": "time_ago", "translated": true, "not_done": "", "title": "time_ago", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.ago.time_ago", "output_blocks": []}}, {"name": "vague_dt", "translated": true, "not_done": "", "title": "vague_dt", "origin": null, "translation": {"description": "Matches R exactly (max abs diff 0). R 4.5 errors on two inputs are reproduced in both.", "usage": "prettyunits.ago.vague_dt", "output_blocks": []}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

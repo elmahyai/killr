@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>moments · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>moments</h1>
+<p class="note">CRAN 0.14.1</p>
+<p>All 12 exports of moments 0.14.1 are done. Moments and the three shape coefficients are the sample formulas. The normal tail is erfc. jarque.test uses SciPy&#x27;s chi-square cdf. There is no crate.</p>
+<p class="note">12 of 12 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#moment">moment</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The mean of the values after an optional center and absolute value, raised to order.</td></tr>
+<tr><td><a href="#all.moments">all.moments</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Orders 0 through order.max. A data frame comes back as a matrix.</td></tr>
+<tr><td><a href="#all.cumulants">all.cumulants</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>kappa[1] stays 0, kappa[2] is the first central moment, and kappa[3] is the second.</td></tr>
+<tr><td><a href="#raw2central">raw2central</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The binomial shift by the first raw moment. The order-0 central moment is 1.</td></tr>
+<tr><td><a href="#central2raw">central2raw</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The binomial shift by eta, undoing raw2central when eta is the mean.</td></tr>
+<tr><td><a href="#skewness">skewness</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The third central moment divided by the second central moment to the power 3/2.</td></tr>
+<tr><td><a href="#kurtosis">kurtosis</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Pearson kurtosis, n times the fourth central sum over the squared second central sum.</td></tr>
+<tr><td><a href="#geary">geary</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The mean absolute deviation divided by the root mean square.</td></tr>
+<tr><td><a href="#agostino.test">agostino.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>D&#x27;Agostino&#x27;s z from the moment skewness. less keeps the upper tail.</td></tr>
+<tr><td><a href="#anscombe.test">anscombe.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Anscombe-Glynn z from Pearson kurtosis. The null value is 3.</td></tr>
+<tr><td><a href="#bonett.test">bonett.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Bonett-Seier z from Geary&#x27;s kurtosis. The null value is sqrt(2/pi).</td></tr>
+<tr><td><a href="#jarque.test">jarque.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The Jarque-Bera statistic and one minus the chi-square cdf on 2 degrees of freedom. Uses scipy.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>moment</td><td>third central moment of 1, 2, 4, -1, and the third raw moment of -2, -1, 3</td><td>0.0308</td><td>0.0489</td><td><button type="button" class="proof-toggle" data-name="moment"><span class='slower'>-37%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:62.9%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>all.moments</td><td>raw moments of 1:4 through order 4, then the central moments</td><td>0.122</td><td>0.201</td><td><button type="button" class="proof-toggle" data-name="all.moments"><span class='slower'>-39%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:60.7%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>all.cumulants</td><td>cumulants from the raw moments of 1:4 through order 5</td><td>0.113</td><td>0.116</td><td><button type="button" class="proof-toggle" data-name="all.cumulants"><span class='slower'>-3%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:97.1%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>raw2central</td><td>central moments from the raw moments of -2, -1, 0, 3, 4</td><td>0.0726</td><td>0.0806</td><td><button type="button" class="proof-toggle" data-name="raw2central"><span class='slower'>-10%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:90.1%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>central2raw</td><td>raw moments recovered from the central moments of 1:4 and their mean</td><td>0.151</td><td>0.155</td><td><button type="button" class="proof-toggle" data-name="central2raw"><span class='slower'>-3%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:97.2%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>skewness</td><td>skewness of 1, 2, 4, -1, 5, 3, 8</td><td>0.0528</td><td>0.0288</td><td><button type="button" class="proof-toggle" data-name="skewness"><span class='yes'>+83%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>5.55e-17</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:54.6%'></span></div></td></tr>
+<tr><td>kurtosis</td><td>kurtosis of 1, 2, 4, -1, 5, 3, 8</td><td>0.0354</td><td>0.0274</td><td><button type="button" class="proof-toggle" data-name="kurtosis"><span class='yes'>+29%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:77.4%'></span></div></td></tr>
+<tr><td>geary</td><td>Geary kurtosis of 1, 2, 4, -1, 5, 3, 8</td><td>0.0333</td><td>0.0464</td><td><button type="button" class="proof-toggle" data-name="geary"><span class='slower'>-28%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:71.7%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>agostino.test</td><td>skewness, z, and the two-sided p-value for a sample of 30 standard normals</td><td>0.528</td><td>0.608</td><td><button type="button" class="proof-toggle" data-name="agostino.test"><span class='slower'>-13%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:86.9%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>anscombe.test</td><td>kurtosis, z, and the two-sided p-value for a sample of 30 standard normals</td><td>0.382</td><td>0.334</td><td><button type="button" class="proof-toggle" data-name="anscombe.test"><span class='yes'>+14%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>3.11e-15</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:87.6%'></span></div></td></tr>
+<tr><td>bonett.test</td><td>tau, z, and the two-sided p-value for a sample of 30 standard normals</td><td>0.561</td><td>0.283</td><td><button type="button" class="proof-toggle" data-name="bonett.test"><span class='yes'>+98%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>2.89e-15</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:50.5%'></span></div></td></tr>
+<tr><td>jarque.test</td><td>JB and its p-value for a sample of 30 standard normals</td><td>0.422</td><td>0.612</td><td><button type="button" class="proof-toggle" data-name="jarque.test"><span class='slower'>-31%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>1.78e-15</td><td><div class='bars'><span class='r' style='width:69.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "moment", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  c(moment(c(1, 2, 4, -1), order = 3, central = TRUE), moment(c(-2, -1, 3), order = 3))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [moment([1, 2, 4, -1], order=3, central=True), moment([-2, -1, 3], order=3)]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "all.moments", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  c(\n    all.moments(c(1, 2, 3, 4), order.max = 4),\n    all.moments(c(1, 2, 3, 4), order.max = 4, central = TRUE)\n  )\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return all_moments([1, 2, 3, 4], order_max=4) + all_moments([1, 2, 3, 4], order_max=4, central=True)\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "all.cumulants", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  all.cumulants(all.moments(c(1, 2, 3, 4), order.max = 5))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return all_cumulants(all_moments([1, 2, 3, 4], order_max=5))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "raw2central", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  raw2central(all.moments(c(-2, -1, 0, 3, 4), order.max = 4))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return raw2central(all_moments([-2, -1, 0, 3, 4], order_max=4))\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "central2raw", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  central2raw(all.moments(c(1, 2, 3, 4), central = TRUE, order.max = 5), mean(c(1, 2, 3, 4)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return central2raw(all_moments([1, 2, 3, 4], central=True, order_max=5), 2.5)\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "skewness", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  skewness(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [skewness([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "kurtosis", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  kurtosis(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [kurtosis([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "geary", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  geary(c(1, 2, 4, -1, 5, 3, 8))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    return [geary([1, 2, 4, -1, 5, 3, 8])]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "agostino.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  result \u003c- agostino.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = agostino_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "anscombe.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  result \u003c- anscombe.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = anscombe_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "bonett.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  result \u003c- bonett.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = bonett_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}, {"name": "jarque.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(moments))\nif (as.character(packageVersion(\"moments\")) != \"0.14.1\") stop(\"expected moments 0.14.1\")\noptions(warn = -1)\none \u003c- function() {\n  result \u003c- jarque.test(c(-0.62645381074233242, 0.18364332422208224, -0.83562861241004716, 1.5952808021377916, 0.32950777181536051, -0.82046838411801526, 0.48742905242848528, 0.73832470512921733, 0.57578135165349231, -0.30538838715635602, 1.511781168450848, 0.38984323641143109, -0.62124058054180376, -2.2146998871774999, 1.1249309181431082, -0.044933609015230851, -0.016190263098946087, 0.94383621068529922, 0.82122119509808855, 0.59390132121750883, 0.91897737160821824, 0.7821363007310671, 0.074564983365190601, -1.9893516958633728, 0.61982574789471023, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.41794156019970241))\n  c(unname(result$statistic), result$p.value)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n", "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/moments\")\nwarnings.simplefilter(\"ignore\")\n\nfrom moments import *\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\ndef one():\n    result = jarque_test([-0.6264538107423324, 0.18364332422208224, -0.8356286124100472, 1.5952808021377916, 0.3295077718153605, -0.8204683841180153, 0.4874290524284853, 0.7383247051292173, 0.5757813516534923, -0.305388387156356, 1.511781168450848, 0.3898432364114311, -0.6212405805418038, -2.2146998871775, 1.1249309181431082, -0.04493360901523085, -0.016190263098946087, 0.9438362106852992, 0.8212211950980886, 0.5939013212175088, 0.9189773716082182, 0.7821363007310671, 0.0745649833651906, -1.9893516958633728, 0.6198257478947102, -0.056128739529000785, -0.1557955067053293, -1.4707523838992744, -0.47815005510862035, 0.4179415601997024])\n    return list(result.statistic.values()) + [result.p_value]\n\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><p class="note">None.</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>scipy</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "moment", "translated": true, "not_done": "", "title": "Sample moment", "origin": {"description": "The average of the observations, each raised to a chosen power.", "usage": "moment(x, order = 1, central = FALSE, absolute = FALSE, na.rm = FALSE)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame. A matrix or data frame is one column at a time."}, {"name": "order", "text": "The power. Zero gives 1 for every value, including a missing value."}, {"name": "central", "text": "Subtract the mean before raising to order."}, {"name": "absolute", "text": "Take the absolute value after centering and before the power."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "The divisor is the length after the optional drop, not one less than that length. A matrix result keeps the column names. A negative value raised to a non-integer power is NaN.", "value": "One number for a vector, or one number per column.", "example": "cat(moment(c(1, 2, 4, -1), order = 3, central = TRUE), \"\\n\")", "output": "output/moment-r.txt", "output_blocks": [{"text": "0 "}]}, "translation": {"description": "The average of the observations, each raised to a chosen power.", "usage": "moment(x, order=1, central=False, absolute=False, na_rm=False)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame. A matrix or data frame is one column at a time."}, {"name": "order", "text": "The power. Zero gives 1 for every value, including a missing value."}, {"name": "central", "text": "Subtract the mean before raising to order."}, {"name": "absolute", "text": "Take the absolute value after centering and before the power."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "The divisor is the length after the optional drop, not one less than that length. A matrix result keeps the column names. A negative value raised to a non-integer power is NaN.", "value": "One number for a vector, or one number per column.", "example": "print(moment([1, 2, 4, -1], order=3, central=True))", "output": "output/moment-python.txt", "output_blocks": [{"text": "0.0"}]}}, {"name": "all.moments", "translated": true, "not_done": "", "title": "Moments through an order", "origin": {"description": "Every sample moment from order 0 up to a chosen order.", "usage": "all.moments(x, order.max = 2, central = FALSE, absolute = FALSE, na.rm = FALSE)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "order.max", "text": "The highest order. It must be at least 2. A fraction is truncated toward zero. In Python the argument is order_max."}, {"name": "central", "text": "Subtract the mean before each power."}, {"name": "absolute", "text": "Take the absolute value after centering."}, {"name": "na.rm", "text": "Drop missing values inside each column. In Python the argument is na_rm."}], "details": "The first entry is the order-0 moment, which is 1. The next is the mean when the moments are raw. A data frame is returned as a matrix, and that matrix does not keep the column names.", "value": "A vector for a vector, or a matrix with one row per order and one column per variable.", "example": "cat(all.moments(c(1, 2, 3, 4), order.max = 4), \"\\n\")", "output": "output/all.moments-r.txt", "output_blocks": [{"text": "1 2.5 7.5 25 88.5 "}]}, "translation": {"description": "Every sample moment from order 0 up to a chosen order.", "usage": "all_moments(x, order_max=2, central=False, absolute=False, na_rm=False)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "order.max", "text": "The highest order. It must be at least 2. A fraction is truncated toward zero. In Python the argument is order_max."}, {"name": "central", "text": "Subtract the mean before each power."}, {"name": "absolute", "text": "Take the absolute value after centering."}, {"name": "na.rm", "text": "Drop missing values inside each column. In Python the argument is na_rm."}], "details": "The first entry is the order-0 moment, which is 1. The next is the mean when the moments are raw. A data frame is returned as a matrix, and that matrix does not keep the column names.", "value": "A vector for a vector, or a matrix with one row per order and one column per variable.", "example": "print(all_moments([1, 2, 3, 4], order_max=4))", "output": "output/all.moments-python.txt", "output_blocks": [{"text": "[1.0, 2.5, 7.5, 25.0, 88.5]"}]}}, {"name": "all.cumulants", "translated": true, "not_done": "", "title": "Cumulants from raw moments", "origin": {"description": "Turn a table of raw moments into cumulants.", "usage": "all.cumulants(mu.raw)", "arguments": [{"name": "mu.raw", "text": "Raw moments from order 0 upward, as a vector, matrix, or data frame. In Python the argument is mu_raw."}], "details": "The first stored cumulant is 0. The second is the first central moment, which is 0 for a raw-moment table that came from data. The third is the second central moment. Later orders use the binomial recurrence. A data frame comes back as a data frame with columns X1, X2, and so on.", "value": "A vector, matrix, or data frame of the same shape as mu.raw.", "example": "cat(all.cumulants(all.moments(c(1, 2, 3, 4), order.max = 4)), \"\\n\")", "output": "output/all.cumulants-r.txt", "output_blocks": [{"text": "0 0 1.25 18.75 -80.25 "}]}, "translation": {"description": "Turn a table of raw moments into cumulants.", "usage": "all_cumulants(mu_raw)", "arguments": [{"name": "mu.raw", "text": "Raw moments from order 0 upward, as a vector, matrix, or data frame. In Python the argument is mu_raw."}], "details": "The first stored cumulant is 0. The second is the first central moment, which is 0 for a raw-moment table that came from data. The third is the second central moment. Later orders use the binomial recurrence. A data frame comes back as a data frame with columns X1, X2, and so on.", "value": "A vector, matrix, or data frame of the same shape as mu.raw.", "example": "print(all_cumulants(all_moments([1, 2, 3, 4], order_max=4)))", "output": "output/all.cumulants-python.txt", "output_blocks": [{"text": "[0.0, 0.0, 1.25, 18.75, -80.25]"}]}}, {"name": "raw2central", "translated": true, "not_done": "", "title": "Raw moments to central moments", "origin": {"description": "Convert raw moments to central moments.", "usage": "raw2central(mu.raw)", "arguments": [{"name": "mu.raw", "text": "Raw moments from order 0 upward. In Python the argument is mu_raw."}], "details": "The order-0 result is 1. Each later order is the binomial expansion of the raw moments about the first raw moment. A data frame comes back as a matrix and keeps its column names.", "value": "Central moments in the same positions as the raw moments.", "example": "cat(raw2central(all.moments(c(1, 2, 3, 4), order.max = 4)), \"\\n\")", "output": "output/raw2central-r.txt", "output_blocks": [{"text": "1 0 1.25 0 2.5625 "}]}, "translation": {"description": "Convert raw moments to central moments.", "usage": "raw2central(mu_raw)", "arguments": [{"name": "mu.raw", "text": "Raw moments from order 0 upward. In Python the argument is mu_raw."}], "details": "The order-0 result is 1. Each later order is the binomial expansion of the raw moments about the first raw moment. A data frame comes back as a matrix and keeps its column names.", "value": "Central moments in the same positions as the raw moments.", "example": "print(raw2central(all_moments([1, 2, 3, 4], order_max=4)))", "output": "output/raw2central-python.txt", "output_blocks": [{"text": "[1.0, 0.0, 1.25, 0.0, 2.5625]"}]}}, {"name": "central2raw", "translated": true, "not_done": "", "title": "Central moments to raw moments", "origin": {"description": "Convert central moments back to raw moments.", "usage": "central2raw(mu.central, eta)", "arguments": [{"name": "mu.central", "text": "Central moments from order 0 upward. In Python the argument is mu_central."}, {"name": "eta", "text": "The mean. One value for a vector, or one value per column."}], "details": "A vector mean must have length 1. A matrix or data frame needs one mean per column. A data frame comes back with columns named X1, X2, and so on, not the names it was given.", "value": "Raw moments in the same positions as the central moments.", "example": "cat(central2raw(all.moments(c(1, 2, 3, 4), central = TRUE, order.max = 4), 2.5), \"\\n\")", "output": "output/central2raw-r.txt", "output_blocks": [{"text": "1 2.5 7.5 25 88.5 "}]}, "translation": {"description": "Convert central moments back to raw moments.", "usage": "central2raw(mu_central, eta)", "arguments": [{"name": "mu.central", "text": "Central moments from order 0 upward. In Python the argument is mu_central."}, {"name": "eta", "text": "The mean. One value for a vector, or one value per column."}], "details": "A vector mean must have length 1. A matrix or data frame needs one mean per column. A data frame comes back with columns named X1, X2, and so on, not the names it was given.", "value": "Raw moments in the same positions as the central moments.", "example": "print(central2raw(all_moments([1, 2, 3, 4], central=True, order_max=4), 2.5))", "output": "output/central2raw-python.txt", "output_blocks": [{"text": "[1.0, 2.5, 7.5, 25.0, 88.5]"}]}}, {"name": "skewness", "translated": true, "not_done": "", "title": "Skewness", "origin": {"description": "The moment coefficient of skewness.", "usage": "skewness(x, na.rm = FALSE)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "The powers use the mean of the values that remain, and the divisor is their length. A constant sample is NaN.", "value": "One number for a vector, or one number per column.", "example": "cat(skewness(c(1, 2, 4, -1, 5, 3, 8)), \"\\n\")", "output": "output/skewness-r.txt", "output_blocks": [{"text": "0.2858421 "}]}, "translation": {"description": "The moment coefficient of skewness.", "usage": "skewness(x, na_rm=False)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "The powers use the mean of the values that remain, and the divisor is their length. A constant sample is NaN.", "value": "One number for a vector, or one number per column.", "example": "print(skewness([1, 2, 4, -1, 5, 3, 8]))", "output": "output/skewness-python.txt", "output_blocks": [{"text": "0.28584212494553574"}]}}, {"name": "kurtosis", "translated": true, "not_done": "", "title": "Kurtosis", "origin": {"description": "Pearson's moment coefficient of kurtosis.", "usage": "kurtosis(x, na.rm = FALSE)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "A normal sample is near 3. The divisor is the square of the sum of squared deviations, and the numerator is multiplied by the length. A constant sample is NaN.", "value": "One number for a vector, or one number per column.", "example": "cat(kurtosis(c(1, 2, 4, -1, 5, 3, 8)), \"\\n\")", "output": "output/kurtosis-r.txt", "output_blocks": [{"text": "2.398908 "}]}, "translation": {"description": "Pearson's moment coefficient of kurtosis.", "usage": "kurtosis(x, na_rm=False)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "A normal sample is near 3. The divisor is the square of the sum of squared deviations, and the numerator is multiplied by the length. A constant sample is NaN.", "value": "One number for a vector, or one number per column.", "example": "print(kurtosis([1, 2, 4, -1, 5, 3, 8]))", "output": "output/kurtosis-python.txt", "output_blocks": [{"text": "2.3989079661658885"}]}}, {"name": "geary", "translated": true, "not_done": "", "title": "Geary kurtosis", "origin": {"description": "Geary's ratio of the mean absolute deviation to the root mean square.", "usage": "geary(x, na.rm = FALSE)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "A normal sample is near sqrt(2/pi). A constant sample is NaN because both the numerator and the denominator are 0.", "value": "One number for a vector, or one number per column.", "example": "cat(geary(c(1, 2, 4, -1, 5, 3, 8)), \"\\n\")", "output": "output/geary-r.txt", "output_blocks": [{"text": "0.8025698 "}]}, "translation": {"description": "Geary's ratio of the mean absolute deviation to the root mean square.", "usage": "geary(x, na_rm=False)", "arguments": [{"name": "x", "text": "A numeric vector, matrix, or data frame."}, {"name": "na.rm", "text": "Drop missing values first. In Python the argument is na_rm."}], "details": "A normal sample is near sqrt(2/pi). A constant sample is NaN because both the numerator and the denominator are 0.", "value": "One number for a vector, or one number per column.", "example": "print(geary([1, 2, 4, -1, 5, 3, 8]))", "output": "output/geary-python.txt", "output_blocks": [{"text": "0.8025698234333868"}]}}, {"name": "agostino.test", "translated": true, "not_done": "", "title": "D'Agostino skewness test", "origin": {"description": "Test whether the skewness of a normal sample is zero.", "usage": "agostino.test(x, alternative = c(\"two.sided\", \"less\", \"greater\"))", "arguments": [{"name": "x", "text": "A numeric vector of length 8 to 46340 after missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "The skewness is transformed to a normal z. The default p-value is two times the upper tail, folded back when that exceeds 1. less reports the upper tail and says the data have positive skewness. greater reports one minus that tail.", "value": "An htest with the skewness, its z, and the p-value.", "example": "x \u003c- c(1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0)\nprint(agostino.test(x))", "output": "output/agostino.test-r.txt", "output_blocks": [{"text": "\n\tD'Agostino skewness test\n\ndata:  x\nskew = 0.27721, z = 0.49471, p-value = 0.6208\nalternative hypothesis: data have a skewness"}]}, "translation": {"description": "Test whether the skewness of a normal sample is zero.", "usage": "agostino_test(x, alternative=\"two.sided\")", "arguments": [{"name": "x", "text": "A numeric vector of length 8 to 46340 after missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "The skewness is transformed to a normal z. The default p-value is two times the upper tail, folded back when that exceeds 1. less reports the upper tail and says the data have positive skewness. greater reports one minus that tail.", "value": "An htest with the skewness, its z, and the p-value.", "example": "print(agostino_test([1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0]))", "output": "output/agostino.test-python.txt", "output_blocks": [{"text": "\n\tD'Agostino skewness test\n\ndata:  [1\nskew = 0.27721, z = 0.49471, p-value = 0.6208\nalternative hypothesis: data have a skewness"}]}}, {"name": "anscombe.test", "translated": true, "not_done": "", "title": "Anscombe-Glynn kurtosis test", "origin": {"description": "Test whether Pearson kurtosis of a normal sample equals 3.", "usage": "anscombe.test(x, alternative = c(\"two.sided\", \"less\", \"greater\"))", "arguments": [{"name": "x", "text": "A numeric vector. Missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "The kurtosis is transformed to a normal z. less keeps the upper tail and says the kurtosis is greater than 3. greater uses one minus that tail. A negative value raised to the one-third power is NaN.", "value": "An htest with the kurtosis, its z, and the p-value.", "example": "x \u003c- c(1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0)\nprint(anscombe.test(x))", "output": "output/anscombe.test-r.txt", "output_blocks": [{"text": "\n\tAnscombe-Glynn kurtosis test\n\ndata:  x\nkurt = 2.22434, z = -0.14693, p-value = 0.8832\nalternative hypothesis: kurtosis is not equal to 3"}]}, "translation": {"description": "Test whether Pearson kurtosis of a normal sample equals 3.", "usage": "anscombe_test(x, alternative=\"two.sided\")", "arguments": [{"name": "x", "text": "A numeric vector. Missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "The kurtosis is transformed to a normal z. less keeps the upper tail and says the kurtosis is greater than 3. greater uses one minus that tail. A negative value raised to the one-third power is NaN.", "value": "An htest with the kurtosis, its z, and the p-value.", "example": "print(anscombe_test([1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0]))", "output": "output/anscombe.test-python.txt", "output_blocks": [{"text": "\n\tAnscombe-Glynn kurtosis test\n\ndata:  [1\nkurt = 2.2243, z = -0.14693, p-value = 0.88319\nalternative hypothesis: kurtosis is not equal to 3"}]}}, {"name": "bonett.test", "translated": true, "not_done": "", "title": "Bonett-Seier test", "origin": {"description": "Test whether Geary's kurtosis of a normal sample equals sqrt(2/pi).", "usage": "bonett.test(x, alternative = c(\"two.sided\", \"less\", \"greater\"))", "arguments": [{"name": "x", "text": "A numeric vector. Missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "tau is the mean absolute deviation. z compares 13.29 times the log of the root mean square over tau with 3. less keeps the upper tail.", "value": "An htest with tau, its z, and the p-value.", "example": "x \u003c- c(1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0)\nprint(bonett.test(x))", "output": "output/bonett.test-r.txt", "output_blocks": [{"text": "\n\tBonett-Seier test for Geary kurtosis\n\ndata:  x\ntau = 2.16000, z = -0.37004, p-value = 0.7114\nalternative hypothesis: kurtosis is not equal to sqrt(2/pi)"}]}, "translation": {"description": "Test whether Geary's kurtosis of a normal sample equals sqrt(2/pi).", "usage": "bonett_test(x, alternative=\"two.sided\")", "arguments": [{"name": "x", "text": "A numeric vector. Missing values are dropped."}, {"name": "alternative", "text": "A unique prefix of \"two.sided\", \"less\", or \"greater\"."}], "details": "tau is the mean absolute deviation. z compares 13.29 times the log of the root mean square over tau with 3. less keeps the upper tail.", "value": "An htest with tau, its z, and the p-value.", "example": "print(bonett_test([1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0]))", "output": "output/bonett.test-python.txt", "output_blocks": [{"text": "\n\tBonett-Seier test for Geary kurtosis\n\ndata:  [1\ntau = 2.16, z = -0.37004, p-value = 0.71135\nalternative hypothesis: kurtosis is not equal to sqrt(2/pi)"}]}}, {"name": "jarque.test", "translated": true, "not_done": "", "title": "Jarque-Bera test", "origin": {"description": "Combine skewness and kurtosis into one chi-square test of normality.", "usage": "jarque.test(x)", "arguments": [{"name": "x", "text": "A numeric vector. A matrix is rejected, and missing values are not dropped."}], "details": "JB is n/6 times the squared skewness plus one quarter of the squared distance of the kurtosis from 3. The p-value is the upper tail of chi-square with 2 degrees of freedom. The alternative string is the word greater.", "value": "An htest with the statistic JB and the p-value.", "example": "x \u003c- c(1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0)\nprint(jarque.test(x))", "output": "output/jarque.test-r.txt", "output_blocks": [{"text": "\n\tJarque-Bera Normality Test\n\ndata:  x\nJB = 0.37876, p-value = 0.8275\nalternative hypothesis: greater"}]}, "translation": {"description": "Combine skewness and kurtosis into one chi-square test of normality.", "usage": "jarque_test(x)", "arguments": [{"name": "x", "text": "A numeric vector. A matrix is rejected, and missing values are not dropped."}], "details": "JB is n/6 times the squared skewness plus one quarter of the squared distance of the kurtosis from 3. The p-value is the upper tail of chi-square with 2 degrees of freedom. The alternative string is the word greater.", "value": "An htest with the statistic JB and the p-value.", "example": "print(jarque_test([1, 2, 4, -1, 5, 3, 8, 2.5, 6, 0]))", "output": "output/jarque.test-python.txt", "output_blocks": [{"text": "\n\tJarque-Bera Normality Test\n\ndata:  [1\nJB = 0.37876, p-value = 0.82747\nalternative hypothesis: greater"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

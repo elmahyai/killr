@@ -1,0 +1,1 @@
+Loblolly groups follow `levels(Loblolly$Seed)` (329, 327, 325, ...), not sorted order. R's condensed model and its nlminb path use that order, so a Python frame with sorted `group_levels` gives a different working response (the rows are permuted) and a different start point. Compare `ranef` rows by group name, since the level position is not the name order.

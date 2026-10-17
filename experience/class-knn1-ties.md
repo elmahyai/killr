@@ -1,0 +1,1 @@
+`class` `knn1` breaks a tie among equal nearest rows by a plain first-maximum vote. R's `VR_knn1` in `class.c` breaks the vote with a reservoir draw from `unif_rand()`, so the chosen label and the RNG state differ from R. `bclust` with `minsize > 0` calls `knn1` on tied centers and gets different pruned centers. Found while checking `bclust` against e1071 1.7-17.

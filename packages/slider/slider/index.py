@@ -1,0 +1,231 @@
+"""Index windows.
+
+Duplicate index values share one window. `.before` and `.after` are applied
+to the unique values, then each value selects the peers whose index falls
+inside that range. The comparisons are the same order `vec_rank(ties="dense")`
+would see, so the original values are compared directly.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+
+from slider.errors import SliderError
+
+
+def _missing(value) -> bool:
+    return value is None or (isinstance(value, float) and math.isnan(value))
+
+
+def _ascending_locations(values: list) -> list[int]:
+    """1-based positions where a value falls behind the one before it."""
+    locations = []
+    for i in range(1, len(values)):
+        if values[i] < values[i - 1]:
+            locations.append(i + 1)
+    return locations
+
+
+def _require_ascending(values: list, label: str) -> None:
+    locations = _ascending_locations(values)
+    if locations:
+        shown = ", ".join(str(item) for item in locations)
+        raise SliderError(f"In locations: {shown}. `{label}` must be in ascending order.")
+
+
+def _require_present(values: list, label: str) -> None:
+    locations = [i + 1 for i, value in enumerate(values) if _missing(value)]
+    if locations:
+        shown = ", ".join(str(item) for item in locations)
+        raise SliderError(f"In locations: {shown}. `{label}` can't be missing.")
+
+
+def unrep(values: list) -> tuple[list, list[int]]:
+    _require_present(values, ".i")
+    _require_ascending(values, ".i")
+    if not values:
+        return [], []
+    keys = [values[0]]
+    times = [1]
+    for value in values[1:]:
+        if value == keys[-1]:
+            times[-1] += 1
+        else:
+            keys.append(value)
+            times.append(1)
+    return keys, times
+
+
+def peer_bounds(times: list[int]) -> tuple[list[int], list[int]]:
+    starts = []
+    stops = []
+    cursor = 0
+    for size in times:
+        starts.append(cursor)
+        stops.append(cursor + size - 1)
+        cursor += size
+    return starts, stops
+
+
+@dataclass
+class IndexPlan:
+    keys: list
+    times: list[int]
+    peer_starts: list[int]
+    peer_stops: list[int]
+    starts: list | None
+    stops: list | None
+    start_unbounded: bool
+    stop_unbounded: bool
+
+    def ranges(self):
+        """Yield (peer index, element start, element stop inclusive).
+
+        An empty selection yields element bounds of None.
+        """
+        cursor = _Cursor(self)
+        count = len(self.keys) if self.starts is None else len(self.starts)
+        for pos in range(count):
+            start_pos = cursor.locate_start(pos)
+            stop_pos = cursor.locate_stop(pos)
+            if stop_pos < start_pos:
+                yield pos, None, None
+            else:
+                yield pos, self.peer_starts[start_pos], self.peer_stops[stop_pos]
+
+
+class _Cursor:
+    def __init__(self, plan: IndexPlan):
+        self.plan = plan
+        self.start_pos = 0
+        self.stop_pos = 0
+        self.last = len(plan.keys) - 1
+
+    def locate_start(self, pos: int) -> int:
+        if self.plan.start_unbounded:
+            return 0
+        if self.start_pos > self.last:
+            return self.last + 1
+        target = self.plan.starts[pos]
+        keys = self.plan.keys
+        while keys[self.start_pos] < target:
+            self.start_pos += 1
+            if self.start_pos > self.last:
+                return self.last + 1
+        return self.start_pos
+
+    def locate_stop(self, pos: int) -> int:
+        if self.plan.stop_unbounded:
+            return self.last
+        if self.stop_pos > self.last:
+            return self.last
+        target = self.plan.stops[pos]
+        keys = self.plan.keys
+        while keys[self.stop_pos] <= target:
+            self.stop_pos += 1
+            if self.stop_pos > self.last:
+                return self.last
+        return self.stop_pos - 1
+
+
+def _iteration_bounds(plan: IndexPlan) -> tuple[int, int]:
+    return 0, len(plan.keys)
+
+
+def _complete_bounds(plan: IndexPlan, complete: bool) -> tuple[int, int]:
+    size = len(plan.keys)
+    if not complete or size == 0:
+        return 0, size
+    forward = 0
+    if not plan.start_unbounded:
+        first = plan.keys[0]
+        for value in plan.starts:
+            if first > value:
+                forward += 1
+            else:
+                break
+    backward = 0
+    if not plan.stop_unbounded:
+        last = plan.keys[-1]
+        for value in reversed(plan.stops):
+            if last < value:
+                backward += 1
+            else:
+                break
+    return forward, size - backward
+
+
+def plan_from_before(index: list, before, after, complete: bool) -> IndexPlan:
+    keys, times = unrep(index)
+    starts, start_unbounded = _endpoints(keys, before, "before", subtract=True)
+    stops, stop_unbounded = _endpoints(keys, after, "after", subtract=False)
+    if not start_unbounded and not stop_unbounded:
+        _starts_not_past_stops(starts, stops, "In the ranges generated by `.before` and `.after`:")
+    peer_starts, peer_stops = peer_bounds(times)
+    plan = IndexPlan(keys, times, peer_starts, peer_stops, starts, stops, start_unbounded, stop_unbounded)
+    # complete trims the iteration, stored by replacing nothing; callers use complete_ranges
+    plan._complete = complete
+    return plan
+
+
+def complete_ranges(plan: IndexPlan):
+    cursor = _Cursor(plan)
+    min_i, max_i = _complete_bounds(plan, getattr(plan, "_complete", False))
+    for pos in range(min_i, max_i):
+        start_pos = cursor.locate_start(pos)
+        stop_pos = cursor.locate_stop(pos)
+        if stop_pos < start_pos:
+            yield pos, None, None
+        else:
+            yield pos, plan.peer_starts[start_pos], plan.peer_stops[stop_pos]
+
+
+def plan_from_bounds(index: list, starts: list, stops: list) -> IndexPlan:
+    _require_present(starts, ".starts")
+    _require_ascending(starts, ".starts")
+    _require_present(stops, ".stops")
+    _require_ascending(stops, ".stops")
+    keys, times = unrep(index)
+    if len(starts) == 1 and len(stops) != 1:
+        starts = starts * len(stops)
+    elif len(stops) == 1 and len(starts) != 1:
+        stops = stops * len(starts)
+    elif len(starts) != len(stops):
+        raise SliderError(
+            f"`.starts` ({len(starts)}) and `.stops` ({len(stops)}) must have the same size."
+        )
+    _starts_not_past_stops(starts, stops, "In the ranges generated by `.starts` and `.stops`:")
+    peer_starts, peer_stops = peer_bounds(times)
+    return IndexPlan(keys, times, peer_starts, peer_stops, starts, stops, False, False)
+
+
+def _endpoints(keys: list, bound, name: str, *, subtract: bool):
+    from slider.windows import _as_int
+
+    if callable(bound):
+        values = list(bound(list(keys)))
+        if len(values) != len(keys):
+            raise SliderError(
+                f"Endpoints generated by `.{name}` must have size {len(keys)}, not {len(values)}."
+            )
+        _require_present(values, f".{name}")
+        _require_ascending(values, f".{name}")
+        return values, False
+    amount, unbounded = _as_int(bound, name, dot=True)
+    if unbounded:
+        return None, True
+    if subtract:
+        values = [key - amount for key in keys]
+    else:
+        values = [key + amount for key in keys]
+    return values, False
+
+
+def _starts_not_past_stops(starts: list, stops: list, detail: str) -> None:
+    locations = [i + 1 for i, (start, stop) in enumerate(zip(starts, stops)) if start > stop]
+    if locations:
+        shown = ", ".join(str(item) for item in locations)
+        raise SliderError(
+            f"In locations: {shown}. {detail} The start of the range can't be after the end of the range."
+        )

@@ -1,0 +1,84 @@
+{
+  "name": "t_tx_OP_y",
+  "title": "Fast calculation of 'z <- x OP y' and 'z <- t(t(x) OP y)'",
+  "origin": {
+    "description": "Fast calculation of 'z <- t(t(x) OP y)', where OP can be +, -, *, and /. For + and *, na.rm = TRUE will drop missing values first.",
+    "usage": "t_tx_OP_y(x, y, OP, xrows = NULL, xcols = NULL, yidxs = NULL,\n  commute = FALSE, na.rm = FALSE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A numeric or logical NxK matrix."
+      },
+      {
+        "name": "y",
+        "text": "A numeric or logical vector of length L."
+      },
+      {
+        "name": "OP",
+        "text": "A character specifying which operator to use."
+      },
+      {
+        "name": "xrows, xcols",
+        "text": "A vector indicating subset of rows (and/or columns) to operate over x. If NULL, no subsetting is done."
+      },
+      {
+        "name": "yidxs",
+        "text": "A vector indicating subset of elements to operate over y. If NULL, no subsetting is done."
+      },
+      {
+        "name": "commute",
+        "text": "If TRUE, t(y OP t(x)) is calculated, otherwise t(t(x) OP y)."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      }
+    ],
+    "details": "If na.rm = TRUE, missing values are dropped before applying the operator to each pair of values. This only applies to additions and multiplications. For subtractions and divisions, na.rm is ignored. y is recycled across each row, which is the same as adding it to the transpose and transposing back.",
+    "value": "A numeric NxK matrix. Integer x and y stay integer for +, -, and *, and division always returns double.",
+    "example": "x <- matrix(c(1, 2, 3, NA, 5, 6), nrow = 3, ncol = 2)\ny <- 1:3\nt_tx_OP_y(x, y, OP = \"+\")",
+    "output": "output/t_tx_OP_y-r.txt"
+  },
+  "translation": {
+    "description": "Fast calculation of z = t(t(x) OP y), where OP can be +, -, *, and /. For + and *, na_rm True drops missing values first.",
+    "usage": "t_tx_OP_y(x, y, OP, xrows=None, xcols=None, yidxs=None, commute=False, na_rm=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. Logical values are 0 and 1. Integer values stay on the integer path. Floating values are computed as float64."
+      },
+      {
+        "name": "y",
+        "text": "A numeric or logical vector. It is recycled in row-major order, one row at a time. A 2-d y is read in column-major order before that recycling."
+      },
+      {
+        "name": "OP",
+        "text": "\"+\", \"-\", \"*\", \"/\", or the integers 1 through 4."
+      },
+      {
+        "name": "xrows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and a positive index past the matrix is an error."
+      },
+      {
+        "name": "xcols",
+        "text": "1-based column subscripts. None selects every column. The same rules as xrows apply."
+      },
+      {
+        "name": "yidxs",
+        "text": "1-based subscripts into y. None selects every element. A positive index past y becomes a missing value."
+      },
+      {
+        "name": "commute",
+        "text": "If True, t(y OP t(x)) is calculated. This is commute."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, a missing operand is replaced by the other one for addition and multiplication. This is na.rm. Subtraction and division ignore it."
+      }
+    ],
+    "details": "The scan lives in the Rust crate xopy, ported from matrixStats src/x_OP_y.c with byRow TRUE. y is recycled along each row. The missing-value and integer-overflow rules match x_OP_y.",
+    "value": "An array of shape (N, K). Integer x and y return int32 for +, -, and *, and float64 for division. Any double operand returns float64.",
+    "example": "import numpy as np\nfrom matrixstats.x_op_y import t_tx_OP_y\n\nna = np.uint64(0x7FF00000000007A2).view(np.float64)\nx = np.array([[1.0, na], [2.0, 5.0], [3.0, 6.0]])\nt_tx_OP_y(x, np.array([1, 2, 3]), \"+\")",
+    "output": "output/t_tx_OP_y-python.txt"
+  }
+}

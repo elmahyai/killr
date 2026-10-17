@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rstudioapi · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>rstudioapi</h1>
+<p class="note">CRAN 0.19.0</p>
+<p>Checked isAvailable, as.document_position, and as.document_range. The other exports are listed and not translated.</p>
+<p class="note">3 of 130 functions · 2.3% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:2.3%"></div></div><strong>2.3%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#addTheme">addTheme</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#applyTheme">applyTheme</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as.document_position">as.document_position</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Coerces length-two numeric vectors to row and column positions and returns an existing position unchanged, without calling the IDE.</td></tr>
+<tr><td><a href="#as.document_range">as.document_range</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Coerces length-four numeric vectors to start and end positions and returns an existing range unchanged, without calling the IDE.</td></tr>
+<tr><td><a href="#askForPassword">askForPassword</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#askForSecret">askForSecret</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#bugReport">bugReport</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#buildToolsCheck">buildToolsCheck</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#buildToolsExec">buildToolsExec</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#buildToolsInstall">buildToolsInstall</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#callFun">callFun</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#convertTheme">convertTheme</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#createProjectTemplate">createProjectTemplate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#dictionariesPath">dictionariesPath</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentClose">documentClose</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentId">documentId</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentNew">documentNew</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentOpen">documentOpen</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentPath">documentPath</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentSave">documentSave</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#documentSaveAll">documentSaveAll</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#document_position">document_position</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#document_range">document_range</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#executeCommand">executeCommand</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#filesPaneNavigate">filesPaneNavigate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#findFun">findFun</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#findOAuthIntegration">findOAuthIntegration</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getActiveDocumentContext">getActiveDocumentContext</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getActiveProject">getActiveProject</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getConsoleEditorContext">getConsoleEditorContext</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getDelegatedAzureToken">getDelegatedAzureToken</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getIdentityToken">getIdentityToken</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getMode">getMode</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getOAuthCredentials">getOAuthCredentials</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getOAuthIntegration">getOAuthIntegration</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getOAuthIntegrations">getOAuthIntegrations</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getPersistentValue">getPersistentValue</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getRStudioPackageDependencies">getRStudioPackageDependencies</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getSourceEditorContext">getSourceEditorContext</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getThemeInfo">getThemeInfo</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getThemes">getThemes</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#getVersion">getVersion</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hasColorConsole">hasColorConsole</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#hasFun">hasFun</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#highlightUi">highlightUi</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#initializeProject">initializeProject</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#insertText">insertText</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is.document_position">is.document_position</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is.document_range">is.document_range</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#isAvailable">isAvailable</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Reports false when RStudio is not running, so a version request is not checked.</td></tr>
+<tr><td><a href="#isBackgroundJob">isBackgroundJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#isJob">isJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#isWorkbenchJob">isWorkbenchJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobAdd">jobAdd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobAddOutput">jobAddOutput</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobAddProgress">jobAddProgress</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobGetState">jobGetState</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobList">jobList</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobRemove">jobRemove</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobRunScript">jobRunScript</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobSetProgress">jobSetProgress</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobSetState">jobSetState</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#jobSetStatus">jobSetStatus</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherAvailable">launcherAvailable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherConfig">launcherConfig</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherContainer">launcherContainer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherControlJob">launcherControlJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherGetInfo">launcherGetInfo</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherGetJob">launcherGetJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherGetJobs">launcherGetJobs</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherHostMount">launcherHostMount</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherNfsMount">launcherNfsMount</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherPlacementConstraint">launcherPlacementConstraint</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherResourceLimit">launcherResourceLimit</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherSubmitJob">launcherSubmitJob</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#launcherSubmitR">launcherSubmitR</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#modifyRange">modifyRange</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#navigateToFile">navigateToFile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#openProject">openProject</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#previewRd">previewRd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#previewSql">previewSql</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#primary_selection">primary_selection</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#readPreference">readPreference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#readRStudioPreference">readRStudioPreference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#registerChunkCallback">registerChunkCallback</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#registerCommandCallback">registerCommandCallback</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#registerCommandStreamCallback">registerCommandStreamCallback</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#removeTheme">removeTheme</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#restartSession">restartSession</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#savePlotAsImage">savePlotAsImage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#selectDirectory">selectDirectory</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#selectFile">selectFile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#selectionGet">selectionGet</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#selectionSet">selectionSet</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#sendToConsole">sendToConsole</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#setCursorPosition">setCursorPosition</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#setDocumentContents">setDocumentContents</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#setGhostText">setGhostText</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#setPersistentValue">setPersistentValue</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#setSelectionRanges">setSelectionRanges</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#showDialog">showDialog</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#showEditSuggestion">showEditSuggestion</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#showPrompt">showPrompt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#showQuestion">showQuestion</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#sourceMarkers">sourceMarkers</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#systemUsername">systemUsername</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalActivate">terminalActivate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalBuffer">terminalBuffer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalBusy">terminalBusy</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalClear">terminalClear</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalContext">terminalContext</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalCreate">terminalCreate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalExecute">terminalExecute</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalExitCode">terminalExitCode</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalKill">terminalKill</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalList">terminalList</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalRunning">terminalRunning</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalSend">terminalSend</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#terminalVisible">terminalVisible</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#translateLocalUrl">translateLocalUrl</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#unregisterChunkCallback">unregisterChunkCallback</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#unregisterCommandCallback">unregisterCommandCallback</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#updateDialog">updateDialog</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#userDictionariesPath">userDictionariesPath</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#userIdentity">userIdentity</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#verifyAvailable">verifyAvailable</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#versionInfo">versionInfo</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#viewer">viewer</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#writePreference">writePreference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#writeRStudioPreference">writeRStudioPreference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>as.document_position</td><td>Identity on an existing position, coercion from double and integer length-2 vectors, NA row, and invalid length or type</td><td>0.548</td><td>0.0307</td><td><button type="button" class="proof-toggle" data-name="as.document_position"><span class='yes'>+1686%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:5.6%'></span></div></td></tr>
+<tr><td>as.document_range</td><td>Identity on an existing range, coercion from double and integer length-4 vectors, NA start row, and invalid length or type</td><td>0.664</td><td>0.0777</td><td><button type="button" class="proof-toggle" data-name="as.document_range"><span class='yes'>+754%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.7%'></span></div></td></tr>
+<tr><td>isAvailable</td><td>isAvailable is FALSE when RStudio is not running</td><td>1.03</td><td>0.122</td><td><button type="button" class="proof-toggle" data-name="isAvailable"><span class='yes'>+745%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.8%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "as.document_position", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\n\nnum \u003c- function(x) {\n  if (length(x) == 1 && is.na(x)) \"NA\" else sprintf(\"%.17g\", as.numeric(x))\n}\n\nline \u003c- function(name, expr, same = NULL) {\n  text \u003c- tryCatch(\n    {\n      value \u003c- expr\n      if (inherits(value, \"document_position\")) {\n        out \u003c- paste0(\"OK \", num(value[[1]]), \" \", num(value[[2]]))\n        if (!is.null(same)) {\n          out \u003c- paste0(out, \" \", identical(value, same))\n        }\n        out\n      } else {\n        paste0(\"OTHER \", paste(as.character(value), collapse = \",\"))\n      }\n    },\n    error = function(e) paste0(\"ERR \", conditionMessage(e))\n  )\n  paste0(name, \"=\", text)\n}\n\none \u003c- function() {\n  pos \u003c- document_position(3, 7)\n  parts \u003c- c(\n    line(\"identity\", as.document_position(pos), same = pos),\n    line(\"dbl\", as.document_position(c(3, 7))),\n    line(\"int\", as.document_position(c(1L, 2L))),\n    line(\"na\", as.document_position(c(NA_real_, 1))),\n    line(\"len3\", as.document_position(c(1, 2, 3))),\n    line(\"logical\", as.document_position(c(TRUE, FALSE))),\n    line(\"char\", as.document_position(c(\"a\", \"b\")))\n  )\n  paste(parts, collapse = \"\\n\")\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom rstudioapi.as_document_position import as_document_position, document_position\n\n\ndef _num(value: float) -> str:\n    if math.isnan(value):\n        return \"NA\"\n    return format(float(value), \".17g\")\n\n\ndef line(name, fn, same=None):\n    try:\n        value = fn()\n    except Exception as exc:\n        text = \"ERR \" + str(exc)\n    else:\n        if hasattr(value, \"row\") and hasattr(value, \"column\"):\n            text = \"OK \" + _num(value.row) + \" \" + _num(value.column)\n            if same is not None:\n                text += \" \" + (\"TRUE\" if value is same else \"FALSE\")\n        else:\n            text = \"OTHER \" + repr(value)\n    return name + \"=\" + text\n\n\ndef one():\n    pos = document_position(3, 7)\n    parts = [\n        line(\"identity\", lambda: as_document_position(pos), same=pos),\n        line(\"dbl\", lambda: as_document_position((3.0, 7.0))),\n        line(\"int\", lambda: as_document_position((1, 2))),\n        line(\"na\", lambda: as_document_position((float(\"nan\"), 1.0))),\n        line(\"len3\", lambda: as_document_position((1.0, 2.0, 3.0))),\n        line(\"logical\", lambda: as_document_position((True, False))),\n        line(\"char\", lambda: as_document_position((\"a\", \"b\"))),\n    ]\n    return \"\\n\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = value.replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "as.document_range", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\n\nnum \u003c- function(x) {\n  if (length(x) == 1 && is.na(x)) \"NA\" else sprintf(\"%.17g\", as.numeric(x))\n}\n\nline \u003c- function(name, expr, same = NULL) {\n  text \u003c- tryCatch(\n    {\n      value \u003c- expr\n      if (inherits(value, \"document_range\")) {\n        s \u003c- value$start\n        e \u003c- value$end\n        out \u003c- paste0(\n          \"OK \",\n          num(s[[1]]), \" \", num(s[[2]]), \" \",\n          num(e[[1]]), \" \", num(e[[2]])\n        )\n        if (!is.null(same)) {\n          out \u003c- paste0(out, \" \", identical(value, same))\n        }\n        out\n      } else {\n        paste0(\"OTHER \", paste(as.character(value), collapse = \",\"))\n      }\n    },\n    error = function(e) paste0(\"ERR \", conditionMessage(e))\n  )\n  paste0(name, \"=\", text)\n}\n\none \u003c- function() {\n  rng \u003c- document_range(c(1, 2, 3, 4))\n  parts \u003c- c(\n    line(\"identity\", as.document_range(rng), same = rng),\n    line(\"dbl4\", as.document_range(c(1, 2, 3, 4))),\n    line(\"int4\", as.document_range(c(1L, 2L, 3L, 4L))),\n    line(\"na4\", as.document_range(c(NA_real_, 2, 3, 4))),\n    line(\"vec2\", as.document_range(c(1, 2))),\n    line(\"len3\", as.document_range(c(1, 2, 3))),\n    line(\"logical\", as.document_range(c(TRUE, FALSE, TRUE, FALSE)))\n  )\n  paste(parts, collapse = \"\\n\")\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import math\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom rstudioapi.as_document_range import as_document_range, document_range\n\n\ndef _num(value: float) -> str:\n    if math.isnan(value):\n        return \"NA\"\n    return format(float(value), \".17g\")\n\n\ndef line(name, fn, same=None):\n    try:\n        value = fn()\n    except Exception as exc:\n        text = \"ERR \" + str(exc)\n    else:\n        if hasattr(value, \"start\") and hasattr(value, \"end\"):\n            s = value.start\n            e = value.end\n            text = (\n                \"OK \"\n                + _num(s.row)\n                + \" \"\n                + _num(s.column)\n                + \" \"\n                + _num(e.row)\n                + \" \"\n                + _num(e.column)\n            )\n            if same is not None:\n                text += \" \" + (\"TRUE\" if value is same else \"FALSE\")\n        else:\n            text = \"OTHER \" + repr(value)\n    return name + \"=\" + text\n\n\ndef one():\n    rng = document_range((1.0, 2.0, 3.0, 4.0))\n    parts = [\n        line(\"identity\", lambda: as_document_range(rng), same=rng),\n        line(\"dbl4\", lambda: as_document_range((1.0, 2.0, 3.0, 4.0))),\n        line(\"int4\", lambda: as_document_range((1, 2, 3, 4))),\n        line(\"na4\", lambda: as_document_range((float(\"nan\"), 2.0, 3.0, 4.0))),\n        line(\"vec2\", lambda: as_document_range((1.0, 2.0))),\n        line(\"len3\", lambda: as_document_range((1.0, 2.0, 3.0))),\n        line(\"logical\", lambda: as_document_range((True, False, True, False))),\n    ]\n    return \"\\n\".join(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = value.replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "isAvailable", "r": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\n\nline \u003c- function(name, expr) {\n  text \u003c- tryCatch(\n    {\n      value \u003c- expr\n      if (isTRUE(value)) {\n        \"TRUE\"\n      } else if (identical(value, FALSE)) {\n        \"FALSE\"\n      } else {\n        paste0(\"OTHER \", paste(as.character(value), collapse = \",\"))\n      }\n    },\n    error = function(e) paste0(\"ERR \", conditionMessage(e))\n  )\n  paste0(name, \"=\", text)\n}\n\nrestore \u003c- function(name, previous) {\n  if (is.na(previous)) {\n    Sys.unsetenv(name)\n  } else {\n    do.call(Sys.setenv, setNames(list(previous), name))\n  }\n}\n\none \u003c- function() {\n  wb \u003c- Sys.getenv(\"RSTUDIO_WORKBENCH_JOB\", unset = NA_character_)\n  ipc \u003c- Sys.getenv(\"RSTUDIOAPI_IPC_REQUESTS_FILE\", unset = NA_character_)\n  response \u003c- Sys.getenv(\"RSTUDIOAPI_IPC_RESPONSE_FILE\", unset = NA_character_)\n  secret \u003c- Sys.getenv(\"RSTUDIOAPI_IPC_SHARED_SECRET\", unset = NA_character_)\n  rstudio \u003c- Sys.getenv(\"RSTUDIO\", unset = NA_character_)\n  on.exit({\n    restore(\"RSTUDIO_WORKBENCH_JOB\", wb)\n    restore(\"RSTUDIOAPI_IPC_REQUESTS_FILE\", ipc)\n    restore(\"RSTUDIOAPI_IPC_RESPONSE_FILE\", response)\n    restore(\"RSTUDIOAPI_IPC_SHARED_SECRET\", secret)\n    restore(\"RSTUDIO\", rstudio)\n  }, add = TRUE)\n  Sys.unsetenv(\"RSTUDIO_WORKBENCH_JOB\")\n  Sys.unsetenv(\"RSTUDIOAPI_IPC_REQUESTS_FILE\")\n  Sys.unsetenv(\"RSTUDIOAPI_IPC_RESPONSE_FILE\")\n  Sys.unsetenv(\"RSTUDIOAPI_IPC_SHARED_SECRET\")\n  Sys.unsetenv(\"RSTUDIO\")\n\n  parts \u003c- c(\n    line(\"default\", isAvailable()),\n    line(\"version\", isAvailable(version_needed = \"2024.04.2\")),\n    line(\"child\", isAvailable(child_ok = TRUE)),\n    line(\"both\", isAvailable(version_needed = \"0.99.0\", child_ok = FALSE)),\n    line(\"null\", isAvailable(child_ok = NULL)),\n    line(\"string\", isAvailable(child_ok = \"TRUE\")),\n    line(\"len2\", isAvailable(child_ok = c(TRUE, FALSE))),\n    line(\"zero\", isAvailable(child_ok = 0)),\n    line(\"one\", isAvailable(child_ok = 1)),\n    line(\"nan\", isAvailable(child_ok = NaN)),\n    line(\"empty\", isAvailable(child_ok = logical(0))),\n    line(\"zeroi\", isAvailable(child_ok = 0i)),\n    line(\"onei\", isAvailable(child_ok = 1i))\n  )\n  Sys.setenv(RSTUDIO = \"1\")\n  parts \u003c- c(\n    parts,\n    line(\"rstudio-env\", isAvailable()),\n    line(\"rstudio-env-child\", isAvailable(child_ok = TRUE))\n  )\n  Sys.unsetenv(\"RSTUDIO\")\n  Sys.setenv(RSTUDIO_WORKBENCH_JOB = \"1\")\n  parts \u003c- c(\n    parts,\n    line(\"wb-default\", isAvailable()),\n    line(\"wb-child\", isAvailable(child_ok = TRUE)),\n    line(\"wb-version\", isAvailable(version_needed = \"99.0\", child_ok = TRUE)),\n    line(\"wb-na\", isAvailable(child_ok = NA)),\n    line(\"wb-zeroi\", isAvailable(child_ok = 0i)),\n    line(\"wb-onei\", isAvailable(child_ok = 1i))\n  )\n  Sys.unsetenv(\"RSTUDIO_WORKBENCH_JOB\")\n  Sys.setenv(RSTUDIOAPI_IPC_REQUESTS_FILE = \"\")\n  parts \u003c- c(\n    parts,\n    line(\"ipc-child\", isAvailable(child_ok = TRUE)),\n    line(\"ipc-false\", isAvailable(child_ok = FALSE))\n  )\n  paste(parts, collapse = \"\\n\")\n}\n\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import os\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom rstudioapi.is_available import isAvailable\n\n\ndef line(name, fn):\n    try:\n        value = fn()\n    except Exception as exc:\n        text = \"ERR \" + str(exc)\n    else:\n        if value is True:\n            text = \"TRUE\"\n        elif value is False:\n            text = \"FALSE\"\n        else:\n            text = \"OTHER \" + repr(value)\n    return name + \"=\" + text\n\n\ndef _restore(name, previous):\n    if previous is None:\n        os.environ.pop(name, None)\n    else:\n        os.environ[name] = previous\n\n\ndef one():\n    saved = {\n        name: os.environ.get(name)\n        for name in (\n            \"RSTUDIO_WORKBENCH_JOB\",\n            \"RSTUDIOAPI_IPC_REQUESTS_FILE\",\n            \"RSTUDIOAPI_IPC_RESPONSE_FILE\",\n            \"RSTUDIOAPI_IPC_SHARED_SECRET\",\n            \"RSTUDIO\",\n        )\n    }\n    try:\n        for name in saved:\n            os.environ.pop(name, None)\n        parts = [\n            line(\"default\", isAvailable),\n            line(\"version\", lambda: isAvailable(version_needed=\"2024.04.2\")),\n            line(\"child\", lambda: isAvailable(child_ok=True)),\n            line(\n                \"both\",\n                lambda: isAvailable(version_needed=\"0.99.0\", child_ok=False),\n            ),\n            line(\"null\", lambda: isAvailable(child_ok=None)),\n            line(\"string\", lambda: isAvailable(child_ok=\"TRUE\")),\n            line(\"len2\", lambda: isAvailable(child_ok=(True, False))),\n            line(\"zero\", lambda: isAvailable(child_ok=0)),\n            line(\"one\", lambda: isAvailable(child_ok=1)),\n            line(\"nan\", lambda: isAvailable(child_ok=float(\"nan\"))),\n            line(\"empty\", lambda: isAvailable(child_ok=())),\n            line(\"zeroi\", lambda: isAvailable(child_ok=0j)),\n            line(\"onei\", lambda: isAvailable(child_ok=1j)),\n        ]\n        os.environ[\"RSTUDIO\"] = \"1\"\n        parts.append(line(\"rstudio-env\", isAvailable))\n        parts.append(line(\"rstudio-env-child\", lambda: isAvailable(child_ok=True)))\n        os.environ.pop(\"RSTUDIO\", None)\n        os.environ[\"RSTUDIO_WORKBENCH_JOB\"] = \"1\"\n        parts.extend(\n            [\n                line(\"wb-default\", isAvailable),\n                line(\"wb-child\", lambda: isAvailable(child_ok=True)),\n                line(\n                    \"wb-version\",\n                    lambda: isAvailable(version_needed=\"99.0\", child_ok=True),\n                ),\n                line(\"wb-na\", lambda: isAvailable(child_ok=float(\"nan\"))),\n                line(\"wb-zeroi\", lambda: isAvailable(child_ok=0j)),\n                line(\"wb-onei\", lambda: isAvailable(child_ok=1j)),\n            ]\n        )\n        os.environ.pop(\"RSTUDIO_WORKBENCH_JOB\", None)\n        os.environ[\"RSTUDIOAPI_IPC_REQUESTS_FILE\"] = \"\"\n        parts.append(line(\"ipc-child\", lambda: isAvailable(child_ok=True)))\n        parts.append(line(\"ipc-false\", lambda: isAvailable(child_ok=False)))\n        return \"\\n\".join(parts)\n    finally:\n        for name, previous in saved.items():\n            _restore(name, previous)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = value.replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><p class="note">None.</p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "addTheme", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "addTheme", "origin": null, "translation": null}, {"name": "applyTheme", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "applyTheme", "origin": null, "translation": null}, {"name": "as.document_position", "translated": true, "not_done": "", "title": "Create a Document Position", "origin": {"description": "Creates a document_position, which can be used to indicate e.g. the row + column location of the cursor in a document.", "usage": "as.document_position(x)", "arguments": [{"name": "x", "text": "An object coercable to document_position."}], "details": "Existing document_position objects are returned unchanged. A numeric vector of length two becomes document_position(x[[1]], x[[2]]).", "value": "A document_position object.", "example": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\npos \u003c- document_position(1, 5)\nprint(as.document_position(pos))\nprint(as.document_position(c(3, 7)))\n", "output": "output/as.document_position-r.txt", "output_blocks": [{"text": "Document Position: [1, 5]\nDocument Position: [3, 7]"}]}, "translation": {"description": "Creates a document_position, which can be used to indicate e.g. the row + column location of the cursor in a document.", "usage": "rstudioapi.as_document_position.as_document_position", "arguments": [{"name": "x", "text": "An object coercable to document_position."}], "details": "Existing document_position objects are returned unchanged. A numeric vector of length two becomes document_position(x[0], x[1]).", "value": "A DocumentPosition object.", "example": "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nfrom rstudioapi.as_document_position import as_document_position, document_position, print_document_position\npos = document_position(1, 5)\nprint_document_position(as_document_position(pos))\nprint_document_position(as_document_position((3.0, 7.0)))\n", "output": "output/as.document_position-python.txt", "output_blocks": [{"text": "Document Position: [1, 5]\nDocument Position: [3, 7]"}]}}, {"name": "as.document_range", "translated": true, "not_done": "", "title": "Create a Range", "origin": {"description": "A document_range is a pair of document_position objects, with each position indicating the start and end of the range, respectively.", "usage": "as.document_range(x)", "arguments": [{"name": "x", "text": "An object coercable to document_range."}], "details": "Existing document_range objects are returned unchanged. Other values are passed to document_range(x).", "value": "A list with class document_range and fields start and end.", "example": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\nrng \u003c- document_range(c(1, 2, 3, 4))\nprint(as.document_range(rng))\nprint(as.document_range(c(5, 6, 7, 8)))\n", "output": "output/as.document_range-r.txt", "output_blocks": [{"text": "Document Range:\n- Start: [1, 2]\n- End: [3, 4]\nDocument Range:\n- Start: [5, 6]\n- End: [7, 8]"}]}, "translation": {"description": "A document_range is a pair of document_position objects, with each position indicating the start and end of the range, respectively.", "usage": "rstudioapi.as_document_range.as_document_range", "arguments": [{"name": "x", "text": "An object coercable to document_range."}], "details": "Existing document_range objects are returned unchanged. A numeric vector of length four is coerced through document_range.", "value": "A DocumentRange object.", "example": "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nfrom rstudioapi.as_document_range import as_document_range, document_range, print_document_range\nrng = document_range((1.0, 2.0, 3.0, 4.0))\nprint_document_range(as_document_range(rng))\nprint_document_range(as_document_range((5.0, 6.0, 7.0, 8.0)))\n", "output": "output/as.document_range-python.txt", "output_blocks": [{"text": "Document Range:\n- Start: [1, 2]\n- End: [3, 4]\nDocument Range:\n- Start: [5, 6]\n- End: [7, 8]"}]}}, {"name": "askForPassword", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "askForPassword", "origin": null, "translation": null}, {"name": "askForSecret", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "askForSecret", "origin": null, "translation": null}, {"name": "bugReport", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "bugReport", "origin": null, "translation": null}, {"name": "buildToolsCheck", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "buildToolsCheck", "origin": null, "translation": null}, {"name": "buildToolsExec", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "buildToolsExec", "origin": null, "translation": null}, {"name": "buildToolsInstall", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "buildToolsInstall", "origin": null, "translation": null}, {"name": "callFun", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "callFun", "origin": null, "translation": null}, {"name": "convertTheme", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "convertTheme", "origin": null, "translation": null}, {"name": "createProjectTemplate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "createProjectTemplate", "origin": null, "translation": null}, {"name": "dictionariesPath", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "dictionariesPath", "origin": null, "translation": null}, {"name": "documentClose", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentClose", "origin": null, "translation": null}, {"name": "documentId", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentId", "origin": null, "translation": null}, {"name": "documentNew", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentNew", "origin": null, "translation": null}, {"name": "documentOpen", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentOpen", "origin": null, "translation": null}, {"name": "documentPath", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentPath", "origin": null, "translation": null}, {"name": "documentSave", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentSave", "origin": null, "translation": null}, {"name": "documentSaveAll", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "documentSaveAll", "origin": null, "translation": null}, {"name": "document_position", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "document_position", "origin": null, "translation": null}, {"name": "document_range", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "document_range", "origin": null, "translation": null}, {"name": "executeCommand", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "executeCommand", "origin": null, "translation": null}, {"name": "filesPaneNavigate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "filesPaneNavigate", "origin": null, "translation": null}, {"name": "findFun", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "findFun", "origin": null, "translation": null}, {"name": "findOAuthIntegration", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "findOAuthIntegration", "origin": null, "translation": null}, {"name": "getActiveDocumentContext", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getActiveDocumentContext", "origin": null, "translation": null}, {"name": "getActiveProject", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getActiveProject", "origin": null, "translation": null}, {"name": "getConsoleEditorContext", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getConsoleEditorContext", "origin": null, "translation": null}, {"name": "getDelegatedAzureToken", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getDelegatedAzureToken", "origin": null, "translation": null}, {"name": "getIdentityToken", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getIdentityToken", "origin": null, "translation": null}, {"name": "getMode", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getMode", "origin": null, "translation": null}, {"name": "getOAuthCredentials", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getOAuthCredentials", "origin": null, "translation": null}, {"name": "getOAuthIntegration", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getOAuthIntegration", "origin": null, "translation": null}, {"name": "getOAuthIntegrations", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getOAuthIntegrations", "origin": null, "translation": null}, {"name": "getPersistentValue", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getPersistentValue", "origin": null, "translation": null}, {"name": "getRStudioPackageDependencies", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getRStudioPackageDependencies", "origin": null, "translation": null}, {"name": "getSourceEditorContext", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getSourceEditorContext", "origin": null, "translation": null}, {"name": "getThemeInfo", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getThemeInfo", "origin": null, "translation": null}, {"name": "getThemes", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getThemes", "origin": null, "translation": null}, {"name": "getVersion", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "getVersion", "origin": null, "translation": null}, {"name": "hasColorConsole", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hasColorConsole", "origin": null, "translation": null}, {"name": "hasFun", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "hasFun", "origin": null, "translation": null}, {"name": "highlightUi", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "highlightUi", "origin": null, "translation": null}, {"name": "initializeProject", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "initializeProject", "origin": null, "translation": null}, {"name": "insertText", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "insertText", "origin": null, "translation": null}, {"name": "is.document_position", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is.document_position", "origin": null, "translation": null}, {"name": "is.document_range", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is.document_range", "origin": null, "translation": null}, {"name": "isAvailable", "translated": true, "not_done": "", "title": "Check if RStudio is running", "origin": {"description": "Check if RStudio is running.", "usage": "isAvailable(version_needed = NULL, child_ok = FALSE)", "arguments": [{"name": "version_needed", "text": "An optional version specification. If supplied, ensures that RStudio is at least that version."}, {"name": "child_ok", "text": "Boolean; check if the current R process is a child process of the main RStudio session? This can be useful for RStudio jobs, where the child communicates back with the main R session."}], "details": "Outside RStudio the GUI is not RStudio, so the result is false and version_needed is not evaluated. child_ok reaches the parent only when this process is an RStudio job.", "value": "A boolean. FALSE when RStudio is not running.", "example": ".libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(rstudioapi))\nstopifnot(identical(as.character(packageVersion(\"rstudioapi\")), \"0.19.0\"))\nrstudioapi::isAvailable()\n", "output": "output/isAvailable-r.txt", "output_blocks": [{"text": "[1] FALSE"}]}, "translation": {"description": "Check if RStudio is running.", "usage": "rstudioapi.is_available.isAvailable", "arguments": [{"name": "version_needed", "text": "An optional version specification. If supplied, ensures that RStudio is at least that version."}, {"name": "child_ok", "text": "Boolean; check if the current R process is a child process of the main RStudio session? This can be useful for RStudio jobs, where the child communicates back with the main R session."}], "details": "Outside RStudio the GUI is not RStudio, so the result is false and version_needed is not evaluated. child_ok reaches the parent only when this process is an RStudio job.", "value": "A boolean. False when RStudio is not running.", "example": "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nfrom rstudioapi.is_available import isAvailable\nvalue = isAvailable()\nif value is True:\n    text = \"TRUE\"\nelif value is False:\n    text = \"FALSE\"\nelse:\n    text = repr(value)\nprint(\"[1] \" + text)\n", "output": "output/isAvailable-python.txt", "output_blocks": [{"text": "[1] FALSE"}]}}, {"name": "isBackgroundJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "isBackgroundJob", "origin": null, "translation": null}, {"name": "isJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "isJob", "origin": null, "translation": null}, {"name": "isWorkbenchJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "isWorkbenchJob", "origin": null, "translation": null}, {"name": "jobAdd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobAdd", "origin": null, "translation": null}, {"name": "jobAddOutput", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobAddOutput", "origin": null, "translation": null}, {"name": "jobAddProgress", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobAddProgress", "origin": null, "translation": null}, {"name": "jobGetState", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobGetState", "origin": null, "translation": null}, {"name": "jobList", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobList", "origin": null, "translation": null}, {"name": "jobRemove", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobRemove", "origin": null, "translation": null}, {"name": "jobRunScript", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobRunScript", "origin": null, "translation": null}, {"name": "jobSetProgress", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobSetProgress", "origin": null, "translation": null}, {"name": "jobSetState", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobSetState", "origin": null, "translation": null}, {"name": "jobSetStatus", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "jobSetStatus", "origin": null, "translation": null}, {"name": "launcherAvailable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherAvailable", "origin": null, "translation": null}, {"name": "launcherConfig", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherConfig", "origin": null, "translation": null}, {"name": "launcherContainer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherContainer", "origin": null, "translation": null}, {"name": "launcherControlJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherControlJob", "origin": null, "translation": null}, {"name": "launcherGetInfo", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherGetInfo", "origin": null, "translation": null}, {"name": "launcherGetJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherGetJob", "origin": null, "translation": null}, {"name": "launcherGetJobs", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherGetJobs", "origin": null, "translation": null}, {"name": "launcherHostMount", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherHostMount", "origin": null, "translation": null}, {"name": "launcherNfsMount", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherNfsMount", "origin": null, "translation": null}, {"name": "launcherPlacementConstraint", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherPlacementConstraint", "origin": null, "translation": null}, {"name": "launcherResourceLimit", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherResourceLimit", "origin": null, "translation": null}, {"name": "launcherSubmitJob", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherSubmitJob", "origin": null, "translation": null}, {"name": "launcherSubmitR", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "launcherSubmitR", "origin": null, "translation": null}, {"name": "modifyRange", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "modifyRange", "origin": null, "translation": null}, {"name": "navigateToFile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "navigateToFile", "origin": null, "translation": null}, {"name": "openProject", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "openProject", "origin": null, "translation": null}, {"name": "previewRd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "previewRd", "origin": null, "translation": null}, {"name": "previewSql", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "previewSql", "origin": null, "translation": null}, {"name": "primary_selection", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "primary_selection", "origin": null, "translation": null}, {"name": "readPreference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "readPreference", "origin": null, "translation": null}, {"name": "readRStudioPreference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "readRStudioPreference", "origin": null, "translation": null}, {"name": "registerChunkCallback", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "registerChunkCallback", "origin": null, "translation": null}, {"name": "registerCommandCallback", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "registerCommandCallback", "origin": null, "translation": null}, {"name": "registerCommandStreamCallback", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "registerCommandStreamCallback", "origin": null, "translation": null}, {"name": "removeTheme", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "removeTheme", "origin": null, "translation": null}, {"name": "restartSession", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "restartSession", "origin": null, "translation": null}, {"name": "savePlotAsImage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "savePlotAsImage", "origin": null, "translation": null}, {"name": "selectDirectory", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "selectDirectory", "origin": null, "translation": null}, {"name": "selectFile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "selectFile", "origin": null, "translation": null}, {"name": "selectionGet", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "selectionGet", "origin": null, "translation": null}, {"name": "selectionSet", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "selectionSet", "origin": null, "translation": null}, {"name": "sendToConsole", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "sendToConsole", "origin": null, "translation": null}, {"name": "setCursorPosition", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "setCursorPosition", "origin": null, "translation": null}, {"name": "setDocumentContents", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "setDocumentContents", "origin": null, "translation": null}, {"name": "setGhostText", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "setGhostText", "origin": null, "translation": null}, {"name": "setPersistentValue", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "setPersistentValue", "origin": null, "translation": null}, {"name": "setSelectionRanges", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "setSelectionRanges", "origin": null, "translation": null}, {"name": "showDialog", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "showDialog", "origin": null, "translation": null}, {"name": "showEditSuggestion", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "showEditSuggestion", "origin": null, "translation": null}, {"name": "showPrompt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "showPrompt", "origin": null, "translation": null}, {"name": "showQuestion", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "showQuestion", "origin": null, "translation": null}, {"name": "sourceMarkers", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "sourceMarkers", "origin": null, "translation": null}, {"name": "systemUsername", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "systemUsername", "origin": null, "translation": null}, {"name": "terminalActivate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalActivate", "origin": null, "translation": null}, {"name": "terminalBuffer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalBuffer", "origin": null, "translation": null}, {"name": "terminalBusy", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalBusy", "origin": null, "translation": null}, {"name": "terminalClear", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalClear", "origin": null, "translation": null}, {"name": "terminalContext", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalContext", "origin": null, "translation": null}, {"name": "terminalCreate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalCreate", "origin": null, "translation": null}, {"name": "terminalExecute", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalExecute", "origin": null, "translation": null}, {"name": "terminalExitCode", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalExitCode", "origin": null, "translation": null}, {"name": "terminalKill", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalKill", "origin": null, "translation": null}, {"name": "terminalList", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalList", "origin": null, "translation": null}, {"name": "terminalRunning", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalRunning", "origin": null, "translation": null}, {"name": "terminalSend", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalSend", "origin": null, "translation": null}, {"name": "terminalVisible", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "terminalVisible", "origin": null, "translation": null}, {"name": "translateLocalUrl", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "translateLocalUrl", "origin": null, "translation": null}, {"name": "unregisterChunkCallback", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "unregisterChunkCallback", "origin": null, "translation": null}, {"name": "unregisterCommandCallback", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "unregisterCommandCallback", "origin": null, "translation": null}, {"name": "updateDialog", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "updateDialog", "origin": null, "translation": null}, {"name": "userDictionariesPath", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "userDictionariesPath", "origin": null, "translation": null}, {"name": "userIdentity", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "userIdentity", "origin": null, "translation": null}, {"name": "verifyAvailable", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "verifyAvailable", "origin": null, "translation": null}, {"name": "versionInfo", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "versionInfo", "origin": null, "translation": null}, {"name": "viewer", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "viewer", "origin": null, "translation": null}, {"name": "writePreference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "writePreference", "origin": null, "translation": null}, {"name": "writeRStudioPreference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "writeRStudioPreference", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

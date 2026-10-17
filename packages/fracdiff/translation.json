@@ -1,0 +1,198 @@
+{
+  "name": "fracdiff",
+  "cran_version": "1.5-4",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "The seven exports match fracdiff 1.5-4 for an ARFIMA(0, d, 0) model. The fractional difference is a NumPy FFT. A positive nar or nma is still the MINPACK fit and raises NotImplementedError. There is no crate. All exports translated.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "diffseries",
+      "translated": true,
+      "python": "fracdiff.diffseries",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Centers the series, then the binomial weights are an FFT convolution.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "fractional difference of order 0.25 of a 40-point series",
+        "r_ms": 0.0940561294555664,
+        "translated_ms": 0.2669474997674115,
+        "speedup": 0.35233942830525294,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  diffseries(sin(1:40) + 0.3 * cos((1:40) / 3), 0.25)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    return list(diffseries([math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)], 0.25))\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fdGPH",
+      "translated": true,
+      "python": "fracdiff.fd_gph",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The slope of the log periodogram on 2 log(2 sin(w/2)), with the sign flipped.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Geweke-Porter-Hudak d and its two standard errors",
+        "r_ms": 0.7814168930053711,
+        "translated_ms": 0.6773134991817642,
+        "speedup": 1.153700456213216,
+        "matches": true,
+        "max_abs_diff": 4.996003610813204e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  g <- fdGPH(sin(1:40) + 0.3 * cos((1:40) / 3)); c(g$d, g$sd.as, g$sd.reg)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    g = fd_gph([math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)]); return [g['d'], g['sd_as'], g['sd_reg']]\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fdSperio",
+      "translated": true,
+      "python": "fracdiff.fd_sperio",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The same regression as fdGPH, with the periodogram tapered by the beta window.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Sperio d and its two standard errors",
+        "r_ms": 0.45359134674072266,
+        "translated_ms": 0.3990614986832952,
+        "speedup": 1.1366452244512408,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  g <- fdSperio(sin(1:40) + 0.3 * cos((1:40) / 3)); c(g$d, g$sd.as, g$sd.reg)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    g = fd_sperio([math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)]); return [g['d'], g['sd_as'], g['sd_reg']]\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fracdiff",
+      "translated": true,
+      "python": "fracdiff.fracdiff",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Haslett-Raftery maximum likelihood for ARFIMA(0, d, 0), including the standard error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "d, the log likelihood, sigma, and the standard error",
+        "r_ms": 1.131892204284668,
+        "translated_ms": 9.527996498945868,
+        "speedup": 0.1187964546806766,
+        "matches": true,
+        "max_abs_diff": 2.719491298819321e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  fit <- fracdiff(sin(1:40) + 0.3 * cos((1:40) / 3)); c(fit$d, fit$log.likelihood, fit$sigma, as.numeric(fit$stderror.dpq))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    fit = fracdiff([math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)]); return [fit.d, fit.log_likelihood, fit.sigma, fit.stderror_dpq[0]]\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fracdiff.sim",
+      "translated": true,
+      "python": "fracdiff.fracdiff_sim",
+      "loads": [],
+      "uses": [],
+      "done": "Filters white noise by the fractional recursion, then the ARMA recursion.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "60 points with d = 0.2 and a fixed innovation sequence",
+        "r_ms": 0.07462501525878906,
+        "translated_ms": 0.6273465005506296,
+        "speedup": 0.11895342556831,
+        "matches": true,
+        "max_abs_diff": 7.105427357601002e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  innov <- (1:60) / 10; fracdiff.sim(60, d = 0.2, innov = innov, start.innov = numeric(0), n.start = 0, allow.0.nstart = TRUE)$series\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    innov = [i / 10 for i in range(1, 61)]; return fracdiff_sim(60, d=0.2, innov=innov, start_innov=[], n_start=0, allow_0_nstart=True)['series']\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "fracdiff.var",
+      "translated": true,
+      "python": "fracdiff.fracdiff_var",
+      "loads": [],
+      "uses": [],
+      "done": "Rebuilds the standard error of d at a chosen finite-difference step.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "standard error of d when h is 0.01",
+        "r_ms": 1.0222196578979492,
+        "translated_ms": 5.369138998503331,
+        "speedup": 0.19038800414422072,
+        "matches": true,
+        "max_abs_diff": 1.3704315460216776e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  fit <- fracdiff(sin(1:40) + 0.3 * cos((1:40) / 3)); as.numeric(fracdiff.var(sin(1:40) + 0.3 * cos((1:40) / 3), fit, h = 0.01)$stderror.dpq)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    series = [math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)]; fit = fracdiff(series); return fracdiff_var(series, fit, 0.01).stderror_dpq\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "confint.fracdiff",
+      "translated": true,
+      "python": "fracdiff.confint_fracdiff",
+      "loads": [],
+      "uses": [
+        "scipy"
+      ],
+      "done": "The normal interval around d, using the stored standard error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "95 percent interval for d",
+        "r_ms": 2.1514892578125,
+        "translated_ms": 5.791095001768554,
+        "speedup": 0.37151683009093317,
+        "matches": true,
+        "max_abs_diff": 2.719491298819321e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(fracdiff))\nif (as.character(packageVersion(\"fracdiff\")) != \"1.5.4\") stop(\"expected fracdiff 1.5-4\")\noptions(warn = -1)\none <- function() {\n  fit <- fracdiff(sin(1:40) + 0.3 * cos((1:40) / 3)); as.numeric(confint(fit))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\nimport warnings\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/fracdiff\")\nwarnings.simplefilter(\"ignore\")\nfrom fracdiff import *\n\ndef clean(value):\n    if isinstance(value, np.ndarray):\n        return clean(value.tolist())\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\ndef one():\n    return [item for row in confint_fracdiff(fracdiff([math.sin(i) + 0.3 * math.cos(i / 3) for i in range(1, 41)])) for item in row]\n\nvalue = clean(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

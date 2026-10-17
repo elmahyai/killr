@@ -1,0 +1,40 @@
+{
+  "name": "local_db_connection",
+  "title": "Database connection that disconnects",
+  "origin": {
+    "description": "Call disconnect() when the frame exits.",
+    "usage": "local_db_connection(..., .local_envir = parent.frame())",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Object with a disconnect() method."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the disconnect."
+      }
+    ],
+    "details": "R requires a DBIConnection and calls DBI::dbDisconnect. The translation calls disconnect() on the object.",
+    "value": "The connection.",
+    "example": "suppressPackageStartupMessages({library(DBI); library(RSQLite)})\npath <- tempfile()\ncon0 <- DBI::dbConnect(RSQLite::SQLite(), path)\nDBI::dbExecute(con0, \"CREATE TABLE t (x REAL)\")\nDBI::dbExecute(con0, \"INSERT INTO t VALUES (1), (2)\")\nDBI::dbDisconnect(con0)\ntotal <- local({\n  con <- local_db_connection(DBI::dbConnect(RSQLite::SQLite(), path))\n  DBI::dbGetQuery(con, \"SELECT SUM(x) AS s FROM t\")$s\n})\nunlink(path)\ntotal\n",
+    "output": "output/local_db_connection-r.txt"
+  },
+  "translation": {
+    "description": "Call disconnect() when the frame exits.",
+    "usage": "local_db_connection(..., _local_envir=None)",
+    "arguments": [
+      {
+        "name": "con",
+        "text": "Object with a disconnect() method."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the disconnect."
+      }
+    ],
+    "details": "R requires a DBIConnection and calls DBI::dbDisconnect. The translation calls disconnect() on the object. code is a callable, and local_* is a context manager.",
+    "value": "The connection.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\nimport sqlite3\nfd, path = tempfile.mkstemp()\nos.close(fd)\nraw = sqlite3.connect(path)\nraw.execute(\"CREATE TABLE t (x REAL)\")\nraw.execute(\"INSERT INTO t VALUES (1), (2)\")\nraw.commit()\nraw.close()\n\nclass Conn:\n    def __init__(self, path):\n        self.raw = sqlite3.connect(path)\n        self.closed = False\n    def disconnect(self):\n        self.raw.close()\n        self.closed = True\n\ncon = Conn(path)\nwith local_db_connection(con):\n    total = con.raw.execute(\"SELECT SUM(x) FROM t\").fetchone()[0]\nos.remove(path)\nreturn total\n",
+    "output": "output/local_db_connection-python.txt"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "weightedMean",
+  "title": "Weighted Arithmetic Mean",
+  "origin": {
+    "description": "Computes the weighted sample mean of a numeric vector.",
+    "usage": "weightedMean(x, w = NULL, idxs = NULL, na.rm = FALSE, refine = FALSE,\n  ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "w",
+        "text": "A vector of weights the same length as x giving the weights to use for each element of x. Negative weights are treated as zero weights. Default value is equal weight to all values. If a missing-value weight exists, the result is always a missing value."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "refine",
+        "text": "If TRUE and x is numeric, then extra effort is used to calculate the average with greater numerical precision, otherwise not."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "This function handles missing values consistently with weighted.mean. More precisely, if na.rm = FALSE, then any missing values in either x or w will give result NA_real_. If na.rm = TRUE, then all (x, w) data points for which x is missing are skipped. Note that if both x and w are missing for a data point, then it is also skipped (by the same rule). However, if only w is missing, then the final result will always be NA_real_ regardless of na.rm.",
+    "value": "Returns a numeric scalar. If x is of zero length, then NaN is returned, which is consistent with mean().",
+    "example": "x <- 1:10\nn <- length(x)\n\nw <- rep(1, times = n)\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))\n\n# Pull the mean towards zero\nw[1] <- 5\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))\n\n# Put even more weight on the zero\nw[1] <- 8.5\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))\n\n# All weight on the first value\nw[1] <- Inf\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))\n\n# All weight on the last value\nw[1] <- 1\nw[n] <- Inf\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))\n\n# All weights set to zero\nw <- rep(0, times = n)\nm0 <- weighted.mean(x, w)\nm1 <- weightedMean(x, w)\nstopifnot(identical(m1, m0))",
+    "output": "output/weightedMean-r.txt"
+  },
+  "translation": {
+    "description": "Computes the weighted sample mean of a numeric vector.",
+    "usage": "weightedMean(x, w=None, idxs=None, na_rm=False, refine=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "One-dimensional numeric vector. This is x in R."
+      },
+      {
+        "name": "w",
+        "text": "A vector of weights the same length as x. None gives every element equal weight. A weight of zero is skipped. The matrixStats manual says a negative weight counts as zero; matrixStats 1.5.0 keeps it in the sum, and this function does too. A missing weight makes the result missing when the paired x value is present."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based vector indicating the subset of elements to operate over. None means no subsetting. Integer, numeric, and logical subscripts follow the matrixStats index rules, including negative exclusion and logical recycling."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, points whose x is missing are skipped. This is na.rm in R."
+      },
+      {
+        "name": "refine",
+        "text": "If True, a second pass adds the weighted residuals of the first average. The default is False."
+      }
+    ],
+    "details": "Missing values follow matrixStats::weightedMean. If na_rm is False, a missing value in x or in w makes the result NaN, except that a weight of zero skips that point before x is read. If na_rm is True, points whose x is missing are skipped, including a point where both x and w are missing. A missing weight paired with a present x still makes the result NaN. The sum and the residual pass run in the Rust crate weightedmean.",
+    "value": "A numeric scalar. If x is empty, or the selected points have total weight zero, the result is NaN.",
+    "example": "import numpy as np\nfrom matrixstats.weightedmean import weightedMean\n\nx = np.arange(1, 11, dtype=float)\nw = np.ones(x.size)\nm1 = weightedMean(x, w)\n\nw = w.copy()\nw[0] = 5\nm1 = weightedMean(x, w)\n\nw[0] = 8.5\nm1 = weightedMean(x, w)\n\nw[0] = np.inf\nm1 = weightedMean(x, w)\n\nw[0] = 1\nw[-1] = np.inf\nm1 = weightedMean(x, w)\n\nw = np.zeros(x.size)\nm1 = weightedMean(x, w)",
+    "output": "output/weightedMean-python.txt"
+  }
+}

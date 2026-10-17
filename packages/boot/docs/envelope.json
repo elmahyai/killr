@@ -1,0 +1,62 @@
+{
+  "name": "envelope",
+  "title": "Confidence envelopes for curves",
+  "origin": {
+    "description": "Pointwise and overall confidence envelopes for a curve evaluated at fixed abscissae.",
+    "usage": "envelope(boot.out = NULL, mat = NULL, level = 0.95, index = 1:ncol(mat))",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A bootstrap object whose t matrix holds the curve at fixed points. If t is a matrix it replaces mat."
+      },
+      {
+        "name": "mat",
+        "text": "Matrix of bootstrap replicates, one row per replicate and one column per abscissa. Required when boot.out does not supply a matrix."
+      },
+      {
+        "name": "level",
+        "text": "Confidence level. A single value is used for both envelopes. A pair gives the pointwise level and then the overall level."
+      },
+      {
+        "name": "index",
+        "text": "1-based columns of mat that belong to the curve. At least two columns are required."
+      }
+    ],
+    "details": "The pointwise envelope is a pair of order statistics in each column. Its overall error is the proportion of replicates that fall outside the envelope somewhere, divided by R+1. Further order statistics are tried until the overall error is about 1 - level[2]. If even the extreme envelope is too wide for that error, a warning is given and the extremes are returned. The manual example draws the envelopes on a normal QQ plot of gravity series 8. The captured example prints the envelope and draws the same four lines on a fixed curve.",
+    "value": "A list with point and overall (two rows each, upper then lower), k.pt and k.ov (the order-statistic positions), err.pt and err.ov (pointwise error and overall error of that envelope), and err.nom (the nominal errors 1 - level).",
+    "example": "mat <- outer(1:80, 1:5, function(a, b) (a * b) %% 17 + b)\nev <- envelope(mat = mat, level = c(0.8, 0.95))\nprint(ev)\nxs <- seq_len(ncol(mat))\nplot(xs, ev$point[1, ], type = \"l\", lty = 2,\n     ylim = range(ev$point, ev$overall),\n     xlab = \"point\", ylab = \"envelope\")\nlines(xs, ev$point[2, ], lty = 2)\nlines(xs, ev$overall[1, ], lty = 1)\nlines(xs, ev$overall[2, ], lty = 1)",
+    "output": [
+      "output/envelope-r.txt",
+      "output/envelope-r.svg"
+    ]
+  },
+  "translation": {
+    "description": "Pointwise and overall confidence envelopes for a curve evaluated at fixed abscissae.",
+    "usage": "envelope(boot_out=None, mat=None, level=0.95, index=None)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "An object whose t attribute is a two-dimensional array of curve replicates. If so, it replaces mat."
+      },
+      {
+        "name": "mat",
+        "text": "Array of bootstrap replicates, one row per replicate and one column per abscissa. Required when boot_out does not supply a matrix."
+      },
+      {
+        "name": "level",
+        "text": "Confidence level. A single value is used for both envelopes. A pair gives the pointwise level and then the overall level."
+      },
+      {
+        "name": "index",
+        "text": "1-based columns that belong to the curve. None uses every column. At least two columns are required."
+      }
+    ],
+    "details": "The pointwise envelope is a pair of order statistics in each column. Ranks use the average of tied positions. The overall error counts replicates whose ranks leave the envelope in any column, divided by R+1. The search walks integer order statistics until the overall error sits next to the requested level. If the extreme envelope cannot reach that error, a warning is given and the extremes are returned. The four envelope lines are drawn with Matplotlib.",
+    "value": "A namespace with point and overall (shape (2, p), upper then lower), k_pt and k_ov, err_pt and err_ov, and err_nom.",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.influence import envelope\n\nmat = (np.arange(1, 81)[:, None] * np.arange(1, 6)[None, :]) % 17 + np.arange(1, 6)\nev = envelope(mat=mat, level=[0.8, 0.95])\nprint(ev.point)\nprint(ev.overall)\nprint(ev.k_pt)\nprint(ev.err_pt)\nprint(ev.k_ov)\nprint(ev.err_ov)\nprint(ev.err_nom)\nxs = np.arange(1, mat.shape[1] + 1)\nfig, ax = plt.subplots()\nax.plot(xs, ev.point[0], linestyle=\"--\")\nax.plot(xs, ev.point[1], linestyle=\"--\")\nax.plot(xs, ev.overall[0], linestyle=\"-\")\nax.plot(xs, ev.overall[1], linestyle=\"-\")\nax.set_xlabel(\"point\")\nax.set_ylabel(\"envelope\")",
+    "output": [
+      "output/envelope-python.txt",
+      "output/envelope-python.svg"
+    ]
+  }
+}

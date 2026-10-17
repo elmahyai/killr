@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hexbin · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>hexbin</h1>
+<p class="note">CRAN 1.28.6</p>
+<p>Fortran binning kernels (hbin.f, hcell.f, herode.f, hsm.f) and C (reg.c) go in the crate. R-level bins and helpers are translated in Python. lattice, grid, and graphics functions are gaps. Not started.</p>
+<p class="note">27 of 46 functions · 58.7% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:58.7%"></div></div><strong>58.7%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#erode">erode</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#erode.hexbin">erode.hexbin</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#getHMedian">getHMedian</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#getMargins">getMargins</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#getPlt">getPlt</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#getXscale">getXscale</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#getYscale">getYscale</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#gplot.hexbin">gplot.hexbin</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#grid.hexagons">grid.hexagons</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#grid.hexlegend">grid.hexlegend</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hboxplot">hboxplot</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hcell2xy">hcell2xy</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hexbin">hexbin</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hexcoords">hexcoords</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hexList">hexList</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hexpolygon">hexpolygon</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#hexViewport">hexViewport</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hexVP.abline">hexVP.abline</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#plotMAhex">plotMAhex</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hexVP.loess">hexVP.loess</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hexMA.loess">hexMA.loess</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hsmooth">hsmooth</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#list2hexList">list2hexList</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#pushHexport">pushHexport</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#smooth.hexbin">smooth.hexbin</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hdiffplot">hdiffplot</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hcell2xyInt">hcell2xyInt</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hgridcent">hgridcent</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#hexGraphPaper">hexGraphPaper</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hexTapply">hexTapply</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#optShape">optShape</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#inout.hex">inout.hex</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td></td></tr>
+<tr><td><a href="#BTC">BTC</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#BTY">BTY</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#LinGray">LinGray</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#LinOCS">LinOCS</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#heat.ob">heat.ob</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#magent">magent</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#plinrain">plinrain</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Matches R on the proof cases (values or exact strings).</td></tr>
+<tr><td><a href="#hexbinplot">hexbinplot</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#hexplom">hexplom</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#panel.hexbinplot">panel.hexbinplot</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#panel.hexplom">panel.hexplom</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#panel.hexboxplot">panel.hexboxplot</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#panel.hexgrid">panel.hexgrid</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+<tr><td><a href="#panel.hexloess">panel.hexloess</a></td><td><span class='note'>left</span></td><td>—</td><td>none</td><td>Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<table>
+<thead><tr><th>Crate</th><th>Fortran origin</th><th>Blocked</th></tr></thead>
+<tbody>
+<tr><td>hexbin</td><td>hexbin Fortran and C kernels (src/*.f, src/reg.c) from hexbin 1.28.6</td><td>—</td></tr>
+</tbody>
+</table></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>erode</td><td>matches R (median of 20 timed calls)</td><td>2.94</td><td>0.211</td><td><span class='yes'>+1292%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.2%'></span></div></td></tr>
+<tr><td>erode.hexbin</td><td>matches R (median of 20 timed calls)</td><td>2.26</td><td>0.16</td><td><span class='yes'>+1313%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.1%'></span></div></td></tr>
+<tr><td>getHMedian</td><td>matches R (median of 20 timed calls)</td><td>0.411</td><td>0.078</td><td><span class='yes'>+427%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:19.0%'></span></div></td></tr>
+<tr><td>getMargins</td><td>hexbin proof, 2000 calls per timing for accessors</td><td>75.4</td><td>2.68</td><td><button type="button" class="proof-toggle" data-name="getMargins"><span class='yes'>+2714%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.6%'></span></div></td></tr>
+<tr><td>getPlt</td><td>hexbin proof, 2000 calls per timing for accessors</td><td>78</td><td>2.35</td><td><button type="button" class="proof-toggle" data-name="getPlt"><span class='yes'>+3220%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>1.11e-16</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:3.0%'></span></div></td></tr>
+<tr><td>getXscale</td><td>hexbin proof</td><td>0.241</td><td>2</td><td><button type="button" class="proof-toggle" data-name="getXscale"><span class='slower'>-88%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:12.1%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>getYscale</td><td>hexbin proof</td><td>0.283</td><td>1.89</td><td><button type="button" class="proof-toggle" data-name="getYscale"><span class='slower'>-85%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:15.0%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>hcell2xy</td><td>matches R (median of 20 timed calls)</td><td>0.188</td><td>0.059</td><td><span class='yes'>+219%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:31.4%'></span></div></td></tr>
+<tr><td>hexbin</td><td>matches R (median of 20 timed calls)</td><td>6.08</td><td>0.693</td><td><span class='yes'>+777%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.4%'></span></div></td></tr>
+<tr><td>hexcoords</td><td>matches R (median of 20 timed calls)</td><td>2.21</td><td>1.51</td><td><span class='yes'>+46%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:68.4%'></span></div></td></tr>
+<tr><td>hexList</td><td>matches R (median of 20 timed calls)</td><td>9.88</td><td>4.51</td><td><span class='yes'>+119%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:45.7%'></span></div></td></tr>
+<tr><td>hexpolygon</td><td>hexbin proof</td><td>0.788</td><td>0.305</td><td><button type="button" class="proof-toggle" data-name="hexpolygon"><span class='yes'>+158%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:38.7%'></span></div></td></tr>
+<tr><td>hsmooth</td><td>matches R (median of 20 timed calls)</td><td>2.07</td><td>0.159</td><td><span class='yes'>+1201%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.7%'></span></div></td></tr>
+<tr><td>list2hexList</td><td>matches R (median of 20 timed calls)</td><td>0.867</td><td>0.062</td><td><span class='yes'>+1298%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.2%'></span></div></td></tr>
+<tr><td>smooth.hexbin</td><td>matches R (median of 20 timed calls)</td><td>3.21</td><td>0.265</td><td><span class='yes'>+1113%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.2%'></span></div></td></tr>
+<tr><td>hcell2xyInt</td><td>matches R (median of 20 timed calls)</td><td>0.147</td><td>0.039</td><td><span class='yes'>+277%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:26.5%'></span></div></td></tr>
+<tr><td>hgridcent</td><td>matches R (median of 20 timed calls)</td><td>16.2</td><td>9.56</td><td><span class='yes'>+70%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:58.9%'></span></div></td></tr>
+<tr><td>hexTapply</td><td>matches R (median of 20 timed calls)</td><td>3.84</td><td>3.42</td><td><span class='yes'>+12%</span></td><td><span class='yes'>matches</span></td><td class='diff'>1.4e-14</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:88.9%'></span></div></td></tr>
+<tr><td>optShape</td><td>hexbin proof, 2000 calls per timing for accessors</td><td>6.52</td><td>1.02</td><td><button type="button" class="proof-toggle" data-name="optShape"><span class='yes'>+541%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:15.6%'></span></div></td></tr>
+<tr><td>inout.hex</td><td>matches R (median of 20 timed calls)</td><td>6.53</td><td>0.512</td><td><span class='yes'>+1175%</span></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.8%'></span></div></td></tr>
+<tr><td>BTC</td><td>hexbin proof</td><td>0.586</td><td>0.129</td><td><button type="button" class="proof-toggle" data-name="BTC"><span class='yes'>+354%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:22.0%'></span></div></td></tr>
+<tr><td>BTY</td><td>hexbin proof</td><td>0.513</td><td>0.131</td><td><button type="button" class="proof-toggle" data-name="BTY"><span class='yes'>+292%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:25.5%'></span></div></td></tr>
+<tr><td>LinGray</td><td>hexbin proof</td><td>0.507</td><td>0.135</td><td><button type="button" class="proof-toggle" data-name="LinGray"><span class='yes'>+276%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:26.6%'></span></div></td></tr>
+<tr><td>LinOCS</td><td>hexbin proof</td><td>0.548</td><td>0.13</td><td><button type="button" class="proof-toggle" data-name="LinOCS"><span class='yes'>+322%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:23.7%'></span></div></td></tr>
+<tr><td>heat.ob</td><td>hexbin proof</td><td>0.57</td><td>0.129</td><td><button type="button" class="proof-toggle" data-name="heat.ob"><span class='yes'>+342%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:22.6%'></span></div></td></tr>
+<tr><td>magent</td><td>hexbin proof</td><td>0.518</td><td>0.13</td><td><button type="button" class="proof-toggle" data-name="magent"><span class='yes'>+298%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:25.1%'></span></div></td></tr>
+<tr><td>plinrain</td><td>hexbin proof</td><td>0.524</td><td>0.139</td><td><button type="button" class="proof-toggle" data-name="plinrain"><span class='yes'>+277%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:26.5%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "getMargins", "r": "packages/hexbin/proof/getMargins_r.R", "python": "packages/hexbin/proof/getMargins_py.py"}, {"name": "getPlt", "r": "packages/hexbin/proof/getPlt_r.R", "python": "packages/hexbin/proof/getPlt_py.py"}, {"name": "getXscale", "r": "packages/hexbin/proof/getXscale_r.R", "python": "packages/hexbin/proof/getXscale_py.py"}, {"name": "getYscale", "r": "packages/hexbin/proof/getYscale_r.R", "python": "packages/hexbin/proof/getYscale_py.py"}, {"name": "hexpolygon", "r": "packages/hexbin/proof/hexpolygon_r.R", "python": "packages/hexbin/proof/hexpolygon_py.py"}, {"name": "optShape", "r": "packages/hexbin/proof/optShape_r.R", "python": "packages/hexbin/proof/optShape_py.py"}, {"name": "BTC", "r": "packages/hexbin/proof/BTC_r.R", "python": "packages/hexbin/proof/BTC_py.py"}, {"name": "BTY", "r": "packages/hexbin/proof/BTY_r.R", "python": "packages/hexbin/proof/BTY_py.py"}, {"name": "LinGray", "r": "packages/hexbin/proof/LinGray_r.R", "python": "packages/hexbin/proof/LinGray_py.py"}, {"name": "LinOCS", "r": "packages/hexbin/proof/LinOCS_r.R", "python": "packages/hexbin/proof/LinOCS_py.py"}, {"name": "heat.ob", "r": "packages/hexbin/proof/heat_ob_r.R", "python": "packages/hexbin/proof/heat_ob_py.py"}, {"name": "magent", "r": "packages/hexbin/proof/magent_r.R", "python": "packages/hexbin/proof/magent_py.py"}, {"name": "plinrain", "r": "packages/hexbin/proof/plinrain_r.R", "python": "packages/hexbin/proof/plinrain_py.py"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Depends</h3><p>methods</p><h3>Imports</h3><p><a href="lattice.html">lattice</a> <span class="note">replaced</span></p><p>grid</p><p>graphics</p><p>grDevices</p><p>stats</p><p><a href="utils.html">utils</a></p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>numpy</p><h3>Crates</h3><p>hexbin</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "erode", "translated": true, "not_done": "", "title": "erode", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.erode.erode", "output_blocks": []}}, {"name": "erode.hexbin", "translated": true, "not_done": "", "title": "erode.hexbin", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.erode_hexbin.erode_hexbin", "output_blocks": []}}, {"name": "getHMedian", "translated": true, "not_done": "", "title": "getHMedian", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.getHMedian.getHMedian", "output_blocks": []}}, {"name": "getMargins", "translated": true, "not_done": "Numeric output in the unit the object stores only. Other units need grid device size and raise an error.", "title": "getMargins", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.getMargins.getMargins", "output_blocks": []}}, {"name": "getPlt", "translated": true, "not_done": "Numeric output in the unit the object stores only. Other units need grid device size and raise an error.", "title": "getPlt", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.getPlt.getPlt", "output_blocks": []}}, {"name": "getXscale", "translated": true, "not_done": "getXscale is commented out in hexbin 1.28.6; the proof checks its body, x@xscale.", "title": "getXscale", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.getXscale.getXscale", "output_blocks": []}}, {"name": "getYscale", "translated": true, "not_done": "getYscale is commented out in hexbin 1.28.6; the proof checks its body, x@yscale.", "title": "getYscale", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.getYscale.getYscale", "output_blocks": []}}, {"name": "gplot.hexbin", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "gplot.hexbin", "origin": null, "translation": null}, {"name": "grid.hexagons", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "grid.hexagons", "origin": null, "translation": null}, {"name": "grid.hexlegend", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "grid.hexlegend", "origin": null, "translation": null}, {"name": "hboxplot", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hboxplot", "origin": null, "translation": null}, {"name": "hcell2xy", "translated": true, "not_done": "", "title": "hcell2xy", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hcell2xy.hcell2xy", "output_blocks": []}}, {"name": "hexbin", "translated": true, "not_done": "", "title": "hexbin", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hexbin.hexbin", "output_blocks": []}}, {"name": "hexcoords", "translated": true, "not_done": "", "title": "hexcoords", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hexcoords.hexcoords", "output_blocks": []}}, {"name": "hexList", "translated": true, "not_done": "", "title": "hexList", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hexList.hexList", "output_blocks": []}}, {"name": "hexpolygon", "translated": true, "not_done": "The optional drawing uses Matplotlib; the value check covers the polygon vertices.", "title": "hexpolygon", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.hexpolygon.hexpolygon", "output_blocks": []}}, {"name": "hexViewport", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexViewport", "origin": null, "translation": null}, {"name": "hexVP.abline", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexVP.abline", "origin": null, "translation": null}, {"name": "plotMAhex", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "plotMAhex", "origin": null, "translation": null}, {"name": "hexVP.loess", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexVP.loess", "origin": null, "translation": null}, {"name": "hexMA.loess", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexMA.loess", "origin": null, "translation": null}, {"name": "hsmooth", "translated": true, "not_done": "", "title": "hsmooth", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hsmooth.hsmooth", "output_blocks": []}}, {"name": "list2hexList", "translated": true, "not_done": "", "title": "list2hexList", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.list2hexList.list2hexList", "output_blocks": []}}, {"name": "pushHexport", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "pushHexport", "origin": null, "translation": null}, {"name": "smooth.hexbin", "translated": true, "not_done": "", "title": "smooth.hexbin", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.smooth_hexbin.smooth_hexbin", "output_blocks": []}}, {"name": "hdiffplot", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hdiffplot", "origin": null, "translation": null}, {"name": "hcell2xyInt", "translated": true, "not_done": "", "title": "hcell2xyInt", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hcell2xyInt.hcell2xyInt", "output_blocks": []}}, {"name": "hgridcent", "translated": true, "not_done": "", "title": "hgridcent", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hgridcent.hgridcent", "output_blocks": []}}, {"name": "hexGraphPaper", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexGraphPaper", "origin": null, "translation": null}, {"name": "hexTapply", "translated": true, "not_done": "", "title": "hexTapply", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.hexTapply.hexTapply", "output_blocks": []}}, {"name": "optShape", "translated": true, "not_done": "The grid viewport branch is not translated.", "title": "optShape", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.optShape.optShape", "output_blocks": []}}, {"name": "inout.hex", "translated": true, "not_done": "", "title": "inout.hex", "origin": null, "translation": {"description": "Checked.", "usage": "hexbin.inout_hex.inout_hex", "output_blocks": []}}, {"name": "BTC", "translated": true, "not_done": "", "title": "BTC", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.BTC.BTC", "output_blocks": []}}, {"name": "BTY", "translated": true, "not_done": "", "title": "BTY", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.BTY.BTY", "output_blocks": []}}, {"name": "LinGray", "translated": true, "not_done": "", "title": "LinGray", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.LinGray.LinGray", "output_blocks": []}}, {"name": "LinOCS", "translated": true, "not_done": "", "title": "LinOCS", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.LinOCS.LinOCS", "output_blocks": []}}, {"name": "heat.ob", "translated": true, "not_done": "", "title": "heat.ob", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.heat_ob.heat_ob", "output_blocks": []}}, {"name": "magent", "translated": true, "not_done": "", "title": "magent", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.magent.magent", "output_blocks": []}}, {"name": "plinrain", "translated": true, "not_done": "", "title": "plinrain", "origin": null, "translation": {"description": "Matches R on the proof cases (values or exact strings).", "usage": "hexbin.plinrain.plinrain", "output_blocks": []}}, {"name": "hexbinplot", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexbinplot", "origin": null, "translation": null}, {"name": "hexplom", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "hexplom", "origin": null, "translation": null}, {"name": "panel.hexbinplot", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "panel.hexbinplot", "origin": null, "translation": null}, {"name": "panel.hexplom", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "panel.hexplom", "origin": null, "translation": null}, {"name": "panel.hexboxplot", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "panel.hexboxplot", "origin": null, "translation": null}, {"name": "panel.hexgrid", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "panel.hexgrid", "origin": null, "translation": null}, {"name": "panel.hexloess", "translated": false, "not_done": "Left: drawing function; needs a Matplotlib or killplot design decision before translation. Graphics or colour. Not translated; charts are Matplotlib.", "title": "panel.hexloess", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

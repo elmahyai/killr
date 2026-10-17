@@ -1,0 +1,15 @@
+.libPaths(c(path.expand("~/R/library"), .libPaths()))
+suppressPackageStartupMessages(library(abind))
+sink("/home/ahmed/killr_projects/killr/packages/abind/docs/output/afill-replacement-r.txt")
+x <- matrix(0, ncol = 3, nrow = 4, dimnames = list(letters[1:4], LETTERS[24:26]))
+print(x)
+y <- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))
+print(y)
+afill(x) <- y
+print(x)
+x <- array(0, dim = c(2, 4, 3), dimnames = list(LETTERS[1:2], letters[1:4], LETTERS[24:26]))
+y <- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))
+afill(x, 1, , ) <- y
+print(x[1, , , drop = FALSE])
+print(x[2, , , drop = FALSE])
+sink()

@@ -1,0 +1,64 @@
+{
+  "name": "handler_debug",
+  "title": "Progression Handler: Progress Reported as Debug Information (Text) in the Terminal",
+  "origin": {
+    "description": "Write one debug line for each reported progression.",
+    "usage": "handler_debug(interval = getOption(\"progressr.interval\", 0), intrusiveness = getOption(\"progressr.intrusiveness.debug\", 0), target = \"terminal\", uuid = FALSE, ...)",
+    "arguments": [
+      {
+        "name": "interval",
+        "text": "Minimum seconds between updates. The default is the option progressr.interval, or 0."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.debug, or 0."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "uuid",
+        "text": "If TRUE, append the progressor UUID and the owner UUID. The default is FALSE."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to make_progression_handler()."
+      }
+    ],
+    "details": "Each line is \"[time] (dt => +delay) type: step/max (+delta) 'message' {clear=, enabled=, status=}\". The type is progression$type. reset clears the clock used for dt. hide and unhide do nothing.",
+    "value": "A function of class progression_handler.",
+    "example": "path <- tempfile(\"dbg\")\ncon <- file(path, open = \"wt\")\nsink(con, type = \"message\")\nhandler <- handler_debug(enable = TRUE)\nwith_progress({\n  p <- progressor(steps = 1, on_exit = FALSE)\n  p(message = \"done\")\n}, handlers = handler, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\nsink(type = \"message\")\nlines <- readLines(path)\ncat(\"handler_debug logged \", length(lines), \" lines and the first type is initiate.\\n\", sep = \"\")\n",
+    "output": "output/handler_debug-r.txt"
+  },
+  "translation": {
+    "description": "Write one debug line for each reported progression.",
+    "usage": "handler_debug(interval=None, intrusiveness=None, target=\"terminal\", uuid=False, **extra)",
+    "arguments": [
+      {
+        "name": "interval",
+        "text": "Minimum seconds between updates. The default is the option progressr.interval, or 0."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.debug, or 0."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"terminal\"."
+      },
+      {
+        "name": "uuid",
+        "text": "If true, append the progressor UUID and the owner UUID. The default is False."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments passed to make_progression_handler(), including enable."
+      }
+    ],
+    "details": "Each line is \"[time] (dt => +delay) type: step/max (+delta) 'message' {clear=, enabled=, status=}\". The type is the progression type. reset clears the clock used for dt. The clock text is local to the process. hide and unhide do nothing.",
+    "value": "A calling handler.",
+    "example": "import contextlib\nimport io\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_debug\n\nerr = io.StringIO()\n\ndef body():\n    progress = progressor(steps=1, on_exit=False)\n    progress(message=\"done\")\n\nwith contextlib.redirect_stderr(err):\n    with_progress(body, handlers=handler_debug(enable=True), enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nlines = err.getvalue().splitlines()\nprint(f\"handler_debug logged {len(lines)} lines and the first type is initiate.\")\n",
+    "output": "output/handler_debug-python.txt"
+  }
+}

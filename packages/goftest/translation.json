@@ -1,0 +1,193 @@
+{
+  "name": "goftest",
+  "cran_version": "1.2-3",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "goftest"
+  ],
+  "resume": "Exports: 7. Crate crates/goftest built: Anderson-Darling kernels match R goftest 1.2-3 (17 cases, max abs diff 0). Python wrappers pending. goftest 1.2-3 has no C for Cramer-von Mises, so there is no CvM kernel to port. All exports translated.",
+  "dependencies": {
+    "translated": [
+      "boot"
+    ],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "goftest"
+    ]
+  },
+  "strategy": "small-low",
+  "functions": [
+    {
+      "name": "ad.test",
+      "translated": true,
+      "python": "goftest.ad_test.ad_test",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ad.test fixed inputs, R goftest 1.2-3",
+        "r_ms": 1.24,
+        "translated_ms": 0.37,
+        "speedup": 3.35,
+        "matches": true,
+        "max_abs_diff": 2.27e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## ad.test from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/ad-test-r.R\n## Writes packages/goftest/docs/output/ad-test-r.tsv, read by ad-test-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\nGOLDEN <- 0.6180339887498949\nmake_sample <- function(n, family) {\n  i <- seq_len(n)\n  u <- if (family == \"uniform\") (i * GOLDEN) %% 1 else (i / (n + 1))^2\n  sort(u)\n}\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nres <- list()\nfor (fam in c(\"uniform\", \"skewed\")) {\n  for (n in c(5, 50, 1000)) {\n    u <- make_sample(n, fam)\n    z <- ad.test(u)\n    res[[sprintf(\"stat|%s|%g|punif\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|punif\", fam, n)]] <- unname(z$p.value)\n    z <- ad.test(u, \"pnorm\", mean = 0.5, sd = 0.2)\n    res[[sprintf(\"stat|%s|%g|pnorm\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|pnorm\", fam, n)]] <- unname(z$p.value)\n    set.seed(7)\n    z <- ad.test(u, estimated = TRUE)\n    res[[sprintf(\"stat|%s|%g|estimated\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|estimated\", fam, n)]] <- unname(z$p.value)\n  }\n}\n\nu_big <- make_sample(10000, \"uniform\")\nms <- time_ms(function() ad.test(u_big))\nwrite_out(res, ms, \"ad-test\")\n",
+          "python": "\"\"\"ad.test from goftest 1.2-3 on the fixed inputs in ad-test-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/ad-test-r.R\n    .venv/bin/python packages/goftest/proof/ad-test-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom boot.rng import set_seed  # noqa: E402\nfrom goftest.ad_test import ad_test  # noqa: E402\n\nGOLDEN = 0.6180339887498949\n\n\ndef make_sample(n, family):\n    i = np.arange(1, n + 1, dtype=float)\n    if family == \"uniform\":\n        u = (i * GOLDEN) % 1.0\n    else:\n        t = i / (n + 1)\n        u = t * t\n    return np.sort(u)\n\n\ndef values():\n    res = {}\n    for fam in (\"uniform\", \"skewed\"):\n        for n in (5, 50, 1000):\n            u = make_sample(n, fam)\n            z = ad_test(u)\n            res[f\"stat|{fam}|{n}|punif\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|punif\"] = [z.p_value]\n            z = ad_test(u, \"pnorm\", mean=0.5, sd=0.2)\n            res[f\"stat|{fam}|{n}|pnorm\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|pnorm\"] = [z.p_value]\n            set_seed(7)\n            z = ad_test(u, estimated=True)\n            res[f\"stat|{fam}|{n}|estimated\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|estimated\"] = [z.p_value]\n    return res\n\n\nu_big = make_sample(10000, \"uniform\")\n\n\ndef timed():\n    ad_test(u_big)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"ad-test\", values(), timed, \"ad.test (goftest 1.2-3, R) vs goftest.ad_test (Python)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "pAD",
+      "translated": true,
+      "python": "goftest.pAD.pAD",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pAD fixed inputs, R goftest 1.2-3",
+        "r_ms": 1.72,
+        "translated_ms": 0.43,
+        "speedup": 4.04,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## pAD from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/pAD-r.R\n## Writes packages/goftest/docs/output/pAD-r.tsv, read by pAD-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nGRID <- 0.05 + 0.1 * (0:59)\nBIG_GRID <- 0.05 + 0.0005 * (0:9999)\nSPECIAL <- c(-Inf, -1, 0, 1e-3, 0.5, 2, 10, 50, Inf, NaN)\n\nres <- list()\nres[[\"grid|Inf|fast\"]] <- pAD(GRID)\nres[[\"grid|Inf|exact\"]] <- pAD(GRID, fast = FALSE)\nres[[\"grid|Inf|upper\"]] <- pAD(GRID, lower.tail = FALSE)\nres[[\"grid|5\"]] <- pAD(GRID, n = 5)\nres[[\"grid|50\"]] <- pAD(GRID, n = 50)\nres[[\"grid|1000\"]] <- pAD(GRID, n = 1000)\nres[[\"grid|50|upper\"]] <- pAD(GRID, n = 50, lower.tail = FALSE)\nres[[\"special|Inf|fast\"]] <- pAD(SPECIAL)\nres[[\"special|50\"]] <- pAD(SPECIAL, n = 50)\n\nms <- time_ms(function() pAD(BIG_GRID))\nwrite_out(res, ms, \"pAD\")\n",
+          "python": "\"\"\"pAD from goftest 1.2-3 on the fixed inputs in pAD-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/pAD-r.R\n    .venv/bin/python packages/goftest/proof/pAD-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.pAD import pAD  # noqa: E402\n\nGRID = 0.05 + 0.1 * np.arange(60, dtype=float)\nBIG_GRID = 0.05 + 0.0005 * np.arange(10000, dtype=float)\nSPECIAL = np.array([-np.inf, -1.0, 0.0, 1e-3, 0.5, 2.0, 10.0, 50.0, np.inf, np.nan])\n\n\ndef values():\n    return {\n        \"grid|Inf|fast\": list(pAD(GRID)),\n        \"grid|Inf|exact\": list(pAD(GRID, fast=False)),\n        \"grid|Inf|upper\": list(pAD(GRID, lower_tail=False)),\n        \"grid|5\": list(pAD(GRID, n=5)),\n        \"grid|50\": list(pAD(GRID, n=50)),\n        \"grid|1000\": list(pAD(GRID, n=1000)),\n        \"grid|50|upper\": list(pAD(GRID, n=50, lower_tail=False)),\n        \"special|Inf|fast\": list(pAD(SPECIAL)),\n        \"special|50\": list(pAD(SPECIAL, n=50)),\n    }\n\n\ndef timed():\n    pAD(BIG_GRID)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"pAD\", values(), timed, \"pAD (goftest 1.2-3, R) vs goftest.pAD (Python, goftest_kernels)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "qAD",
+      "translated": true,
+      "python": "goftest.qAD.qAD",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "qAD fixed inputs, R goftest 1.2-3",
+        "r_ms": 5.59,
+        "translated_ms": 7.14,
+        "speedup": 0.78,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## qAD from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/qAD-r.R\n## Writes packages/goftest/docs/output/qAD-r.tsv, read by qAD-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nP <- c(0, 0.001, 0.05 + 0.05 * (0:18), 0.99, 0.999, 1)\n\nres <- list()\nres[[\"Inf|fast|lower\"]] <- qAD(P)\nres[[\"Inf|exact|lower\"]] <- qAD(P, fast = FALSE)\nres[[\"Inf|fast|upper\"]] <- qAD(P, lower.tail = FALSE)\nres[[\"5|fast|lower\"]] <- qAD(P, n = 5)\nres[[\"50|fast|lower\"]] <- qAD(P, n = 50)\nres[[\"1000|fast|lower\"]] <- qAD(P, n = 1000)\n\nms <- time_ms(function() qAD(0.05 + 0.05 * (0:18), n = 50))\nwrite_out(res, ms, \"qAD\")\n",
+          "python": "\"\"\"qAD from goftest 1.2-3 on the fixed inputs in qAD-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/qAD-r.R\n    .venv/bin/python packages/goftest/proof/qAD-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.qAD import qAD  # noqa: E402\n\nP = np.concatenate(([0.0, 0.001], 0.05 + 0.05 * np.arange(19, dtype=float), [0.99, 0.999, 1.0]))\nTIMED_P = 0.05 + 0.05 * np.arange(19, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|fast|lower\": list(qAD(P)),\n        \"Inf|exact|lower\": list(qAD(P, fast=False)),\n        \"Inf|fast|upper\": list(qAD(P, lower_tail=False)),\n        \"5|fast|lower\": list(qAD(P, n=5)),\n        \"50|fast|lower\": list(qAD(P, n=50)),\n        \"1000|fast|lower\": list(qAD(P, n=1000)),\n    }\n\n\ndef timed():\n    qAD(TIMED_P, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"qAD\", values(), timed, \"qAD (goftest 1.2-3, R) vs goftest.qAD (Python, uniroot port)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "cvm.test",
+      "translated": true,
+      "python": "goftest.cvm_test.cvm_test",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cvm.test fixed inputs, R goftest 1.2-3",
+        "r_ms": 1.05,
+        "translated_ms": 0.35,
+        "speedup": 3.01,
+        "matches": true,
+        "max_abs_diff": 6.04e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## cvm.test from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/cvm-test-r.R\n## Writes packages/goftest/docs/output/cvm-test-r.tsv, read by cvm-test-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\nGOLDEN <- 0.6180339887498949\nmake_sample <- function(n, family) {\n  i <- seq_len(n)\n  u <- if (family == \"uniform\") (i * GOLDEN) %% 1 else (i / (n + 1))^2\n  sort(u)\n}\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nres <- list()\nfor (fam in c(\"uniform\", \"skewed\")) {\n  for (n in c(5, 50, 1000)) {\n    u <- make_sample(n, fam)\n    z <- cvm.test(u)\n    res[[sprintf(\"stat|%s|%g|punif\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|punif\", fam, n)]] <- unname(z$p.value)\n    z <- cvm.test(u, \"pnorm\", mean = 0.5, sd = 0.2)\n    res[[sprintf(\"stat|%s|%g|pnorm\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|pnorm\", fam, n)]] <- unname(z$p.value)\n    set.seed(7)\n    z <- cvm.test(u, estimated = TRUE)\n    res[[sprintf(\"stat|%s|%g|estimated\", fam, n)]] <- unname(z$statistic)\n    res[[sprintf(\"p|%s|%g|estimated\", fam, n)]] <- unname(z$p.value)\n  }\n}\n\nu_big <- make_sample(10000, \"uniform\")\nms <- time_ms(function() cvm.test(u_big))\nwrite_out(res, ms, \"cvm-test\")\n",
+          "python": "\"\"\"cvm.test from goftest 1.2-3 on the fixed inputs in cvm-test-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/cvm-test-r.R\n    .venv/bin/python packages/goftest/proof/cvm-test-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom boot.rng import set_seed  # noqa: E402\nfrom goftest.cvm_test import cvm_test  # noqa: E402\n\nGOLDEN = 0.6180339887498949\n\n\ndef make_sample(n, family):\n    i = np.arange(1, n + 1, dtype=float)\n    if family == \"uniform\":\n        u = (i * GOLDEN) % 1.0\n    else:\n        t = i / (n + 1)\n        u = t * t\n    return np.sort(u)\n\n\ndef values():\n    res = {}\n    for fam in (\"uniform\", \"skewed\"):\n        for n in (5, 50, 1000):\n            u = make_sample(n, fam)\n            z = cvm_test(u)\n            res[f\"stat|{fam}|{n}|punif\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|punif\"] = [z.p_value]\n            z = cvm_test(u, \"pnorm\", mean=0.5, sd=0.2)\n            res[f\"stat|{fam}|{n}|pnorm\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|pnorm\"] = [z.p_value]\n            set_seed(7)\n            z = cvm_test(u, estimated=True)\n            res[f\"stat|{fam}|{n}|estimated\"] = [z.statistic]\n            res[f\"p|{fam}|{n}|estimated\"] = [z.p_value]\n    return res\n\n\nu_big = make_sample(10000, \"uniform\")\n\n\ndef timed():\n    cvm_test(u_big)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"cvm-test\", values(), timed, \"cvm.test (goftest 1.2-3, R) vs goftest.cvm_test (Python)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "pCvM",
+      "translated": true,
+      "python": "goftest.pCvM.pCvM",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pCvM fixed inputs, R goftest 1.2-3",
+        "r_ms": 69.4,
+        "translated_ms": 88.1,
+        "speedup": 0.79,
+        "matches": true,
+        "max_abs_diff": 2.11e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## pCvM from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/pCvM-r.R\n## Writes packages/goftest/docs/output/pCvM-r.tsv, read by pCvM-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nQ <- c(0, 1 / 12, 0.02 + 0.02 * (0:29), 0.9, 1.5, 2.5, 5, 10, 20, 33, 34)\nBIG_Q <- 0.001 + 0.001 * (0:1999)\n\nres <- list()\nres[[\"Inf|lower\"]] <- pCvM(Q)\nres[[\"5|lower\"]] <- pCvM(Q, n = 5)\nres[[\"50|lower\"]] <- pCvM(Q, n = 50)\nres[[\"1000|lower\"]] <- pCvM(Q, n = 1000)\nres[[\"Inf|upper\"]] <- pCvM(Q, lower.tail = FALSE)\nres[[\"50|upper\"]] <- pCvM(Q, n = 50, lower.tail = FALSE)\n\nms <- time_ms(function() pCvM(BIG_Q, n = 50))\nwrite_out(res, ms, \"pCvM\")\n",
+          "python": "\"\"\"pCvM from goftest 1.2-3 on the fixed inputs in pCvM-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/pCvM-r.R\n    .venv/bin/python packages/goftest/proof/pCvM-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.pCvM import pCvM  # noqa: E402\n\nQ = np.concatenate(([0.0, 1 / 12], 0.02 + 0.02 * np.arange(30, dtype=float), [0.9, 1.5, 2.5, 5.0, 10.0, 20.0, 33.0, 34.0]))\nBIG_Q = 0.001 + 0.001 * np.arange(2000, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|lower\": list(pCvM(Q)),\n        \"5|lower\": list(pCvM(Q, n=5)),\n        \"50|lower\": list(pCvM(Q, n=50)),\n        \"1000|lower\": list(pCvM(Q, n=1000)),\n        \"Inf|upper\": list(pCvM(Q, lower_tail=False)),\n        \"50|upper\": list(pCvM(Q, n=50, lower_tail=False)),\n    }\n\n\ndef timed():\n    pCvM(BIG_Q, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"pCvM\", values(), timed, \"pCvM (goftest 1.2-3, R) vs goftest.pCvM (Python, SciPy kv)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "qCvM",
+      "translated": true,
+      "python": "goftest.qCvM.qCvM",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "qCvM fixed inputs, R goftest 1.2-3",
+        "r_ms": 326,
+        "translated_ms": 672,
+        "speedup": 0.49,
+        "matches": true,
+        "max_abs_diff": 3.07e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## qCvM from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/qCvM-r.R\n## Writes packages/goftest/docs/output/qCvM-r.tsv, read by qCvM-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nP <- c(0, 0.001, 0.05 + 0.05 * (0:18), 0.99, 0.999, 1)\n\nres <- list()\nres[[\"Inf|lower\"]] <- qCvM(P)\nres[[\"5|lower\"]] <- qCvM(P, n = 5)\nres[[\"50|lower\"]] <- qCvM(P, n = 50)\nres[[\"Inf|upper\"]] <- qCvM(P, lower.tail = FALSE)\n\nms <- time_ms(function() qCvM(0.05 + 0.05 * (0:18), n = 50))\nwrite_out(res, ms, \"qCvM\")\n",
+          "python": "\"\"\"qCvM from goftest 1.2-3 on the fixed inputs in qCvM-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/qCvM-r.R\n    .venv/bin/python packages/goftest/proof/qCvM-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.qCvM import qCvM  # noqa: E402\n\nP = np.concatenate(([0.0, 0.001], 0.05 + 0.05 * np.arange(19, dtype=float), [0.99, 0.999, 1.0]))\nTIMED_P = 0.05 + 0.05 * np.arange(19, dtype=float)\n\n\ndef values():\n    return {\n        \"Inf|lower\": list(qCvM(P)),\n        \"5|lower\": list(qCvM(P, n=5)),\n        \"50|lower\": list(qCvM(P, n=50)),\n        \"Inf|upper\": list(qCvM(P, lower_tail=False)),\n    }\n\n\ndef timed():\n    qCvM(TIMED_P, n=50)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"qCvM\", values(), timed, \"qCvM (goftest 1.2-3, R) vs goftest.qCvM (Python, uniroot port)\"))\n"
+        }
+      }
+    },
+    {
+      "name": "recogniseCdf",
+      "translated": true,
+      "python": "goftest.recogniseCdf.recogniseCdf",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "recogniseCdf fixed inputs, R goftest 1.2-3",
+        "r_ms": 0.4,
+        "translated_ms": 0.014,
+        "speedup": 29.8,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "## recogniseCdf from goftest 1.2-3 on fixed inputs, with timings.\n##\n## Run from the repository root:\n##   Rscript packages/goftest/proof/recogniseCdf-r.R\n## Writes packages/goftest/docs/output/recogniseCdf-r.tsv, read by recogniseCdf-py.py.\n\nlib <- Sys.getenv(\"GOFTEST_RLIB\", \"/tmp/goftest_rlib\")\nif (nzchar(lib) && dir.exists(lib)) .libPaths(c(lib, .libPaths()))\nsuppressPackageStartupMessages(library(goftest))\nstopifnot(packageDescription(\"goftest\")$Version == \"1.2-3\")\n\ntime_ms <- function(f, reps = 20) {\n  f()\n  t <- numeric(reps)\n  for (k in seq_len(reps)) {\n    t0 <- Sys.time()\n    f()\n    t[k] <- as.numeric(Sys.time() - t0, units = \"secs\") * 1000\n  }\n  median(t)\n}\nwrite_out <- function(res, ms, name) {\n  out <- file.path(\"packages\", \"goftest\", \"docs\", \"output\", paste0(name, \"-r.tsv\"))\n  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)\n  con <- file(out, \"w\")\n  writeLines(\"kind\\tcase\\tindex\\tvalue\", con)\n  for (nm in names(res)) {\n    v <- res[[nm]]\n    for (i in seq_along(v)) {\n      s <- if (is.character(v[i])) v[i] else sprintf(\"%.17g\", v[i])\n      writeLines(sprintf(\"value\\t%s\\t%d\\t%s\", nm, i, s), con)\n    }\n  }\n  writeLines(sprintf(\"time_ms\\tmain\\t0\\t%.17g\", ms), con)\n  close(con)\n  cat(\"wrote\", out, \"\\n\")\n}\n\nCASES <- list(\"punif\", \"pnorm\", \"norm\", \"t\", \"pt\", \"chisq\", \"unif\", \"AD\", \"pAD\", \"CvM\",\n              \"pCvM\", \"wilcox\", \"pwilcox\", \"p\", \"\", \"foo\", \"pfoo\", \"beta\", \"binom\",\n              \"birthday\", \"tukey\", \"weibull\", \"nbinom\", \"logis\", \"lnorm\", \"gamma\", \"f\",\n              \"geom\", \"hyper\", \"exp\", \"pois\", \"cauchy\", \"pexp\", \"pAD \", 1)\n\nres <- list()\nfor (i in seq_along(CASES)) {\n  r <- recogniseCdf(CASES[[i]])\n  res[[paste0(\"s|\", i)]] <- if (is.null(r)) \"NULL\" else r\n}\n\nms <- time_ms(function() for (s in CASES) recogniseCdf(s))\nwrite_out(res, ms, \"recogniseCdf\")\n",
+          "python": "\"\"\"recogniseCdf from goftest 1.2-3 on the fixed inputs in recogniseCdf-r.R.\n\nRun from the repository root after the R script:\n    Rscript packages/goftest/proof/recogniseCdf-r.R\n    .venv/bin/python packages/goftest/proof/recogniseCdf-py.py\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[3]\nsys.path.insert(0, str(ROOT / \"packages\" / \"goftest\"))\nsys.path.insert(0, str(Path(__file__).resolve().parent))\n\nfrom _compare import check  # noqa: E402\nfrom goftest.recogniseCdf import recogniseCdf  # noqa: E402\n\nCASES = [\"punif\", \"pnorm\", \"norm\", \"t\", \"pt\", \"chisq\", \"unif\", \"AD\", \"pAD\", \"CvM\",\n         \"pCvM\", \"wilcox\", \"pwilcox\", \"p\", \"\", \"foo\", \"pfoo\", \"beta\", \"binom\",\n         \"birthday\", \"tukey\", \"weibull\", \"nbinom\", \"logis\", \"lnorm\", \"gamma\", \"f\",\n         \"geom\", \"hyper\", \"exp\", \"pois\", \"cauchy\", \"pexp\", \"pAD \", 1]\n\n\ndef _name(s):\n    r = recogniseCdf(s)\n    return \"NULL\" if r is None else r\n\n\ndef values():\n    return {f\"s|{i}\": [_name(s)] for i, s in enumerate(CASES, start=1)}\n\n\ndef timed():\n    for s in CASES:\n        recogniseCdf(s)\n\n\nif __name__ == \"__main__\":\n    sys.exit(check(\"recogniseCdf\", values(), timed, \"recogniseCdf (goftest 1.2-3, R) vs goftest.recogniseCdf (Python)\"))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "SCOC",
+  "title": "A sediment model of oxygen consumption",
+  "origin": {
+    "description": "One-state sediment organic carbon model with deposition forcing. The compiled derivative lives in the deSolve DLL.",
+    "usage": "SCOC(times, y = NULL, parms, Flux, ...)",
+    "arguments": [
+      {
+        "name": "times",
+        "text": "Output times; the first value is the initial time."
+      },
+      {
+        "name": "y",
+        "text": "Initial carbon; when NULL, mean daily deposition over seq(1, 365) divided by k."
+      },
+      {
+        "name": "parms",
+        "text": "Single parameter k, the decay rate."
+      },
+      {
+        "name": "Flux",
+        "text": "Two-column matrix of deposition times and rates."
+      }
+    ],
+    "details": "Integrates with vode and linear forcing interpolation by default. Global outputs Mineralisation and Depo come from the compiled scocder routine.",
+    "value": "A matrix of class deSolve with columns time, C, Mineralisation, and Depo.",
+    "example": "Flux <- matrix(ncol = 2, byrow = TRUE, data = c(...))\nparms <- c(k = 0.01)\nout <- SCOC(1:365, parms = parms, Flux = Flux)\nprint(out)",
+    "output": "output/SCOC-r.txt"
+  },
+  "translation": {
+    "description": "Same sediment carbon model; derivatives are in the scoc Rust crate from ex_SCOC.c. Integration uses SciPy LSODA with deSolve-compatible forcing interpolation.",
+    "usage": "SCOC(times, y=None, parms, Flux, **kwargs)",
+    "arguments": [
+      {
+        "name": "times",
+        "text": "Output times; the first value is the initial time."
+      },
+      {
+        "name": "y",
+        "text": "Initial carbon; when None, mean daily deposition over 1:365 divided by k."
+      },
+      {
+        "name": "parms",
+        "text": "Single parameter k, the decay rate."
+      },
+      {
+        "name": "Flux",
+        "text": "Two-column deposition matrix."
+      }
+    ],
+    "details": "Integrates with SciPy LSODA (rtol and atol default 1e-6). fcontrol selects linear or constant forcing like deSolve checkforcings.",
+    "value": "A deSolve matrix with columns time, C, Mineralisation, and Depo.",
+    "example": "from deSolve.SCOC import SCOC\nout = SCOC(list(range(1, 366)), parms={'k': 0.01}, Flux=Flux)\nprint(out)",
+    "output": "output/SCOC-python.txt"
+  }
+}

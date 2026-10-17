@@ -1,0 +1,1 @@
+R's `pwxy` lays out `wn(n,9)` with leading dimension `n`, but `rqfnb` runs on `n+2` entries when every observation is unclassified. The vectors then overlap, so replicates with `nit(3) == n+2` are not reproducible. Compare against R only on the other replicates.

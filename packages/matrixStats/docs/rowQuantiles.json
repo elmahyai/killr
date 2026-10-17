@@ -1,0 +1,104 @@
+{
+  "name": "rowQuantiles",
+  "title": "Estimates quantiles for each row in a matrix",
+  "origin": {
+    "description": "Estimates quantiles for each row (column) in a matrix.",
+    "usage": "rowQuantiles(x, rows = NULL, cols = NULL, probs = seq(from = 0, to = 1,\n  by = 0.25), na.rm = FALSE, type = 7L, digits = 7L, ...,\n  useNames = TRUE, drop = TRUE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An integer, numeric, or logical N by K matrix with N >= 0."
+      },
+      {
+        "name": "rows",
+        "text": "A vector indicating a subset of rows to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "cols",
+        "text": "A vector indicating a subset of columns to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "probs",
+        "text": "A numeric vector of J probabilities in [0, 1]."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "type",
+        "text": "An integer specifying the type of estimator. See stats::quantile."
+      },
+      {
+        "name": "digits",
+        "text": "An integer specifying the precision of the formatted percentages. Not used when useNames is FALSE."
+      },
+      {
+        "name": "...",
+        "text": "Additional arguments passed to stats::quantile. fuzz is the one used by quantile."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      },
+      {
+        "name": "drop",
+        "text": "If TRUE, singleton dimensions in the result are dropped, otherwise not."
+      }
+    ],
+    "details": "When the matrix has no missing values and type is 7, each row is sorted with sort.int(partial=) and the quantile is interpolated without clamping probs. Any missing value, or another type, calls stats::quantile on that row. A row with a missing value is NA when na.rm is FALSE. Percentage names such as 25% and 75% come from the internal formatter.",
+    "value": "An N by J matrix, where N is the number of selected rows and J is the number of probabilities. A single row or a single probability drops to a vector when drop is TRUE. Type 7 returns double. Another type returns the storage mode of x when no row is calculated, and double when stats::quantile runs.",
+    "example": "rowQuantiles(matrix(1:12, nrow = 4), probs = c(0.25, 0.75))",
+    "output": "output/rowQuantiles-r.txt"
+  },
+  "translation": {
+    "description": "Estimates quantiles for each row in a matrix.",
+    "usage": "rowQuantiles(x, rows=None, cols=None, probs=None, na_rm=False, type=7,\n  digits=7, use_names=True, drop=True, fuzz=None)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An N by K array. Axis 0 is rows and axis 1 is columns, matching the printed R matrix. Integer, floating, and logical arrays are accepted. A vector is rejected."
+      },
+      {
+        "name": "rows",
+        "text": "1-based rows to include. None uses every row. Zero is dropped, a negative value excludes, and a missing subscript inserts a missing row."
+      },
+      {
+        "name": "cols",
+        "text": "1-based columns to include. None uses every column."
+      },
+      {
+        "name": "probs",
+        "text": "Probabilities. None is 0, 0.25, 0.5, 0.75, and 1. Values may sit within 100 * machine epsilon of [0, 1]."
+      },
+      {
+        "name": "na_rm",
+        "text": "If true, missing values are dropped before the quantile. A double missing value is nan. An integer missing value is -2147483648."
+      },
+      {
+        "name": "type",
+        "text": "Quantile type 1 through 9. The default 7 matches stats::quantile. Type 7 with no missing values does not clamp probs."
+      },
+      {
+        "name": "digits",
+        "text": "Precision of the percentage names. Ignored when use_names is false. A fractional value is truncated toward zero."
+      },
+      {
+        "name": "use_names",
+        "text": "If true, the result carries percentage names such as 25% and 75% on .colnames, or on .names after a row drops to a vector."
+      },
+      {
+        "name": "drop",
+        "text": "If true, a result with one row or one probability becomes a one-dimensional array."
+      },
+      {
+        "name": "fuzz",
+        "text": "Passed to the stats::quantile path. None uses R's default, which is 0 for type 7 and 4 * machine epsilon otherwise. The type-7 path with no missing values ignores it."
+      }
+    ],
+    "details": "A full sort selects the same order statistics as sort.int(partial=). Type 7 with no missing values interpolates 1 + (n - 1) * probs and errors if a partial index is outside 1:n. Other cases follow R 4.5 stats::quantile, including floor(nppm * (1 + fuzz)) for types other than 7. Percentage names are built inside this function.",
+    "value": "An array of shape (selected rows, probabilities). Double results are float64. An untouched integer allocation, when type is not 7 and a margin is empty, is int32 filled with -2147483648. .colnames holds the percentage names.",
+    "example": "import numpy as np\nfrom matrixstats.rowquantiles import rowQuantiles\n\nrowQuantiles(np.arange(1, 13).reshape((4, 3), order=\"F\"), probs=[0.25, 0.75])",
+    "output": "output/rowQuantiles-python.txt"
+  }
+}

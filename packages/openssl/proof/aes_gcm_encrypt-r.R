@@ -1,0 +1,1 @@
+.libPaths(c(path.expand("~/R/library"), .libPaths())); library(openssl); key <- sha256(charToRaw("This is super secret")); iv <- charToRaw("123456789012"); paste(as.integer(aes_gcm_encrypt(charToRaw("hello curl"), key, iv)), collapse=",")

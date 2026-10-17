@@ -1,0 +1,56 @@
+{
+  "name": "na.StructTS",
+  "title": "Replace NA by a structural time-series Kalman smoother",
+  "origin": {
+    "description": "Replace NA by a structural time-series Kalman smoother.",
+    "usage": "na.StructTS(object, ...)\nna.StructTS.ts(object, ..., na.rm = FALSE, maxgap = Inf)",
+    "arguments": [
+      {
+        "name": "object",
+        "text": "A regular series with a frequency. A Zoo needs frequency greater than 1 so the basic structural model has a seasonal state."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, trim ends that are still missing. The default keeps them."
+      },
+      {
+        "name": "maxgap",
+        "text": "Runs longer than maxgap are put back to missing after the smoother."
+      },
+      {
+        "name": "...",
+        "text": "Passed through to StructTS (type, init, fixed, optim.control)."
+      }
+    ],
+    "details": "Missing values are replaced by the sum of the smoothed level and seasonal states from StructTS, dropping the slope. The variances are fit by L-BFGS-B on the concentrated Kalman likelihood. Frequency 1 selects the trend model, drops the only remaining column, and rowSums then fails.",
+    "value": "Observed points stay as they are. The three missing points of c(1, NA, 3, NA, NA) at frequency 4 are the smoothed level plus seasonal state.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(zoo))\nstopifnot(packageVersion(\"zoo\") == \"1.9-1\")\nx <- as.numeric(na.StructTS(zooreg(c(1, NA, 3, NA, NA), frequency = 4)))\ncat(paste(vapply(as.numeric(x), function(v) if (is.nan(v)) \"NaN\" else if (is.na(v)) \"NA\" else sprintf(\"%.12g\", v), \"\"), collapse = \" \"), \"\\n\", sep = \"\")\n",
+    "output": "output/na.StructTS-r.txt"
+  },
+  "translation": {
+    "description": "Replace NA by a structural time-series Kalman smoother.",
+    "usage": "na_structts(object, na_rm=False, maxgap=inf)",
+    "arguments": [
+      {
+        "name": "object",
+        "text": "A regular series with a frequency. A Zoo needs frequency greater than 1 so the basic structural model has a seasonal state."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, trim ends that are still missing. The default keeps them."
+      },
+      {
+        "name": "maxgap",
+        "text": "Runs longer than maxgap are put back to missing after the smoother."
+      },
+      {
+        "name": "...",
+        "text": "Passed through to StructTS (type, init, fixed, optim.control)."
+      }
+    ],
+    "details": "Missing values are replaced by the sum of the smoothed level and seasonal states from StructTS, dropping the slope. The variances are fit by L-BFGS-B on the concentrated Kalman likelihood. Frequency 1 selects the trend model, drops the only remaining column, and rowSums then fails.",
+    "value": "Observed points stay as they are. The three missing points of c(1, NA, 3, NA, NA) at frequency 4 are the smoothed level plus seasonal state.",
+    "example": "import math\nimport sys\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/zoo\")\nfrom zoo.na import na_structts\nfrom zoo.series import Zoo\n\nNA = np.array(np.uint64(0x7FF00000000007A2)).view(np.float64)[()]\n\n\ndef series():\n    return np.array([1.0, NA, 3.0, NA, NA], dtype=np.float64)\n\n\ndef tok(number):\n    if math.isnan(float(number)):\n        bits = int(np.float64(number).view(np.uint64))\n        return \"NA\" if (bits & 0xFFFFFFFF) == 1954 else \"NaN\"\n    return format(float(number), \".12g\")\n\n\nvalue = np.asarray(na_structts(Zoo(series(), np.arange(1, 6), frequency=4, regular=True)).data, dtype=float)\nprint(\" \".join(tok(number) for number in np.asarray(value, dtype=float).reshape(-1)))\n",
+    "output": "output/na.StructTS-python.txt"
+  }
+}

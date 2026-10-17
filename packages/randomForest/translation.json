@@ -1,0 +1,506 @@
+{
+  "name": "randomForest",
+  "cran_version": "4.7-1.2",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 18 exports match randomForest 4.7-1.2. Draws use boot's generator. Classification trees are the Rust port of rfsub.f.",
+  "dependencies": {
+    "translated": [
+      "boot"
+    ],
+    "native": [
+      "numpy",
+      "scipy"
+    ],
+    "rust": [
+      "rfsub"
+    ]
+  },
+  "functions": [
+    {
+      "name": "na.roughfix",
+      "translated": true,
+      "python": "randomForest.na_roughfix",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Fills each missing entry with the column median.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a 4 by 2 matrix with two missing entries",
+        "r_ms": 0.2492666244506836,
+        "translated_ms": 0.17370950081385672,
+        "speedup": 1.4349625281451486,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  as.numeric(na.roughfix(matrix(c(1,10, NA,2, 3,6, 8,NA), ncol=2, byrow=TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/randomForest\"]\nfrom randomForest import margin, na_roughfix, outlier\n\ndef one():\n    return [v for column in zip(*na_roughfix([[1, 10], [float('nan'), 2], [3, 6], [8, float('nan')]])) for v in column]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "margin",
+      "translated": true,
+      "python": "randomForest.margin",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Observed-class share minus the largest other share.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three rows and two classes",
+        "r_ms": 0.2663135528564453,
+        "translated_ms": 0.018402999558020383,
+        "speedup": 14.471203567484775,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  as.numeric(margin(matrix(c(0.7,0.3, 0.2,0.8, 0.4,0.6), ncol=2, byrow=TRUE, dimnames=list(NULL, c(\"a\",\"b\"))), factor(c(\"a\",\"b\",\"a\"))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/randomForest\"]\nfrom randomForest import margin, na_roughfix, outlier\n\ndef one():\n    return margin([[0.7, 0.3], [0.2, 0.8], [0.4, 0.6]], [\"a\", \"b\", \"a\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "outlier",
+      "translated": true,
+      "python": "randomForest.outlier",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Scales the inverse proximity by the median and by mad with constant 1.4826.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a 3 by 3 proximity",
+        "r_ms": 0.7206201553344727,
+        "translated_ms": 0.22333099877869245,
+        "speedup": 3.2266911412891846,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\n\none <- function() {\n  as.numeric(outlier(matrix(c(1,0.2,0.8, 0.2,1,0.1, 0.8,0.1,1), 3, byrow=TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\"/home/ahmed/killr_projects/killr/packages/randomForest\"]\nfrom randomForest import margin, na_roughfix, outlier\n\ndef one():\n    return outlier([[1, 0.2, 0.8], [0.2, 1, 0.1], [0.8, 0.1, 1]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "combine",
+      "translated": true,
+      "python": "randomForest.combine",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Predictions, importance, its standard deviation, and the tree sizes of two forests joined together. A missing out-of-bag prediction is compared as -1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three trees plus two",
+        "r_ms": 3.1262636184692383,
+        "translated_ms": 5.3707624999788095,
+        "speedup": 0.582089343641908,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- reg()\n  fit2 <- randomForest(x, y, ntree=2, mtry=2, nodesize=5, importance=TRUE)\n  joined <- combine(fit, fit2)\n  c(joined$predicted, as.numeric(joined$importance), joined$importanceSD, joined$forest$ndbigtree)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(2)\n    fit = reg()\n    fit2 = random_forest(x, y, ntree=2, mtry=2, nodesize=5, importance=True)\n    joined = combine(fit, fit2)\n    return (clean(joined.predicted) + as_rows(joined.importance)\n            + [float(v) for v in joined.importance_sd]\n            + [float(v) for v in joined.forest[\"ndbigtree\"]])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "getTree",
+      "translated": true,
+      "python": "randomForest.get_tree",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Daughter, variable, split, status, and prediction of regression tree 2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "tree 2",
+        "r_ms": 0.5946159362792969,
+        "translated_ms": 3.5141030000431783,
+        "speedup": 0.1692084541266977,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  as.numeric(getTree(reg(), k=2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    return columns(get_tree(reg(), k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "grow",
+      "translated": true,
+      "python": "randomForest.grow",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Predictions after two more trees on the continued generator. A missing out-of-bag prediction is compared as -1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two more trees",
+        "r_ms": 1.8669366836547852,
+        "translated_ms": 5.886819999886939,
+        "speedup": 0.31713840132544246,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- reg()\n  fit2 <- randomForest(x, y, ntree=2, mtry=2, nodesize=5, importance=TRUE)\n  combine(fit, fit2)$predicted\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(2)\n    fit = reg()\n    return clean(grow(fit, 2).predicted)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "importance",
+      "translated": true,
+      "python": "randomForest.importance",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Scaled importance, the permutation column, and the gini column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "type 1 and type 2",
+        "r_ms": 0.6612539291381836,
+        "translated_ms": 3.360106999934942,
+        "speedup": 0.1967954976287918,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- reg()\n  c(as.numeric(importance(fit)), importance(fit, type=1), importance(fit, type=2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    fit = reg()\n    return (as_rows(importance(fit))\n            + as_rows(importance(fit, type=1))\n            + as_rows(importance(fit, type=2)))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "MDSplot",
+      "translated": true,
+      "python": "randomForest.mdsplot",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The two-axis points and the eigenvalues of one minus the proximity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "k = 2",
+        "r_ms": 2.5807619094848633,
+        "translated_ms": 3.9687419998699625,
+        "speedup": 0.6502720281563839,
+        "matches": true,
+        "max_abs_diff": 3.552713678800501e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- randomForest(x, y, ntree=3, mtry=2, nodesize=5, proximity=TRUE)\n  drawn <- MDSplot(fit, factor(rep(c(\"a\",\"b\"), each=10)), k=2)\n  c(drawn$points, drawn$eig)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(2)\n    fit = random_forest(x, y, ntree=3, mtry=2, nodesize=5, proximity=True)\n    drawn = mdsplot(fit, k=2)\n    return columns(drawn[\"points\"]) + [float(v) for v in drawn[\"eig\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "partialPlot",
+      "translated": true,
+      "python": "randomForest.partial_plot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The grid and the partial prediction for the first predictor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "predictor 1",
+        "r_ms": 4.773616790771484,
+        "translated_ms": 6.94102750003367,
+        "speedup": 0.6877392130701583,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  drawn <- partialPlot(reg(), x, 1, plot=FALSE)\n  c(drawn$x, drawn$y)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    drawn = partial_plot(reg(), x, 1)\n    return [float(v) for v in drawn[\"x\"]] + [float(v) for v in drawn[\"y\"]]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "randomForest",
+      "translated": true,
+      "python": "randomForest.random_forest",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Out-of-bag predictions for a regression forest of 20 rows and a classification forest of 16 rows. A missing prediction is compared as -1. Classification trees are the Rust port of rfsub.f. Draws use boot's generator.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ntree = 3",
+        "r_ms": 1.674652099609375,
+        "translated_ms": 6.0620210001616215,
+        "speedup": 0.2762531009979554,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n  set.seed(7)\n  cls <- randomForest(xc, yc, ntree=3, mtry=2, proximity=TRUE)\n  c(fit$predicted, as.integer(cls$predicted))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    fit = reg()\n    set_seed(7)\n    cls = random_forest(xc, yc, ntree=3, mtry=2, proximity=True)\n    return clean(fit.predicted) + codes(cls.predicted)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rfImpute",
+      "translated": true,
+      "python": "randomForest.rf_impute",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The response and the filled predictors after one pass.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "iter = 1, ntree = 3",
+        "r_ms": 1.105666160583496,
+        "translated_ms": 1.1804390001088905,
+        "speedup": 0.9366567526839618,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(4)\n  xx <- matrix(c(1,2,NA,4, 5,NA,7,8, 9,10,11,NA), nrow=4, byrow=TRUE)\n  as.numeric(as.matrix(rfImpute(xx, c(1,2,3,4), iter=1, ntree=3)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(4)\n    xx = [[1, 2, float(\"nan\")], [4, 5, float(\"nan\")], [7, 8, 9], [10, 11, float(\"nan\")]]\n    filled = rf_impute(xx, [1.0, 2.0, 3.0, 4.0], iter=1, ntree=3)\n    rows = filled.tolist() if hasattr(filled, \"tolist\") else filled\n    return columns(rows)\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "treesize",
+      "translated": true,
+      "python": "randomForest.treesize",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Terminal-node counts and the count of every node.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three regression trees",
+        "r_ms": 0.46241283416748047,
+        "translated_ms": 3.2729630001995247,
+        "speedup": 0.14128263415727313,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- reg()\n  c(treesize(fit), treesize(fit, terminal=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    fit = reg()\n    return [float(v) for v in treesize(fit)] + [float(v) for v in treesize(fit, terminal=False)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "tuneRF",
+      "translated": true,
+      "python": "randomForest.tune_rf",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The mtry values tried and their out-of-bag error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mtryStart = 1, ntreeTry = 3",
+        "r_ms": 1.1354684829711914,
+        "translated_ms": 4.367788499848757,
+        "speedup": 0.2599641633312852,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(5)\n  as.numeric(tuneRF(x, y, mtryStart=1, ntreeTry=3, stepFactor=2, improve=0.05, trace=FALSE, plot=FALSE))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(5)\n    return columns(tune_rf(x, y, mtry_start=1, ntree_try=3, step_factor=2, improve=0.05))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "varImpPlot",
+      "translated": true,
+      "python": "randomForest.var_imp_plot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The importance matrix a dot chart is drawn from.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the regression forest",
+        "r_ms": 3.1136274337768555,
+        "translated_ms": 3.1135189999531576,
+        "speedup": 1.0000348267743666,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  as.numeric(varImpPlot(reg()))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    return as_rows(var_imp_plot(reg()))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "varUsed",
+      "translated": true,
+      "python": "randomForest.var_used",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Split counts, the unique-variable count, and the count in each tree.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three predictors",
+        "r_ms": 1.6678571701049805,
+        "translated_ms": 3.24871850011732,
+        "speedup": 0.5133892548845798,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(2)\n  fit <- reg()\n  c(varUsed(fit), varUsed(fit, count=FALSE), as.numeric(varUsed(fit, by.tree=TRUE)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    fit = reg()\n    by_tree = var_used(fit, by_tree=True)\n    return ([float(v) for v in var_used(fit)]\n            + [float(v) for v in var_used(fit, count=False)]\n            + [float(v) for row in by_tree for v in row])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rfNews",
+      "translated": true,
+      "python": "randomForest.rf_news",
+      "loads": [],
+      "uses": [],
+      "done": "Checksum of the installed NEWS text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the package NEWS file",
+        "r_ms": 1.5718936920166016,
+        "translated_ms": 1.412883000284637,
+        "speedup": 1.1125434248270596,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  news <- paste(readLines(system.file(\"NEWS\", package=\"randomForest\")), collapse=\"\n\")\n  sum(utf8ToInt(news))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    news = rf_news()\n    if news.endswith(\"\\n\"):\n        news = news[:-1]\n    return [sum(ord(ch) for ch in news)]\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "classCenter",
+      "translated": true,
+      "python": "randomForest.class_center",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Class medians from the three nearest neighbors in the proximity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "nNbr = 3",
+        "r_ms": 2.669692039489746,
+        "translated_ms": 2.7581000001646316,
+        "speedup": 0.9679460640768615,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(7)\n  cls <- randomForest(xc, yc, ntree=3, mtry=2, proximity=TRUE)\n  as.numeric(classCenter(xc, yc, cls$proximity, nNbr=3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(7)\n    cls = random_forest(xc, yc, ntree=3, mtry=2, proximity=True)\n    return columns(class_center(xc, yc, cls.proximity, n_nbr=3))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "rfcv",
+      "translated": true,
+      "python": "randomForest.rfcv",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The variable counts, the cross-validated error, and the held-out predictions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cv.fold = 3, ntree = 3",
+        "r_ms": 3.592848777770996,
+        "translated_ms": 7.811977000073966,
+        "speedup": 0.4599154321290216,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(randomForest))\nif (packageDescription(\"randomForest\")$Version != \"4.7-1.2\") stop(\"expected randomForest 4.7-1.2\")\noptions(warn = -1)\njson_num <- function(x) {\n  x <- as.numeric(x)\n  x[is.na(x)] <- -1\n  paste0(\"[\", paste(sprintf(\"%.17g\", x), collapse=\",\"), \"]\")\n}\ny <- c(1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0)\nx <- matrix(c(1:60)/7, nrow=20, ncol=3)\nnewx <- matrix(c(2,9, 15,22, 30,41)/7, nrow=2)\nxc <- matrix(c(1:48)/5, nrow=16, ncol=3)\nyc <- factor(rep(c(\"b\",\"a\",\"b\",\"a\"), each=4))\nreg <- function() randomForest(x, y, ntree=3, mtry=2, nodesize=5, importance=TRUE)\n\none <- function() {\n  set.seed(6)\n  cv <- rfcv(x, y, cv.fold=3, ntree=3, step=0.5)\n  c(cv$n.var, cv$error.cv, unlist(cv$predicted))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_num(value), median(elapsed) * 1000))\n",
+          "python": "\nimport json\nimport statistics\nimport sys\nimport time\n\nsys.path[:0] = [\n    \"/home/ahmed/killr_projects/killr/packages/randomForest\",\n    \"/home/ahmed/killr_projects/killr/packages/boot\",\n]\nfrom boot.rng import set_seed\nfrom randomForest import (\n    class_center, combine, get_tree, grow, importance, mdsplot, partial_plot,\n    predict, random_forest, rf_impute, rf_news, rfcv, treesize, tune_rf,\n    var_imp_plot, var_used,\n)\n\ny = [1.2, 0.4, 2.1, 1.7, 0.2, 3.3, 2.8, 0.9, 1.1, 4.0, 0.5, 2.2, 1.8, 3.1, 0.7, 2.6, 1.4, 0.3, 3.6, 2.0]\nx = [[(r + 20 * c + 1) / 7 for c in range(3)] for r in range(20)]\nnewx = [[2 / 7, 15 / 7, 30 / 7], [9 / 7, 22 / 7, 41 / 7]]\nxc = [[(r + 16 * c + 1) / 5 for c in range(3)] for r in range(16)]\nyc = [\"b\"] * 4 + [\"a\"] * 4 + [\"b\"] * 4 + [\"a\"] * 4\n\ndef columns(rows):\n    rows = [list(row) for row in rows]\n    return [float(row[col]) for col in range(len(rows[0])) for row in rows]\n\ndef clean(values):\n    return [-1.0 if v != v else float(v) for v in values]\n\ndef as_rows(table):\n    if hasattr(table, \"tolist\"):\n        table = table.tolist()\n    if table and isinstance(table[0], (list, tuple)):\n        return columns(table)\n    return [float(v) for v in table]\n\ndef codes(labels):\n    level = {\"a\": 1.0, \"b\": 2.0}\n    return [-1.0 if label is None else float(level[label]) for label in labels]\n\ndef reg():\n    set_seed(2)\n    return random_forest(x, y, ntree=3, mtry=2, nodesize=5, importance=True)\n\ndef one():\n    set_seed(6)\n    cv = rfcv(x, y, cv_fold=3, ntree=3, step=0.5)\n    held = [float(v) for block in cv[\"predicted\"] for v in block]\n    return [float(v) for v in cv[\"n_var\"]] + [float(v) for v in cv[\"error_cv\"]] + held\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

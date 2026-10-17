@@ -1,0 +1,1 @@
+`checkDLL` on package deSolve resolves only names registered in `R_init_deSolve`, because `R_useDynamicSymbols` is false. The registered name `aquaphyforc` points at `aquaphy`. `Nmtot$lengthvar` counts the original `outnames`, including names past `nout`. Assigning `NULL` to `colnames` removes that element.

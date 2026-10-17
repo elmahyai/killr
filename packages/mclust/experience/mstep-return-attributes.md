@@ -1,0 +1,1 @@
+`mstepEVV`, `mstepVEE`, `mstepEVE`, and `mstepVVE` return `WARNING`, `returnCode`, and `info` as attributes from `structure()`, not as list items, so an R proof reads them with `attr()`. With a `prior`, these four never reach the kernel: R fills `temp` with zeros, so `returnCode` is 0 for EVV and 2 for the other three, and `WARNING` is reset to NULL after the warning.

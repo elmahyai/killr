@@ -1,0 +1,112 @@
+{
+  "name": "censboot",
+  "title": "Bootstrap for Censored Data",
+  "origin": {
+    "description": "Resample right-censored observations by case resampling, the conditional bootstrap, the weird bootstrap, or a Cox model whose coefficients are already fitted.",
+    "usage": "censboot(data, statistic, R, F.surv, G.surv, strata = matrix(1, n, 2), sim = \"ordinary\", cox = NULL, index = c(1, 2), ..., parallel = c(\"no\", \"multicore\", \"snow\"), ncpus = getOption(\"boot.ncpus\", 1L), cl = NULL)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A matrix or data frame with at least two columns. The columns named by index are the times and the censoring indicators."
+      },
+      {
+        "name": "statistic",
+        "text": "A function of the data. Extra arguments go through .... For sim = \"weird\" with strata supplied, it also receives the stratum labels."
+      },
+      {
+        "name": "R",
+        "text": "The number of bootstrap replicates."
+      },
+      {
+        "name": "F.surv",
+        "text": "A survival curve with time and surv. Required except for ordinary case resampling, and except for sim = \"model\" when cox is missing. The weird bootstrap also needs n.risk and n.event."
+      },
+      {
+        "name": "G.surv",
+        "text": "The product-limit curve of the censoring distribution, again with time and surv. Required for sim = \"cond\", and for sim = \"model\" when cox is supplied."
+      },
+      {
+        "name": "strata",
+        "text": "A vector, or a two-column matrix. A vector stratifies the survival distribution. A matrix stratifies survival in column 1 and censoring in column 2. Ordinary resampling uses only the first column. The default is one stratum."
+      },
+      {
+        "name": "sim",
+        "text": "\"ordinary\" resamples cases. \"model\" does the same when cox is missing, and otherwise resamples from the Cox model. \"weird\" redraws event counts at the observed failure times. \"cond\" redraws censoring times from the conditional censoring distribution. The string must match exactly."
+      },
+      {
+        "name": "cox",
+        "text": "A fitted Cox model. Model-based failure times use its coefficients and its linear predictors. The weird bootstrap rejects a Cox model."
+      },
+      {
+        "name": "index",
+        "text": "Two 1-based column positions, time then censoring indicator. Further entries are ignored with a warning."
+      },
+      {
+        "name": "...",
+        "text": "Named arguments forwarded to statistic on every call."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Optional parallel backend. The comparison here is serial."
+      }
+    ],
+    "details": "Case resampling draws each stratum with replacement and passes the rows in increasing index order. The conditional bootstrap draws failure times from F.surv. An originally censored row keeps its censoring time; an event draws a censoring time strictly later than the observed failure. A last censored time is treated as an infinite failure, and a last uncensored time as an infinite censoring time. If both draws are infinite, the time becomes the largest observed failure in that survival stratum. With a Cox model, failure times use the fitted linear predictors. The weird bootstrap keeps censored rows fixed and draws binomial event counts at each failure time, repeating a replicate until every stratum has at least one event. sim = \"model\" with no cox is stored as ordinary.",
+    "value": "An object of class \"boot\" with t0, t, R, sim, data, seed, statistic, strata, and call. t has one row per replicate. sim is ordinary when model was requested without cox. For the weird bootstrap, data keeps only the time and censoring columns.",
+    "example": "set.seed(1)\ndata <- cbind(c(1.2, 3.4, 0.5, 2.2, 8.1, 4.0, 6.5, 1.1), c(1, 1, 0, 1, 0, 1, 1, 0))\nout <- censboot(data, function(d) mean(d[, 1]), R = 5)\ncat(sprintf(\"t0 %.10g\\n\", out$t0))\ncat(sprintf(\"%.10g\\n\", out$t[, 1]), sep = \"\")\n",
+    "output": "output/censboot-r.txt"
+  },
+  "translation": {
+    "description": "Resample right-censored observations by case resampling, the conditional bootstrap, the weird bootstrap, or a Cox model whose coefficients are already fitted.",
+    "usage": "censboot(data, statistic, R, F_surv=None, G_surv=None, strata=None, sim=\"ordinary\", cox=None, index=(1, 2), parallel=\"no\", ncpus=1, cl=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "data",
+        "text": "A two-dimensional numeric array with at least two columns. The columns named by index are the times and the censoring indicators."
+      },
+      {
+        "name": "statistic",
+        "text": "A function of the data. Extra arguments go through keywords. For sim=\"weird\" with strata supplied, it also receives the stratum labels."
+      },
+      {
+        "name": "R",
+        "text": "The number of bootstrap replicates."
+      },
+      {
+        "name": "F_surv",
+        "text": "A mapping or object with time and surv, the numeric survival curve R would pass. Required except for ordinary case resampling, and except for sim=\"model\" when cox is omitted. The weird bootstrap also needs n.risk and n.event."
+      },
+      {
+        "name": "G_surv",
+        "text": "The product-limit curve of the censoring distribution, with time and surv. Required for sim=\"cond\", and for sim=\"model\" when cox is supplied."
+      },
+      {
+        "name": "strata",
+        "text": "A vector, or a two-column array. A vector stratifies the survival distribution. An array stratifies survival in column 1 and censoring in column 2. Ordinary resampling uses only the first column. None means one stratum."
+      },
+      {
+        "name": "sim",
+        "text": "\"ordinary\" resamples cases. \"model\" does the same when cox is omitted, and otherwise resamples from the supplied Cox fit. \"weird\" redraws event counts at the observed failure times. \"cond\" redraws censoring times from the conditional censoring distribution. The string must match exactly."
+      },
+      {
+        "name": "cox",
+        "text": "An object with a coefficients vector. Model-based failure times also read linear_predictors. This function does not fit the model. The weird bootstrap rejects a Cox object."
+      },
+      {
+        "name": "index",
+        "text": "Two 1-based column positions, time then censoring indicator. Further entries are ignored with a warning."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Keyword arguments forwarded to statistic on every call."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Accepted for the R signature. Only serial evaluation is implemented. parallel other than \"no\" with ncpus greater than 1 warns and still runs serially."
+      }
+    ],
+    "details": "Case resampling draws each stratum with replacement through boot.rng sample_int and passes the rows in increasing index order. The conditional bootstrap draws failure times from F_surv. An originally censored row keeps its censoring time; an event draws a censoring time strictly later than the observed failure. A last censored time is treated as an infinite failure, and a last uncensored time as an infinite censoring time. If both draws are infinite, the time becomes the largest observed failure in that survival stratum. With a Cox object, failure times use the supplied linear predictors. The weird bootstrap keeps censored rows fixed and draws binomial event counts at each failure time, repeating a replicate until every stratum has at least one event. sim=\"model\" with cox omitted is stored as ordinary. Random index draws use boot.rng, matching R set.seed and sample.int.",
+    "value": "A CensBoot object with t0, t, R, sim, data, seed, statistic, and strata. t has one row per replicate. seed is the 626 signed integers of .Random.seed at the start of the work. sim is ordinary when model was requested without cox. For the weird bootstrap, data keeps only the time and censoring columns.",
+    "example": "from boot.censored import censboot\nfrom boot.rng import set_seed\nimport numpy as np\n\nset_seed(1)\ndata = np.array([\n    [1.2, 1], [3.4, 1], [0.5, 0], [2.2, 1],\n    [8.1, 0], [4.0, 1], [6.5, 1], [1.1, 0],\n], dtype=float)\nout = censboot(data, lambda d: float(np.mean(d[:, 0])), R=5)\nprint(f\"t0 {float(out.t0[0]):.10g}\")\nfor value in out.t[:, 0]:\n    print(f\"{float(value):.10g}\")\n",
+    "output": "output/censboot-python.txt"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "make_progression_handler",
+  "title": "Build a progression handler",
+  "origin": {
+    "description": "Create a calling handler that turns progression conditions into reporter calls.",
+    "usage": "make_progression_handler(name, reporter = list(), handler = NULL, enable = getOption(\"progressr.enable\", interactive()), enable_after = getOption(\"progressr.enable_after\", 0), times = getOption(\"progressr.times\", +Inf), interval = getOption(\"progressr.interval\", 0), intrusiveness = 1, clear = getOption(\"progressr.clear\", TRUE), target = \"terminal\", ...)",
+    "arguments": [
+      {
+        "name": "name",
+        "text": "Handler name. The class vector starts with <name>_progression_handler."
+      },
+      {
+        "name": "reporter",
+        "text": "Named functions initiate, update, finish, hide, unhide, reset, and interrupt. Each receives config, state, and progression."
+      },
+      {
+        "name": "enable",
+        "text": "If FALSE, times becomes 0 and the handler does nothing."
+      },
+      {
+        "name": "times",
+        "text": "Maximum number of reporter updates. Zero, an infinite interval, or infinite intrusiveness replaces the handler with a no-op."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "Scales how often milestones are reached. The value stored in config stays the original times and interval."
+      }
+    ],
+    "details": "The handler owns one progressor at a time, drops a repeated session-index-time id, and skips updates that miss the next milestone or arrive sooner than interval. A zero amount still updates. auto_finish signals finish when step reaches max_steps. The handler returns whether it is finished. In batch mode progressr.enable is FALSE, so pass enable = TRUE or the handler is a no-op.",
+    "value": "A function of classes <name>_progression_handler, progression_handler, and calling_handler.",
+    "example": "steps <- numeric()\nmessages <- character()\nhandler <- make_progression_handler(\"rec\", reporter = list(\n  update = function(config, state, progression, ...) {\n    steps <<- c(steps, state$step)\n    messages <<- c(messages, state$message)\n  }\n), enable = TRUE, target = \"file\", interval = 0)\nwithCallingHandlers({\n  signalCondition(progression(type = \"initiate\", steps = 4, auto_finish = TRUE, progressor_uuid = \"p\", progression_index = 1L))\n  for (k in 1:4) {\n    signalCondition(progression(type = \"update\", amount = 1, message = letters[k], progressor_uuid = \"p\", progression_index = k + 1L))\n  }\n}, progression = handler)\ncat(paste(steps, collapse = \" \"), \"\\n\", sep = \"\")\ncat(paste(messages, collapse = \" \"), \"\\n\", sep = \"\")\n",
+    "output": "output/make_progression_handler-r.txt"
+  },
+  "translation": {
+    "description": "Create a calling handler that turns progression conditions into reporter calls.",
+    "usage": "make_progression_handler(name, reporter=None, handler=None, enable=None, enable_after=None, times=None, interval=None, intrusiveness=1.0, clear=None, target=\"terminal\")",
+    "arguments": [
+      {
+        "name": "name",
+        "text": "Handler name. The class tuple starts with <name>_progression_handler."
+      },
+      {
+        "name": "reporter",
+        "text": "A dict of initiate, update, finish, hide, unhide, reset, and interrupt callables. Each receives config, state, and progression."
+      },
+      {
+        "name": "enable",
+        "text": "If False, times becomes 0 and the handler does nothing. The default follows progressr.enable, which is false when stdin is not a terminal."
+      },
+      {
+        "name": "times",
+        "text": "Maximum number of reporter updates. Zero, an infinite interval, or infinite intrusiveness replaces the handler with a no-op."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "Scales the local milestone count. config times and interval stay the original arguments."
+      }
+    ],
+    "details": "The handler keeps one owner, ignores a repeated session-index-time id, and skips an update that has not reached the next milestone or that arrives before interval. A zero amount still updates. When step is set, amount becomes that step minus the current step; the stored step is the caller's value. auto_finish finishes when step reaches max_steps. The handler returns whether it is finished. Pass enable=True under a non-interactive stdin or the handler is dropped.",
+    "value": "A callable whose classes are <name>_progression_handler, progression_handler, and calling_handler.",
+    "example": "from progressr.condition import progression, signal_condition, with_calling_handlers\nfrom progressr.factory import make_progression_handler\n\nsteps = []\nmessages = []\n\ndef update(config, state, progression, **kwargs):\n    steps.append(state[\"step\"])\n    messages.append(state[\"message\"])\n\nhandler = make_progression_handler(\"rec\", reporter={\"update\": update}, enable=True, target=\"file\", interval=0)\n\ndef go():\n    signal_condition(progression(type=\"initiate\", steps=4, auto_finish=True, progressor_uuid=\"p\", progression_index=1))\n    for index, text in enumerate(\"abcd\", start=2):\n        signal_condition(progression(type=\"update\", amount=1, message=text, progressor_uuid=\"p\", progression_index=index))\n\nwith_calling_handlers(go, progression=handler)\nprint(\" \".join(format(step, \"g\") for step in steps))\nprint(\" \".join(messages))\n",
+    "output": "output/make_progression_handler-python.txt"
+  }
+}

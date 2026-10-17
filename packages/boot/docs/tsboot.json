@@ -1,0 +1,128 @@
+{
+  "name": "tsboot",
+  "title": "Bootstrapping of Time Series",
+  "origin": {
+    "description": "Generate R bootstrap replicates of a statistic applied to a time series. Replicates use fixed blocks, geometric blocks, a user model, or phase scrambling.",
+    "usage": "tsboot(tseries, statistic, R, l = NULL, sim = \"model\", endcorr = TRUE, n.sim = NROW(tseries), orig.t = TRUE, ran.gen, ran.args = NULL, norm = TRUE, ..., parallel = c(\"no\", \"multicore\", \"snow\"), ncpus = getOption(\"boot.ncpus\", 1L), cl = NULL)",
+    "arguments": [
+      {
+        "name": "tseries",
+        "text": "A univariate or multivariate time series."
+      },
+      {
+        "name": "statistic",
+        "text": "Function applied to each series. It receives a series of length n.sim and returns a vector. Further arguments are passed through ...."
+      },
+      {
+        "name": "R",
+        "text": "Positive integer, the number of bootstrap replicates."
+      },
+      {
+        "name": "sim",
+        "text": "\"model\" for model-based resampling, \"fixed\" for blocks of length l, \"geom\" for geometric block lengths with mean l, or \"scramble\" for phase scrambling."
+      },
+      {
+        "name": "l",
+        "text": "Fixed block length, or the mean of the geometric block lengths. A positive integer no longer than the series. Not used for \"model\" or \"scramble\"."
+      },
+      {
+        "name": "endcorr",
+        "text": "If true, block starts may fall anywhere in the series and blocks wrap. If false, starts are restricted so a block of length l stays inside the series. Forced to true for \"geom\"."
+      },
+      {
+        "name": "n.sim",
+        "text": "Length of each simulated series. Defaults to the number of observations."
+      },
+      {
+        "name": "orig.t",
+        "text": "If true, t0 is statistic applied to the original series. If false, t0 is NULL."
+      },
+      {
+        "name": "ran.gen",
+        "text": "Function of the series, n.sim, and ran.args. For \"model\" it builds the replicate. For the block methods it post-blackens the stitched blocks. The default returns the series unchanged."
+      },
+      {
+        "name": "ran.args",
+        "text": "Extra object passed to ran.gen. NULL when ran.gen needs nothing beyond its three arguments."
+      },
+      {
+        "name": "norm",
+        "text": "For phase scrambling, true uses normal margins and false restores the exact empirical margins."
+      },
+      {
+        "name": "...",
+        "text": "Named arguments forwarded to statistic on every call."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Optional parallel backend. The comparison here is serial."
+      }
+    ],
+    "details": "Fixed blocks of length l are laid end to end until the replicate has length n.sim. Geometric blocks use the same stitching, with lengths drawn so their mean is l. Passing ran.gen post-blackens those replicates. Model-based replicates are produced entirely by ran.gen. Phase scrambling randomizes the Fourier phases of the centered series. The manual's lynx example fits an autoregression on each replicate; the example below is the same block bootstrap with the mean of a short series.",
+    "value": "An object of class \"boot\" with t0, t, R, data (the original series; the manual calls this component tseries), statistic, sim, and n.sim. Block methods also store l and endcorr. \"model\" stores ran.gen and ran.args. \"scramble\" stores norm. The attribute boot_type is \"tsboot\".",
+    "example": "set.seed(1)\nseries <- 1:30\nfixed <- tsboot(series, function(tsb) mean(tsb), R = 20, l = 5, sim = \"fixed\")\ncat(sprintf(\"t0 %.10g\\n\", fixed$t0))\ncat(sprintf(\"%.10g\\n\", fixed$t[, 1]), sep = \"\")\nset.seed(1)\ngeom <- tsboot(series, function(tsb) mean(tsb), R = 20, l = 5, sim = \"geom\")\ncat(\"geom\\n\")\ncat(sprintf(\"t0 %.10g\\n\", geom$t0))\ncat(sprintf(\"%.10g\\n\", geom$t[, 1]), sep = \"\")\n",
+    "output": "output/tsboot-r.txt"
+  },
+  "translation": {
+    "description": "Generate R bootstrap replicates of a statistic applied to a time series. Replicates use fixed blocks, geometric blocks, a user model, or phase scrambling.",
+    "usage": "tsboot(tseries, statistic, R, l=None, sim=\"model\", endcorr=True, n_sim=None, orig_t=True, ran_gen=None, ran_args=None, norm=True, parallel=\"no\", ncpus=1, cl=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "tseries",
+        "text": "A one-dimensional series or a two-dimensional array with one row per time and one column per variable."
+      },
+      {
+        "name": "statistic",
+        "text": "Function applied to each series. It receives a series of length n_sim and returns a vector. Further arguments are passed as keywords."
+      },
+      {
+        "name": "R",
+        "text": "Positive number of bootstrap replicates. A non-integer is truncated toward zero with floor."
+      },
+      {
+        "name": "sim",
+        "text": "\"model\" for model-based resampling, \"fixed\" for blocks of length l, \"geom\" for geometric block lengths with mean l, or \"scramble\" for phase scrambling."
+      },
+      {
+        "name": "l",
+        "text": "Fixed block length, or the mean of the geometric block lengths. A positive number no longer than the series. Not used for \"model\" or \"scramble\"."
+      },
+      {
+        "name": "endcorr",
+        "text": "If true, block starts may fall anywhere in the series and blocks wrap. If false, starts are restricted so a block of length l stays inside the series. Forced to true for \"geom\"."
+      },
+      {
+        "name": "n_sim",
+        "text": "Length of each simulated series. The default is the number of observations."
+      },
+      {
+        "name": "orig_t",
+        "text": "If true, t0 is statistic applied to the original series. If false, t0 is None."
+      },
+      {
+        "name": "ran_gen",
+        "text": "Function of the series, n_sim, and ran_args. For \"model\" it builds the replicate. For the block methods it post-blackens the stitched blocks. The default returns the series unchanged."
+      },
+      {
+        "name": "ran_args",
+        "text": "Extra object passed to ran_gen. None when ran_gen needs nothing beyond its three arguments."
+      },
+      {
+        "name": "norm",
+        "text": "For phase scrambling, true uses normal margins and false restores the exact empirical margins."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Keyword arguments forwarded to statistic on every call."
+      },
+      {
+        "name": "parallel, ncpus, cl",
+        "text": "Accepted for the R signature. Only serial evaluation is implemented; parallel=\"no\" is the default."
+      }
+    ],
+    "details": "Fixed blocks of length l are laid end to end until the replicate has length n_sim. Geometric blocks use the same stitching. Lengths are 1 plus an R geometric draw, which is a Poisson of an exponential, and a normal draw on that path is qnorm of two uniforms packed the way R's Inversion generator packs them. Passing ran_gen post-blackens block replicates. Model-based replicates are produced entirely by ran_gen. Phase scrambling randomizes the Fourier phases of the centered series. Random integers come from boot.rng sample_int, matching R sample.int. The manual's lynx example fits an autoregression on each replicate; the example below is the same block bootstrap with the mean of a short series.",
+    "value": "A Tsboot object with t0, t, R, data (the original series), statistic, sim, and n_sim. Block methods also store l and endcorr. \"model\" stores ran_gen and ran_args. \"scramble\" stores norm. boot_type is \"tsboot\". t has one row per replicate.",
+    "example": "from boot.rng import set_seed\nfrom boot.series import tsboot\nimport numpy as np\n\nset_seed(1)\nseries = list(range(1, 31))\nfixed = tsboot(series, lambda tsb: float(np.mean(tsb)), R=20, l=5, sim=\"fixed\")\nprint(f\"t0 {fixed.t0:.10g}\")\nfor value in fixed.t[:, 0]:\n    print(f\"{value:.10g}\")\nset_seed(1)\ngeom = tsboot(series, lambda tsb: float(np.mean(tsb)), R=20, l=5, sim=\"geom\")\nprint(\"geom\")\nprint(f\"t0 {geom.t0:.10g}\")\nfor value in geom.t[:, 0]:\n    print(f\"{value:.10g}\")\n",
+    "output": "output/tsboot-python.txt"
+  }
+}

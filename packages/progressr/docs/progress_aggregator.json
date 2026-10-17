@@ -1,0 +1,32 @@
+{
+  "name": "progress_aggregator",
+  "title": "Aggregate progression conditions",
+  "origin": {
+    "description": "Build a function that runs an expression and relays its progression updates to one parent progressor.",
+    "usage": "progress_aggregator(progress)",
+    "arguments": [
+      {
+        "name": "progress",
+        "text": "A progressor. The step count is read from its environment."
+      }
+    ],
+    "details": "Update conditions call progress(child = p). initiate, finish, reset, and shutdown do nothing. hide, unhide, and interrupt stop with the control_progression message. Any other type stops as an unknown progression type. The handler is make_progression_handler(\"progress_aggregator\", handler = that function), and the returned function calls with_progress with that handler. It muffles the child progression so upstream handlers do not see it.",
+    "value": "A function of class progress_aggregator.",
+    "example": "amounts <- numeric()\nhandler <- make_progression_handler(\"rec\", reporter = list(\n  update = function(config, state, progression, ...) {\n    child <- progression$child\n    if (!is.null(child)) amounts <<- c(amounts, child$amount)\n  }\n), enable = TRUE, target = \"file\", interval = 0)\nresult <- with_progress({\n  progress <- progressor(steps = 2, initiate = TRUE)\n  relay <- progress_aggregator(progress)\n  relay({\n    p <- progressor(steps = 2)\n    p(amount = 1)\n    p(amount = 1)\n    2\n  })\n}, handlers = handler, enable = TRUE, interval = 0,\n   delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\ncat(sprintf(\"progress_aggregator forwards child amounts %s and returns %s.\\n\",\n  paste(format(amounts, trim = TRUE, scientific = FALSE), collapse = \", \"),\n  format(result, trim = TRUE, scientific = FALSE)))\n",
+    "output": "output/progress_aggregator-r.txt"
+  },
+  "translation": {
+    "description": "Build a callable that runs a zero-argument function and relays its progression updates to one parent progressor.",
+    "usage": "progress_aggregator(progress)",
+    "arguments": [
+      {
+        "name": "progress",
+        "text": "A progressor. The step count is read from progress.steps."
+      }
+    ],
+    "details": "On type update the handler calls progress(child=p). initiate, finish, reset, and shutdown do nothing. hide, unhide, and interrupt raise the control_progression message. Any other type raises the unknown progression message. The inner handler is make_progression_handler(\"progress_aggregator\", handler=that function), so the function is the calling handler. The returned callable takes one zero-argument callable and passes it to with_progress. A parent update signaled from inside the handler is not forwarded again.",
+    "value": "A callable whose classes start with progress_aggregator.",
+    "example": "from progressr.aggregator import progress_aggregator\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.options import set_option\nfrom progressr.progressor import progressor\n\nset_option(\"progressr.enable\", True)\namounts = []\n\ndef update(config, state, progression, **kwargs):\n    child = progression.get(\"child\")\n    if child is not None:\n        amounts.append(child[\"amount\"])\n\nhandler = make_progression_handler(\"rec\", reporter={\"update\": update}, enable=True, target=\"file\", interval=0)\n\ndef body():\n    progress = progressor(steps=2, initiate=True)\n    relay = progress_aggregator(progress)\n\n    def child():\n        step = progressor(steps=2)\n        step(amount=1)\n        step(amount=1)\n        return 2\n\n    return relay(child)\n\nresult = with_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nshown = \", \".join(format(item, \"g\") for item in amounts)\nprint(f\"progress_aggregator forwards child amounts {shown} and returns {format(result, 'g')}.\")\n",
+    "output": "output/progress_aggregator-python.txt"
+  }
+}

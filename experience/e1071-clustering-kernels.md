@@ -1,0 +1,1 @@
+`cmeans` and `write.svm` pass Fortran-order matrices into `crates/cmeans` and `crates/svmwrite`. `cshell` must return the last accepted `X` when `gradcount` exceeds `maxit`, not the post-line-search `Bvec`.

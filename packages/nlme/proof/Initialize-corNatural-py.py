@@ -1,0 +1,50 @@
+import statistics
+import sys
+import time
+import types
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+# Load the nlme modules without running nlme/__init__.py (it imports phenoModel).
+if "nlme" not in sys.modules:
+    _pkg = types.ModuleType("nlme")
+    _pkg.__path__ = [str(ROOT / "nlme")]
+    sys.modules["nlme"] = _pkg
+from nlme.corfactor import corFactor
+from nlme.cornatural import coef, corNatural
+from nlme.initialize import Initialize
+from nlme.logdet import logDet
+
+SUBJ = {"Subject": ["a", "a", "a", "a", "b", "b", "b", "b", "c", "c", "c"]}
+
+
+def one():
+    a = Initialize(corNatural([0.3, 0.1, 0.2, 0.05, 0.1, 0.25], form="~ 1 | Subject"), SUBJ)
+    b = Initialize(corNatural(form="~ 1 | Subject"), SUBJ)
+    return np.concatenate(
+        [
+            np.ravel(a.value),
+            np.asarray([a.max_cov], dtype=np.float64),
+            np.ravel(corFactor(a).values, order="F"),
+            np.asarray([logDet(a)], dtype=np.float64),
+            np.ravel(coef(a, unconstrained=False).values),
+            np.ravel(b.value),
+            np.asarray([b.max_cov], dtype=np.float64),
+            np.ravel(corFactor(b).values, order="F"),
+            np.asarray([logDet(b)], dtype=np.float64),
+        ]
+    ).astype(np.float64)
+
+value = one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+print(
+    '{"value":[%s],"median_ms":%.17g}'
+    % (",".join("%.17g" % float(part) for part in value), statistics.median(elapsed))
+)

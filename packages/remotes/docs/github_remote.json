@@ -1,0 +1,80 @@
+{
+  "name": "github_remote",
+  "title": "Create a new github_remote",
+  "origin": {
+    "description": "This is an internal function to create a new github_remote, users should generally have no need for it.",
+    "usage": "github_remote(repo, ref = \"HEAD\", subdir = NULL, auth_token = github_pat(), sha = NULL, host = \"api.github.com\", ...)",
+    "arguments": [
+      {
+        "name": "repo",
+        "text": "Repository address in the format username/repo[/subdir][@ref|#pull|@*release]. subdir and ref may also be arguments. When both are set, the values in repo take precedence."
+      },
+      {
+        "name": "ref",
+        "text": "Commit, tag, or branch name, or a call to github_pull() or github_release(). Default \"HEAD\", the default branch."
+      },
+      {
+        "name": "subdir",
+        "text": "Subdirectory within the repo that contains the R package."
+      },
+      {
+        "name": "auth_token",
+        "text": "Personal access token for a private repo. The default is github_pat(), which the manual describes as the GITHUB_PAT environment variable."
+      },
+      {
+        "name": "sha",
+        "text": "Commit SHA stored on the remote. Default NULL. The manual lists it in the usage and does not describe it."
+      },
+      {
+        "name": "host",
+        "text": "GitHub API host. Default api.github.com. A GitHub Enterprise host looks like github.hostname.com/api/v3."
+      },
+      {
+        "name": "...",
+        "text": "Other arguments passed on to utils::install.packages()."
+      }
+    ],
+    "details": "The manual page has no example. parse_git_repo reads a GitHub URL when the text starts with https://github or git@github, and otherwise reads the shorthand. Fields whose nchar is 0 are dropped. An empty string is kept by %||% because it is not NULL. A remaining pull is stored as github_pull and a remaining release as github_release; those two refs are resolved through the GitHub API. A pull GET replaces username with head.user.login and ref with head.ref. A release GET stores the first tag_name. With the curl package installed, an HTTP error is parsed and appended: a missing pull adds HTTP error 404, Not Found, and the owner and repo spelling guidance. An empty release list stops with No releases found for repo. A string ref is stored as given, and NULL becomes HEAD. A parsed subdir wins over the subdir argument.",
+    "value": "An object of class github_remote and remote, with fields host, package, repo, subdir, username, ref, sha, and auth_token. A parsed field that was dropped is NULL.",
+    "example": "x <- github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token = NULL)\ncat(paste0(\"github_remote(\\\"igraph=igraph/rigraph@v1.0.0\\\", auth_token = NULL) returns package \", x$package, \", repo \", x$repo, \", ref \", x$ref, \".\\n\"))\npull <- tryCatch(github_remote(\"r-lib/remotes#7\", auth_token = NULL), error = function(e) e)\nif (inherits(pull, \"error\")) {\n  cat(\"github_remote(\\\"r-lib/remotes#7\\\", auth_token = NULL) stops with:\\n\")\n  cat(conditionMessage(pull), \"\\n\", sep = \"\")\n} else {\n  cat(paste0(\"github_remote(\\\"r-lib/remotes#7\\\", auth_token = NULL) returns username \", pull$username, \", repo \", pull$repo, \", ref \", pull$ref, \".\\n\"))\n}",
+    "output": "output/github_remote-r.txt"
+  },
+  "translation": {
+    "description": "This is an internal function to create a new github_remote, users should generally have no need for it.",
+    "usage": "github_remote(repo, ref=\"HEAD\", subdir=None, auth_token=<GITHUB_PAT or GITHUB_TOKEN>, sha=None, host=\"api.github.com\", **extra)",
+    "arguments": [
+      {
+        "name": "repo",
+        "text": "Repository address in the format username/repo[/subdir][@ref|#pull|@*release], or an https://github or git@github URL. A parsed subdir or ref wins over the argument."
+      },
+      {
+        "name": "ref",
+        "text": "Commit, tag, or branch name, or github_pull() or github_release(). Default \"HEAD\". Used when the specification has no ref."
+      },
+      {
+        "name": "subdir",
+        "text": "Subdirectory within the repo that contains the package. Used when the specification has no subdir."
+      },
+      {
+        "name": "auth_token",
+        "text": "Personal access token. Omitted, the default reads GITHUB_PAT, then GITHUB_TOKEN, when the string is non-empty. If neither is set, the default is None. An explicit None stays None."
+      },
+      {
+        "name": "sha",
+        "text": "Commit SHA stored on the remote. Default None. It is not looked up."
+      },
+      {
+        "name": "host",
+        "text": "GitHub API host. Default api.github.com."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments are accepted and ignored."
+      }
+    ],
+    "details": "Empty strings are dropped before %||% is applied, and an empty string that remains is kept. A parsed subdir wins over the subdir argument. A string ref is stored as that string, and None becomes HEAD. A github_pull GETs https://{host}/repos/{username}/{repo}/pulls/{number}, sends Authorization: token {pat} when auth_token is set, and replaces username with head.user.login and ref with head.ref. A github_release GETs the releases list and stores the first tag_name. An HTTP status at or above 300 stops with the installed github_error message. A 404 appends HTTP error 404, Not Found, and the owner and repo spelling guidance. A missing head, a JSON error message, or an empty release list stops with the same message as the installed function. The git credential store and the bundled CI token are not used.",
+    "value": "An object with class names github_remote and remote, and fields host, package, repo, subdir, username, ref, sha, and auth_token. A missing parsed field is None.",
+    "example": "from remotes.github_remote import github_remote\nx = github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token=None)\nprint('github_remote(\"igraph=igraph/rigraph@v1.0.0\", auth_token = NULL) returns package ' + x.package + ', repo ' + x.repo + ', ref ' + x.ref + '.')\ntry:\n    pull = github_remote(\"r-lib/remotes#7\", auth_token=None)\n    print('github_remote(\"r-lib/remotes#7\", auth_token = NULL) returns username ' + pull.username + ', repo ' + pull.repo + ', ref ' + pull.ref + '.')\nexcept RuntimeError as exc:\n    print('github_remote(\"r-lib/remotes#7\", auth_token = NULL) stops with:')\n    print(exc)",
+    "output": "output/github_remote-python.txt"
+  }
+}

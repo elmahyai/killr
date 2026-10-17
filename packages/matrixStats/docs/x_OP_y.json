@@ -1,0 +1,84 @@
+{
+  "name": "x_OP_y",
+  "title": "Fast calculation of 'z <- x OP y' and 'z <- t(t(x) OP y)'",
+  "origin": {
+    "description": "Fast calculation of 'z <- x OP y', where OP can be +, -, *, and /. For + and *, na.rm = TRUE will drop missing values first.",
+    "usage": "x_OP_y(x, y, OP, xrows = NULL, xcols = NULL, yidxs = NULL,\n  commute = FALSE, na.rm = FALSE)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A numeric or logical NxK matrix."
+      },
+      {
+        "name": "y",
+        "text": "A numeric or logical vector of length L."
+      },
+      {
+        "name": "OP",
+        "text": "A character specifying which operator to use."
+      },
+      {
+        "name": "xrows, xcols",
+        "text": "A vector indicating subset of rows (and/or columns) to operate over x. If NULL, no subsetting is done."
+      },
+      {
+        "name": "yidxs",
+        "text": "A vector indicating subset of elements to operate over y. If NULL, no subsetting is done."
+      },
+      {
+        "name": "commute",
+        "text": "If TRUE, y OP x is calculated, otherwise x OP y."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      }
+    ],
+    "details": "If na.rm = TRUE, missing values are dropped before applying the operator to each pair of values. For instance, if x[1, 1] is missing, then x[1, 1] + y[1] equals y[1]. If y[1] is missing too, the result is missing. This only applies to additions and multiplications. For subtractions and divisions, na.rm is ignored. The installed integer path warns when a result is outside [-2147483647, 2147483647] and stores NA_integer_.",
+    "value": "A numeric NxK matrix. Integer x and y stay integer for +, -, and *, and division always returns double.",
+    "example": "x <- matrix(c(1, 2, 3, NA, 5, 6), nrow = 3, ncol = 2)\ny <- 1:2\nx_OP_y(x, y, OP = \"+\")",
+    "output": "output/x_OP_y-r.txt"
+  },
+  "translation": {
+    "description": "Fast calculation of z = x OP y, where OP can be +, -, *, and /. For + and *, na_rm True drops missing values first.",
+    "usage": "x_OP_y(x, y, OP, xrows=None, xcols=None, yidxs=None, commute=False, na_rm=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A 2-d array whose axis 0 is rows and axis 1 is columns, matching the printed R matrix. Logical values are 0 and 1. Integer values stay on the integer path. Floating values are computed as float64."
+      },
+      {
+        "name": "y",
+        "text": "A numeric or logical vector. It is recycled in column-major order. A 2-d y is read in that same column-major order."
+      },
+      {
+        "name": "OP",
+        "text": "\"+\", \"-\", \"*\", \"/\", or the integers 1 through 4."
+      },
+      {
+        "name": "xrows",
+        "text": "1-based row subscripts. None selects every row. Zeros are dropped, negatives exclude, and a positive index past the matrix is an error."
+      },
+      {
+        "name": "xcols",
+        "text": "1-based column subscripts. None selects every column. The same rules as xrows apply."
+      },
+      {
+        "name": "yidxs",
+        "text": "1-based subscripts into y. None selects every element. A positive index past y becomes a missing value."
+      },
+      {
+        "name": "commute",
+        "text": "If True, y OP x is calculated. This is commute."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, a missing operand is replaced by the other one for addition and multiplication. This is na.rm. Subtraction and division ignore it. An integer NA cast to double is -2147483648."
+      }
+    ],
+    "details": "The scan lives in the Rust crate xopy, ported from matrixStats src/x_OP_y.c. y is recycled down each column. R's NA is a NaN whose low 32 bits are 1954. Integer NA is -2147483648. For integer +, -, and *, a result outside [-2147483647, 2147483647] becomes NA_integer_ and a RuntimeWarning is raised. Division always returns float64.",
+    "value": "An array of shape (N, K). Integer x and y return int32 for +, -, and *, and float64 for division. Any double operand returns float64.",
+    "example": "import numpy as np\nfrom matrixstats.x_op_y import x_OP_y\n\nna = np.uint64(0x7FF00000000007A2).view(np.float64)\nx = np.array([[1.0, na], [2.0, 5.0], [3.0, 6.0]])\nx_OP_y(x, np.array([1, 2]), \"+\")",
+    "output": "output/x_OP_y-python.txt"
+  }
+}

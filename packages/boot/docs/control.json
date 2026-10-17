@@ -1,0 +1,96 @@
+{
+  "name": "control",
+  "title": "Control variates",
+  "origin": {
+    "description": "Bias from post-simulation balance, or bias, variance, skewness, and quantiles using the linear approximation as a control variate.",
+    "usage": "control(boot.out, L = NULL, distn = NULL, index = 1, t0 = NULL,\n        t = NULL, bias.adj = FALSE, alpha = NULL, ...)",
+    "arguments": [
+      {
+        "name": "boot.out",
+        "text": "A nonparametric bootstrap object. A bootstrap that was called with weights is an error."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values. If omitted they are estimated from boot.out."
+      },
+      {
+        "name": "distn",
+        "text": "A smooth.spline fit to the distribution of the linear approximation. Used only when bias.adj is FALSE. If omitted it is computed by saddle.distn."
+      },
+      {
+        "name": "index",
+        "text": "1-based component of the statistic. Only the first element is used, with a warning if several are given."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Used only when bias.adj is FALSE and t is supplied as well. Otherwise boot.out$t0[index]."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates. Used only when bias.adj is FALSE and t0 is supplied as well. Otherwise the index column of boot.out$t."
+      },
+      {
+        "name": "bias.adj",
+        "text": "If TRUE, return only the balanced bias. If FALSE, return the control-variate moments and quantiles."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantile levels. The default is 0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.975, and 0.99."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to the bootstrap statistic."
+      }
+    ],
+    "details": "The balanced bias compares the mean of the replicates with the statistic on the pooled frequencies. The default path approximates each replicate by its linear influence, then estimates the bias, variance, and third cumulant of the remainder. Quantiles combine that linear approximation with a saddlepoint distribution. A zero index from trunc((R+1)*alpha) is dropped before the replicates are bound.",
+    "value": "A single number when bias.adj is TRUE. Otherwise a list with L, tL, bias, var, k3, quantiles, and distn.",
+    "example": "set.seed(11)\nx <- c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9)\nstat <- function(d, i) c(mean(d[i]), var(d[i]))\nb <- boot(x, stat, R = 40)\nprint(control(b, index = 2, bias.adj = TRUE))",
+    "output": "output/control-r.txt"
+  },
+  "translation": {
+    "description": "Bias from post-simulation balance, or bias, variance, skewness, and quantiles using the linear approximation as a control variate.",
+    "usage": "control(boot_out, L=None, distn=None, index=1, t0=None, t=None, bias_adj=False, alpha=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "boot_out",
+        "text": "An object with t0, t, R, data, statistic, stype, and the seed that rebuilds the frequency array. A hand-built object is enough. A call that recorded weights is an error; a missing call is treated as unweighted."
+      },
+      {
+        "name": "L",
+        "text": "Empirical influence values. If omitted they are estimated from boot_out."
+      },
+      {
+        "name": "distn",
+        "text": "A callable distribution evaluated on the normal quantile scale. Used only when bias_adj is False. If omitted, a natural cubic spline is fit to the saddlepoint curve."
+      },
+      {
+        "name": "index",
+        "text": "1-based component of the statistic. Only the first element is used, with a warning if several are given."
+      },
+      {
+        "name": "t0",
+        "text": "Observed statistic. Used only when bias_adj is False and t is supplied as well. Otherwise the index entry of boot_out.t0."
+      },
+      {
+        "name": "t",
+        "text": "Bootstrap replicates. Used only when bias_adj is False and t0 is supplied as well. Otherwise the index column of boot_out.t."
+      },
+      {
+        "name": "bias_adj",
+        "text": "If True, return only the balanced bias. If False, return the control-variate moments and quantiles."
+      },
+      {
+        "name": "alpha",
+        "text": "Quantile levels. The default is 0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.975, and 0.99."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Further arguments passed to the bootstrap statistic."
+      }
+    ],
+    "details": "The balanced bias compares the mean of the replicates with the statistic on the pooled frequencies. The default path approximates each replicate by its linear influence, then estimates the bias, variance, and third cumulant of the remainder. Those moments match the installed function. Quantiles read a natural cubic spline through the saddlepoint curve on the normal quantile scale. That curve follows smooth.spline closely and is not the same Fortran fit, so quantile values are not compared at 1e-8. A zero index from trunc((R+1)*alpha) is dropped before the replicates are bound.",
+    "value": "A Python float when bias_adj is True. Otherwise a ControlResult with L, tL, bias, var, k3, quantiles, and distn.",
+    "example": "import numpy as np\nfrom boot.resample import boot\nfrom boot.rng import set_seed\nfrom boot.tilt import control\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    centre = float(values.mean())\n    variance = float(np.sum((values - centre) ** 2) / (values.size - 1))\n    return np.array([centre, variance])\n\nx = np.array([2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9])\nset_seed(11)\nresult = boot(x, statistic, R=40)\nprint(control(result, index=2, bias_adj=True))",
+    "output": "output/control-python.txt"
+  }
+}

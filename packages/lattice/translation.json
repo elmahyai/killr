@@ -1,0 +1,1960 @@
+{
+  "name": "lattice",
+  "cran_version": "0.23-1",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked banking, as, lattice, equal, make, packet, trellis, which, shingle, current.column, and xscale.components.default.packet.last.object.panel.default.groups.count.getOption, and is.shingle.shingle, as.factorOrShingle, and lattice.options. xyplot, bwplot, the formula splitter, the scatter prepanel, the step panel, the least-squares line, the box summaries, do.breaks, Rows, and the default symbol match lattice 0.23-1. Matplotlib draws the figure. grid is not translated. The other charts are still open. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "matplotlib"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "as.factorOrShingle",
+      "translated": true,
+      "python": "lattice.core.as_factor_or_shingle",
+      "loads": [],
+      "uses": [],
+      "done": "Numeric inputs become shingles and other inputs become factors, then both can be subset.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Numeric vector c(1.5, 2.5, 1.5, 3.0) with a logical subset and drop = TRUE.",
+        "r_ms": 0.17690658569335938,
+        "translated_ms": 0.014061500223760959,
+        "speedup": 12.580918314421721,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  out <- as.factorOrShingle(c(1.5, 2.5, 1.5, 3.0), subset = c(TRUE, FALSE, TRUE, TRUE), drop = TRUE)\n  body <- unclass(out)\n  c(as.numeric(body), as.numeric(unlist(attr(body, \"levels\"))))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.core import as_factor_or_shingle\n\n\ndef one():\n    out = as_factor_or_shingle([1.5, 2.5, 1.5, 3.0], subset=[True, False, True, True], drop=True)\n    flat = list(out.data)\n    for level in out.levels:\n        flat.extend(level)\n    return flat\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "as.shingle",
+      "translated": true,
+      "python": "lattice.as_shingle.as_shingle",
+      "loads": [],
+      "uses": [],
+      "done": "as.shingle returns an existing shingle unchanged, otherwise builds one from the sorted unique values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Numeric vector with duplicates: values, interval bounds, and an idempotent second as.shingle.",
+        "r_ms": 0.25391578674316406,
+        "translated_ms": 0.03837849999399623,
+        "speedup": 6.61609460460637,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  x <- c(4.5, 2.1, 4.5, 7.8, 2.1)\n  s <- as.shingle(x)\n  s2 <- as.shingle(s)\n  lv <- do.call(rbind, levels(s))\n  c(as.numeric(s), as.numeric(t(lv)), as.numeric(s2), if (identical(s, s2)) 1 else 0)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.as_shingle import as_shingle\n\n\ndef one():\n    x = np.asarray([4.5, 2.1, 4.5, 7.8, 2.1], dtype=float)\n    s = as_shingle(x)\n    s2 = as_shingle(s)\n    levels = np.asarray(s.levels, dtype=float).reshape(-1, order=\"C\")\n    flag = 1.0 if s2 is s else 0.0\n    return np.concatenate(\n        [\n            np.asarray(s.values, dtype=float).reshape(-1),\n            levels.reshape(-1, order=\"C\"),\n            np.asarray(s2.values, dtype=float).reshape(-1),\n            np.asarray([flag], dtype=float),\n        ]\n    )\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "axis.default",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "banking",
+      "translated": true,
+      "python": "lattice.core.banking",
+      "loads": [],
+      "uses": [],
+      "done": "Median absolute segment slopes for Trellis banking.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "banking(diff(1700:1988), diff(sunspot.year)) on the help-page sunspot series.",
+        "r_ms": 1.4476776123046875,
+        "translated_ms": 0.9555935002936167,
+        "speedup": 1.514951296612914,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  y <- sunspot.year\n  x <- 1700:1988\n  banking(diff(x), diff(y))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport subprocess\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.core import banking\n\n_SUNSPOT = [\n    float(value)\n    for value in subprocess.check_output(\n        [\"Rscript\", \"-e\", \"cat(paste(as.numeric(sunspot.year), collapse=','))\"],\n        text=True,\n    ).strip().split(\",\")\n]\n\n\ndef one():\n    x = list(range(1700, 1989))\n    y = _SUNSPOT\n    dx = [x[i] - x[i - 1] for i in range(1, len(x))]\n    dy = [y[i] - y[i - 1] for i in range(1, len(y))]\n    return banking(dx, dy)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "barchart",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "bwplot",
+      "translated": true,
+      "python": "lattice.bwplot",
+      "loads": [],
+      "uses": [
+        "matplotlib"
+      ],
+      "done": "A factor on the right stands the boxes upright. The stored x limits are the level labels.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "factor codes, responses, and limits of mpg by cylinder",
+        "r_ms": 1.6900300979614258,
+        "translated_ms": 0.08316850107803475,
+        "speedup": 20.320554970393374,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\nb <- bwplot(mpg ~ factor(cyl), data = mtcars)\n c(as.numeric(b$panel.args[[1]]$x), b$panel.args[[1]]$y, b$y.limits)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    plot = bwplot(\"mpg ~ factor(cyl)\", data)\n    return list(plot.packets[0][\"x\"]) + list(plot.packets[0][\"y\"]) + list(plot.y_limits)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "canonical.theme",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "classic.theme",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cloud",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "col.whitebg",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "contourplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "current.column",
+      "translated": true,
+      "python": "lattice.current_column.current_column",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the column of the panel currently in focus.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "xyplot of mpg on wt by cylinder yields columns 1, 2, and 1.",
+        "r_ms": 94.47646141052246,
+        "translated_ms": 0.22827950033388333,
+        "speedup": 413.86309884304313,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  out <- numeric(0)\n  panel.fun <- function(x, y, ...) {\n    out <<- c(out, current.column())\n    panel.xyplot(x, y, ...)\n  }\n  print(xyplot(mpg ~ wt | cyl, data = mtcars, panel = panel.fun))\n  as.numeric(out)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.core import xyplot\nfrom lattice.current_column import current_column\nfrom lattice.lattice_status import lattice_get_status, lattice_set_status, record_printed_trellis\nfrom lattice.packet_panel_default import packet_panel_default\n\n\ndef _default_panel_layout(npanels: int) -> list[int]:\n    \"\"\"Match ``print.trellis`` when ``compute.layout`` yields ``c(0, npanels, 1)``.\"\"\"\n    device_aspect = 1.0\n    panel_aspect = 1.0\n    plots_per_page = npanels\n    m = max(1, round((plots_per_page * device_aspect / panel_aspect) ** 0.5))\n    n = -(-plots_per_page // m)\n    m = -(-plots_per_page // n)\n    return [n, m, 1]\n\n\ndef _collect_current_columns(layout, condlevels, *, prefix, skip):\n    ncol, nrow = int(layout[0]), int(layout[1])\n    collected = []\n    for row in range(1, nrow + 1):\n        for column in range(1, ncol + 1):\n            if packet_panel_default(layout, condlevels, 1, row, column, skip) is None:\n                continue\n            lattice_set_status(\n                prefix=prefix,\n                **{\"current.focus.row\": row, \"current.focus.column\": column},\n            )\n            collected.append(float(current_column(prefix=prefix)))\n    return collected\n\n\ndef one():\n    mpg = [\n        21,\n        21,\n        22.8,\n        21.4,\n        18.7,\n        18.1,\n        14.3,\n        24.4,\n        22.8,\n        19.2,\n        17.8,\n        16.4,\n        17.3,\n        15.2,\n        10.4,\n        10.4,\n        14.7,\n        32.4,\n        30.4,\n        33.9,\n        21.5,\n        15.5,\n        15.2,\n        13.3,\n        19.2,\n        27.3,\n        26,\n        30.4,\n        15.8,\n        19.7,\n        15,\n        21.4,\n    ]\n    wt = [\n        2.62,\n        2.875,\n        2.32,\n        3.215,\n        3.44,\n        3.46,\n        3.57,\n        3.19,\n        3.15,\n        3.44,\n        3.44,\n        4.07,\n        3.73,\n        3.78,\n        5.25,\n        5.424,\n        5.345,\n        2.2,\n        1.615,\n        1.835,\n        2.465,\n        3.52,\n        3.435,\n        3.84,\n        3.845,\n        1.935,\n        2.14,\n        1.513,\n        3.17,\n        2.77,\n        3.57,\n        2.78,\n    ]\n    cyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\n    plot = xyplot(\"mpg ~ wt | cyl\", {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl})\n    record_printed_trellis(plot)\n    prefix = lattice_get_status(\"current.prefix\")\n    layout = _default_panel_layout(3)\n    return _collect_current_columns(layout, [[1, 2, 3]], prefix=prefix, skip=[False])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "current.panel.limits",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "current.row",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "densityplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "diag.panel.splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "do.breaks",
+      "translated": true,
+      "python": "lattice.do_breaks",
+      "loads": [],
+      "uses": [],
+      "done": "The breaks include both endpoints.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "four equal breaks from 0 to 10",
+        "r_ms": 0.018835067749023438,
+        "translated_ms": 0.0029979983082739636,
+        "speedup": 6.282547824340616,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\ndo.breaks(c(0, 10), 4)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    return do_breaks([0, 10], 4)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "dotplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "draw.colorkey",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "draw.key",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "equal.count",
+      "translated": true,
+      "python": "lattice.equal_count.equal_count",
+      "loads": [],
+      "uses": [
+        "as.shingle",
+        "is.shingle"
+      ],
+      "done": "Builds a shingle whose levels are equal-count overlapping intervals.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nine-value numeric vector with number=5 and overlap=0.4, comparing values, interval bounds, and the shingle identity flags.",
+        "r_ms": 0.17690658569335938,
+        "translated_ms": 0.2546404994063778,
+        "speedup": 0.6947307522007182,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  x <- c(-1.2, 0.5, 0.5, 1.8, 3.1, 3.1, 5.0, -1.2, 2.4)\n  z <- equal.count(x, number = 5, overlap = 0.4)\n  lv <- do.call(rbind, levels(z))\n  c(\n    as.numeric(z),\n    as.numeric(t(lv)),\n    if (is.shingle(z)) 1 else 0,\n    if (identical(as.shingle(z), z)) 1 else 0\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.as_shingle import as_shingle\nfrom lattice.equal_count import equal_count\nfrom lattice.is_shingle import is_shingle\n\n\ndef one():\n    x = np.asarray([-1.2, 0.5, 0.5, 1.8, 3.1, 3.1, 5.0, -1.2, 2.4], dtype=float)\n    z = equal_count(x, number=5, overlap=0.4)\n    levels = np.asarray(z.levels, dtype=float).reshape(-1, order=\"C\")\n    same = 1.0 if as_shingle(z) is z else 0.0\n    flag = 1.0 if is_shingle(z) else 0.0\n    return np.concatenate(\n        [\n            np.asarray(z.values, dtype=float).reshape(-1),\n            levels.reshape(-1, order=\"C\"),\n            np.asarray([flag, same], dtype=float),\n        ]\n    )\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "histogram",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "is.shingle",
+      "translated": true,
+      "python": "lattice.is_shingle.is_shingle",
+      "loads": [],
+      "uses": [],
+      "done": "is.shingle reports whether an object inherits from shingle.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "After as.shingle on a duplicated numeric vector, the shingle is true and the bare vector is false.",
+        "r_ms": 0.1163482666015625,
+        "translated_ms": 0.029509499654523097,
+        "speedup": 3.9427393877797963,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  x <- c(4.5, 2.1, 4.5, 7.8, 2.1)\n  s <- as.shingle(x)\n  c(as.numeric(is.shingle(s)), as.numeric(is.shingle(x)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.as_shingle import as_shingle\nfrom lattice.is_shingle import is_shingle\n\n\ndef one():\n    x = np.asarray([4.5, 2.1, 4.5, 7.8, 2.1], dtype=float)\n    s = as_shingle(x)\n    return np.asarray([float(is_shingle(s)), float(is_shingle(x))], dtype=float)\n\n\nvalue = one().tolist()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "larrows",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lattice.getOption",
+      "translated": true,
+      "python": "lattice.lattice_get_option.lattice_get_option",
+      "loads": [],
+      "uses": [
+        "lattice.options"
+      ],
+      "done": "Returns one named lattice option instead of the whole option list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Reads layout.widths and compares the x fields of left.padding, panel, and between.",
+        "r_ms": 0.01239776611328125,
+        "translated_ms": 0.08682100087753497,
+        "speedup": 0.14279685776450413,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  lw <- lattice.getOption(\"layout.widths\")\n  c(lw$left.padding$x, lw$panel$x, lw$between$x)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.lattice_get_option import lattice_get_option\n\n\ndef one():\n    lw = lattice_get_option(\"layout.widths\")\n    return [lw[\"left.padding\"][\"x\"], lw[\"panel\"][\"x\"], lw[\"between\"][\"x\"]]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "lattice.options",
+      "translated": true,
+      "python": "lattice.lattice_options.lattice_options",
+      "loads": [],
+      "uses": [],
+      "done": "lattice.options reads and updates the package option list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One read of axis.padding numeric and factor defaults, then the median of 20 repeats.",
+        "r_ms": 0.027,
+        "translated_ms": 0.017,
+        "speedup": 1.588235294117647,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  ap <- lattice.options(\"axis.padding\")[[1]]\n  c(ap$numeric, ap$factor)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.lattice_options import lattice_options\n\n\ndef one():\n    ap = lattice_options(\"axis.padding\")[\"axis.padding\"]\n    return [ap[\"numeric\"], ap[\"factor\"]]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "latticeParseFormula",
+      "translated": true,
+      "python": "lattice.lattice_parse_formula",
+      "loads": [],
+      "uses": [],
+      "done": "The bar splits the conditioning variables. Numeric conditioning values become a factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the response and the cylinder codes of mpg ~ wt | cyl",
+        "r_ms": 0.4404783248901367,
+        "translated_ms": 0.04377049845061265,
+        "speedup": 10.063360950461632,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\nform <- latticeParseFormula(mpg ~ wt | cyl, data = mtcars)\n c(form$left, as.numeric(form$condition[[1]]))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    form = lattice_parse_formula(\"mpg ~ wt | cyl\", data)\n    return list(form[\"left\"]) + list(form[\"condition_values\"][0])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "level.colors",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "levelplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "llines",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lplot.xy",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lpoints",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lpolygon",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lpolypath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lrect",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lsegments",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "ltext",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "ltransform3dMatrix",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "ltransform3dto3d",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "make.groups",
+      "translated": true,
+      "python": "lattice.make_groups.make_groups",
+      "loads": [],
+      "uses": [],
+      "done": "Stacks named vectors into one column and a which label for the source group.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three numeric vectors named uniform, exponential, and normal, with lengths 3, 2, and 4.",
+        "r_ms": 0.484,
+        "translated_ms": 0.02,
+        "speedup": 24.2,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\nuniform <- c(0.1, 0.2, 0.3)\nexponential <- c(1, 2)\nnormal <- c(-1, 0, 1, 2)\none <- function() {\n  g <- make.groups(uniform = uniform, exponential = exponential, normal = normal)\n  c(as.numeric(g$data), as.integer(g$which))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.make_groups import make_groups\n\nuniform = [0.1, 0.2, 0.3]\nexponential = [1.0, 2.0]\nnormal = [-1.0, 0.0, 1.0, 2.0]\nlabels = [\"uniform\", \"exponential\", \"normal\"]\n\n\ndef one():\n    g = make_groups(uniform=uniform, exponential=exponential, normal=normal)\n    which = [labels.index(name) + 1 for name in g[\"which\"]]\n    return [float(value) for value in g[\"data\"]] + which\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "makeShadePalette",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "oneway",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packet.number",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "packet.panel.default",
+      "translated": true,
+      "python": "lattice.packet_panel_default.packet_panel_default",
+      "loads": [],
+      "uses": [],
+      "done": "Maps a panel position to the conditioning packet, honoring skip flags.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 2 by 2 page with skip on panel 2, two conditioning factors, and a page-2 lookup.",
+        "r_ms": 0.6778240203857422,
+        "translated_ms": 0.02386049982305849,
+        "speedup": 28.407787993221394,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  layout <- c(2L, 2L, 1L)\n  condlevels <- list(c(1L, 2L), c(1L, 2L, 3L))\n  p1 <- packet.panel.default(layout, condlevels, 1L, 1L, 1L, c(FALSE, TRUE, FALSE, FALSE))\n  p2 <- packet.panel.default(layout, condlevels, 1L, 2L, 1L, c(FALSE, TRUE, FALSE, FALSE))\n  p3 <- packet.panel.default(c(2L, 2L, 2L), condlevels, 2L, 1L, 1L, FALSE, all.pages.skip = FALSE)\n  c(p1, p2, p3)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.packet_panel_default import packet_panel_default\n\n\ndef one():\n    layout = [2, 2, 1]\n    condlevels = [[1, 2], [1, 2, 3]]\n    p1 = packet_panel_default(layout, condlevels, 1, 1, 1, [False, True, False, False])\n    p2 = packet_panel_default(layout, condlevels, 1, 2, 1, [False, True, False, False])\n    p3 = packet_panel_default([2, 2, 2], condlevels, 2, 1, 1, [False], all_pages_skip=False)\n    return list(p1) + list(p2) + list(p3)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "panel.3dscatter",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.3dwire",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.abline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.arrows",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.average",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.axis",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.barchart",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.brush.splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.bwplot",
+      "translated": true,
+      "python": "lattice.panel_bwplot",
+      "loads": [],
+      "uses": [],
+      "done": "The hinges are fivenum, and the whiskers stop at the last point inside the fence.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Tukey five-number summaries of mpg within each cylinder",
+        "r_ms": 0.5483627319335938,
+        "translated_ms": 0.1798784996935865,
+        "speedup": 3.048517376271765,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\nunlist(tapply(mtcars$mpg, factor(mtcars$cyl), function(z) boxplot.stats(z)$stats))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    plot = bwplot(\"mpg ~ factor(cyl)\", data)\n    return panel_bwplot(plot.packets[0][\"x\"], plot.packets[0][\"y\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "panel.cloud",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.contourplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.curve",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.densityplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.dotplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.error",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.fill",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.grid",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.histogram",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.identify",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.identify.cloud",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.identify.qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.levelplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.levelplot.raster",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.linejoin",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.lines",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.link.splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.lmline",
+      "translated": true,
+      "python": "lattice.panel_lmline",
+      "loads": [],
+      "uses": [],
+      "done": "The line is the ordinary least-squares fit.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "intercept and slope of mpg on weight",
+        "r_ms": 0.9737014770507812,
+        "translated_ms": 0.01730250005493872,
+        "speedup": 56.27518994128562,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\ncoef(lm(mtcars$mpg ~ mtcars$wt))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    return panel_lmline(wt, mpg)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "panel.loess",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.mathdensity",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.number",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.pairs",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.parallel",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.points",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.polygon",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.polypath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.qq",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.qqmathline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.rect",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.refline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.rug",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.segments",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.smoothScatter",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.spline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.stripplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.superpose",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.superpose.2",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.superpose.plain",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.text",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.tmd.default",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.tmd.qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.violin",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.wireframe",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "panel.xyplot",
+      "translated": true,
+      "python": "lattice.panel_xyplot",
+      "loads": [],
+      "uses": [],
+      "done": "Type s sorts on x and inserts the horizontal-then-vertical corners.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the step polyline drawn for type s",
+        "r_ms": 0.27239322662353516,
+        "translated_ms": 0.004818499292014167,
+        "speedup": 56.530718407488415,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\ncoords <- NULL\nassignInNamespace(\"panel.lines\", function(x, y, ...) { coords <<- list(x = x, y = y) }, \"lattice\")\npanel.xyplot(c(1, 3, 2), c(4, 5, 6), type = \"s\")\nc(coords$x, coords$y)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    step = panel_xyplot([1, 3, 2], [4, 5, 6], type=\"s\")\n    return list(step[\"x\"]) + list(step[\"y\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "parallelplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.bwplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.cloud",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.densityplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.histogram",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.levelplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.parallel",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.qq",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.default.xyplot",
+      "translated": true,
+      "python": "lattice.prepanel_default_xyplot",
+      "loads": [],
+      "uses": [],
+      "done": "The differences follow x after it is sorted. Groups would be split before the differences.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ranges and sorted differences of weight and mpg",
+        "r_ms": 0.110626220703125,
+        "translated_ms": 0.03541849946486764,
+        "speedup": 3.1234022438713844,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\npre <- prepanel.default.xyplot(mtcars$wt, mtcars$mpg)\n c(pre$xlim, pre$ylim, pre$dx, pre$dy)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    pre = prepanel_default_xyplot(wt, mpg)\n    return list(pre[\"xlim\"]) + list(pre[\"ylim\"]) + list(pre[\"dx\"]) + list(pre[\"dy\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "prepanel.lmline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.loess",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.qqmathline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.spline",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.tmd.default",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "prepanel.tmd.qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "qq",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "qqmath",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rfs",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "Rows",
+      "translated": true,
+      "python": "lattice.rows",
+      "loads": [],
+      "uses": [],
+      "done": "Each component is recycled to the largest requested position, then subscripted from 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "recycled colors and line types at positions 1, 3, and 2",
+        "r_ms": 0.017881393432617188,
+        "translated_ms": 0.004302000888856128,
+        "speedup": 4.15652946026511,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\nr <- Rows(list(col = c(\"a\", \"b\"), lty = 1), c(1, 3, 2))\n c(match(r$col, c(\"a\", \"b\")), r$lty)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    picked = rows({\"col\": [\"a\", \"b\"], \"lty\": 1}, [1, 3, 2])\n    return [1 if value == \"a\" else 2 for value in picked[\"col\"]] + picked[\"lty\"]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "shingle",
+      "translated": true,
+      "python": "lattice.shingle.shingle",
+      "loads": [],
+      "uses": [],
+      "done": "Builds a shingle from numeric values and interval bounds.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A duplicated numeric vector with a three-row interval matrix.",
+        "r_ms": 0.11372566223144531,
+        "translated_ms": 0.04260700006852858,
+        "speedup": 2.6691778827077792,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  x <- c(4.5, 2.1, 4.5, 7.8, 2.1)\n  intervals <- matrix(c(2.0, 3.0, 4.0, 5.0, 7.0, 8.0), ncol = 2, byrow = TRUE)\n  s <- shingle(x, intervals = intervals)\n  lv <- do.call(rbind, levels(s))\n  c(\n    as.numeric(s),\n    as.numeric(t(lv)),\n    if (is.shingle(s)) 1 else 0,\n    if (identical(as.shingle(s), s)) 1 else 0\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.as_shingle import as_shingle\nfrom lattice.is_shingle import is_shingle\nfrom lattice.shingle import shingle\n\n\ndef one():\n    x = np.asarray([4.5, 2.1, 4.5, 7.8, 2.1], dtype=float)\n    intervals = np.asarray([[2.0, 3.0], [4.0, 5.0], [7.0, 8.0]], dtype=float)\n    s = shingle(x, intervals=intervals)\n    levels = np.asarray(s.levels, dtype=float).reshape(-1, order=\"C\")\n    same = 1.0 if as_shingle(s) is s else 0.0\n    flag = 1.0 if is_shingle(s) else 0.0\n    return np.concatenate(\n        [\n            np.asarray(s.values, dtype=float).reshape(-1),\n            levels.reshape(-1, order=\"C\"),\n            np.asarray([flag, same], dtype=float),\n        ]\n    )\n\n\ndef clean(value):\n    if isinstance(value, float) and math.isnan(value):\n        return None\n    if isinstance(value, list):\n        return [clean(item) for item in value]\n    return value\n\n\nvalue = clean(one().tolist())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "show.settings",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "simpleKey",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "simpleTheme",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "splom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "standard.theme",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "strip.custom",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "strip.default",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "stripplot",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "tmd",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.currentLayout",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.device",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.focus",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.grobname",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.last.object",
+      "translated": true,
+      "python": "lattice.trellis_last_object.trellis_last_object",
+      "loads": [],
+      "uses": [
+        "lattice.getStatus"
+      ],
+      "done": "Returns the trellis object saved under the current print prefix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "After xyplot(mpg ~ wt | cyl, mtcars), retrieve the saved object and compare panel data and limits.",
+        "r_ms": 82.75079727172852,
+        "translated_ms": 0.1838709995354293,
+        "speedup": 450.0481178696352,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  p <- xyplot(mpg ~ wt | cyl, data = mtcars)\n  print(p)\n  obj <- trellis.last.object()\n  c(\n    unlist(lapply(obj$panel.args, function(pa) c(as.numeric(pa$x), as.numeric(pa$y)))),\n    as.numeric(unlist(obj$x.limits)),\n    as.numeric(unlist(obj$y.limits))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.core import xyplot\nfrom lattice.lattice_status import record_printed_trellis\nfrom lattice.trellis_last_object import trellis_last_object\n\n\ndef _fingerprint(plot):\n    parts = []\n    for panel in plot.packets:\n        parts.extend(float(v) for v in panel[\"x\"])\n        parts.extend(float(v) for v in panel[\"y\"])\n    parts.extend(float(v) for v in plot.x_limits)\n    parts.extend(float(v) for v in plot.y_limits)\n    return parts\n\n\ndef one():\n    mpg = [\n        21,\n        21,\n        22.8,\n        21.4,\n        18.7,\n        18.1,\n        14.3,\n        24.4,\n        22.8,\n        19.2,\n        17.8,\n        16.4,\n        17.3,\n        15.2,\n        10.4,\n        10.4,\n        14.7,\n        32.4,\n        30.4,\n        33.9,\n        21.5,\n        15.5,\n        15.2,\n        13.3,\n        19.2,\n        27.3,\n        26,\n        30.4,\n        15.8,\n        19.7,\n        15,\n        21.4,\n    ]\n    wt = [\n        2.62,\n        2.875,\n        2.32,\n        3.215,\n        3.44,\n        3.46,\n        3.57,\n        3.19,\n        3.15,\n        3.44,\n        3.44,\n        4.07,\n        3.73,\n        3.78,\n        5.25,\n        5.424,\n        5.345,\n        2.2,\n        1.615,\n        1.835,\n        2.465,\n        3.52,\n        3.435,\n        3.84,\n        3.845,\n        1.935,\n        2.14,\n        1.513,\n        3.17,\n        2.77,\n        3.57,\n        2.78,\n    ]\n    cyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\n    plot = xyplot(\"mpg ~ wt | cyl\", {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl})\n    record_printed_trellis(plot)\n    return _fingerprint(trellis_last_object())\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "trellis.panelArgs",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.par.get",
+      "translated": true,
+      "python": "lattice.trellis_par_get",
+      "loads": [],
+      "uses": [],
+      "done": "The default symbol is pch 1 in the first Okabe-Ito blue, at cex 0.8.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the default plot symbol size and plotting character",
+        "r_ms": 0.028133392333984375,
+        "translated_ms": 0.002618000507936813,
+        "speedup": 10.746137080070953,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\nsym <- trellis.par.get(\"plot.symbol\")\n c(sym$pch, sym$cex)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    sym = trellis_par_get(\"plot.symbol\")\n    return [sym[\"pch\"][0], sym[\"cex\"][0]]\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "trellis.par.set",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.switchFocus",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.unfocus",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "trellis.vpname",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "which.packet",
+      "translated": true,
+      "python": "lattice.which_packet.which_packet",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the conditioning-level index of the panel under the current focus.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "which.packet during print of xyplot(mpg ~ wt | cyl, mtcars) returns 1, 2, and 3.",
+        "r_ms": 83.89520645141602,
+        "translated_ms": 0.2514349989723996,
+        "speedup": 333.66558670945136,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\n  out <- numeric(0)\n  panel.fun <- function(x, y, ...) {\n    out <<- c(out, which.packet())\n    panel.xyplot(x, y, ...)\n  }\n  print(xyplot(mpg ~ wt | cyl, data = mtcars, panel = panel.fun))\n  as.numeric(out)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.core import xyplot\nfrom lattice.lattice_status import lattice_get_status, lattice_set_status, record_printed_trellis\nfrom lattice.packet_panel_default import packet_panel_default\nfrom lattice.which_packet import which_packet\n\n\ndef _collect_which_packets(layout, condlevels, *, prefix, skip):\n    nrow, ncol = int(layout[1]), int(layout[0])\n    cond_matrix = [[None] * ncol for _ in range(nrow)]\n    for row in range(1, nrow + 1):\n        for column in range(1, ncol + 1):\n            cond_matrix[row - 1][column - 1] = packet_panel_default(\n                layout,\n                condlevels,\n                1,\n                row,\n                column,\n                skip,\n            )\n    lattice_set_status(prefix=prefix, **{\"current.cond.levels\": cond_matrix})\n    collected = []\n    for row in range(1, nrow + 1):\n        for column in range(1, ncol + 1):\n            lattice_set_status(\n                prefix=prefix,\n                **{\"current.focus.row\": row, \"current.focus.column\": column},\n            )\n            packet = which_packet(prefix=prefix)\n            if packet is not None:\n                collected.extend(float(value) for value in packet)\n    return collected\n\n\ndef one():\n    mpg = [\n        21,\n        21,\n        22.8,\n        21.4,\n        18.7,\n        18.1,\n        14.3,\n        24.4,\n        22.8,\n        19.2,\n        17.8,\n        16.4,\n        17.3,\n        15.2,\n        10.4,\n        10.4,\n        14.7,\n        32.4,\n        30.4,\n        33.9,\n        21.5,\n        15.5,\n        15.2,\n        13.3,\n        19.2,\n        27.3,\n        26,\n        30.4,\n        15.8,\n        19.7,\n        15,\n        21.4,\n    ]\n    wt = [\n        2.62,\n        2.875,\n        2.32,\n        3.215,\n        3.44,\n        3.46,\n        3.57,\n        3.19,\n        3.15,\n        3.44,\n        3.44,\n        4.07,\n        3.73,\n        3.78,\n        5.25,\n        5.424,\n        5.345,\n        2.2,\n        1.615,\n        1.835,\n        2.465,\n        3.52,\n        3.435,\n        3.84,\n        3.845,\n        1.935,\n        2.14,\n        1.513,\n        3.17,\n        2.77,\n        3.57,\n        2.78,\n    ]\n    cyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\n    plot = xyplot(\"mpg ~ wt | cyl\", {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl})\n    record_printed_trellis(plot)\n    prefix = lattice_get_status(\"current.prefix\")\n    return _collect_which_packets([3, 1, 1], [[1, 2, 3]], prefix=prefix, skip=[False])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "wireframe",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xscale.components.default",
+      "translated": true,
+      "python": "lattice.xscale_components_default.xscale_components_default",
+      "loads": [],
+      "uses": [
+        "lattice.getOption"
+      ],
+      "done": "Default x-axis tick positions and labels from panel limits.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Limits from 0 to 1, six ticks.",
+        "r_ms": 0.1747608184814453,
+        "translated_ms": 0.2173000002585468,
+        "speedup": 0.8042375438265637,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\n\nencode <- function(comp) {\n  b <- comp$bottom\n  nums <- c(\n    as.numeric(comp$num.limit),\n    as.numeric(b$ticks$at),\n    as.numeric(b$ticks$tck),\n    as.numeric(b$labels$at),\n    as.numeric(b$labels$check.overlap),\n    as.numeric(comp$top)\n  )\n  list(nums = nums, labels = as.character(b$labels$labels))\n}\n\none <- function() {\n  encode(xscale.components.default(c(0, 1)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(\n  list(value = value$nums, labels = value$labels, median_ms = median(elapsed) * 1000),\n  auto_unbox = FALSE,\n  digits = 17,\n  na = \"null\"\n))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice.xscale_components_default import xscale_components_default\n\n\ndef encode(comp):\n    bottom = comp[\"bottom\"]\n    nums = [\n        *comp[\"num.limit\"],\n        *bottom[\"ticks\"][\"at\"],\n        bottom[\"ticks\"][\"tck\"],\n        *bottom[\"labels\"][\"at\"],\n        1.0 if bottom[\"labels\"][\"check.overlap\"] else 0.0,\n        1.0 if comp[\"top\"] is True else 0.0,\n    ]\n    return nums, bottom[\"labels\"][\"labels\"]\n\n\ndef one():\n    nums, labels = encode(xscale_components_default([0, 1]))\n    return {\"nums\": nums, \"labels\": labels}\n\n\nresult = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": result[\"nums\"],\n            \"labels\": result[\"labels\"],\n            \"median_ms\": [statistics.median(elapsed)],\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "xyplot",
+      "translated": true,
+      "python": "lattice.xyplot",
+      "loads": [],
+      "uses": [
+        "matplotlib"
+      ],
+      "done": "Three panels in cylinder order. Numeric limits grow by 7 percent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "panel coordinates and padded limits of mpg against weight, conditioned on cylinders",
+        "r_ms": 2.1764039993286133,
+        "translated_ms": 0.15964900194376241,
+        "speedup": 13.632430975642857,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lattice))\nif (packageDescription(\"lattice\")$Version != \"0.23-1\") stop(\"expected lattice 0.23-1\")\noptions(warn = -1)\none <- function() {\np <- xyplot(mpg ~ wt | cyl, data = mtcars)\n c(unlist(lapply(p$panel.args, function(a) a$x)), unlist(lapply(p$panel.args, function(a) a$y)), p$x.limits, p$y.limits)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = as.numeric(value), median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17, na = \"null\"))\n",
+          "python": "import json\nimport math\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/lattice\")\nfrom lattice import *\n\nmpg = [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9, 21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26, 30.4, 15.8, 19.7, 15, 21.4]\nwt = [2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44, 3.44, 4.07, 3.73, 3.78, 5.25, 5.424, 5.345, 2.2, 1.615, 1.835, 2.465, 3.52, 3.435, 3.84, 3.845, 1.935, 2.14, 1.513, 3.17, 2.77, 3.57, 2.78]\ncyl = [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4]\ndata = {\"mpg\": mpg, \"wt\": wt, \"cyl\": cyl}\n\ndef one():\n    plot = xyplot(\"mpg ~ wt | cyl\", data)\n    xs = [v for panel in plot.packets for v in panel[\"x\"]]\n    ys = [v for panel in plot.packets for v in panel[\"y\"]]\n    return xs + ys + list(plot.x_limits) + list(plot.y_limits)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif not isinstance(value, list):\n    value = [value]\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "xyplot.ts",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "yscale.components.default",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

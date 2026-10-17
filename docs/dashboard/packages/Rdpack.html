@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rdpack · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>Rdpack</h1>
+<p class="note">CRAN 2.6.6</p>
+<p>Rd manuals are left unfinished.</p>
+<p class="note">0 of 110 functions · 0.0% · replaced · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#append_to_Rd_list">append_to_Rd_list</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#as.character.f_usage
+#">as.character.f_usage
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#bibentry_key">bibentry_key</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#c_Rd">c_Rd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#char2Rdpiece">char2Rdpiece</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#compare_usage1">compare_usage1</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#deparse_usage">deparse_usage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#deparse_usage1">deparse_usage1</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#format_funusage">format_funusage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#get_bibentries">get_bibentries</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#get_sig_text">get_sig_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#get_usage">get_usage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#get_usage_text">get_usage_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#insert_ref">insert_ref</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_args">inspect_args</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_clmethods">inspect_clmethods</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_Rd">inspect_Rd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_Rdbib">inspect_Rdbib</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_Rdclass">inspect_Rdclass</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_Rdfun">inspect_Rdfun</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_Rdmethods">inspect_Rdmethods</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_signatures">inspect_signatures</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_slots">inspect_slots</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#inspect_usage">inspect_usage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#is_Rdsecname">is_Rdsecname</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#list_Rd">list_Rd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#pairlist2f_usage1">pairlist2f_usage1</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_1usage_text">parse_1usage_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_pairlist">parse_pairlist</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_Rdname">parse_Rdname</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_Rdpiece">parse_Rdpiece</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_Rdtext
+#">parse_Rdtext
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_text">parse_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#parse_usage_text">parse_usage_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#promptPackageSexpr">promptPackageSexpr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#promptUsage">promptUsage</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rattr">rattr</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rd_combo">Rd_combo</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdapply">Rdapply</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_append_argument">Rdo_append_argument</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_collect_aliases">Rdo_collect_aliases</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_comment">Rdo_comment</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_drop_empty">Rdo_drop_empty</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_empty_sections">Rdo_empty_sections</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_flatinsert">Rdo_flatinsert</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_flatremove">Rdo_flatremove</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_get_argument_names">Rdo_get_argument_names</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_get_insert_pos">Rdo_get_insert_pos</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_get_item_labels">Rdo_get_item_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_insert">Rdo_insert</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_insert_element">Rdo_insert_element</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_is_newline">Rdo_is_newline</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_item">Rdo_item</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_locate">Rdo_locate</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_locate_core_section">Rdo_locate_core_section</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_locate_leaves
+#">Rdo_locate_leaves
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_locate_leaves2
+#">Rdo_locate_leaves2
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_locate_predefined_section">Rdo_locate_predefined_section</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_macro">Rdo_macro</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_macro1">Rdo_macro1</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_macro2">Rdo_macro2</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_modify">Rdo_modify</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_modify_simple">Rdo_modify_simple</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_newline">Rdo_newline</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_piece_types">Rdo_piece_types</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_piecetag">Rdo_piecetag</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_predefined_sections">Rdo_predefined_sections</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_Rcode">Rdo_Rcode</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_remove_srcref">Rdo_remove_srcref</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_reparse">Rdo_reparse</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_replace_section">Rdo_replace_section</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_sections">Rdo_sections</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_sectype">Rdo_sectype</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_set_section">Rdo_set_section</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_show">Rdo_show</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_sigitem">Rdo_sigitem</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_tag">Rdo_tag</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_tags">Rdo_tags</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_text">Rdo_text</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rdo_text_restore">rdo_text_restore</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rdo_top_tags">rdo_top_tags</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_verb">Rdo_verb</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_which">Rdo_which</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_which_tag_eq">Rdo_which_tag_eq</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_which_tag_in">Rdo_which_tag_in</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo2Rdf">Rdo2Rdf</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdreplace_section">Rdreplace_section</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdtagapply">Rdtagapply</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#rebib">rebib</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#reprompt">reprompt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#RStudio_reprompt">RStudio_reprompt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#S4formals
+#">S4formals
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#toolsdotdotdot.Rd_drop_nodes_with_tags
+#">toolsdotdotdot.Rd_drop_nodes_with_tags
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#toolsdotdotdot.Rd_get_metadata
+#">toolsdotdotdot.Rd_get_metadata
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#toolsdotdotdotfetchRdDB
+#">toolsdotdotdotfetchRdDB
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#toolsdotdotdotRdTags">toolsdotdotdotRdTags</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#update_aliases_tmp
+#">update_aliases_tmp
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#utilsdotdotdot.getHelpFile">utilsdotdotdot.getHelpFile</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#viewRd">viewRd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#makeVignetteReference">makeVignetteReference</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#vigbib">vigbib</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#ereprompt">ereprompt</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#insert_citeOnly">insert_citeOnly</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#insert_all_ref">insert_all_ref</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdpack_bibstyles
+##">Rdpack_bibstyles
+##</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#set_Rdpack_bibstyle  # 2025-11=09 rremoved
+#">set_Rdpack_bibstyle  # 2025-11=09 rremoved
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#run_examples - commenting out until completed
+#">run_examples - commenting out until completed
+#</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#insert_fig - commenting out until completed">insert_fig - commenting out until completed</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#Rdo_fetch
+##">Rdo_fetch
+##</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+<tr><td><a href="#deparseLatexToRd">deparseLatexToRd</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Package is replaced (cran/replaced.json). Not translated.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td colspan='8'>None have been compared yet.</td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Depends</h3><p>methods</p><h3>Imports</h3><p><a href="tools.html">tools</a></p><p><a href="utils.html">utils</a></p><p>rbibutils <span class="note">> 2.4 · not started</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">Dependencies are not recorded yet.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "append_to_Rd_list", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "append_to_Rd_list", "origin": null, "translation": null}, {"name": "as.character.f_usage\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "as.character.f_usage\n#", "origin": null, "translation": null}, {"name": "bibentry_key", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "bibentry_key", "origin": null, "translation": null}, {"name": "c_Rd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "c_Rd", "origin": null, "translation": null}, {"name": "char2Rdpiece", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "char2Rdpiece", "origin": null, "translation": null}, {"name": "compare_usage1", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "compare_usage1", "origin": null, "translation": null}, {"name": "deparse_usage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "deparse_usage", "origin": null, "translation": null}, {"name": "deparse_usage1", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "deparse_usage1", "origin": null, "translation": null}, {"name": "format_funusage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "format_funusage", "origin": null, "translation": null}, {"name": "get_bibentries", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "get_bibentries", "origin": null, "translation": null}, {"name": "get_sig_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "get_sig_text", "origin": null, "translation": null}, {"name": "get_usage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "get_usage", "origin": null, "translation": null}, {"name": "get_usage_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "get_usage_text", "origin": null, "translation": null}, {"name": "insert_ref", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "insert_ref", "origin": null, "translation": null}, {"name": "inspect_args", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_args", "origin": null, "translation": null}, {"name": "inspect_clmethods", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_clmethods", "origin": null, "translation": null}, {"name": "inspect_Rd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_Rd", "origin": null, "translation": null}, {"name": "inspect_Rdbib", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_Rdbib", "origin": null, "translation": null}, {"name": "inspect_Rdclass", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_Rdclass", "origin": null, "translation": null}, {"name": "inspect_Rdfun", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_Rdfun", "origin": null, "translation": null}, {"name": "inspect_Rdmethods", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_Rdmethods", "origin": null, "translation": null}, {"name": "inspect_signatures", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_signatures", "origin": null, "translation": null}, {"name": "inspect_slots", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_slots", "origin": null, "translation": null}, {"name": "inspect_usage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "inspect_usage", "origin": null, "translation": null}, {"name": "is_Rdsecname", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "is_Rdsecname", "origin": null, "translation": null}, {"name": "list_Rd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "list_Rd", "origin": null, "translation": null}, {"name": "pairlist2f_usage1", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "pairlist2f_usage1", "origin": null, "translation": null}, {"name": "parse_1usage_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_1usage_text", "origin": null, "translation": null}, {"name": "parse_pairlist", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_pairlist", "origin": null, "translation": null}, {"name": "parse_Rdname", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_Rdname", "origin": null, "translation": null}, {"name": "parse_Rdpiece", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_Rdpiece", "origin": null, "translation": null}, {"name": "parse_Rdtext\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_Rdtext\n#", "origin": null, "translation": null}, {"name": "parse_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_text", "origin": null, "translation": null}, {"name": "parse_usage_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "parse_usage_text", "origin": null, "translation": null}, {"name": "promptPackageSexpr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "promptPackageSexpr", "origin": null, "translation": null}, {"name": "promptUsage", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "promptUsage", "origin": null, "translation": null}, {"name": "rattr", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rattr", "origin": null, "translation": null}, {"name": "Rd_combo", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rd_combo", "origin": null, "translation": null}, {"name": "Rdapply", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdapply", "origin": null, "translation": null}, {"name": "Rdo_append_argument", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_append_argument", "origin": null, "translation": null}, {"name": "Rdo_collect_aliases", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_collect_aliases", "origin": null, "translation": null}, {"name": "Rdo_comment", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_comment", "origin": null, "translation": null}, {"name": "Rdo_drop_empty", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_drop_empty", "origin": null, "translation": null}, {"name": "Rdo_empty_sections", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_empty_sections", "origin": null, "translation": null}, {"name": "Rdo_flatinsert", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_flatinsert", "origin": null, "translation": null}, {"name": "Rdo_flatremove", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_flatremove", "origin": null, "translation": null}, {"name": "Rdo_get_argument_names", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_get_argument_names", "origin": null, "translation": null}, {"name": "Rdo_get_insert_pos", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_get_insert_pos", "origin": null, "translation": null}, {"name": "Rdo_get_item_labels", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_get_item_labels", "origin": null, "translation": null}, {"name": "Rdo_insert", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_insert", "origin": null, "translation": null}, {"name": "Rdo_insert_element", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_insert_element", "origin": null, "translation": null}, {"name": "Rdo_is_newline", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_is_newline", "origin": null, "translation": null}, {"name": "Rdo_item", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_item", "origin": null, "translation": null}, {"name": "Rdo_locate", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_locate", "origin": null, "translation": null}, {"name": "Rdo_locate_core_section", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_locate_core_section", "origin": null, "translation": null}, {"name": "Rdo_locate_leaves\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_locate_leaves\n#", "origin": null, "translation": null}, {"name": "Rdo_locate_leaves2\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_locate_leaves2\n#", "origin": null, "translation": null}, {"name": "Rdo_locate_predefined_section", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_locate_predefined_section", "origin": null, "translation": null}, {"name": "Rdo_macro", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_macro", "origin": null, "translation": null}, {"name": "Rdo_macro1", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_macro1", "origin": null, "translation": null}, {"name": "Rdo_macro2", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_macro2", "origin": null, "translation": null}, {"name": "Rdo_modify", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_modify", "origin": null, "translation": null}, {"name": "Rdo_modify_simple", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_modify_simple", "origin": null, "translation": null}, {"name": "Rdo_newline", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_newline", "origin": null, "translation": null}, {"name": "Rdo_piece_types", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_piece_types", "origin": null, "translation": null}, {"name": "Rdo_piecetag", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_piecetag", "origin": null, "translation": null}, {"name": "Rdo_predefined_sections", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_predefined_sections", "origin": null, "translation": null}, {"name": "Rdo_Rcode", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_Rcode", "origin": null, "translation": null}, {"name": "Rdo_remove_srcref", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_remove_srcref", "origin": null, "translation": null}, {"name": "Rdo_reparse", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_reparse", "origin": null, "translation": null}, {"name": "Rdo_replace_section", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_replace_section", "origin": null, "translation": null}, {"name": "Rdo_sections", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_sections", "origin": null, "translation": null}, {"name": "Rdo_sectype", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_sectype", "origin": null, "translation": null}, {"name": "Rdo_set_section", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_set_section", "origin": null, "translation": null}, {"name": "Rdo_show", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_show", "origin": null, "translation": null}, {"name": "Rdo_sigitem", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_sigitem", "origin": null, "translation": null}, {"name": "Rdo_tag", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_tag", "origin": null, "translation": null}, {"name": "Rdo_tags", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_tags", "origin": null, "translation": null}, {"name": "Rdo_text", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_text", "origin": null, "translation": null}, {"name": "rdo_text_restore", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rdo_text_restore", "origin": null, "translation": null}, {"name": "rdo_top_tags", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rdo_top_tags", "origin": null, "translation": null}, {"name": "Rdo_verb", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_verb", "origin": null, "translation": null}, {"name": "Rdo_which", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_which", "origin": null, "translation": null}, {"name": "Rdo_which_tag_eq", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_which_tag_eq", "origin": null, "translation": null}, {"name": "Rdo_which_tag_in", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_which_tag_in", "origin": null, "translation": null}, {"name": "Rdo2Rdf", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo2Rdf", "origin": null, "translation": null}, {"name": "Rdreplace_section", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdreplace_section", "origin": null, "translation": null}, {"name": "Rdtagapply", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdtagapply", "origin": null, "translation": null}, {"name": "rebib", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "rebib", "origin": null, "translation": null}, {"name": "reprompt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "reprompt", "origin": null, "translation": null}, {"name": "RStudio_reprompt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "RStudio_reprompt", "origin": null, "translation": null}, {"name": "S4formals\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "S4formals\n#", "origin": null, "translation": null}, {"name": "toolsdotdotdot.Rd_drop_nodes_with_tags\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "toolsdotdotdot.Rd_drop_nodes_with_tags\n#", "origin": null, "translation": null}, {"name": "toolsdotdotdot.Rd_get_metadata\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "toolsdotdotdot.Rd_get_metadata\n#", "origin": null, "translation": null}, {"name": "toolsdotdotdotfetchRdDB\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "toolsdotdotdotfetchRdDB\n#", "origin": null, "translation": null}, {"name": "toolsdotdotdotRdTags", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "toolsdotdotdotRdTags", "origin": null, "translation": null}, {"name": "update_aliases_tmp\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "update_aliases_tmp\n#", "origin": null, "translation": null}, {"name": "utilsdotdotdot.getHelpFile", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "utilsdotdotdot.getHelpFile", "origin": null, "translation": null}, {"name": "viewRd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "viewRd", "origin": null, "translation": null}, {"name": "makeVignetteReference", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "makeVignetteReference", "origin": null, "translation": null}, {"name": "vigbib", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "vigbib", "origin": null, "translation": null}, {"name": "ereprompt", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "ereprompt", "origin": null, "translation": null}, {"name": "insert_citeOnly", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "insert_citeOnly", "origin": null, "translation": null}, {"name": "insert_all_ref", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "insert_all_ref", "origin": null, "translation": null}, {"name": "Rdpack_bibstyles\n##", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdpack_bibstyles\n##", "origin": null, "translation": null}, {"name": "set_Rdpack_bibstyle  # 2025-11=09 rremoved\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "set_Rdpack_bibstyle  # 2025-11=09 rremoved\n#", "origin": null, "translation": null}, {"name": "run_examples - commenting out until completed\n#", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "run_examples - commenting out until completed\n#", "origin": null, "translation": null}, {"name": "insert_fig - commenting out until completed", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "insert_fig - commenting out until completed", "origin": null, "translation": null}, {"name": "Rdo_fetch\n##", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "Rdo_fetch\n##", "origin": null, "translation": null}, {"name": "deparseLatexToRd", "translated": false, "not_done": "Package is replaced (cran/replaced.json). Not translated.", "title": "deparseLatexToRd", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

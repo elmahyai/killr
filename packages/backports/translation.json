@@ -1,0 +1,1144 @@
+{
+  "name": "backports",
+  "cran_version": "1.5.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All forty-seven documented functions are done. On R 4.5 only import is exported, and the default version 4.5.0 copies nothing. The other reimplementations are called from the namespace. There is no crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "import",
+      "translated": true,
+      "python": "backports.import_",
+      "loads": [],
+      "uses": [],
+      "done": "On 4.5.0 import copies nothing. get_backports(\"3.5.0\") is the names introduced after 3.5.0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "default version 4.5.0 assigns nothing",
+        "r_ms": 1.8775463104248047,
+        "translated_ms": 0.035430000025371555,
+        "speedup": 52.993121904608714,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  paste(c(if (isTRUE(g(\"import\")(\"backports\"))) \"true\" else \"false\", as.character(length(g(\"get_backports\")(\"4.5.0\"))), paste(g(\"get_backports\")(\"3.5.0\"), collapse = \"|\")), collapse = \"||\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (f\"true||{len(get_backports('4.5.0'))}||{\"|\".join(get_backports(\"3.5.0\"))}\")\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "URLencode",
+      "translated": true,
+      "python": "backports.URLencode",
+      "loads": [],
+      "uses": [],
+      "done": "Leaves an existing %20 in place, and encodes it again when repeated is true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "space, reserved punctuation, and a repeated percent",
+        "r_ms": 0.5881786346435547,
+        "translated_ms": 0.03870650016324362,
+        "speedup": 15.195861991214064,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"URLencode\")(\"a b\"), g(\"URLencode\")(\"a/b?c\", reserved = TRUE), g(\"URLencode\")(\"ab%20cd\"), g(\"URLencode\")(\"ab%20cd\", repeated = TRUE))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([URLencode(\"a b\"), URLencode(\"a/b?c\", reserved=True), URLencode(\"ab%20cd\"), URLencode(\"ab%20cd\", repeated=True)])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "anyNA",
+      "translated": true,
+      "python": "backports.anyNA",
+      "loads": [],
+      "uses": [],
+      "done": "NA and NaN count. A nested list is searched only when recursive is true.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "letters, an NA, NaN, and a nested NA",
+        "r_ms": 0.11241436004638672,
+        "translated_ms": 0.009982500159821939,
+        "speedup": 11.261142824603962,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"anyNA\")(letters), g(\"anyNA\")(c(1, NA)), g(\"anyNA\")(NaN), g(\"anyNA\")(list(list(list(NA))), recursive = TRUE), g(\"anyNA\")(list(list(NA)), recursive = FALSE))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([anyNA([\"a\", \"b\"]), anyNA([1, NA]), anyNA(float(\"nan\")), anyNA([[[NA]]], recursive=True), anyNA([[NA]], recursive=False)])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "dir.exists",
+      "translated": true,
+      "python": "backports.dir_exists",
+      "loads": [],
+      "uses": [],
+      "done": "A file is false, its parent directory is true, and a missing path is false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the R COPYING file, its directory, and a missing path",
+        "r_ms": 0.12421607971191406,
+        "translated_ms": 0.01711650020297384,
+        "speedup": 7.257095681880846,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"dir.exists\")(c(\"/usr/lib/R/COPYING\", \"/usr/lib/R\", \"/tmp/killr-backports-missing\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (dir_exists([\"/usr/lib/R/COPYING\", \"/usr/lib/R\", \"/tmp/killr-backports-missing\"]))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "file.info",
+      "translated": true,
+      "python": "backports.file_info",
+      "loads": [],
+      "uses": [],
+      "done": "COPYING is 17984 bytes, not a directory, mode 420.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "size, isdir, mode, and mtime of /usr/lib/R/COPYING",
+        "r_ms": 0.1538991928100586,
+        "translated_ms": 0.007249999725900125,
+        "speedup": 21.227475672897523,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\n          one <- function() {\n            fi <- g(\"file.info\")(\"/usr/lib/R/COPYING\", extra_cols = FALSE)\nlist(fi$size, as.integer(fi$mode), fi$isdir, unclass(fi$mtime)[[1]])\n          }\n          value <- flat(one())\n          elapsed <- numeric(20)\n          for (i in seq_len(20)) {\n            t0 <- as.numeric(Sys.time())\n            one()\n            elapsed[[i]] <- as.numeric(Sys.time()) - t0\n          }\n          cat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    info = file_info(\"/usr/lib/R/COPYING\", extra_cols=False)[0]\n    return ([info.size, info.mode, info.isdir, info.mtime])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "file.mode",
+      "translated": true,
+      "python": "backports.file_mode",
+      "loads": [],
+      "uses": [],
+      "done": "COPYING is mode 420.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mode of /usr/lib/R/COPYING",
+        "r_ms": 0.11181831359863281,
+        "translated_ms": 0.013841500731359702,
+        "speedup": 8.07848193406471,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  as.integer(g(\"file.mode\")(\"/usr/lib/R/COPYING\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (file_mode(\"/usr/lib/R/COPYING\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "file.mtime",
+      "translated": true,
+      "python": "backports.file_mtime",
+      "loads": [],
+      "uses": [],
+      "done": "COPYING's mtime matches the R timestamp.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mtime of /usr/lib/R/COPYING",
+        "r_ms": 0.10323524475097656,
+        "translated_ms": 0.01106349918700289,
+        "speedup": 9.331156716878024,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  unclass(g(\"file.mtime\")(\"/usr/lib/R/COPYING\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (file_mtime(\"/usr/lib/R/COPYING\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "file.size",
+      "translated": true,
+      "python": "backports.file_size",
+      "loads": [],
+      "uses": [],
+      "done": "COPYING is 17984 bytes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "size of /usr/lib/R/COPYING",
+        "r_ms": 0.4382133483886719,
+        "translated_ms": 0.00719050058251014,
+        "speedup": 60.94337151638134,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"file.size\")(\"/usr/lib/R/COPYING\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (file_size(\"/usr/lib/R/COPYING\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "get0",
+      "translated": true,
+      "python": "backports.get0",
+      "loads": [],
+      "uses": [],
+      "done": "A missing name returns the default. A name that is present returns its value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "missing name and foo = 12",
+        "r_ms": 0.05269050598144531,
+        "translated_ms": 0.0028479998945840634,
+        "speedup": 18.500880594007363,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  e <- new.env(parent = emptyenv()); e$foo <- 12; c(g(\"get0\")(\"missing\", envir = e, ifnotfound = -1), g(\"get0\")(\"foo\", envir = e))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([get0(\"missing\", envir={}, ifnotfound=-1), get0(\"foo\", envir={\"foo\": 12})])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "isNamespaceLoaded",
+      "translated": true,
+      "python": "backports.is_namespace_loaded",
+      "loads": [],
+      "uses": [],
+      "done": "backports is true and an unknown name is false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "backports and a name that is not loaded",
+        "r_ms": 0.029802322387695312,
+        "translated_ms": 0.001633000465517398,
+        "speedup": 18.250039125526385,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"isNamespaceLoaded\")(\"backports\"), g(\"isNamespaceLoaded\")(\"not_a_real_pkg_zz\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([is_namespace_loaded(\"backports\"), is_namespace_loaded(\"not_a_real_pkg_zz\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "lengths",
+      "translated": true,
+      "python": "backports.lengths",
+      "loads": [],
+      "uses": [],
+      "done": "lengths of 1:3 and a scalar are 3 and 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a list of 1:3 and a scalar",
+        "r_ms": 0.036835670471191406,
+        "translated_ms": 0.002027500158874318,
+        "speedup": 18.16802346967155,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"lengths\")(list(1:3, 2))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (lengths([[1, 2, 3], 2]))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "trimws",
+      "translated": true,
+      "python": "backports.trimws",
+      "loads": [],
+      "uses": [],
+      "done": "both trims each side. left leaves the trailing spaces.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "both and left",
+        "r_ms": 0.1633167266845703,
+        "translated_ms": 0.01961799989658175,
+        "speedup": 8.324840837267345,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"trimws\")(c(\"  a  \", \"b  \", \"  c\")), g(\"trimws\")(c(\"  a  \", \"b  \", \"  c\"), which = \"left\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (trimws([\"  a  \", \"b  \", \"  c\"]) + trimws([\"  a  \", \"b  \", \"  c\"], which=\"left\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "capture.output",
+      "translated": true,
+      "python": "backports.capture_output",
+      "loads": [],
+      "uses": [],
+      "done": "message(\"hi\") is the line hi.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "capture message hi",
+        "r_ms": 0.4200935363769531,
+        "translated_ms": 0.006604999725823291,
+        "speedup": 63.60235485469152,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"capture.output\")(message(\"hi\"), type = \"message\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (capture_output(lambda: message(\"hi\"), type=\"message\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "endsWith",
+      "translated": true,
+      "python": "backports.endsWith",
+      "loads": [],
+      "uses": [],
+      "done": "aabb ends with bb. bbcc does not.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bb at the end of two strings",
+        "r_ms": 0.019550323486328125,
+        "translated_ms": 0.009134500032814685,
+        "speedup": 2.1402729668942735,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"endsWith\")(c(\"aabb\", \"bbcc\"), \"bb\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (endsWith([\"aabb\", \"bbcc\"], \"bb\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "startsWith",
+      "translated": true,
+      "python": "backports.startsWith",
+      "loads": [],
+      "uses": [],
+      "done": "bbcc starts with bb. aabb does not.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "bb at the start of two strings",
+        "r_ms": 0.03695487976074219,
+        "translated_ms": 0.0054905003707972355,
+        "speedup": 6.730694338406217,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"startsWith\")(c(\"aabb\", \"bbcc\"), \"bb\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (startsWith([\"aabb\", \"bbcc\"], \"bb\"))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "strrep",
+      "translated": true,
+      "python": "backports.strrep",
+      "loads": [],
+      "uses": [],
+      "done": "Ten hyphens, and a repeated a beside NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ten hyphens and a recycled NA",
+        "r_ms": 0.27048587799072266,
+        "translated_ms": 0.015171499399002641,
+        "speedup": 17.828552793437417,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"strrep\")(\"-\", 10), g(\"strrep\")(c(\"a\", NA), c(2, 3)))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([strrep(\"-\", 10), *strrep([\"a\", NA], [2, 3])])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": ".valid.factor",
+      "translated": true,
+      "python": "backports.valid_factor",
+      "loads": [],
+      "uses": [],
+      "done": "letters a, b, c are valid. A repeated a is not.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "valid levels and a duplicated level",
+        "r_ms": 0.19860267639160156,
+        "translated_ms": 0.009033999049279373,
+        "speedup": 21.983916016400705,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  f <- factor(\"a\"); attr(f, \"levels\") <- c(\"a\", \"a\"); c(if (isTRUE(g(\".valid.factor\")(factor(letters[1:3])))) \"true\" else \"false\", g(\".valid.factor\")(f))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    ok = valid_factor(Factor([\"a\", \"b\", \"c\"]))\n    bad = valid_factor(Factor([\"a\", \"a\"]))\n    return [\"true\" if ok is True else str(ok), bad]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "hasName",
+      "translated": true,
+      "python": "backports.hasName",
+      "loads": [],
+      "uses": [],
+      "done": "a and b are present. c is not.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two names that exist and one that does not",
+        "r_ms": 0.0209808349609375,
+        "translated_ms": 0.001921499460877385,
+        "speedup": 10.918990813225282,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"hasName\")(list(a = 1, b = 2), c(\"a\", \"b\", \"c\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (hasName({\"a\": 1, \"b\": 2}, [\"a\", \"b\", \"c\"]))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "...elt",
+      "translated": true,
+      "python": "backports.dots_elt",
+      "loads": [],
+      "uses": [],
+      "done": "The second of a, b, c is b.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the second of three unnamed dots",
+        "r_ms": 0.021576881408691406,
+        "translated_ms": 0.003195499630237464,
+        "speedup": 6.752271602387257,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  elt <- function(n, ...) g(\"...elt\")(n); elt(2, \"a\", \"b\", \"c\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    def elt():\n        _dots = Dots((\"\", \"a\"), (\"\", \"b\"), (\"\", \"c\"))\n        return dots_elt(2)\n    return (elt())\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "...length",
+      "translated": true,
+      "python": "backports.dots_length",
+      "loads": [],
+      "uses": [],
+      "done": "Three dots have length 3.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three dots",
+        "r_ms": 0.020742416381835938,
+        "translated_ms": 0.00560449916520156,
+        "speedup": 3.7010294355338633,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  (function(...) g(\"...length\")())(1, 2, 3)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    def elen():\n        _dots = Dots((\"\", 1), (\"\", 2), (\"\", 3))\n        return dots_length()\n    return (elen())\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "isFALSE",
+      "translated": true,
+      "python": "backports.isFALSE",
+      "loads": [],
+      "uses": [],
+      "done": "FALSE is true. NA and TRUE are false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "FALSE, TRUE, and NA",
+        "r_ms": 0.040411949157714844,
+        "translated_ms": 0.0019435001377132721,
+        "speedup": 20.79338631036253,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"isFALSE\")(FALSE), g(\"isFALSE\")(TRUE), g(\"isFALSE\")(NA), g(\"isFALSE\")(c(FALSE, FALSE)))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([isFALSE(False), isFALSE(True), isFALSE(NA), isFALSE([False, False])])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "isTRUE",
+      "translated": true,
+      "python": "backports.isTRUE",
+      "loads": [],
+      "uses": [],
+      "done": "TRUE is true. A longer logical vector and the number 1 are false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "TRUE, a pair of TRUEs, and the number 1",
+        "r_ms": 0.025510787963867188,
+        "translated_ms": 0.0021825007934239693,
+        "speedup": 11.688787486690961,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"isTRUE\")(TRUE), g(\"isTRUE\")(FALSE), g(\"isTRUE\")(c(TRUE, TRUE)), g(\"isTRUE\")(1))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([isTRUE(True), isTRUE(False), isTRUE([True, True]), isTRUE(1)])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "asplit",
+      "translated": true,
+      "python": "backports.asplit",
+      "loads": [],
+      "uses": [],
+      "done": "Rows of matrix(1:6, 2, 3) are 1,3,5 and 2,4,6.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "split a 2 by 3 matrix by row",
+        "r_ms": 0.09143352508544922,
+        "translated_ms": 0.03250999998272164,
+        "speedup": 2.812473858321875,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  sp <- g(\"asplit\")(matrix(1:6, 2, 3), 1); c(paste(sp[[1]], collapse = \",\"), paste(sp[[2]], collapse = \",\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    parts = asplit(Array([1, 2, 3, 4, 5, 6], [2, 3]), 1)\n    return [\",\".join(str(item) for item in part.data) for part in parts]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "dQuote",
+      "translated": true,
+      "python": "backports.dQuote",
+      "loads": [],
+      "uses": [],
+      "done": "The default and q TRUE are curly. TeX uses `` and ''.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "curly quotes and TeX quotes",
+        "r_ms": 0.1119375228881836,
+        "translated_ms": 0.009194000085699372,
+        "speedup": 12.175062197605875,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"dQuote\")(\"foo\"), g(\"dQuote\")(\"foo\", q = TRUE), g(\"dQuote\")(\"foo\", q = \"TeX\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([dQuote(\"foo\"), dQuote(\"foo\", q=True), dQuote(\"foo\", q=\"TeX\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sQuote",
+      "translated": true,
+      "python": "backports.sQuote",
+      "loads": [],
+      "uses": [],
+      "done": "The default is a curly single quote. TeX uses a backtick and an apostrophe.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "curly single quotes and TeX quotes",
+        "r_ms": 0.06711483001708984,
+        "translated_ms": 0.008303500180772971,
+        "speedup": 8.082715548377593,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"sQuote\")(\"foo\"), g(\"sQuote\")(\"foo\", q = \"TeX\"), g(\"sQuote\")(\"foo\", q = \"UTF-8\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([sQuote(\"foo\"), sQuote(\"foo\", q=\"TeX\"), sQuote(\"foo\", q=\"UTF-8\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "errorCondition",
+      "translated": true,
+      "python": "backports.errorCondition",
+      "loads": [],
+      "uses": [],
+      "done": "The message is kept and the class list starts with error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "message and class",
+        "r_ms": 0.05841255187988281,
+        "translated_ms": 0.004626500412996393,
+        "speedup": 12.625645015786656,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  cond <- g(\"errorCondition\")(\"package backports not found\", class = \"missing\"); paste(cond$message, paste(class(cond), collapse = \",\"), sep = \"|\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    cond = errorCondition(\"package backports not found\", class_=\"missing\")\n    return cond.message + \"|\" + \",\".join(cond.classes)\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "removeSource",
+      "translated": true,
+      "python": "backports.remove_source",
+      "loads": [],
+      "uses": [],
+      "done": "mean stays a function. quote(log(y)) stays log(y).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a function and quote(log(y))",
+        "r_ms": 0.20742416381835938,
+        "translated_ms": 0.023919000341265928,
+        "speedup": 8.671941170572405,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(if (is.function(g(\"removeSource\")(mean))) \"function\" else \"other\", paste(deparse(g(\"removeSource\")(quote(log(y)))), collapse = \"\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([\"function\" if callable(remove_source(sum)) else \"other\", deparse1(remove_source(str2lang(\"log(y)\")))])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "str2expression",
+      "translated": true,
+      "python": "backports.str2expression",
+      "loads": [],
+      "uses": [],
+      "done": "The four test strings deparse the way base R does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "four short expressions",
+        "r_ms": 0.29969215393066406,
+        "translated_ms": 0.07348600047407672,
+        "speedup": 4.078221048870185,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  vapply(c(\"x[3] <- 1+4\", \"log(y)\", \"abc\", \"1.375\"), function(s) paste(deparse(g(\"str2expression\")(s)), collapse = \"\"), \"\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([deparse1(str2expression(s)) for s in [\"x[3] <- 1+4\", \"log(y)\", \"abc\", \"1.375\"]])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "str2lang",
+      "translated": true,
+      "python": "backports.str2lang",
+      "loads": [],
+      "uses": [],
+      "done": "x[3] <- 1+4 deparses with spaces around the operators.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "four short expressions",
+        "r_ms": 0.3587007522583008,
+        "translated_ms": 0.06199550080054905,
+        "speedup": 5.785915874964978,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  vapply(c(\"x[3] <- 1+4\", \"log(y)\", \"abc\", \"1.375\"), function(s) paste(deparse(g(\"str2lang\")(s)), collapse = \"\"), \"\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([deparse1(str2lang(s)) for s in [\"x[3] <- 1+4\", \"log(y)\", \"abc\", \"1.375\"]])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "vignetteInfo",
+      "translated": true,
+      "python": "backports.vignetteInfo",
+      "loads": [],
+      "uses": [],
+      "done": "The sample header is Hello, two dependencies, one keyword line, and knitr::knitr.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a four-line vignette header",
+        "r_ms": 1.4821290969848633,
+        "translated_ms": 0.12303850053285714,
+        "speedup": 12.046059490046078,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\nwriteLines(c(\"% \\\\VignetteIndexEntry{Hello}\", \"% \\\\VignetteEngine{knitr::knitr}\", \"% \\\\VignetteDepends{backports, tools}\", \"% \\\\VignetteKeyword{one, two}\"), \"/tmp/killr-backports-vig.Rmd\")\n\none <- function() {\n  vi <- g(\"vignetteInfo\")(\"/tmp/killr-backports-vig.Rmd\"); c(vi$file, vi$title, paste(vi$depends, collapse = \",\"), paste(vi$keywords, collapse = \"|\"), vi$engine)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\nopen(\"/tmp/killr-backports-vig.Rmd\", \"w\", encoding=\"utf-8\").write(\"% \\\\VignetteIndexEntry{Hello}\\n% \\\\VignetteEngine{knitr::knitr}\\n% \\\\VignetteDepends{backports, tools}\\n% \\\\VignetteKeyword{one, two}\\n\")\ndef one():\n    vi = vignetteInfo(\"/tmp/killr-backports-vig.Rmd\")\n    return [vi[\"file\"], vi[\"title\"], \",\".join(vi[\"depends\"]), \"|\".join(vi[\"keywords\"]), vi[\"engine\"]]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "warningCondition",
+      "translated": true,
+      "python": "backports.warningCondition",
+      "loads": [],
+      "uses": [],
+      "done": "The message is kept and the class list starts with warning.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "message and class",
+        "r_ms": 0.03981590270996094,
+        "translated_ms": 0.002547999429225456,
+        "speedup": 15.626338943907937,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  cond <- g(\"warningCondition\")(\"package backports not found\"); paste(cond$message, paste(class(cond), collapse = \",\"), sep = \"|\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    cond = warningCondition(\"package backports not found\")\n    return cond.message + \"|\" + \",\".join(cond.classes)\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "R_user_dir",
+      "translated": true,
+      "python": "backports.R_user_dir",
+      "loads": [],
+      "uses": [],
+      "done": "With the user-dir variables unset, data and cache use the XDG defaults.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "data and cache for backports",
+        "r_ms": 0.6576776504516602,
+        "translated_ms": 0.06411350022972329,
+        "speedup": 10.258021291852009,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\nSys.unsetenv(c(\"R_USER_DATA_DIR\", \"XDG_DATA_HOME\", \"R_USER_CONFIG_DIR\", \"XDG_CONFIG_HOME\", \"R_USER_CACHE_DIR\", \"XDG_CACHE_HOME\"))\n\none <- function() {\n  c(g(\"R_user_dir\")(\"backports\"), g(\"R_user_dir\")(\"backports\", \"cache\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\nimport os\nfor _name in (\"R_USER_DATA_DIR\", \"XDG_DATA_HOME\", \"R_USER_CONFIG_DIR\", \"XDG_CONFIG_HOME\", \"R_USER_CACHE_DIR\", \"XDG_CACHE_HOME\"):\n    os.environ.pop(_name, None)\ndef one():\n    return ([R_user_dir(\"backports\"), R_user_dir(\"backports\", \"cache\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "deparse1",
+      "translated": true,
+      "python": "backports.deparse1",
+      "loads": [],
+      "uses": [],
+      "done": "A bare name with a space has no backticks. The same name in a call does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a name with a space, alone and inside plus",
+        "r_ms": 0.07808208465576172,
+        "translated_ms": 0.008602000889368355,
+        "speedup": 9.077200253753436,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(g(\"deparse1\")(quote(`foo bar`)), g(\"deparse1\")(quote(`foo bar` + 1)))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([deparse1(Name(\"foo bar\")), deparse1(Call(\"+\", [Name(\"foo bar\"), Literal(\"1\")]))])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "list2DF",
+      "translated": true,
+      "python": "backports.list2DF",
+      "loads": [],
+      "uses": [],
+      "done": "x is 1, 2, 3 and y is 2, 3, 4.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two columns of length 3",
+        "r_ms": 0.1666545867919922,
+        "translated_ms": 0.010290499631082639,
+        "speedup": 16.194994681172624,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  df <- g(\"list2DF\")(list(x = 1:3, y = 2:4)); c(paste(df$x, collapse = \",\"), paste(df$y, collapse = \",\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    frame = list2DF({\"x\": [1, 2, 3], \"y\": [2, 3, 4]})\n    return [\",\".join(str(item) for item in frame.columns[\"x\"]), \",\".join(str(item) for item in frame.columns[\"y\"])]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "stopifnot",
+      "translated": true,
+      "python": "backports.stopifnot",
+      "loads": [],
+      "uses": [],
+      "done": "The failing name is the message. A true check is silent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a failing name and a passing name",
+        "r_ms": 0.16963481903076172,
+        "translated_ms": 0.00882399945112411,
+        "speedup": 19.224255392394834,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  bad <- tryCatch(g(\"stopifnot\")(\"Test\" = 1 == 2), error = function(e) conditionMessage(e)); good <- tryCatch({ g(\"stopifnot\")(\"Test\" = 1 == 1); \"null\" }, error = function(e) e$message); c(bad, good)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    def run():\n        bad = \"null\"\n        try:\n            stopifnot(**{\"Test\": False})\n        except Exception as exc:\n            bad = str(exc)\n        good = \"null\"\n        try:\n            stopifnot(**{\"Test\": True})\n        except Exception as exc:\n            good = str(exc)\n        return [bad, good]\n    return (run())\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "suppressMessages",
+      "translated": true,
+      "python": "backports.suppressMessages",
+      "loads": [],
+      "uses": [],
+      "done": "The condition's message is returned unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a message condition that is not raised",
+        "r_ms": 0.053763389587402344,
+        "translated_ms": 0.002497499735909514,
+        "speedup": 21.526884993973116,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"suppressMessages\")(g(\"warningCondition\")(\"package backports not found\"))$message\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (suppressMessages(warningCondition(\"package backports not found\")).message)\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "suppressWarnings",
+      "translated": true,
+      "python": "backports.suppressWarnings",
+      "loads": [],
+      "uses": [],
+      "done": "The warning message is returned unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a warning condition that is not raised",
+        "r_ms": 0.04971027374267578,
+        "translated_ms": 0.004264499693817925,
+        "speedup": 11.656765696275881,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  g(\"suppressWarnings\")(g(\"warningCondition\")(\"package backports not found\"), \"testWarning\")$message\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return (suppressWarnings(warningCondition(\"package backports not found\"), \"testWarning\").message)\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "paste",
+      "translated": true,
+      "python": "backports.paste",
+      "loads": [],
+      "uses": [],
+      "done": "recycle0 with an empty argument is empty. NA pastes as the text NA.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "recycle0 of an empty argument, and NA collapsed",
+        "r_ms": 0.22017955780029297,
+        "translated_ms": 0.04712750069302274,
+        "speedup": 4.671997338337331,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(as.character(length(g(\"paste\")(letters[1:3], character(), recycle0 = TRUE))), g(\"paste\")(letters[1:3], character(), collapse = \"_\", recycle0 = TRUE), g(\"paste\")(c(\"a\", NA), \"b\", collapse = \"|\"), g(\"paste\")(letters[1:3], 1:3, sep = \"-\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return [str(len(paste([\"a\", \"b\", \"c\"], [], recycle0=True))), paste([\"a\", \"b\", \"c\"], [], collapse=\"_\", recycle0=True), paste([\"a\", NA], \"b\", collapse=\"|\"), *paste([\"a\", \"b\", \"c\"], [1, 2, 3], sep=\"-\")]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "paste0",
+      "translated": true,
+      "python": "backports.paste0",
+      "loads": [],
+      "uses": [],
+      "done": "recycle0 with an empty argument is empty. Two letters are joined.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "recycle0 of an empty argument, and ab",
+        "r_ms": 0.11086463928222656,
+        "translated_ms": 0.014411999472940806,
+        "speedup": 7.692523129103636,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  c(as.character(length(g(\"paste0\")(letters[1:3], character(), recycle0 = TRUE))), g(\"paste0\")(letters[1:3], character(), collapse = \"_\", recycle0 = TRUE), g(\"paste0\")(\"a\", \"b\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([str(len(paste0([\"a\", \"b\", \"c\"], [], recycle0=True))), paste0([\"a\", \"b\", \"c\"], [], collapse=\"_\", recycle0=True), paste0(\"a\", \"b\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "...names",
+      "translated": true,
+      "python": "backports.dots_names",
+      "loads": [],
+      "uses": [],
+      "done": "a, b, and an empty name. Two unnamed arguments are null.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mixed names and a fully unnamed call",
+        "r_ms": 0.034809112548828125,
+        "translated_ms": 0.020317499547672924,
+        "speedup": 1.713257700198399,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  show <- function(...) g(\"...names\")(); c(flat(show(a = 1, b = 2, 3)), flat(show(1, 2)))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    def named():\n        _dots = Dots((\"a\", 1), (\"b\", 2), (\"\", 3))\n        return dots_names()\n    def bare():\n        _dots = Dots((\"\", 1), (\"\", 2))\n        return dots_names()\n    return [flat(named()), flat(bare())]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": ".libPaths",
+      "translated": true,
+      "python": "backports.lib_paths",
+      "loads": [],
+      "uses": [],
+      "done": "The temp directory, then /usr/lib/R/library.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a temp directory with include.site false",
+        "r_ms": 0.2262592315673828,
+        "translated_ms": 0.06611450044147205,
+        "speedup": 3.422233096469951,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\ndir.create(\"/tmp/killr-backports-lib\", showWarnings = FALSE)\n\none <- function() {\n  g(\".libPaths\")(\"/tmp/killr-backports-lib\", include.site = FALSE)\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\nimport os\nos.makedirs(\"/tmp/killr-backports-lib\", exist_ok=True)\ndef one():\n    return (lib_paths(\"/tmp/killr-backports-lib\", include_site=False))\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "as.Rconcordance",
+      "translated": true,
+      "python": "backports.as_rconcordance",
+      "loads": [],
+      "uses": [],
+      "done": "Sample.Rmd has 25 lines, and output line 20 is source line 25.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the Sample.Rmd concordance comment",
+        "r_ms": 0.15115737915039062,
+        "translated_ms": 0.04325149984651944,
+        "speedup": 3.4948471078871655,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\nregisterS3method(\"as.Rconcordance\", \"default\", get(\"as.Rconcordance.default\", asNamespace(\"backports\")), envir = asNamespace(\"backports\"))\n\none <- function() {\n  obj <- g(\"as.Rconcordance\")(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\"); c(obj$srcFile, as.character(length(obj$srcLine)), as.character(obj$srcLine[20]))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    obj = as_rconcordance(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\")\n    return [obj.src_file, str(len(obj.src_line)), str(obj.src_line[19])]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "as.Rconcordance.default",
+      "translated": true,
+      "python": "backports.as_rconcordance_default",
+      "loads": [],
+      "uses": [],
+      "done": "The sample expands to Sample.Rmd with 25 source lines.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the Sample.Rmd concordance comment",
+        "r_ms": 0.2295970916748047,
+        "translated_ms": 0.02783799936878495,
+        "speedup": 8.247614659128644,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  obj <- g(\"as.Rconcordance.default\")(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\"); c(obj$srcFile, as.character(length(obj$srcLine)), as.character(obj$srcLine[[1]]), as.character(obj$srcLine[[20]]))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    obj = as_rconcordance_default(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\")\n    return [obj.src_file, str(len(obj.src_line)), str(obj.src_line[0]), str(obj.src_line[19])]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "as.character.Rconcordance",
+      "translated": true,
+      "python": "backports.as_character_rconcordance",
+      "loads": [],
+      "uses": [],
+      "done": "The sample round-trips with target out.tex.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "round-trip the Sample.Rmd comment",
+        "r_ms": 0.27120113372802734,
+        "translated_ms": 0.036417500268726144,
+        "speedup": 7.447000253362358,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  obj <- g(\"as.Rconcordance.default\")(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\"); g(\"as.character.Rconcordance\")(obj, targetfile = \"out.tex\")\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    obj = as_rconcordance_default(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\")\n    return as_character_rconcordance(obj, targetfile=\"out.tex\")\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "print.Rconcordance",
+      "translated": true,
+      "python": "backports.print_rconcordance",
+      "loads": [],
+      "uses": [],
+      "done": "The printed object is Sample.Rmd with 25 lines.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "file, length, and source line 20",
+        "r_ms": 3.256559371948242,
+        "translated_ms": 0.1619809991098009,
+        "speedup": 20.10457639998097,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  obj <- g(\"as.Rconcordance.default\")(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\"); printed <- g(\"print.Rconcordance\")(obj); c(printed$srcFile, as.character(length(printed$srcLine)), as.character(printed$srcLine[20]))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    obj = as_rconcordance_default(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\")\n    printed = print_rconcordance(obj)\n    return [printed.src_file, str(len(printed.src_line)), str(printed.src_line[19])]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "matchConcordance",
+      "translated": true,
+      "python": "backports.matchConcordance",
+      "loads": [],
+      "uses": [],
+      "done": "Output line 20 is Sample.Rmd line 25.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "output line 20 of the sample",
+        "r_ms": 0.194549560546875,
+        "translated_ms": 0.03379000008862931,
+        "speedup": 5.757607577288612,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  obj <- g(\"as.Rconcordance.default\")(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\"); mc <- g(\"matchConcordance\")(20, obj); c(mc[1, 1], mc[1, 2])\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    obj = as_rconcordance_default(\"<!-- concordance::Sample.Rmd:1 9 1 1 6 14 1 -->\")\n    file, line = matchConcordance(20, obj)\n    return [file, line]\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "%||%",
+      "translated": true,
+      "python": "backports.null_coalesce",
+      "loads": [],
+      "uses": [],
+      "done": "NULL becomes FALSE. FALSE stays FALSE.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "null and false on the left",
+        "r_ms": 0.0171661376953125,
+        "translated_ms": 0.0008654997145640664,
+        "speedup": 19.83378781812622,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nns <- asNamespace(\"backports\")\ng <- function(name) get(name, envir = ns)\nflat <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.list(x) && !is.data.frame(x)) {\n    if (!length(x)) return(\"\")\n    return(paste(vapply(x, flat, \"\"), collapse = \"|\"))\n  }\n  if (length(x) == 0) return(\"\")\n  out <- character(length(x))\n  for (i in seq_along(x)) {\n    el <- x[[i]]\n    if (length(el) != 1) out[[i]] <- flat(el)\n    else if (is.na(el)) out[[i]] <- \"NA\"\n    else if (is.logical(el)) out[[i]] <- if (isTRUE(el)) \"true\" else \"false\"\n    else if (is.numeric(el)) out[[i]] <- sprintf(\"%.0f\", el)\n    else out[[i]] <- enc2utf8(as.character(el))\n  }\n  paste(out, collapse = \"|\")\n}\nesc <- function(s) {\n  s <- enc2utf8(s)\n  s <- gsub(\"\\\\\", \"\\\\\\\\\", s, fixed = TRUE)\n  s <- gsub('\"', '\\\\\"', s, fixed = TRUE)\n  s <- gsub(\"\\n\", \"\\\\n\", s, fixed = TRUE)\n  s <- gsub(\"\\r\", \"\\\\r\", s, fixed = TRUE)\n  s\n}\n\n\n\none <- function() {\n  op <- g(\"%||%\"); list(op(NULL, FALSE), op(FALSE, NULL), op(\"a\", \"b\"))\n}\nvalue <- flat(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":\"%s\",\"median_ms\":%.17g}\\n', esc(value), median(elapsed) * 1000))\n\n",
+          "python": "\nimport json\nimport math\nimport os\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/backports\")\nfrom backports import *\nfrom backports._values import NA\n\ndef flat(x):\n    if x is None:\n        return \"null\"\n    if x is NA or (isinstance(x, float) and math.isnan(x)):\n        return \"NA\"\n    if isinstance(x, bool):\n        return \"true\" if x else \"false\"\n    if isinstance(x, (list, tuple)):\n        return \"|\".join(flat(item) for item in x)\n    if isinstance(x, float):\n        if math.isfinite(x) and x.is_integer():\n            return str(int(x))\n        return format(x, \".10g\")\n    return str(x)\n\n\ndef one():\n    return ([null_coalesce(None, False), null_coalesce(False, None), null_coalesce(\"a\", \"b\")])\nvalue = one()\nif not isinstance(value, str):\n    value = flat(value)\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    }
+  ]
+}

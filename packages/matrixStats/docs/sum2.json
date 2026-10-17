@@ -1,0 +1,60 @@
+{
+  "name": "sum2",
+  "title": "Fast sum over subset of vector elements",
+  "origin": {
+    "description": "Computes the sum of all or a subset of values.",
+    "usage": "sum2(x, idxs = NULL, na.rm = FALSE, mode = typeof(x), ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "An NxK matrix or, if dim. is specified, an N * K vector."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values are excluded."
+      },
+      {
+        "name": "mode",
+        "text": "A character string specifying the data type of the return value. Default is to use the same mode as argument x, unless it is logical when it defaults to \"integer\"."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "sum2(x, idxs) gives equivalent results as sum(x[idxs]), but is faster and more memory efficient since it avoids the actual subsetting which requires copying of elements and garbage collection thereof.",
+    "value": "Returns a scalar of the data type specified by argument mode. If mode = \"integer\", then integer overflow occurs if the sum is outside the range of defined integer values. Note that the intermediate sum (sum(x[1:n])) is internally represented as a floating point value and will therefore never be outside of the range. If mode = \"integer\" and typeof(x) == \"double\", then a warning is generated.",
+    "example": "x <- 1:10\nn <- length(x)\n\nidxs <- seq(from = 1, to = n, by = 2)\ns1 <- sum(x[idxs])                     # 25\ns2 <- sum2(x, idxs = idxs)             # 25\nstopifnot(identical(s1, s2))\n\nidxs <- seq(from = n, to = 1, by = -2)\ns1 <- sum(x[idxs])                     # 25\ns2 <- sum2(x, idxs = idxs)             # 25\nstopifnot(identical(s1, s2))\n\ns1 <- sum(x)                           # 55\ns2 <- sum2(x)                          # 55\nstopifnot(identical(s1, s2))",
+    "output": "output/sum2-r.txt"
+  },
+  "translation": {
+    "description": "Computes the sum of all or a subset of values.",
+    "usage": "sum2(x, idxs=None, na_rm=False, mode=None)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "Numeric or logical vector. A logical vector is stored as 0 and 1. Integer missing values are None. Double missing values are nan."
+      },
+      {
+        "name": "idxs",
+        "text": "1-based positions to include, as in R. None selects every element. Zeros are dropped. Negative values exclude those positions. Missing and out-of-range positions contribute a missing value. This is idxs in R."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm in R."
+      },
+      {
+        "name": "mode",
+        "text": "\"integer\" or \"double\", the type of the return value. None uses the type of x, except a logical x returns an integer. Integer overflow becomes None and warns. Asking for an integer sum of doubles warns."
+      }
+    ],
+    "details": "sum2(x, idxs) gives the same result as summing the selected elements, without building that subset. The sum is accumulated in the Rust crate sum2. Index rules for zeros, negatives, missing values, and out-of-range positions follow matrixStats validateIndices, with out-of-range positions allowed.",
+    "value": "A Python int when mode is integer, or None when that integer sum is missing. A Python float when mode is double. An empty sum is 0.",
+    "example": "import numpy as np\nfrom matrixstats.sum2 import sum2\n\nx = np.arange(1, 11)\nn = len(x)\nidxs = np.arange(1, n + 1, 2)\ns2 = sum2(x, idxs=idxs)          # 25\nidxs = np.arange(n, 0, -2)\ns2 = sum2(x, idxs=idxs)          # 25\ns2 = sum2(x)                     # 55",
+    "output": "output/sum2-python.txt"
+  }
+}

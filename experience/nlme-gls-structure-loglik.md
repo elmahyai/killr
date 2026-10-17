@@ -1,0 +1,7 @@
+The gls structure fit (corAR1, corNatural, varPower) runs nlminb on `-logLik(glsSt, glsPars)`. R's `logLik.glsStruct` calls `gls_loglik` with `conLin$logLik` after `recalc` as the kernel's starting value. The kernel subtracts its terms one at a time, so `((c - a) - b) - h` is not the same as `((0 - a) - b) - h + c`.
+
+Passing 0 and adding `con.logLik` afterwards left the PORT path about 2.3e-6 off R on Oats corAR1, where the optimum is otherwise exact. Passing `con.logLik` as the incoming value gives max abs diff 0 on Oats corAR1 and 0 on Orthodont varPower. On Orthodont corNatural the max diff is about 4e-10, which is inside 1e-8 but not bit-exact.
+
+So in `gls.py`, the objective is `-gls_loglik(xy, n, p, reml, con.logLik, 0.0, sigma)`, and the result is negated without a further addition.
+
+The outer repeat loop with a varPower covariate of `fitted(.)` (the default `varPower()`) needs three more bit-level matches, or the PORT path leaves R after about the third outer step. R's `sum(log(w))` is a sequential long double sum, so use `add.accumulate` in longdouble, not numpy's pairwise `np.sum`. The weights are `abs(covariate)^(-p)` by libm `pow` and the log by libm `log`; numpy's `power` differs on about one input in ten. The fitted values are `oXy %*% beta`, which is BLAS `dgemv`, so use `linpack_qr.dgemv`, not `@`. With those, Orthodont `weights = varPower()` matches R bit for bit, including `numIter` 6.

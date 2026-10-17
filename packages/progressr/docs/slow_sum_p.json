@@ -1,0 +1,72 @@
+{
+  "name": "slow_sum_p",
+  "title": "Slowly sum elements",
+  "origin": {
+    "description": "Add the elements of a numeric vector, pausing after each one and optionally reporting progress.",
+    "usage": "slow_sum_p(x, delay = getOption(\"progressr.demo.delay\", 1.0), stdout = getOption(\"progressr.demo.stdout\", FALSE), message = getOption(\"progressr.demo.message\", TRUE), sticky = getOption(\"progressr.demo.sticky\", TRUE), progress = getOption(\"progressr.demo.progress\", TRUE))",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "Numeric vector to sum. An integer vector keeps integer storage."
+      },
+      {
+        "name": "delay",
+        "text": "Seconds to pause, split into five sleeps of 0.2 * delay after each element. The default reads progressr.demo.delay, or 1.0 when that option is unset."
+      },
+      {
+        "name": "stdout",
+        "text": "If TRUE, print O: Element #k for the 1-based index. When the argument is omitted, progressr.slow_sum_p.stdout replaces the demo default."
+      },
+      {
+        "name": "message",
+        "text": "If TRUE, signal M: Added value for each element. When omitted, progressr.slow_sum_p.message replaces the demo default."
+      },
+      {
+        "name": "sticky",
+        "text": "If TRUE, signal a sticky progression every 10 elements. When omitted, progressr.slow_sum_p.sticky replaces the demo default."
+      },
+      {
+        "name": "progress",
+        "text": "If TRUE, create a progressor along x. Otherwise the reporter does nothing. When omitted, progressr.slow_sum_p.progress replaces the demo default."
+      }
+    ],
+    "details": "Each element signals an alive update, sleeps, optionally prints, sleeps, signals alive again, sleeps, adds the element, signals P: Adding with the 1-based index, sleeps, optionally messages the value, signals alive again, and sleeps. A sticky update uses class sticky. An explicit FALSE does not read the hidden option.",
+    "value": "The sum. Integer x returns an integer.",
+    "example": "lines <- character()\nhandler <- make_progression_handler(\"rec\", reporter = list(\n  update = function(config, state, progression, ...) {\n    msg <- gsub(\"\\n\", \"\", paste(conditionMessage(progression), collapse = \"\"), fixed = TRUE)\n    if (nzchar(msg)) lines <<- c(lines, msg)\n  }\n), enable = TRUE, target = \"file\", interval = 0)\nvalue <- withCallingHandlers({\n  with_progress({\n    slow_sum_p(1:3, delay = 0, stdout = FALSE, message = TRUE, sticky = FALSE, progress = TRUE)\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n}, message = function(m) {\n  lines <<- c(lines, gsub(\"\\n\", \"\", paste(conditionMessage(m), collapse = \"\"), fixed = TRUE))\n  invokeRestart(\"muffleMessage\")\n})\ncat(sprintf(\"slow_sum_p(1:3) returns %d.\\n\", value))\ncat(paste(lines, collapse = \"\\n\"), \"\\n\", sep = \"\")\n",
+    "output": "output/slow_sum_p-r.txt"
+  },
+  "translation": {
+    "description": "Add the elements of a numeric vector, pausing after each one and optionally reporting progress.",
+    "usage": "slow_sum_p(x, delay=<omitted>, stdout=<omitted>, message=<omitted>, sticky=<omitted>, progress=<omitted>)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "Numeric vector to sum. A vector of ints keeps a Python int."
+      },
+      {
+        "name": "delay",
+        "text": "Seconds to pause, split into five sleeps of 0.2 * delay after each element. Omitted reads progressr.demo.delay, or 1.0 when that option is unset."
+      },
+      {
+        "name": "stdout",
+        "text": "If True, print O: Element #k for the 1-based index. Omitted is a sentinel, and progressr.slow_sum_p.stdout replaces the demo default. An explicit False does not."
+      },
+      {
+        "name": "message",
+        "text": "If True, signal M: Added value for each element. Omitted reads progressr.slow_sum_p.message."
+      },
+      {
+        "name": "sticky",
+        "text": "If True, signal a sticky progression every 10 elements. Omitted reads progressr.slow_sum_p.sticky."
+      },
+      {
+        "name": "progress",
+        "text": "If True, create a progressor along x. Otherwise the reporter does nothing. Omitted reads progressr.slow_sum_p.progress."
+      }
+    ],
+    "details": "The loop matches R, including the five partial sleeps, the alive progress(amount=0) updates, the P: Adding message for the 1-based index, and the sticky update with class_. Set progressr.enable true before a progressor if the check records events. An omitted argument is the sentinel, not False.",
+    "value": "The sum. Integer input returns an int.",
+    "example": "from progressr.condition import condition_message, try_invoke_restart, with_calling_handlers\nfrom progressr.demo import slow_sum_p\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.options import set_option\n\nset_option(\"progressr.enable\", True)\nlines = []\n\ndef update(config, state, progression, **kwargs):\n    text = condition_message(progression).replace(\"\\n\", \"\")\n    if text:\n        lines.append(text)\n\nhandler = make_progression_handler(\"rec\", reporter={\"update\": update}, enable=True, target=\"file\", interval=0)\n\ndef on_message(condition):\n    lines.append(condition_message(condition).replace(\"\\n\", \"\"))\n    try_invoke_restart(\"muffleMessage\", condition)\n\ndef body():\n    return slow_sum_p(list(range(1, 4)), delay=0, stdout=False, message=True, sticky=False, progress=True)\n\nvalue = with_calling_handlers(\n    lambda: with_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=()),\n    message=on_message,\n)\nprint(f\"slow_sum_p(1:3) returns {value}.\")\nprint(\"\\n\".join(lines))\n",
+    "output": "output/slow_sum_p-python.txt"
+  }
+}

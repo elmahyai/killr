@@ -1,0 +1,715 @@
+{
+  "name": "nloptr",
+  "cran_version": "2.2.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 26 exports of nloptr 2.2.1 are done. The solver is the Python package nlopt 2.10.0, the NLopt the CRAN tarball builds. Finite differences and the option list are a port of the R wrappers. There is no Fortran crate.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "nlopt"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "nloptr",
+      "translated": true,
+      "python": "nloptr.nloptr",
+      "loads": [],
+      "uses": [
+        "check.derivatives",
+        "is.nloptr",
+        "nloptr.get.default.options",
+        "nloptr.print.options"
+      ],
+      "done": "Minimize with an NLopt algorithm and return the solution, objective, and status.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock with LBFGS at xtol_rel 1e-8",
+        "r_ms": 4.695773124694824,
+        "translated_ms": 2.079849999063299,
+        "speedup": 2.2577460522680277,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  eval_f <- function(x) 100 * (x[2] - x[1] * x[1])^2 + (1 - x[1])^2\n  eval_grad_f <- function(x) c(-400 * x[1] * (x[2] - x[1] * x[1]) - 2 * (1 - x[1]), 200 * (x[2] - x[1] * x[1]))\n  res <- nloptr(c(-1.2, 1), eval_f, eval_grad_f, opts = list(algorithm = \"NLOPT_LD_LBFGS\", xtol_rel = 1e-8))\n  c(res$solution, res$objective, res$iterations, res$status)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def eval_f(x):\n        return 100 * (x[1] - x[0] * x[0]) ** 2 + (1 - x[0]) ** 2\n    def eval_grad_f(x):\n        return np.array([-400 * x[0] * (x[1] - x[0] * x[0]) - 2 * (1 - x[0]), 200 * (x[1] - x[0] * x[0])])\n    res = nloptr([-1.2, 1], eval_f, eval_grad_f, opts={\"algorithm\": \"NLOPT_LD_LBFGS\", \"xtol_rel\": 1e-8})\n    return np.array([res.solution[0], res.solution[1], res.objective, res.iterations, res.status])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "nl.grad",
+      "translated": true,
+      "python": "nloptr.nl_grad",
+      "loads": [],
+      "uses": [],
+      "done": "Central-difference gradient with step epsilon to the power 1/3.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sum of squares on seq(0, 1, by = 0.2)",
+        "r_ms": 0.16009807586669922,
+        "translated_ms": 0.19959149904025253,
+        "speedup": 0.8021287311160057,
+        "matches": true,
+        "max_abs_diff": 3.6668668101924595e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() nl.grad(seq(0, 1, by = 0.2), function(x) sum(x^2))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    return nl_grad(np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]), lambda x: float(np.sum(np.asarray(x) ** 2)))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "nl.jacobian",
+      "translated": true,
+      "python": "nloptr.nl_jacobian",
+      "loads": [],
+      "uses": [],
+      "done": "Central-difference Jacobian, stored column-major the way R stores a matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sin and cos at 0 and 2 pi",
+        "r_ms": 0.09012222290039062,
+        "translated_ms": 0.11018650002370123,
+        "speedup": 0.8179062124761676,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() as.numeric(nl.jacobian((0:1) * 2 * pi, function(x) c(sin(x), cos(x))))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    jac = nl_jacobian(np.array([0.0, 2 * np.pi]), lambda x: np.concatenate([np.sin(x), np.cos(x)]))\n    return np.ravel(jac, order=\"F\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "nl.opts",
+      "translated": true,
+      "python": "nloptr.nl_opts",
+      "loads": [],
+      "uses": [],
+      "done": "Named option list. Setting algorithm warns and stores NULL.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "xtol_rel 1e-8 and maxeval 2000",
+        "r_ms": 0.0362396240234375,
+        "translated_ms": 0.006130499969003722,
+        "speedup": 5.911365175217,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  o <- nl.opts(list(xtol_rel = 1e-8, maxeval = 2000))\n  c(o$xtol_rel, o$maxeval, if (is.null(o$algorithm)) 0 else 1)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    o = nl_opts({\"xtol_rel\": 1e-8, \"maxeval\": 2000})\n    return np.array([o[\"xtol_rel\"], o[\"maxeval\"], 0.0 if o[\"algorithm\"] is None else 1.0])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "nloptr.get.default.options",
+      "translated": true,
+      "python": "nloptr.nloptr_get_default_options",
+      "loads": [],
+      "uses": [],
+      "done": "The option table, including defaults, allowed values, and descriptions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "paste of the default column",
+        "r_ms": 0.8542537689208984,
+        "translated_ms": 0.012460000107239466,
+        "speedup": 68.55969193969452,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() paste(nloptr.get.default.options()$default, collapse = \"|\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    return \"|\".join(row[\"default\"] for row in nloptr_get_default_options())\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "nloptr.print.options",
+      "translated": true,
+      "python": "nloptr.nloptr_print_options",
+      "loads": [],
+      "uses": [
+        "nloptr.get.default.options"
+      ],
+      "done": "Print selected options with the same wrapping as R strwrap.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "print stopval",
+        "r_ms": 1.6189813613891602,
+        "translated_ms": 0.04135249946557451,
+        "speedup": 39.15074982920788,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() paste(capture.output(nloptr.print.options(opts.show = \"stopval\")), collapse = \"\\n\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    import io\n    import contextlib\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        nloptr_print_options([\"stopval\"])\n    text = buf.getvalue()\n    if text.endswith(\"\\n\"):\n        text = text[:-1]\n    return text\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "check.derivatives",
+      "translated": true,
+      "python": "nloptr.check_derivatives",
+      "loads": [],
+      "uses": [],
+      "done": "Compare an analytic gradient with a forward difference and flag relative error above the tolerance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sum of squares on 1:5",
+        "r_ms": 0.5435943603515625,
+        "translated_ms": 0.3215829992768704,
+        "speedup": 1.690370329196255,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  cd <- check.derivatives(1:5, function(x) sum(x^2), function(x) 2 * x, check_derivatives_print = \"none\")\n  c(cd$analytic, cd$finite_difference, cd$relative_error)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    cd = check_derivatives(np.arange(1, 6, dtype=float), lambda x: float(np.sum(np.asarray(x) ** 2)), lambda x: 2 * np.asarray(x, dtype=float), check_derivatives_print=\"none\")\n    return np.concatenate([np.ravel(cd[\"analytic\"]), np.ravel(cd[\"finite_difference\"]), np.ravel(cd[\"relative_error\"])])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "is.nloptr",
+      "translated": true,
+      "python": "nloptr.is_nloptr",
+      "loads": [],
+      "uses": [],
+      "done": "Check that a call has the functions, bounds, and algorithm NLopt can run.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "NULL is FALSE",
+        "r_ms": 0.010251998901367188,
+        "translated_ms": 0.0005929996405029669,
+        "speedup": 17.2883728777166,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() is.nloptr(NULL)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    return is_nloptr(None)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "lbfgs",
+      "translated": true,
+      "python": "nloptr.lbfgs",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad"
+      ],
+      "done": "Low-storage BFGS, with a numerical gradient when none is supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "25-dimensional extended Rosenbrock, bounds 2 and 4",
+        "r_ms": 24.349212646484375,
+        "translated_ms": 40.57160849970387,
+        "speedup": 0.6001539881432627,
+        "matches": true,
+        "max_abs_diff": 3.001199289087708e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  flb <- function(x) { p <- length(x); sum(c(1, rep(4, p - 1)) * (x - c(1, x[-p])^2)^2) }\n  S <- lbfgs(rep(3, 25), flb, lower = rep(2, 25), upper = rep(4, 25), control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def flb(x):\n        x = np.asarray(x, dtype=float)\n        prev = np.concatenate([[1.0], x[:-1]])\n        w = np.array([1.0] + [4.0] * (len(x) - 1))\n        return float(np.sum(w * (x - prev ** 2) ** 2))\n    S = lbfgs(np.full(25, 3.0), flb, lower=np.full(25, 2.0), upper=np.full(25, 4.0), control={\"xtol_rel\": 1e-8})\n    return np.concatenate([S[\"par\"], [S[\"value\"], S[\"iter\"], S[\"convergence\"]]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "tnewton",
+      "translated": true,
+      "python": "nloptr.tnewton",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad"
+      ],
+      "done": "Truncated Newton, with a numerical gradient when none is supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "5-dimensional extended Rosenbrock",
+        "r_ms": 5.1261186599731445,
+        "translated_ms": 8.044803499615227,
+        "speedup": 0.6371962547274549,
+        "matches": true,
+        "max_abs_diff": 6.652456363553938e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  flb <- function(x) { p <- length(x); sum(c(1, rep(4, p - 1)) * (x - c(1, x[-p])^2)^2) }\n  S <- tnewton(rep(3, 5), flb, lower = rep(2, 5), upper = rep(4, 5), control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def flb(x):\n        x = np.asarray(x, dtype=float)\n        prev = np.concatenate([[1.0], x[:-1]])\n        w = np.array([1.0] + [4.0] * (len(x) - 1))\n        return float(np.sum(w * (x - prev ** 2) ** 2))\n    S = tnewton(np.full(5, 3.0), flb, lower=np.full(5, 2.0), upper=np.full(5, 4.0), control={\"xtol_rel\": 1e-8})\n    return np.concatenate([S[\"par\"], [S[\"value\"], S[\"convergence\"]]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "varmetric",
+      "translated": true,
+      "python": "nloptr.varmetric",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad"
+      ],
+      "done": "Variable-metric method, with a numerical gradient when none is supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "5-dimensional extended Rosenbrock",
+        "r_ms": 4.439592361450195,
+        "translated_ms": 6.070382500183769,
+        "speedup": 0.7313529849751306,
+        "matches": true,
+        "max_abs_diff": 1.2447820552097255e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  flb <- function(x) { p <- length(x); sum(c(1, rep(4, p - 1)) * (x - c(1, x[-p])^2)^2) }\n  S <- varmetric(rep(3, 5), flb, lower = rep(2, 5), upper = rep(4, 5), control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def flb(x):\n        x = np.asarray(x, dtype=float)\n        prev = np.concatenate([[1.0], x[:-1]])\n        w = np.array([1.0] + [4.0] * (len(x) - 1))\n        return float(np.sum(w * (x - prev ** 2) ** 2))\n    S = varmetric(np.full(5, 3.0), flb, lower=np.full(5, 2.0), upper=np.full(5, 4.0), control={\"xtol_rel\": 1e-8})\n    return np.concatenate([S[\"par\"], [S[\"value\"], S[\"convergence\"]]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "neldermead",
+      "translated": true,
+      "python": "nloptr.neldermead",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Nelder-Mead simplex.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock from c(-1.2, 1)",
+        "r_ms": 4.040718078613281,
+        "translated_ms": 3.4743939995678375,
+        "speedup": 1.1629993832351444,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- neldermead(c(-1.2, 1), rbf)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = neldermead([-1.2, 1], rbf)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "sbplx",
+      "translated": true,
+      "python": "nloptr.sbplx",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Subplex, a Nelder-Mead variant on subspaces.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "helical valley from c(-1, 0, 0)",
+        "r_ms": 11.770486831665039,
+        "translated_ms": 12.429886998688744,
+        "speedup": 0.94695042946945,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  fphv <- function(x) 100 * (x[3] - 10 * atan2(x[2], x[1]) / (2 * pi))^2 + (sqrt(x[1]^2 + x[2]^2) - 1)^2 + x[3]^2\n  S <- sbplx(c(-1, 0, 0), fphv)\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def fphv(x):\n        return 100 * (x[2] - 10 * np.atan2(x[1], x[0]) / (2 * np.pi)) ** 2 + (np.sqrt(x[0] ** 2 + x[1] ** 2) - 1) ** 2 + x[2] ** 2\n    S = sbplx([-1.0, 0.0, 0.0], fphv)\n    return np.concatenate([S[\"par\"], [S[\"value\"], S[\"convergence\"]]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "bobyqa",
+      "translated": true,
+      "python": "nloptr.bobyqa",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Bound-constrained quadratic approximation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock from c(0, 0)",
+        "r_ms": 4.262566566467285,
+        "translated_ms": 3.3213620008609723,
+        "speedup": 1.283379097298738,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- bobyqa(c(0, 0), rbf)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = bobyqa([0.0, 0.0], rbf)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "newuoa",
+      "translated": true,
+      "python": "nloptr.newuoa",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Unconstrained quadratic approximation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock from c(1, 2)",
+        "r_ms": 2.723097801208496,
+        "translated_ms": 0.7545765001850668,
+        "speedup": 3.608776314317543,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- newuoa(c(1, 2), rbf)\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = newuoa([1.0, 2.0], rbf)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "cobyla",
+      "translated": true,
+      "python": "nloptr.cobyla",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Linear approximation of the objective and the constraints.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "unconstrained Rosenbrock from c(-1.2, 1)",
+        "r_ms": 10.176658630371094,
+        "translated_ms": 9.403185001247039,
+        "speedup": 1.08225655764738,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- cobyla(c(-1.2, 1), rbf)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = cobyla([-1.2, 1.0], rbf)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "mma",
+      "translated": true,
+      "python": "nloptr.mma",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad",
+        "nl.jacobian"
+      ],
+      "done": "Method of moving asymptotes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x^2 + y^2 with inequality 1 - x - y",
+        "r_ms": 3.4017562866210938,
+        "translated_ms": 1.551601000755909,
+        "speedup": 2.1924169196615795,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  fn <- function(x) x[1]^2 + x[2]^2\n  gr <- function(x) 2 * x\n  hin <- function(x) 1 - x[1] - x[2]\n  S <- mma(c(0.5, 0.5), fn, gr = gr, hin = hin, lower = c(0, 0), upper = c(2, 2), deprecatedBehavior = FALSE, control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    fn = lambda x: x[0] ** 2 + x[1] ** 2\n    gr = lambda x: 2 * np.asarray(x, dtype=float)\n    hin = lambda x: 1 - x[0] - x[1]\n    S = mma([0.5, 0.5], fn, gr=gr, hin=hin, lower=[0, 0], upper=[2, 2], deprecated_behavior=False, control={\"xtol_rel\": 1e-8})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "ccsaq",
+      "translated": true,
+      "python": "nloptr.ccsaq",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad",
+        "nl.jacobian"
+      ],
+      "done": "Conservative convex separable approximation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x^2 + y^2 with inequality 1 - x - y",
+        "r_ms": 3.9316415786743164,
+        "translated_ms": 1.3538339999286109,
+        "speedup": 2.904079509660443,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  fn <- function(x) x[1]^2 + x[2]^2\n  gr <- function(x) 2 * x\n  hin <- function(x) 1 - x[1] - x[2]\n  S <- ccsaq(c(0.5, 0.5), fn, gr = gr, hin = hin, lower = c(0, 0), upper = c(2, 2), deprecatedBehavior = FALSE, control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    fn = lambda x: x[0] ** 2 + x[1] ** 2\n    gr = lambda x: 2 * np.asarray(x, dtype=float)\n    hin = lambda x: 1 - x[0] - x[1]\n    S = ccsaq([0.5, 0.5], fn, gr=gr, hin=hin, lower=[0, 0], upper=[2, 2], deprecated_behavior=False, control={\"xtol_rel\": 1e-8})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "slsqp",
+      "translated": true,
+      "python": "nloptr.slsqp",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad",
+        "nl.jacobian"
+      ],
+      "done": "Sequential quadratic programming.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x^2 + y^2 with equality x + y = 1",
+        "r_ms": 4.324913024902344,
+        "translated_ms": 1.9582560007620486,
+        "speedup": 2.2085534389882215,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  fn <- function(x) x[1]^2 + x[2]^2\n  gr <- function(x) 2 * x\n  heq <- function(x) x[1] + x[2] - 1\n  S <- slsqp(c(0, 0), fn, gr = gr, heq = heq, deprecatedBehavior = FALSE, control = list(xtol_rel = 1e-10))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    fn = lambda x: x[0] ** 2 + x[1] ** 2\n    gr = lambda x: 2 * np.asarray(x, dtype=float)\n    heq = lambda x: x[0] + x[1] - 1\n    S = slsqp([0.0, 0.0], fn, gr=gr, heq=heq, deprecated_behavior=False, control={\"xtol_rel\": 1e-10})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "auglag",
+      "translated": true,
+      "python": "nloptr.auglag",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad",
+        "nl.jacobian"
+      ],
+      "done": "Augmented Lagrangian, with a local solver named by localsolver.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "x^2 + y^2, equality x + y = 1, local solver COBYLA",
+        "r_ms": 18.230319023132324,
+        "translated_ms": 23.943664999023895,
+        "speedup": 0.7613838158809654,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  fn <- function(x) x[1]^2 + x[2]^2\n  heq <- function(x) x[1] + x[2] - 1\n  S <- auglag(c(0, 0), fn, heq = heq, localsolver = \"COBYLA\", deprecatedBehavior = FALSE, control = list(xtol_rel = 1e-8))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    fn = lambda x: x[0] ** 2 + x[1] ** 2\n    heq = lambda x: x[0] + x[1] - 1\n    S = auglag([0.0, 0.0], fn, heq=heq, localsolver=\"COBYLA\", deprecated_behavior=False, control={\"xtol_rel\": 1e-8})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "direct",
+      "translated": true,
+      "python": "nloptr.direct",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Dividing rectangles on a box. The start is the center of the box.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock on [-3, 3]^2 with maxeval 80",
+        "r_ms": 4.508256912231445,
+        "translated_ms": 1.9593490005718195,
+        "speedup": 2.300895302937735,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- direct(rbf, c(-3, -3), c(3, 3), control = list(maxeval = 80))\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = direct(rbf, [-3, -3], [3, 3], control={\"maxeval\": 80})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "directL",
+      "translated": true,
+      "python": "nloptr.directL",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Locally biased dividing rectangles.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock on [-3, 3]^2 with maxeval 80",
+        "r_ms": 3.0072927474975586,
+        "translated_ms": 1.1086615004387568,
+        "speedup": 2.712543681103215,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- directL(rbf, c(-3, -3), c(3, 3), control = list(maxeval = 80))\n  c(S$par, S$value, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = directL(rbf, [-3, -3], [3, 3], control={\"maxeval\": 80})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "stogo",
+      "translated": true,
+      "python": "nloptr.stogo",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.grad"
+      ],
+      "done": "Stochastic global optimization, with a numerical gradient when none is supplied.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock from c(-1.2, 1), bounds [-3, 3], maxeval 50",
+        "r_ms": 5.991816520690918,
+        "translated_ms": 3.169239500493859,
+        "speedup": 1.890616509025973,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- stogo(c(-1.2, 1), rbf, lower = c(-3, -3), upper = c(3, 3), maxeval = 50, xtol_rel = 1e-4)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = stogo([-1.2, 1], rbf, lower=[-3, -3], upper=[3, 3], maxeval=50, xtol_rel=1e-4)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "isres",
+      "translated": true,
+      "python": "nloptr.isres",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Improved stochastic ranking evolution strategy.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "one evaluation returns the start",
+        "r_ms": 2.6683807373046875,
+        "translated_ms": 0.8332269999300479,
+        "speedup": 3.2024655196347536,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- isres(c(-1.2, 1), rbf, lower = c(-3, -3), upper = c(3, 3), maxeval = 1)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = isres([-1.2, 1], rbf, lower=[-3, -3], upper=[3, 3], maxeval=1)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "crs2lm",
+      "translated": true,
+      "python": "nloptr.crs2lm",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts"
+      ],
+      "done": "Controlled random search with local mutation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock, ranseed 10, maxeval 200",
+        "r_ms": 2.9709339141845703,
+        "translated_ms": 2.0537499995043618,
+        "speedup": 1.446589855095097,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- crs2lm(c(0, 0), rbf, lower = c(-3, -3), upper = c(3, 3), ranseed = 10L, maxeval = 200L, xtol_rel = 1e-6)\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = crs2lm(np.zeros(2), rbf, lower=np.full(2, -3.0), upper=np.full(2, 3.0), ranseed=10, maxeval=200, xtol_rel=1e-6)\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    },
+    {
+      "name": "mlsl",
+      "translated": true,
+      "python": "nloptr.mlsl",
+      "loads": [],
+      "uses": [
+        "nloptr",
+        "nl.opts",
+        "nl.grad"
+      ],
+      "done": "Multi-level single-linkage, low-discrepancy by default, with a numerical gradient.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock, maxeval 30, xtol_rel 1e-4",
+        "r_ms": 5.555510520935059,
+        "translated_ms": 3.313329999400594,
+        "speedup": 1.6767151240414,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nloptr))\n\none <- function() {\n  rbf <- function(x) (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2\n  S <- mlsl(c(-1.2, 1), rbf, lower = c(-3, -3), upper = c(3, 3), control = list(maxeval = 30, xtol_rel = 1e-4))\n  c(S$par, S$value, S$iter, S$convergence)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\njson_num <- function(x) {\n  paste0(\"[\", paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \",\"), \"]\")\n}\nif (is.character(value) && length(value) == 1) {\n  esc <- gsub(\"\\\\\", \"\\\\\\\\\", value, fixed = TRUE)\n  esc <- gsub(\"\\\"\", \"\\\\\\\"\", esc, fixed = TRUE)\n  esc <- gsub(\"\\n\", \"\\\\n\", esc, fixed = TRUE)\n  esc <- gsub(\"\\t\", \"\\\\t\", esc, fixed = TRUE)\n  encoded <- paste0(\"\\\"\", esc, \"\\\"\")\n} else if (is.logical(value) && length(value) == 1) {\n  encoded <- if (isTRUE(value)) \"true\" else \"false\"\n} else {\n  encoded <- json_num(value)\n}\ncat(sprintf(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\", encoded, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom nloptr import (\n    auglag, bobyqa, ccsaq, check_derivatives, cobyla, crs2lm, direct, directL,\n    is_nloptr, isres, lbfgs, mlsl, mma, neldermead, newuoa, nl_grad, nl_jacobian,\n    nl_opts, nloptr, nloptr_get_default_options, nloptr_print_options, sbplx,\n    slsqp, stogo, tnewton, varmetric,\n)\n\ndef one():\n    def rbf(x):\n        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2\n    S = mlsl([-1.2, 1], rbf, lower=[-3, -3], upper=[3, 3], control={\"maxeval\": 30, \"xtol_rel\": 1e-4})\n    return np.array([S[\"par\"][0], S[\"par\"][1], S[\"value\"], S[\"iter\"], S[\"convergence\"]])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\ndef encode(item):\n    if isinstance(item, bool):\n        return \"true\" if item else \"false\"\n    if isinstance(item, str):\n        return json.dumps(item)\n    array = np.atleast_1d(np.asarray(item, dtype=float))\n    return \"[\" + \",\".join(\"%.17g\" % float(part) for part in array.ravel()) + \"]\"\n\nprint(\"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\" % (encode(value), statistics.median(elapsed)))\n"
+        }
+      }
+    }
+  ]
+}

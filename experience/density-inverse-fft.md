@@ -1,0 +1,1 @@
+R's `fft(inverse=TRUE)` is the length times NumPy's `ifft`. `density` bins the sample onto the first `n` points of a length-`2n` grid, multiplies by the Gaussian kernel transform, and divides that inverse transform by `2n`. The plotted curve is the real part of NumPy's `ifft`, clipped at zero, then interpolated from the extended grid back to the data range.

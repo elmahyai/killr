@@ -1,0 +1,46 @@
+import statistics
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mclust.mstep_vee_eve_vve import mstepVVE
+
+i = np.arange(1, 25, dtype=float)
+x = np.column_stack([i / 10 + (i % 5), ((i * i) % 7) / 3 - i / 20, ((i * 3) % 11) / 2 + i / 50])
+
+
+def zmat(G):
+    raw = np.column_stack([1 + ((i + 2 * g) % 3) for g in range(1, G + 1)])
+    return raw / raw.sum(axis=1, keepdims=True)
+
+
+z2 = zmat(2)
+z3 = zmat(3)
+
+
+def flat(r):
+    p = r["parameters"]
+    var = p["variance"]
+    parts = [p["pro"], p["mean"], var["sigma"], var["scale"], var["shape"], var["orientation"], [r["returnCode"]],
+             [r["info"]["iteration"], r["info"]["error"]]]
+    out = []
+    for part in parts:
+        out.extend(np.asarray(part, dtype=float).ravel(order="F").tolist())
+    return out
+
+
+def one():
+    return flat(mstepVVE(x, z2)) + flat(mstepVVE(x, z3))
+
+
+value = one()
+elapsed = []
+for _ in range(20):
+    t0 = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - t0) * 1000)
+print("\n".join("%.17g" % v for v in value))
+print("%.17g" % statistics.median(elapsed))

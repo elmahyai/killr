@@ -1,0 +1,52 @@
+{
+  "name": "lag.zoo",
+  "title": "Lags and Differences of zoo Objects",
+  "origin": {
+    "description": "Shift a zoo series by observations.",
+    "usage": "lag.zoo(x, k = 1, na.pad = FALSE, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A zoo series."
+      },
+      {
+        "name": "k",
+        "text": "Number of observations to shift. A positive k moves values to earlier indexes. A vector of lags is merged into columns."
+      },
+      {
+        "name": "na.pad",
+        "text": "When TRUE, indexes dropped by the shift are put back with value NA."
+      },
+      {
+        "name": "...",
+        "text": "Passed along when k has several values. A single lag ignores it."
+      }
+    ],
+    "details": "A positive k drops the first k values and the last k indexes, so each remaining value sits on an earlier time. A negative k does the opposite. k is rounded, with a warning when it was not an integer. If abs(k) is larger than the number of rows, k becomes that row count, so a large negative lag becomes positive and can return an empty series. na.pad = TRUE calls merge on an empty series with the original index and all = c(TRUE, FALSE). This R method does not call the C routine zoo_lag.",
+    "value": "The lagged zoo series.",
+    "example": "x <- zoo(c(10, 20, 30, 40), 1:4)\nz <- lag(x, k = 1, na.pad = TRUE)\nshow <- function(v) paste(vapply(as.numeric(v), function(a) if (is.na(a)) \"NA\" else sprintf(\"%.16g\", a), \"\"), collapse = \" \")\ncat(show(coredata(z)), \"\\n\", sep = \"\")\ncat(show(index(z)), \"\\n\", sep = \"\")",
+    "output": "output/lag.zoo-r.txt"
+  },
+  "translation": {
+    "description": "Shift a zoo series by observations.",
+    "usage": "lag_zoo(x, k=1, na_pad=False)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A Zoo series."
+      },
+      {
+        "name": "k",
+        "text": "Number of observations to shift. A positive k moves values to earlier indexes. A sequence of lags is merged into columns, named lag1, lag-1, and so on unless k is a dict."
+      },
+      {
+        "name": "na_pad",
+        "text": "When True, indexes dropped by the shift are put back with NaN."
+      }
+    ],
+    "details": "A positive k drops the first k values and the last k indexes. A negative k does the opposite. k is rounded, with a warning when it was not an integer. If abs(k) is larger than the number of rows, k becomes that row count. na_pad=True calls merge_zoo on an empty series with the original index and all=[True, False].",
+    "value": "The lagged Zoo.",
+    "example": "import math\nimport numpy as np\nfrom zoo.series import Zoo\nfrom zoo.window import lag_zoo\n\ndef show(values):\n    array = np.asarray(values, dtype=float)\n    flat = array.reshape(-1, order=\"F\") if array.ndim == 2 else array.reshape(-1)\n    parts = []\n    for value in flat:\n        value = float(value)\n        parts.append(\"NA\" if math.isnan(value) else format(value, \".16g\"))\n    return \" \".join(parts)\n\nx = Zoo([10.0, 20.0, 30.0, 40.0], [1.0, 2.0, 3.0, 4.0])\nz = lag_zoo(x, k=1, na_pad=True)\nprint(show(z.data))\nprint(show(z.index))",
+    "output": "output/lag.zoo-python.txt"
+  }
+}

@@ -1,0 +1,1 @@
+`uncholf` and `shapeo` on the `mclustbootstraplrt` module read column-major matrices. The leading dimension is the first axis, so a C-order buffer is the transpose those kernels see. The pyo3 binding copies each matrix into column-major storage before the call.

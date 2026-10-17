@@ -1,0 +1,1 @@
+`logLik.MclustDA` computes each class model's log density on the supplied data, combines classes with `log(prop)`, and uses EDDA degrees of freedom `d * nclass + nVarParams(first model, d, nclass) + nclass - 1`.

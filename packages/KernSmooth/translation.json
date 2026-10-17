@@ -1,0 +1,244 @@
+{
+  "name": "KernSmooth",
+  "cran_version": "2.23-27",
+  "status": "complete",
+  "blocked_by": [],
+  "resume": "All seven public functions are done: bkde, bkde2D, bkfe, dpih, dpik, dpill, and locpoly. bkde2D loads the Rust crate lbtwod. dpill loads blkest, cp, rlbin, sdiag, and sstdiag, and calls locpoly. sdiag and sstdiag use linpack. Density binning still uses linbin. Kernel weights and the FFT use NumPy.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "blkest",
+      "cp",
+      "lbtwod",
+      "linbin",
+      "locpol",
+      "rlbin",
+      "sdiag",
+      "sstdiag"
+    ]
+  },
+  "functions": [
+    {
+      "name": "bkde",
+      "translated": true,
+      "python": "kernsmooth.bkde",
+      "loads": [
+        "linbin"
+      ],
+      "uses": [
+        "numpy",
+        "linbin"
+      ],
+      "done": "Binned kernel density estimate. Signature matches KernSmooth::bkde and returns x and y. Kernel weights, default bandwidth, and FFT are Python on NumPy. Bin counts come from the linbin crate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "10,000 standard normal points, normal kernel, gridsize 401",
+        "r_ms": 0.48613548278808594,
+        "translated_ms": 0.7819550000931486,
+        "speedup": 0.6216924026704557,
+        "matches": true,
+        "max_abs_diff": 1.6653345369377348e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "x <- scan(\"bkde-sample.txt\", quiet=TRUE)\none <- function() KernSmooth::bkde(x)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom kernsmooth import bkde\n\nsample = np.random.default_rng(0).normal(size=10_000)\nnp.savetxt(\"bkde-sample.txt\", sample, fmt=\"%.17g\")\n\ndef one():\n    bkde(sample)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "bkde2D",
+      "translated": true,
+      "python": "kernsmooth.bkde2d",
+      "loads": [
+        "lbtwod"
+      ],
+      "uses": [
+        "numpy",
+        "lbtwod"
+      ],
+      "done": "Two-dimensional binned kernel density estimate. Signature matches KernSmooth::bkde2D and returns x1, x2, and fhat. Bin counts come from the lbtwod crate. The bivariate normal kernel and the 2D FFT stay in NumPy.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "MASS geyser duration and waiting, bandwidth c(0.7, 7)",
+        "r_ms": 2.3164749145507812,
+        "translated_ms": 1.178120499389479,
+        "speedup": 1.9662461656097283,
+        "matches": true,
+        "max_abs_diff": 3.469446951953614e-18,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- cbind(geyser$duration, geyser$waiting)\none <- function() KernSmooth::bkde2D(x, bandwidth=c(0.7, 7))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom mass import geyser\nfrom kernsmooth.bkde2d import bkde2d\n\nx = np.column_stack((geyser[\"duration\"], geyser[\"waiting\"]))\n\ndef one():\n    bkde2d(x, bandwidth=(0.7, 7))\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "bkfe",
+      "translated": true,
+      "python": "kernsmooth.bkfe",
+      "loads": [
+        "linbin"
+      ],
+      "uses": [
+        "numpy",
+        "linbin"
+      ],
+      "done": "Binned kernel functional estimate. Signature matches KernSmooth::bkfe and returns one number. Normal-kernel weights and the FFT are Python on NumPy. Bin counts come from the linbin crate when the data are not already binned.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "geyser duration, drv=4, bandwidth=0.3",
+        "r_ms": 0.23245811462402344,
+        "translated_ms": 0.25816900006248034,
+        "speedup": 0.9004106401921435,
+        "matches": true,
+        "max_abs_diff": 7.105427357601002e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- geyser$duration\none <- function() KernSmooth::bkfe(x, drv=4, bandwidth=0.3)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nfrom mass import geyser\nfrom kernsmooth import bkfe\n\nx = geyser[\"duration\"]\n\ndef one():\n    bkfe(x, drv=4, bandwidth=0.3)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "dpih",
+      "translated": true,
+      "python": "kernsmooth.dpih",
+      "loads": [
+        "linbin"
+      ],
+      "uses": [
+        "numpy",
+        "linbin",
+        "bkfe"
+      ],
+      "done": "Direct plug-in histogram bin width. Signature matches KernSmooth::dpih and returns one number. Bin counts come from linbin. The plug-in functionals come from bkfe.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "geyser duration, default histogram bin width",
+        "r_ms": 1.2598037719726562,
+        "translated_ms": 0.7388079998236208,
+        "speedup": 1.7051842593385769,
+        "matches": true,
+        "max_abs_diff": 2.7755575615628914e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- geyser$duration\none <- function() KernSmooth::dpih(x)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nfrom mass import geyser\nfrom kernsmooth import dpih\n\nx = geyser[\"duration\"]\n\ndef one():\n    dpih(x)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "dpik",
+      "translated": true,
+      "python": "kernsmooth.dpik",
+      "loads": [
+        "linbin"
+      ],
+      "uses": [
+        "numpy",
+        "linbin",
+        "bkfe"
+      ],
+      "done": "Direct plug-in bandwidth for a kernel density estimate. Signature matches KernSmooth::dpik and returns one number. Bin counts come from linbin. The plug-in functionals come from bkfe.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "geyser duration, default plug-in bandwidth",
+        "r_ms": 1.1194944381713867,
+        "translated_ms": 0.6908185000611411,
+        "speedup": 1.6205333789878318,
+        "matches": true,
+        "max_abs_diff": 2.7755575615628914e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- geyser$duration\none <- function() KernSmooth::dpik(x)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nfrom mass import geyser\nfrom kernsmooth import dpik\n\nx = geyser[\"duration\"]\n\ndef one():\n    dpik(x)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "dpill",
+      "translated": true,
+      "python": "kernsmooth.dpill",
+      "loads": [
+        "blkest",
+        "cp",
+        "rlbin",
+        "sdiag",
+        "sstdiag"
+      ],
+      "uses": [
+        "numpy",
+        "blkest",
+        "cp",
+        "rlbin",
+        "sdiag",
+        "sstdiag",
+        "locpoly"
+      ],
+      "done": "Direct plug-in bandwidth for local linear regression. Signature matches KernSmooth::dpill and returns one number. Pairs are binned with rlbin. Blocked quartic fits come from blkest and cp. Smoother diagonals come from sdiag and sstdiag. Pilot smooths use locpoly.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "geyser duration (x) and waiting (y), defaults",
+        "r_ms": 4.231572151184082,
+        "translated_ms": 23.034200500660518,
+        "speedup": 0.18370822773131368,
+        "matches": true,
+        "max_abs_diff": 1.304512053934559e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- geyser$duration\ny <- geyser$waiting\none <- function() KernSmooth::dpill(x, y)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nfrom mass import geyser\nfrom kernsmooth.dpill import dpill\n\nx = geyser[\"duration\"]\ny = geyser[\"waiting\"]\n\ndef one():\n    dpill(x, y)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    },
+    {
+      "name": "locpoly",
+      "translated": true,
+      "python": "kernsmooth.locpoly",
+      "loads": [
+        "linbin",
+        "rlbin",
+        "locpol"
+      ],
+      "uses": [
+        "numpy",
+        "linbin",
+        "rlbin",
+        "locpol"
+      ],
+      "done": "Local polynomial density and regression estimate. Signature matches KernSmooth::locpoly and returns x and y. Density bin counts come from the existing linbin crate. Regression bin counts come from rlbin. The fit comes from locpol, which calls linpack.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "geyser duration, bandwidth 0.25, density",
+        "r_ms": 0.8944272994995117,
+        "translated_ms": 0.8738875003473368,
+        "speedup": 1.0235039397451173,
+        "matches": true,
+        "max_abs_diff": 6.938893903907228e-18,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "data(geyser, package=\"MASS\")\nx <- geyser$duration\none <- function() KernSmooth::locpoly(x, bandwidth=0.25)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nmedian(elapsed) * 1000\n",
+          "python": "import statistics\nimport time\n\nfrom mass import geyser\nfrom kernsmooth import locpoly\n\nx = geyser[\"duration\"]\n\ndef one():\n    locpoly(x, bandwidth=0.25)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nstatistics.median(elapsed)\n"
+        }
+      }
+    }
+  ],
+  "crate_claims": []
+}

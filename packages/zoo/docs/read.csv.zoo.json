@@ -1,0 +1,44 @@
+{
+  "name": "read.csv.zoo",
+  "title": "Read a zoo series from CSV",
+  "origin": {
+    "description": "Read a text file and return a zoo series. This is the zoo 1.9-1 reader.",
+    "usage": "read.csv.zoo(..., read = read.csv)",
+    "arguments": [
+      {
+        "name": "...",
+        "text": "Arguments passed to read.zoo, including the file and any reader arguments such as header."
+      },
+      {
+        "name": "read",
+        "text": "Reader used for the file. The default is read.csv."
+      }
+    ],
+    "details": "read.csv.zoo calls read.zoo with read = read.csv. format and tz are not passed unless the caller supplies them, so a YYYY-MM-DD index uses the date heuristic and becomes Date. read.csv uses a comma separator, a header, and a dot decimal mark.",
+    "value": "An object of class \"zoo\", or \"zooreg\" when regular is TRUE and the series is regular.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(zoo))\npath <- tempfile()\nwriteLines(c(\n  \"date,a,b\",\n  \"2020-01-01,1.5,2.25\",\n  \"2020-01-02,3.5,4.75\",\n  \"2020-01-03,5.25,6.125\"\n), path)\nz <- read.csv.zoo(path)\ncat(sprintf(\"index %s\\n\", paste(sprintf(\"%.17g\", as.numeric(index(z))), collapse = \" \")))\ncat(sprintf(\"values %s\\n\", paste(sprintf(\"%.17g\", as.vector(coredata(z))), collapse = \" \")))\n",
+    "output": "output/read.csv.zoo-r.txt"
+  },
+  "translation": {
+    "description": "Python read_csv_zoo returns a Zoo. The core data is a NumPy array.",
+    "usage": "read_csv_zoo(*args, read=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "*args",
+        "text": "Passed to read_zoo. The first argument is the file path."
+      },
+      {
+        "name": "read",
+        "text": "Replacement for the default read_csv reader."
+      },
+      {
+        "name": "**kwargs",
+        "text": "Passed to read_zoo and then to the reader. format and tz stay missing unless named here."
+      }
+    ],
+    "details": "read_csv_zoo calls read_zoo with read_csv. A header row is required by default, the separator is a comma, and the decimal mark is a dot. The first column is the index. 2020-01-01 becomes datetime.date.",
+    "value": "A Zoo. index is datetime.date, datetime.datetime, or a numeric NumPy array. data holds the series.",
+    "example": "import datetime as dt\nimport sys\nimport tempfile\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/zoo\")\nfrom zoo.io import read_csv_zoo\n\npath = tempfile.mktemp()\nPath(path).write_text(\n    \"date,a,b\\n\"\n    \"2020-01-01,1.5,2.25\\n\"\n    \"2020-01-02,3.5,4.75\\n\"\n    \"2020-01-03,5.25,6.125\\n\"\n)\nz = read_csv_zoo(path)\norigin = dt.date(1970, 1, 1)\nprint(\"index \" + \" \".join(format(float((value - origin).days), \".17g\") for value in z.index))\nprint(\"values \" + \" \".join(format(float(value), \".17g\") for value in np.asarray(z.data, dtype=float).ravel(order=\"F\")))\n",
+    "output": "output/read.csv.zoo-python.txt"
+  }
+}

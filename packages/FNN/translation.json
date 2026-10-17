@@ -1,0 +1,460 @@
+{
+  "name": "FNN",
+  "cran_version": "1.1.4.1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN FNN 1.1.4.1. Depends is R only. chemometrics and mvtnorm stay suggested and are not translated. The 17 exports are translated. print.knnReg and print.knnRegCV are S3 methods and are not exports. The default Euclidean search is the sliding-midpoint kd-tree.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "get.knn",
+      "translated": true,
+      "python": "FNN.get_knn",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "get_knn returns 1-based indices. The default is the sliding-midpoint kd-tree. An equal squared distance keeps the point already in the queue.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cbind(1:10, 1:10) k=5 for kd_tree, brute, and cover_tree distances; CR on cos and sin of seq(0.1, 6, length=10) k=3",
+        "r_ms": 1.1076927185058594,
+        "translated_ms": 5.199038998398464,
+        "speedup": 0.21305720515792978,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  g <- get.knn(data, k = 5)\n  br <- get.knn(data, k = 5, algorithm = \"brute\")\n  cr <- get.knn(circ, k = 3, algorithm = \"CR\")\n  cv <- get.knn(data, k = 5, algorithm = \"cover_tree\")\n  paste(show(g$nn.index), show(g$nn.dist), show(br$nn.index), show(cr$nn.index), show(cr$nn.dist), show(cv$nn.dist), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    g = get_knn(data, k=5)\n    br = get_knn(data, 5, \"brute\")\n    cr = get_knn(circ, 3, algorithm=\"CR\")\n    cv = get_knn(data, 5, \"cover_tree\")\n    return \"\\n\".join([\n        show(g[\"nn.index\"]), show(g[\"nn.dist\"]), show(br[\"nn.index\"]),\n        show(cr[\"nn.index\"]), show(cr[\"nn.dist\"]), show(cv[\"nn.dist\"]),\n    ])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knn.index",
+      "translated": true,
+      "python": "FNN.knn_index",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knn_index returns the index matrix from get_knn.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "knn.index of cbind(1:10, 1:10), k=5, default kd_tree",
+        "r_ms": 0.1481771469116211,
+        "translated_ms": 1.3399090003076708,
+        "speedup": 0.11058747040104705,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(knn.index(data, k = 5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(knn_index(data, k=5))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knn.dist",
+      "translated": true,
+      "python": "FNN.knn_dist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knn_dist returns the Euclidean distances from get_knn.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "knn.dist of cbind(1:10, 1:10), k=5, default kd_tree",
+        "r_ms": 0.1493692398071289,
+        "translated_ms": 1.1333830007060897,
+        "speedup": 0.1317906124532245,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(knn.dist(data, k = 5))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(knn_dist(data, k=5))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "get.knnx",
+      "translated": true,
+      "python": "FNN.get_knnx",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "get_knnx searches a query against the training points and keeps the query point when it is one of them.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "query points (1.2, 1.2) and (8.7, 8.7) against cbind(1:10, 1:10), k=3",
+        "r_ms": 0.1308917999267578,
+        "translated_ms": 0.5947674999333685,
+        "speedup": 0.2200722129931806,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  gx <- get.knnx(data, q, k = 3)\n  paste(show(gx$nn.index), show(gx$nn.dist), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    gx = get_knnx(data, q, k=3)\n    return \"\\n\".join([show(gx[\"nn.index\"]), show(gx[\"nn.dist\"])])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knnx.index",
+      "translated": true,
+      "python": "FNN.knnx_index",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knnx_index returns the index matrix from get_knnx.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "knnx.index of query points (1.2, 1.2) and (8.7, 8.7), k=3",
+        "r_ms": 0.1201629638671875,
+        "translated_ms": 0.465224498839234,
+        "speedup": 0.2582902752692562,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(knnx.index(data, q, k = 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(knnx_index(data, q, k=3))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knnx.dist",
+      "translated": true,
+      "python": "FNN.knnx_dist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knnx_dist returns the Euclidean distances from get_knnx.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "knnx.dist of query points (1.2, 1.2) and (8.7, 8.7), k=3",
+        "r_ms": 0.12695789337158203,
+        "translated_ms": 0.5052140004409011,
+        "speedup": 0.2512952793485249,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(knnx.dist(data, q, k = 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(knnx_dist(data, q, k=3))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "entropy",
+      "translated": true,
+      "python": "FNN.entropy",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "entropy is digamma(n) - digamma(1:k) plus the volume term and the mean log neighbor distance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "entropy of cbind(1:10, 1:10), k=3",
+        "r_ms": 0.14889240264892578,
+        "translated_ms": 1.321160501902341,
+        "speedup": 0.11269819407599257,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(entropy(data, k = 3))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(entropy(data, k=3))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "crossentropy",
+      "translated": true,
+      "python": "FNN.crossentropy",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "crossentropy uses knnx distances from Y to X and the same volume term as entropy.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "crossentropy of the first six rows and the last six rows of cbind(1:10, 1:10), k=2",
+        "r_ms": 0.19228458404541016,
+        "translated_ms": 0.545868499102653,
+        "speedup": 0.3522544062562771,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(crossentropy(X, Y, k = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(crossentropy(X, Y, k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "KL.divergence",
+      "translated": true,
+      "python": "FNN.KL_divergence",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "KL_divergence is log(m/n) plus the dimension times the difference of mean log neighbor distances.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "KL.divergence of the first six rows and the last six rows, k=2",
+        "r_ms": 0.26357173919677734,
+        "translated_ms": 1.0006009997596266,
+        "speedup": 0.26341342778999316,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(KL.divergence(X, Y, k = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(KL_divergence(X, Y, k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "KL.dist",
+      "translated": true,
+      "python": "FNN.KL_dist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "KL_dist adds the divergence in both directions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "KL.dist of the first six rows and the last six rows, k=2",
+        "r_ms": 0.6148815155029297,
+        "translated_ms": 2.3576464991492685,
+        "speedup": 0.2608030999239297,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(KL.dist(X, Y, k = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(KL_dist(X, Y, k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "KLx.divergence",
+      "translated": true,
+      "python": "FNN.KLx_divergence",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "KLx_divergence follows the kd-tree divergence. Any other algorithm is an error, as in match.arg.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "KLx.divergence of the first six rows and the last six rows, k=2, kd_tree",
+        "r_ms": 0.10061264038085938,
+        "translated_ms": 0.9941490006895037,
+        "speedup": 0.10120478953464551,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(KLx.divergence(X, Y, k = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(KLx_divergence(X, Y, k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "KLx.dist",
+      "translated": true,
+      "python": "FNN.KLx_dist",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "KLx_dist sums log squared distances in both directions and scales by the dimension.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "KLx.dist of the first six rows and the last six rows, k=2, kd_tree",
+        "r_ms": 0.09512901306152344,
+        "translated_ms": 2.274631002364913,
+        "speedup": 0.041821734146162026,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  show(KLx.dist(X, Y, k = 2))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return show(KLx_dist(X, Y, k=2))\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "mutinfo",
+      "translated": true,
+      "python": "FNN.mutinfo",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "direct TRUE counts max-norm neighbors. direct FALSE is the sum of the two entropies minus the joint entropy.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "mutinfo of 1:10 and (1:10)^2, k=3, direct TRUE and direct FALSE",
+        "r_ms": 0.7201433181762695,
+        "translated_ms": 7.591731498905574,
+        "speedup": 0.09485890251520165,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  paste(show(mutinfo(data[, 1], data[, 2]^2, k = 3)), show(mutinfo(data[, 1], data[, 2]^2, k = 3, direct = FALSE)), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    return \"\\n\".join([\n        show(mutinfo(data[:, 0], data[:, 1] ** 2, k=3)),\n        show(mutinfo(data[:, 0], data[:, 1] ** 2, k=3, direct=False)),\n    ])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knn",
+      "translated": true,
+      "python": "FNN.knn",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knn votes with the first maximum. Character labels are sorted. The result carries class, prob, nn.index, and nn.dist.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "two-class train of six points, test (1.1, 1.1) and (5.5, 9.2), k=2, prob TRUE",
+        "r_ms": 1.6472339630126953,
+        "translated_ms": 0.38442549885076005,
+        "speedup": 4.284923783508381,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  kn <- knn(train, test, cl, k = 2, prob = TRUE)\n  paste(show(kn), show(attr(kn, \"prob\")), show(attr(kn, \"nn.index\")), show(attr(kn, \"nn.dist\")), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    kn = knn(train, test, cl, k=2, prob=True)\n    return \"\\n\".join([show(kn[\"class\"]), show(kn[\"prob\"]), show(kn[\"nn.index\"]), show(kn[\"nn.dist\"])])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knn.cv",
+      "translated": true,
+      "python": "FNN.knn_cv",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "knn_cv classifies each training point from its neighbors in the same set.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "leave-one-out knn.cv on the six-point two-class train, k=2, prob TRUE",
+        "r_ms": 1.6275644302368164,
+        "translated_ms": 0.983177000307478,
+        "speedup": 1.6554134502005369,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  cv <- knn.cv(train, cl, k = 2, prob = TRUE)\n  paste(show(cv), show(attr(cv, \"prob\")), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    cv = knn_cv(train, cl, k=2, prob=True)\n    return \"\\n\".join([show(cv[\"class\"]), show(cv[\"prob\"])])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "knn.reg",
+      "translated": true,
+      "python": "FNN.knn_reg",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "With test omitted, knn_reg predicts the mean of the neighbor responses and reports PRESS and R2Pred.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "leave-one-out knn.reg on the six-point train with y = c(1, 1, 1, 4, 4, 4), k=2",
+        "r_ms": 0.24390220642089844,
+        "translated_ms": 0.8889644996088464,
+        "speedup": 0.2743666440315872,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  rg <- knn.reg(train, y = y, k = 2)\n  paste(show(rg$pred), show(rg$R2Pred), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    rg = knn_reg(train, y=y, k=2)\n    return \"\\n\".join([show(rg[\"pred\"]), show(rg[\"R2Pred\"])])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "ownn",
+      "translated": true,
+      "python": "FNN.ownn",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "ownn requires k. It reports the uniform, optimal-weight, and bagged predictions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ownn on the six-point train and the two test points, k=2",
+        "r_ms": 2.1255016326904297,
+        "translated_ms": 0.850295500640641,
+        "speedup": 2.499721133522412,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages(library(FNN))\nstopifnot(packageVersion(\"FNN\") == \"1.1.4.1\")\nshow <- function(x) {\n  if (is.character(x) || is.factor(x)) paste(as.character(x), collapse = \" \")\n  else paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n}\ndata <- cbind(1:10, 1:10)\nth <- seq(0.1, 6, length.out = 10)\ncirc <- cbind(cos(th), sin(th))\nX <- data[1:6, ]\nY <- data[5:10, ]\nq <- cbind(c(1.2, 8.7), c(1.2, 8.7))\ntrain <- cbind(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 8, 9, 10))\ncl <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\")\ntest <- cbind(c(1.1, 5.5), c(1.1, 9.2))\ny <- c(1, 1, 1, 4, 4, 4)\none <- function() {\n  ow <- ownn(train, test, cl, k = 2)\n  paste(show(ow$knn), show(ow$ownn), show(ow$bnn), sep = \"\\n\")\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport math\nimport numpy as np\nfrom FNN import (\n    KL_dist, KL_divergence, KLx_dist, KLx_divergence, crossentropy, entropy,\n    get_knn, get_knnx, knn, knn_cv, knn_dist, knn_index, knn_reg, knnx_dist,\n    knnx_index, mutinfo, ownn,\n)\n\ndef show(x):\n    arr = np.asarray(x)\n    if arr.dtype == object or arr.dtype.kind in \"SU\":\n        return \" \".join(str(v) for v in arr.reshape(-1, order=\"F\"))\n    vals = []\n    for v in np.asarray(arr, dtype=float).reshape(-1, order=\"F\"):\n        if math.isnan(v):\n            vals.append(\"NA\")\n        elif math.isinf(v):\n            vals.append(\"Inf\" if v > 0 else \"-Inf\")\n        else:\n            vals.append(f\"{v:.17g}\")\n    return \" \".join(vals)\n\ndata = np.column_stack([np.arange(1, 11), np.arange(1, 11)])\nth = np.linspace(0.1, 6, 10)\ncirc = np.column_stack([np.cos(th), np.sin(th)])\nX, Y = data[:6], data[4:]\nq = np.array([[1.2, 1.2], [8.7, 8.7]])\ntrain = np.array([[1.0, 1.0], [2, 2], [3, 3], [4, 8], [5, 9], [6, 10]])\ncl = np.array([\"a\", \"a\", \"a\", \"b\", \"b\", \"b\"])\ntest = np.array([[1.1, 1.1], [5.5, 9.2]])\ny = np.array([1.0, 1, 1, 4, 4, 4])\ndef one():\n    ow = ownn(train, test, cl, k=2)\n    return \"\\n\".join([show(ow[\"knn\"]), show(ow[\"ownn\"]), show(ow[\"bnn\"])])\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = __import__('time').perf_counter()\n    one()\n    elapsed.append((__import__('time').perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{__import__('statistics').median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

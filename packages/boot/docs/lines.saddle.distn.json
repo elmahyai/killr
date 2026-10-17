@@ -1,0 +1,39 @@
+{
+  "name": "lines.saddle.distn",
+  "title": "Add a Saddlepoint Approximation to a Plot",
+  "origin": {
+    "description": "Add a saddlepoint density or distribution function to the current plot.",
+    "usage": "lines.saddle.distn(x, dens = TRUE, h = function(u) u, J = function(u) 1,\n      npts = 50, lty = 1, ...)",
+    "arguments": [
+      {"name": "x", "text": "An object of class \"saddle.distn\"."},
+      {"name": "dens", "text": "If TRUE, draw the density. If FALSE, draw the distribution function."},
+      {"name": "h", "text": "Transformation of the variable. The first argument is the point, and the function must be vectorized."},
+      {"name": "J", "text": "Jacobian of the transformation, used when dens is TRUE. It must have the same arguments as h."},
+      {"name": "npts", "text": "Number of evenly spaced points across the range of the saddlepoint points."},
+      {"name": "lty", "text": "Line type."},
+      {"name": "...", "text": "Further arguments passed to h and J."}
+    ],
+    "details": "A smoothing spline produces the curve. The density spline is on the log scale and the distribution spline is on the probit scale. The Rd example builds the curve from a bootstrap of 9999 replicates. That bootstrap is omitted here. The coordinates below are the air-conditioning conditional density, which is the curve lines would add.",
+    "value": "sad.d is returned invisibly. A line is added to the current plot.",
+    "example": "air.t0 <- c(mean(aircondit$hours), sqrt(var(aircondit$hours)/12))\nair <- saddle.distn(A = cbind(aircondit$hours/12, 1), u = 12, wdist = \"p\",\n                    type = \"cond\", t0 = air.t0)\ntt <- air$points[, 1]\ntt1 <- seq(min(tt), max(tt), length.out = 50)\nspl <- smooth.spline(tt, log(air$points[, 2]))\nexp(predict(spl, tt1)$y)",
+    "output": "output/lines.saddle.distn-r.txt"
+  },
+  "translation": {
+    "description": "Add a saddlepoint density or distribution function to the current axes and return the coordinates.",
+    "usage": "lines_saddle_distn(x, dens=True, h=None, J=None, npts=50, lty=1, ax=None, **extra)",
+    "arguments": [
+      {"name": "x", "text": "A dict as returned by saddle_distn."},
+      {"name": "dens", "text": "If true, draw the density. If false, draw the distribution function."},
+      {"name": "h", "text": "Transformation of the points. None is the identity. Extra keywords are passed through."},
+      {"name": "J", "text": "Jacobian, used for the density. None is 1."},
+      {"name": "npts", "text": "Number of evenly spaced points."},
+      {"name": "lty", "text": "Line type, as an R number or a Matplotlib name."},
+      {"name": "ax", "text": "Axes to draw on. None uses the current axes."},
+      {"name": "extra", "text": "Passed to h and J."}
+    ],
+    "details": "The density spline is fit to the log density and the distribution spline to the probit of the cdf. The Rd figure uses boot(R = 9999), which is omitted. This example draws the air-conditioning conditional density. The check times the coordinate arithmetic; the saved figure is the Matplotlib line.",
+    "value": "A dict with x and y, the coordinates that were drawn.",
+    "example": "import matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom boot.data_sets import aircondit\nfrom boot.saddle import lines_saddle_distn, saddle_distn\n\nhours = aircondit()[1][:, 0]\nair_t0 = np.array([hours.mean(), np.sqrt(np.var(hours, ddof=1) / 12)])\nair = saddle_distn(\n    A=np.column_stack([hours / 12, np.ones(len(hours))]),\n    u=12,\n    wdist=\"p\",\n    type=\"cond\",\n    t0=air_t0,\n)\nfig, ax = plt.subplots()\ndrawn = lines_saddle_distn(air, ax=ax)\nfig.savefig(\"packages/boot/docs/output/lines.saddle.distn.svg\")\nprint(drawn[\"y\"])",
+    "output": ["output/lines.saddle.distn-python.txt", "output/lines.saddle.distn.svg"]
+  }
+}

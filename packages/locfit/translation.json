@@ -1,0 +1,1195 @@
+{
+  "name": "locfit",
+  "cran_version": "1.5-9.12",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    "locfit"
+  ],
+  "resume": "Exports: local regression (lf, lp, locfit, locfit.raw, locfit.censor, locfit.quasi, locfit.robust, locfit.matrix), bandwidth selection (aic, cp, gcv, lcv, lscv), density, hat matrix, simultaneous bands (scb), and helpers. Compiled C kernel (useDynLib locfit). Lattice and plot methods are graphics gaps. The S3 methods for the locfit result (fitted, formula, predict, residuals, summary, print) are not in this list. Crate first, then Python batches. Not started.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "locfit"
+    ]
+  },
+  "strategy": "medium-low",
+  "functions": [
+    {
+      "name": "aic",
+      "translated": true,
+      "python": "locfit.aic.aic",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "aic against real R calls",
+        "r_ms": 0.3937,
+        "translated_ms": 0.1338,
+        "speedup": 2.942,
+        "matches": true,
+        "max_abs_diff": 4.9e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "ang",
+      "translated": true,
+      "python": "locfit.ang.ang",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ang against real R calls",
+        "r_ms": 0.0893,
+        "translated_ms": 0.00215,
+        "speedup": 41.535,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "cp",
+      "translated": true,
+      "python": "locfit.cp.cp",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cp against real R calls",
+        "r_ms": 0.3937,
+        "translated_ms": 0.1234,
+        "speedup": 3.19,
+        "matches": true,
+        "max_abs_diff": 4.9e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "crit",
+      "translated": true,
+      "python": "locfit.crit.crit",
+      "loads": [],
+      "uses": [],
+      "done": "d=1 and d>1 with rdf=0 use the default const; d>1 calls scritval ported into crates/locfit (critval.rs).",
+      "not_done": "d=1 with a non-default const and any rdf>0 (t-process) still raise NotImplementedError. kappa0 (separate function) still needs grid-fit outputs. R timings are noisy at about 0.03 to 0.08 ms.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "d=2 and d=3 with const=c(0,1), cov=0.95; d=1 existing proof",
+        "r_ms": 0.0325,
+        "translated_ms": 0.00465,
+        "speedup": 7.0,
+        "matches": true,
+        "max_abs_diff": 1.8e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/locfit/proof/crit-d2-r.R",
+          "python": "packages/locfit/proof/crit-d2-py.py"
+        },
+        "output": {
+          "compare": "packages/locfit/docs/output/crit-d2-compare.txt"
+        }
+      }
+    },
+    {
+      "name": "dat",
+      "translated": true,
+      "python": "locfit.dat.dat",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dat against real R calls",
+        "r_ms": 0.0134,
+        "translated_ms": 0.00233,
+        "speedup": 5.751,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "density.lf",
+      "translated": true,
+      "python": "locfit.density_lf.density_lf",
+      "loads": [],
+      "uses": [],
+      "done": "Default path (degree 0, Gaussian, rectangular, triangular, tricube windows) matches R (1.1e-16) via crates/locfit density_lf.rs.",
+      "not_done": "Degree 1 and higher, user ev or limits, renorm, log link, and multi-dimensional fits are not translated.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "density.lf default path",
+        "matches": true,
+        "max_abs_diff": 1.1e-16,
+        "tolerance": 1e-08,
+        "r_ms": 0.743,
+        "translated_ms": 0.042,
+        "speedup": 17.8,
+        "proof": {
+          "r": "packages/locfit/proof/density-lf-r.R",
+          "python": "packages/locfit/proof/density-lf-py.py"
+        }
+      }
+    },
+    {
+      "name": "expit",
+      "translated": true,
+      "python": "locfit.expit.expit",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "expit against real R calls",
+        "r_ms": 0.00593,
+        "translated_ms": 0.0229,
+        "speedup": 0.259,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "gam.lf",
+      "translated": true,
+      "python": "locfit.gam_lf.gam_lf",
+      "loads": [],
+      "uses": [],
+      "done": "residuals, nl.df, var, xeval, and one non-default case (alpha 0.5, deg 1, kern rect) match R within 1e-8 (var 4.8e-11; xeval 1.3e-11; non-default 8.9e-16).",
+      "not_done": "var reproduces the geth=4 aliasing (can be negative); raises NotImplementedError when p*p+n > 3n (d=2, n<18). Non-default args checked in scratch runs except the proof case. Speed about 1x.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.8e-11,
+        "tolerance": 1e-08,
+        "r_ms": 0.245,
+        "translated_ms": 0.311,
+        "speedup": 0.788,
+        "note": "var (default kd-tree); xeval 1.3e-11; non-default 8.9e-16"
+      }
+    },
+    {
+      "name": "gam.slist",
+      "translated": true,
+      "python": "locfit.gam_slist.gam_slist",
+      "loads": [],
+      "uses": [],
+      "done": "Constant, not a function; the value matches.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": null,
+        "translated_ms": null,
+        "speedup": null,
+        "proof": {
+          "r": "",
+          "python": ""
+        },
+        "case": "constant c(\"s\",\"lo\",\"random\",\"lf\")"
+      }
+    },
+    {
+      "name": "gcv",
+      "translated": true,
+      "python": "locfit.gcv.gcv",
+      "loads": [],
+      "uses": [],
+      "done": "Checked against real R calls with R loops of 100 calls, median of 20. Python time includes the crate fit where R includes it.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "gcv against real R calls",
+        "r_ms": 0.392,
+        "translated_ms": 0.1185,
+        "speedup": 3.308,
+        "matches": true,
+        "max_abs_diff": 4.9e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference values and timings for the seven locfit helpers:\n# aic, ang, cp, crit, dat, expit, gcv.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_criteria_r.R\n#\n# Every value comes from calling the real locfit 1.5-9.12 functions. The\n# criteria are called as aic(x, y, ev = dat()) so that R fits directly at the\n# data, the same direct fit the Python side makes through crates/locfit.\n# Timing: one untimed call, then the median over 20 samples. Each sample is a\n# loop of K calls, and the reported time is the sample time divided by K.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\n\ncalls <- list(\n  aic = function() unname(aic(x, y, ev = dat())),\n  cp = function() unname(cp(x, y, ev = dat(), sig2 = 1)),\n  gcv = function() unname(gcv(x, y, ev = dat())),\n  crit = function() crit(const = c(0, 1), d = 1, cov = 0.95)$crit.val,\n  crit_cov090 = function() crit(const = c(0, 1), d = 1, cov = 0.9)$crit.val,\n  crit_d2 = function() crit(const = c(0, 1), d = 2, cov = 0.95)$crit.val,\n  dat = function() {\n    z <- dat()\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  dat_cv = function() {\n    z <- dat(TRUE)\n    c(as.numeric(z$type == \"crossval\"), z$xev, z$mg, z$cut, z$ll, z$ur)\n  },\n  expit = function() expit(c(-3, 0, 2)),\n  ang = function() as.numeric(ang(c(-1, 0, 1)))\n)\n\nvalues <- vapply(calls, function(f) paste(sprintf(\"%.17g\", as.numeric(f())),\n                                          collapse = \",\"), character(1))\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_criteria_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- vapply(calls[c(\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\")],\n                 time_call, numeric(1))\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_criteria_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n# R reference values and timings for gam.lf and density.lf.\n#\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit_smoothers_r.R\n#\n# gam.lf is shown twice: with the R default (ev = rbox(), the kd-tree vertex\n# interpolation) and with ev = dat() (a direct fit at the data). The Python\n# side can only reach the direct fit through crates/locfit, so the ev = dat()\n# values are the comparison target. density.lf uses its R default.\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nlibrary(locfit, lib.loc = lib)\n\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\nK <- 100L\nx <- seq(0, 1, length.out = 12)\ny <- sin(2 * pi * x) + 0.1 * cos(7 * x)\nw <- seq(0.5, 2, length.out = 12)\n\nxd <- qnorm(seq(0.05, 0.95, length.out = 20))\n\ngam_ev <- function() gam.lf(x, y, w, ev = dat())\ngam_default <- function() gam.lf(x, y, w)\ndensity_default <- function() density.lf(xd, n = 50)\n\nfmt <- function(v) paste(sprintf(\"%.17g\", as.numeric(v)), collapse = \",\")\n\ng <- gam_ev()\nd <- density_default()\ngd <- gam_default()\nvalues <- c(\n  gam.lf_ev_residuals = fmt(g$residuals),\n  gam.lf_ev_nl.df = fmt(g$nl.df),\n  gam.lf_default_residuals = fmt(gd$residuals),\n  gam.lf_default_nl.df = fmt(gd$nl.df),\n  density.lf_x = fmt(d$x),\n  density.lf_y = fmt(d$y)\n)\nwriteLines(paste(names(values), values, sep = \",\"),\n           file.path(out, \"locfit_smoothers_r_values.txt\"))\n\ntime_call <- function(f) {\n  f()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    t0 <- Sys.time()\n    for (j in seq_len(K)) f()\n    samples[i] <- as.numeric(Sys.time() - t0) * 1000\n  }\n  median(samples) / K\n}\n\ntiming <- c(\n  gam.lf_ev = time_call(gam_ev),\n  gam.lf_default = time_call(gam_default),\n  density.lf = time_call(density_default)\n)\nwriteLines(sprintf(\"%s,%.17g\", names(timing), timing),\n           file.path(out, \"locfit_smoothers_r_timing.txt\"))\n\nprint(values)\nprint(timing)\n",
+          "python": "\"\"\"Proof and timing for the seven locfit helpers: aic, ang, cp, crit, dat,\nexpit, gcv.\n\nRun from the repository root with the workspace venv (it has the locfit\ncrate, which supplies the direct fit):\n\n    .venv/bin/python packages/locfit/proof/locfit_criteria_proof.py\n\nThe R values come from locfit_criteria_r.R, which calls the real R functions.\naic, cp, and gcv take a fit. The fit is the crate's direct local fit at the\ndata (ev = dat()), mapped to the locfit dp and mi names. The timed Python call\nincludes that fit, as R's aic(x, y, ev = dat()) does.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit, the loaded C kernel\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nTOL = 1e-8\nK = 100\n\n# Load the translated package as a namespace so its relative imports resolve.\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.aic import aic  # noqa: E402\nfrom locfit_translated.ang import ang  # noqa: E402\nfrom locfit_translated.cp import cp  # noqa: E402\nfrom locfit_translated.crit import crit  # noqa: E402\nfrom locfit_translated.dat import dat  # noqa: E402\nfrom locfit_translated.expit import expit  # noqa: E402\nfrom locfit_translated.gcv import gcv  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\n\n\ndef direct_fit(x, y):\n    \"\"\"Direct local fit at the data, with the R names for dp and mi.\"\"\"\n    r = crate.locfit_fit(np.asarray(x, float).reshape(-1, 1),\n                         np.asarray(y, float), kern=\"tricube\", kt=\"spherical\",\n                         nn=0.7, deg=2)\n    return {\"dp\": {\"lk\": float(r[\"lk\"]), \"df1\": float(r[\"df0\"]),\n                   \"df2\": float(r[\"df1\"])},\n            \"mi\": {\"n\": float(len(y))}}\n\n\ndef values_of(obj):\n    if isinstance(obj, dict):\n        return np.asarray(list(obj.values()), dtype=float)\n    return np.asarray(obj, dtype=float).reshape(-1)\n\n\ndef crit_value(**kwargs):\n    return crit(**kwargs).crit_val\n\n\ndef dat_vector(cv=False):\n    z = dat(cv)\n    return np.array([float(z[\"type\"] == \"crossval\"), z[\"xev\"], z[\"mg\"],\n                     z[\"cut\"], z[\"ll\"], z[\"ur\"]])\n\n\nCALLS = {\n    \"aic\": lambda: aic(direct_fit(X, Y)),\n    \"cp\": lambda: cp(direct_fit(X, Y), sig2=1),\n    \"gcv\": lambda: gcv(direct_fit(X, Y)),\n    \"crit\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.95),\n    \"crit_cov090\": lambda: crit_value(const=(0.0, 1.0), d=1, cov=0.9),\n    \"crit_d2\": lambda: crit_value(const=(0.0, 1.0), d=2, cov=0.95),\n    \"dat\": lambda: dat_vector(False),\n    \"dat_cv\": lambda: dat_vector(True),\n    \"expit\": lambda: expit(np.array([-3.0, 0.0, 2.0])),\n    \"ang\": lambda: ang(np.array([-1.0, 0.0, 1.0])),\n}\nTIMED = [\"aic\", \"cp\", \"gcv\", \"crit\", \"dat\", \"expit\", \"ang\"]\n\n\ndef timed(fn):\n    fn()  # one untimed call\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef load_r_values():\n    ref = {}\n    for line in (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines():\n        name, values = line.split(\",\", 1)\n        ref[name] = np.array([float(v) for v in values.split(\",\")])\n    return ref\n\n\ndef load_r_timing():\n    times = {}\n    for line in (OUT / \"locfit_criteria_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef main():\n    ref = load_r_values()\n    r_ms = load_r_timing()\n    lines = []\n    for name, call in CALLS.items():\n        try:\n            value = values_of(call())\n        except NotImplementedError as exc:\n            lines.append(f\"{name},matches=no,max_abs_diff=NA,r_ms=NA,\"\n                         f\"translated_ms=NA,speedup=NA,blocked_by={exc}\")\n            continue\n        expected = ref[name]\n        if value.shape != expected.shape:\n            diff = float(\"inf\")\n        else:\n            diff = float(np.max(np.abs(value - expected)))\n        matches = \"yes\" if diff <= TOL else \"no\"\n        (OUT / f\"locfit_{name}_python.txt\").write_text(\n            \"\\n\".join(f\"{v:.17g}\" for v in value) + \"\\n\")\n        if name in TIMED:\n            tms = timed(call)\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms={r_ms[name]:.17g},translated_ms={tms:.17g},\"\n                         f\"speedup={r_ms[name] / tms:.17g}\")\n        else:\n            lines.append(f\"{name},matches={matches},max_abs_diff={diff:.17g},\"\n                         f\"r_ms=NA,translated_ms=NA,speedup=NA\")\n    (OUT / \"locfit_criteria_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n\"\"\"Proof record for gam.lf and density.lf.\n\nRun from the repository root with the workspace venv:\n\n    .venv/bin/python packages/locfit/proof/locfit_smoothers_proof.py\n\nBoth functions are blocked by gaps in crates/locfit, so the translated\nfunctions raise NotImplementedError. This script records that, and checks the\nevidence behind each blocker against R:\n\n- the crate's direct fit at the data reproduces R's dp summaries (lk, df1,\n  df2) and R's evaluated coefficients at points, so the crate is correct\n  where it applies;\n- the crate's coef column is not R's fitted value at the data, so residuals\n  cannot be formed from the crate output (diagnostic line below);\n- density.lf needs the density family, which the crate does not have.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport importlib.machinery\nimport importlib.util\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nimport locfit as crate  # crates/locfit\n\nROOT = Path(__file__).parents[3]\nPKG = ROOT / \"packages\" / \"locfit\" / \"locfit\"\nOUT = ROOT / \"packages\" / \"locfit\" / \"docs\" / \"output\"\nK = 100\n\nspec = importlib.machinery.ModuleSpec(\"locfit_translated\", loader=None,\n                                      is_package=True)\nspec.submodule_search_locations = [str(PKG)]\ntranslated = importlib.util.module_from_spec(spec)\nsys.modules[\"locfit_translated\"] = translated\nfrom locfit_translated.gam_lf import BLOCKED_BY as GAM_BLOCKED  # noqa: E402\nfrom locfit_translated.gam_lf import gam_lf  # noqa: E402\nfrom locfit_translated.density_lf import BLOCKED_BY as DENS_BLOCKED  # noqa: E402\nfrom locfit_translated.density_lf import density_lf  # noqa: E402\n\nX = np.linspace(0.0, 1.0, 12)\nY = np.sin(2 * np.pi * X) + 0.1 * np.cos(7 * X)\nW = np.linspace(0.5, 2.0, 12)\n\n\ndef read_values():\n    values = {}\n    for line in (OUT / \"locfit_smoothers_r_values.txt\").read_text().splitlines():\n        name, text = line.split(\",\", 1)\n        values[name] = np.array([float(v) for v in text.split(\",\")])\n    return values\n\n\ndef read_timing():\n    times = {}\n    for line in (OUT / \"locfit_smoothers_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",\", 1)\n        times[name] = float(value)\n    return times\n\n\ndef status(call):\n    try:\n        call()\n        return \"ok\"\n    except NotImplementedError as exc:\n        return str(exc)\n\n\ndef diagnostics():\n    \"\"\"Evidence for the blockers, against R's ev = dat() fit.\"\"\"\n    r = read_values()\n    resid_r = r[\"gam.lf_ev_residuals\"]\n    fitted_r = Y - resid_r\n    fit = crate.locfit_fit(X.reshape(-1, 1), Y, weights=W)\n    coef0 = fit[\"coef\"][:, 0]\n    fit_no_w = crate.locfit_fit(X.reshape(-1, 1), Y)\n    pres = np.array([[0.1], [0.5], [0.9]])\n    eval_crate = crate.locfit_fit(X.reshape(-1, 1), Y, xev=pres)[\"coef\"][:, 0]\n    lk_r = float(next(line.split(\",\")[1] for line in\n                      (OUT / \"locfit_criteria_r_values.txt\").read_text().splitlines()\n                      if line.startswith(\"aic,\")))\n    return [\n        f\"diag_crate_coef_vs_r_fitted,max_abs_diff=\"\n        f\"{float(np.max(np.abs(coef0 - fitted_r))):.17g}\",\n        f\"diag_crate_lk_vs_r_lk,crate={fit_no_w['lk']:.17g},r={lk_r:.17g},\"\n        f\"abs_diff={abs(fit_no_w['lk'] - lk_r):.3g}\",\n        f\"diag_crate_pres_coef_finite,{bool(np.all(np.isfinite(eval_crate)))}\",\n    ]\n\n\ndef timed(fn):\n    fn()\n    samples = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(K):\n            fn()\n        samples.append((time.perf_counter() - start) * 1000.0)\n    return statistics.median(samples) / K\n\n\ndef main():\n    r_ms = read_timing()\n    lines = []\n    gam_status = status(lambda: gam_lf(X, Y, W, ev_dat=True))\n    lines.append(\n        f\"gam.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['gam.lf_ev']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by=\"\n        f\"{'; '.join(GAM_BLOCKED)}\")\n    lines.append(f\"gam.lf_status,{gam_status}\")\n    dens_status = status(lambda: density_lf(np.linspace(-1.9, 1.9, 20)))\n    lines.append(\n        f\"density.lf,matches=no,max_abs_diff=NA,r_ms={r_ms['density.lf']:.17g},\"\n        f\"translated_ms=NA,speedup=NA,proof=packages/locfit/proof/\"\n        f\"locfit_smoothers_proof.py,blocked_by={'; '.join(DENS_BLOCKED)}\")\n    lines.append(f\"density.lf_status,{dens_status}\")\n    lines.extend(diagnostics())\n    (OUT / \"locfit_smoothers_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n    print(\"\\n\".join(lines))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "hatmatrix",
+      "translated": false,
+      "python": "locfit.hatmatrix.hatmatrix",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: R hatmatrix() fails with \"data is too long\" on the default tree for every n tried, so there is no default reference. Data-path probe matches to 2.3e-9 but is 43x slower.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "kappa0",
+      "translated": true,
+      "python": "locfit.kappa0.kappa0",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R at d=1 and d=2 (4.4e-16) via crates/locfit/src/kappa0.rs; general const through scritval.",
+      "not_done": "d >= 3 not ported (needs n0x and simp3). Only tricube, kt=\"sph\", degree 2 and unit weights. crit with rdf > 0 not translated. d=2 speedup 1.16x (per-grid allocation).",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.4e-16,
+        "tolerance": 1e-08,
+        "r_ms": 1.49,
+        "translated_ms": 0.31,
+        "speedup": 4.806,
+        "note": "d=1 n=40; d=2 max 4.4e-16 (49.5 ms R vs 42.8 ms)"
+      }
+    },
+    {
+      "name": "kdeb",
+      "translated": true,
+      "python": "locfit.kdeb.kdeb",
+      "loads": [],
+      "uses": [],
+      "done": "Ported to crates/locfit (kdeb.rs, kernel.rs wconv6, lib.rs kdeb_bandwidth). Matches R on four proof cases, Gaussian kernel.",
+      "not_done": "Gaussian kernel only; other kernel names raise an error. R partial-name matching of kern is not supported. Speedup is 1.14x: the O(n^2) kdecri in the shared kdecri.rs dominates.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "kdeb main case (dsamp, six methods) and three more cases",
+        "r_ms": 3.229,
+        "translated_ms": 2.84,
+        "speedup": 1.137,
+        "matches": true,
+        "max_abs_diff": 3.331e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/locfit/proof/kdeb_r.R",
+          "python": "packages/locfit/proof/kdeb_proof.py"
+        },
+        "output": {
+          "python": "packages/locfit/docs/output/locfit_kdeb_python_values.txt",
+          "r": "packages/locfit/docs/output/locfit_kdeb_r_values.txt"
+        }
+      }
+    },
+    {
+      "name": "km.mrl",
+      "translated": true,
+      "python": "locfit.km_mrl.km_mrl",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "km.mrl fixed inputs",
+        "r_ms": 0.073159,
+        "translated_ms": 0.060278,
+        "speedup": 1.214,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lcv",
+      "translated": true,
+      "python": "locfit.lcv.lcv",
+      "loads": [],
+      "uses": [],
+      "done": "Default ev=rbox path uses crates/locfit cv_sum (leave-one-out term).",
+      "not_done": "Speedup 0.91 to 1.03 at these sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lcv default path, d=1 and d=2",
+        "matches": true,
+        "max_abs_diff": 1.2e-14,
+        "tolerance": 1e-08,
+        "r_ms": 2.007,
+        "translated_ms": 2.204,
+        "speedup": 0.91,
+        "proof": {
+          "r": "packages/locfit/proof/lcv-default-r.R",
+          "python": "packages/locfit/proof/lcv-default-py.py"
+        },
+        "output": {
+          "compare": "packages/locfit/docs/output/lcv_default_compare.txt"
+        }
+      }
+    },
+    {
+      "name": "left",
+      "translated": false,
+      "python": "locfit.left.left",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: no local implementation or source for this name in the locfit record.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "lf",
+      "translated": true,
+      "python": "locfit.lf.lf",
+      "loads": [],
+      "uses": [],
+      "done": "Default ev = rbox() matches R (max 0), with the default ev routed to the kd-tree tree spec (cut 0.8).",
+      "not_done": "lf does no fitting itself: the crate is reached through the chain cases. Explicit ev=dat() cases compare the type string only. Speedups for lf alone are constructor overhead and not meaningful.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lf default d=1 and d=2 plus chain through locfit_raw",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.105,
+        "translated_ms": 0.0072,
+        "speedup": 14.6,
+        "proof": {
+          "r": "packages/locfit/proof/lf-default-r.R",
+          "python": "packages/locfit/proof/lf-default-py.py"
+        },
+        "output": {
+          "compare": "packages/locfit/docs/output/lf_default_compare.txt"
+        }
+      }
+    },
+    {
+      "name": "lfeval",
+      "translated": true,
+      "python": "locfit.lfeval.lfeval",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lfeval fixed inputs",
+        "r_ms": 0.00361,
+        "translated_ms": 0.00119,
+        "speedup": 3.034,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference for locfit::lfeval (locfit 1.5-9.12). Run from the repository root.\nsource(\"packages/locfit/proof/locfit_proof_common.R\")\n\nfits <- fixed_fits()\nwrite_fixture(list(cases = lapply(fits, fit_fixture)), \"lfeval\")\nout <- lapply(fits, function(f) to_plain(lfeval(f)))\nwrite_r_output(list(cases = out), \"lfeval\")\n\nms <- time_r_ms(function() lfeval(fits$tree))\nwrite_r_timing(\"lfeval\", ms)\ncat(\"lfeval R reference written; r_ms =\", ms, \"\\n\")\n",
+          "python": "\"\"\"Python proof for locfit::lfeval against the R reference (locfit 1.5-9.12).\n\nRun from the repository root after lfeval_r.R:\n    python3 packages/locfit/proof/lfeval_python.py\n\"\"\"\n\nfrom __future__ import annotations\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom locfit_proof_common import (check_case, load, new_state, read_fixture,  # noqa: E402\n                                 read_r_output, read_r_timing, report, time_py_ms,\n                                 to_plain, write_python_output)\n\n\ndef main() -> None:\n    lfeval = load(\"lfeval\").lfeval\n    fixtures = read_fixture(\"lfeval\")[\"cases\"]\n    r_cases = read_r_output(\"lfeval\")[\"cases\"]\n    total, lines, py_out = new_state(), [], {}\n    for name, fit in fixtures.items():\n        value = to_plain(lfeval(fit))\n        py_out[name] = value\n        check_case(name, r_cases[name], value, total, lines)\n    write_python_output(\"lfeval\", py_out)\n\n    fit = fixtures[\"tree\"]\n    py_ms = time_py_ms(lambda: lfeval(fit))\n    r_ms = read_r_timing(\"lfeval\")\n    print(report(\"lfeval\", lines, total, r_ms, py_ms))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lfgrid",
+      "translated": true,
+      "python": "locfit.lfgrid.lfgrid",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lfgrid fixed inputs",
+        "r_ms": 0.008267,
+        "translated_ms": 0.006531,
+        "speedup": 1.266,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lfknots",
+      "translated": true,
+      "python": "locfit.lfknots.lfknots",
+      "loads": [],
+      "uses": [],
+      "done": "lfknots does not return R column names; values match.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lfknots fixed inputs",
+        "r_ms": 0.102,
+        "translated_ms": 0.0511,
+        "speedup": 1.996,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference for locfit::lfknots (locfit 1.5-9.12). Run from the repository root.\nsource(\"packages/locfit/proof/locfit_proof_common.R\")\n\nfits <- fixed_fits()\ntree_s <- fits$tree\ntree_s$cell$s[c(2, 5)] <- 1L          # exercises the delete.pv row removal\ntree_na <- fits$tree\ntree_na$eva$coef[2, 1] <- 0.1278433   # locfit's missing-value marker\nfit_set <- list(tree = fits$tree, tree_s = tree_s, tree_na = tree_na,\n                dat = fits$dat, grid = fits$grid)\n\ncases <- list(\n  tree_default = list(fit = \"tree\", what = c(\"x\", \"coef\", \"h\", \"nlx\"), delete_pv = TRUE, tr = \"identity\"),\n  tree_all = list(fit = \"tree\", what = c(\"x\", \"coef\", \"f1\", \"nlx\", \"nlx1\", \"se\", \"infl\",\n                                         \"infla\", \"lik\", \"h\", \"deg\"), delete_pv = TRUE, tr = \"identity\"),\n  tree_exp = list(fit = \"tree\", what = c(\"coef\", \"h\"), delete_pv = TRUE, tr = \"exp\"),\n  tree_s_delete = list(fit = \"tree_s\", what = c(\"x\", \"coef\", \"h\", \"nlx\"), delete_pv = TRUE, tr = \"identity\"),\n  tree_s_keep = list(fit = \"tree_s\", what = c(\"x\", \"coef\", \"h\", \"nlx\"), delete_pv = FALSE, tr = \"identity\"),\n  tree_na = list(fit = \"tree_na\", what = c(\"coef\", \"h\"), delete_pv = TRUE, tr = \"identity\"),\n  dat = list(fit = \"dat\", what = c(\"x\", \"coef\", \"nlx\"), delete_pv = TRUE, tr = \"identity\"),\n  grid = list(fit = \"grid\", what = c(\"x\", \"coef\", \"h\"), delete_pv = TRUE, tr = \"identity\")\n)\n\nfixture_cases <- lapply(cases, function(cs) {\n  list(fit = fit_fixture(fit_set[[cs$fit]]), what = cs$what,\n       delete_pv = cs$delete_pv, tr = cs$tr)\n})\nwrite_fixture(list(cases = fixture_cases), \"lfknots\")\n\nrun_case <- function(cs) {\n  f <- fit_set[[cs$fit]]\n  if (cs$tr == \"exp\") {\n    lfknots(f, tr = exp, what = cs$what, delete.pv = cs$delete_pv)\n  } else {\n    lfknots(f, what = cs$what, delete.pv = cs$delete_pv)\n  }\n}\nout <- lapply(cases, run_case)\nwrite_r_output(list(cases = out), \"lfknots\")\n\nprimary <- fits$tree\nms <- time_r_ms(function() lfknots(primary, what = c(\"x\", \"coef\", \"h\", \"nlx\")))\nwrite_r_timing(\"lfknots\", ms)\ncat(\"lfknots R reference written; r_ms =\", ms, \"\\n\")\n",
+          "python": "\"\"\"Python proof for locfit::lfknots against the R reference (locfit 1.5-9.12).\n\nRun from the repository root after lfknots_r.R:\n    python3 packages/locfit/proof/lfknots_python.py\n\"\"\"\n\nfrom __future__ import annotations\n\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom locfit_proof_common import (check_case, load, new_state, read_fixture,  # noqa: E402\n                                 read_r_output, read_r_timing, report, time_py_ms,\n                                 to_plain, write_python_output)\n\n\ndef _what(value):\n    return tuple(value) if isinstance(value, list) else (value,)\n\n\ndef main() -> None:\n    lfknots = load(\"lfknots\").lfknots\n    cases = read_fixture(\"lfknots\")[\"cases\"]\n    r_cases = read_r_output(\"lfknots\")[\"cases\"]\n    total, lines, py_out = new_state(), [], {}\n    for name, cs in cases.items():\n        tr = np.exp if cs[\"tr\"] == \"exp\" else None\n        value = to_plain(lfknots(cs[\"fit\"], tr=tr, what=_what(cs[\"what\"]),\n                                 delete_pv=bool(cs[\"delete_pv\"])))\n        py_out[name] = value\n        check_case(name, r_cases[name], value, total, lines)\n    write_python_output(\"lfknots\", py_out)\n\n    primary = cases[\"tree_default\"]\n    fit = primary[\"fit\"]\n    what = _what(primary[\"what\"])\n    py_ms = time_py_ms(lambda: lfknots(fit, what=what))\n    r_ms = read_r_timing(\"lfknots\")\n    print(report(\"lfknots\", lines, total, r_ms, py_ms))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lflim",
+      "translated": true,
+      "python": "locfit.lflim.lflim",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lflim fixed inputs",
+        "r_ms": 0.007272,
+        "translated_ms": 0.005753,
+        "speedup": 1.264,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lfmarg",
+      "translated": true,
+      "python": "locfit.lfmarg.lfmarg",
+      "loads": [],
+      "uses": [],
+      "done": "R times are 0.03 to 0.05 ms, so the speedup is indicative only.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lfmarg fixed inputs",
+        "r_ms": 0.0477,
+        "translated_ms": 0.0389,
+        "speedup": 1.226,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# Proof (R side) for the ten locfit functions: lfmarg, locfit, locfit.censor,\n# locfit.matrix, locfit.quasi, locfit.raw, locfit.robust, lp, lscv, lscv.exact.\n#\n# Reference: locfit 1.5-9.12 installed at /tmp/locfit-rlib. Install it once with\n#   R CMD INSTALL --library=/tmp/locfit-rlib cran/contrib/locfit_1.5-9.12.tar.gz\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit10_r.R\n#\n# Writes packages/locfit/docs/output/locfit_ref/:\n#   in_*.csv        the fixed inputs (read by the Python proofs)\n#   <case>.csv      R outputs, one row per line, %.17g\n#   r_timing.csv    median ms per call: 20 samples of a 20-call loop, Sys.time()\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nsuppressPackageStartupMessages(library(locfit, lib.loc = lib))\nstopifnot(as.character(packageVersion(\"locfit\")) == \"1.5.9.12\")\n\nrefdir <- \"packages/locfit/docs/output/locfit_ref\"\ndir.create(refdir, recursive = TRUE, showWarnings = FALSE)\n\nwr <- function(name, v) {\n  m <- as.matrix(v)\n  storage.mode(m) <- \"double\"\n  lines <- apply(m, 1, function(r) paste(sprintf(\"%.17g\", r), collapse = \",\"))\n  writeLines(lines, file.path(refdir, paste0(name, \".csv\")))\n}\n\ntimed_ms <- function(f) {\n  f()  # one untimed call\n  s <- numeric(20)\n  for (k in 1:20) {\n    t0 <- Sys.time()\n    for (j in 1:20) f()\n    s[k] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000 / 20\n  }\n  median(s)\n}\n\n# ---- fixed inputs -------------------------------------------------------\nset.seed(20241017)\nn1 <- 150\nx1 <- runif(n1)\ny1 <- sin(2 * pi * x1) + rnorm(n1, sd = 0.2)\nw1 <- runif(n1, 0.5, 1.5)\nb1 <- rep(0.05, n1)\ncens1 <- as.numeric(runif(n1) < 0.2)\nx1m <- matrix(x1, ncol = 1)\nn2 <- 100\nx2 <- cbind(runif(n2), runif(n2))\ny2 <- sin(3 * x2[, 1]) + x2[, 2]^2 + rnorm(n2, sd = 0.1)\nxev1 <- seq(0, 1, length.out = 25)\ndsamp <- rnorm(150)\nxa <- x1[1:20]\nxb <- x1[21:40]\nev_data <- list(type = \"data\", xev = 0, mg = 0, cut = 0, ll = 0, ur = 0)\ndf1 <- data.frame(x = x1, y = y1)\ndf2 <- data.frame(x1 = x2[, 1], x2 = x2[, 2], y = y2)\n\nwr(\"in_x1\", x1m); wr(\"in_y1\", y1); wr(\"in_w1\", w1); wr(\"in_b1\", b1)\nwr(\"in_cens1\", cens1); wr(\"in_x2\", x2); wr(\"in_y2\", y2); wr(\"in_xev1\", xev1)\nwr(\"in_dsamp\", dsamp); wr(\"in_xa\", xa); wr(\"in_xb\", xb)\n\n# A fit's reference: eva$coef (R's 11 columns) and the dp summaries.\nrec <- function(name, fit) {\n  wr(paste0(name, \"_coef\"), fit$eva$coef)\n  wr(paste0(name, \"_dp\"), fit$dp[c(\"lk\", \"df1\", \"df2\", \"rv\", \"rsc\")])\n}\n\n# ---- lfmarg -------------------------------------------------------------\nlf1 <- lfmarg(c(0, 1, 2, 3), m = c(5, 4))\nlf2 <- lfmarg(list(mi = c(d = 2), box = c(-1, 0, 1, 2)), m = c(3, 6))\nwr(\"lfmarg_1a\", lf1[[1]]); wr(\"lfmarg_1b\", lf1[[2]])\nwr(\"lfmarg_2a\", lf2[[1]]); wr(\"lfmarg_2b\", lf2[[2]])\n\n# ---- lp -----------------------------------------------------------------\nlp1 <- lp(xa, xb)\nlp2 <- lp(xa, nn = 0.4, h = 0.1, adpen = 2, deg = 1)\nwr(\"lp_1_x\", matrix(as.numeric(lp1), nrow = nrow(lp1)))\nwr(\"lp_1_alpha\", attr(lp1, \"alpha\")); wr(\"lp_1_deg\", attr(lp1, \"deg\"))\nwr(\"lp_2_x\", matrix(as.numeric(lp2), nrow = nrow(lp2)))\nwr(\"lp_2_alpha\", attr(lp2, \"alpha\")); wr(\"lp_2_deg\", attr(lp2, \"deg\"))\n\n# ---- locfit.raw ---------------------------------------------------------\nrawA <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawB <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nrawC <- function() locfit.raw(x1m, y1, weights = w1, base = b1, alpha = 0.5, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawD <- function() locfit.raw(x2, y2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"raw_A\", rawA()); rec(\"raw_B\", rawB()); rec(\"raw_C\", rawC()); rec(\"raw_D\", rawD())\n\n# ---- locfit (formula front end) ----------------------------------------\nF1 <- function() locfit(y ~ x, data = df1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nF2 <- function() locfit(y ~ x1 + x2, data = df2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"locfit_F1\", F1()); rec(\"locfit_F2\", F2())\n\n# ---- locfit.matrix ------------------------------------------------------\nfitM1 <- rawC()\nM1 <- function() locfit.matrix(fitM1, data = NULL)\nmm <- M1()\nwr(\"matrix_M1_x\", mm$x); wr(\"matrix_M1_y\", mm$y); wr(\"matrix_M1_w\", mm$w)\nwr(\"matrix_M1_sc\", mm$sc); wr(\"matrix_M1_ce\", mm$ce); wr(\"matrix_M1_base\", mm$base)\n\n# ---- locfit.censor, locfit.quasi, locfit.robust (need fitted values) ----\nC1 <- function() locfit.censor(x1m, y1, cens = cens1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nQ1 <- function() locfit.quasi(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nR1 <- function() locfit.robust(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrec(\"censor_C1\", C1()); rec(\"quasi_Q1\", Q1()); rec(\"robust_R1\", R1())\n\n# ---- lscv, lscv.exact ---------------------------------------------------\nL1 <- function() lscv(dsamp)\nL2 <- function() lscv.exact(dsamp, h = 0.3)\nwr(\"lscv_L1\", as.numeric(L1()))\nwr(\"lscv_exact_L2\", as.numeric(L2()))\n\n# ---- timing (representative call per function) --------------------------\ntm <- c(\n  lfmarg = timed_ms(function() lfmarg(c(0, 1, 2, 3), m = c(5, 4))),\n  lp = timed_ms(function() lp(xa, xb)),\n  locfit_raw = timed_ms(rawA),\n  locfit = timed_ms(F1),\n  locfit_matrix = timed_ms(M1),\n  locfit_censor = timed_ms(C1),\n  locfit_quasi = timed_ms(Q1),\n  locfit_robust = timed_ms(R1),\n  lscv = timed_ms(L1),\n  lscv_exact = timed_ms(L2)\n)\nwriteLines(paste0(names(tm), \",\", sprintf(\"%.17g\", tm)), file.path(refdir, \"r_timing.csv\"))\nprint(tm)\n",
+          "python": "\"\"\"Proof: lfmarg against R locfit 1.5-9.12 on the fixed cases in locfit10_r.R.\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parent))\nimport _locfit10 as L  # noqa: E402\n\nmod = L.load_translated()\nfrom locfit_translated.lfmarg import lfmarg  # noqa: E402\n\n\ndef main():\n    numeric = lambda: lfmarg([0, 1, 2, 3], m=[5, 4])  # noqa: E731\n    obj = lambda: lfmarg({\"mi\": {\"d\": 2}, \"box\": [-1, 0, 1, 2]}, m=[3, 6])  # noqa: E731\n    diffs = {}\n    for tag, call in ((\"1\", numeric), (\"2\", obj)):\n        got = call()\n        for i, part in enumerate((\"a\", \"b\")):\n            diffs[f\"{tag}{part}\"] = L.max_diff(got[i], L.ref_vec(f\"lfmarg_{tag}{part}\"))\n            L.save(f\"lfmarg_{tag}{part}\", got[i])\n    ms = L.timed_ms(numeric)\n    ok = L.finish(\"lfmarg\", diffs, ms)\n    sys.exit(0 if ok else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "locfit",
+      "translated": true,
+      "python": "locfit.locfit.locfit",
+      "loads": [],
+      "uses": [],
+      "done": "Default kd-tree path (ev=rbox) matches R via crates/locfit tree.rs fit_tree.",
+      "not_done": "locfit.quasi default path (a different function) still misses at d=2. Speedup 0.7 to 1.5 at these small sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "locfit default path, d=1 and d=2",
+        "matches": true,
+        "max_abs_diff": 4.8e-14,
+        "tolerance": 1e-08,
+        "r_ms": 2.591,
+        "translated_ms": 2.166,
+        "speedup": 1.2,
+        "proof": {
+          "r": "packages/locfit/proof/locfit-default-r.R",
+          "python": "packages/locfit/proof/locfit-default-py.py"
+        },
+        "output": {
+          "compare": "packages/locfit/docs/output/locfit_default_path_compare.txt"
+        }
+      }
+    },
+    {
+      "name": "locfit.censor",
+      "translated": true,
+      "python": "locfit.locfit_censor.locfit_censor",
+      "loads": [],
+      "uses": [],
+      "done": "Default ev = rbox() path matches R at d=1 and d=2 (fit.rs weighted-product grouping and d=1 distance fixed to match R C code).",
+      "not_done": "Speed about 1.0x R at these sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.8e-14,
+        "tolerance": 1e-08,
+        "r_ms": 6.44,
+        "translated_ms": 5.77,
+        "speedup": 1.116,
+        "proof": {
+          "r": "packages/locfit/proof/locfit-censor-default-r.R",
+          "python": "packages/locfit/proof/locfit-censor-default-py.py"
+        },
+        "note": "max over d=1 and d=2; timings d=1"
+      }
+    },
+    {
+      "name": "locfit.matrix",
+      "translated": true,
+      "python": "locfit.locfit_matrix.locfit_matrix",
+      "loads": [],
+      "uses": [],
+      "done": "R times are 0.03 to 0.05 ms, so the speedup is indicative only.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "locfit.matrix fixed inputs",
+        "r_ms": 0.0458,
+        "translated_ms": 0.00188,
+        "speedup": 24.362,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# Proof (R side) for the ten locfit functions: lfmarg, locfit, locfit.censor,\n# locfit.matrix, locfit.quasi, locfit.raw, locfit.robust, lp, lscv, lscv.exact.\n#\n# Reference: locfit 1.5-9.12 installed at /tmp/locfit-rlib. Install it once with\n#   R CMD INSTALL --library=/tmp/locfit-rlib cran/contrib/locfit_1.5-9.12.tar.gz\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit10_r.R\n#\n# Writes packages/locfit/docs/output/locfit_ref/:\n#   in_*.csv        the fixed inputs (read by the Python proofs)\n#   <case>.csv      R outputs, one row per line, %.17g\n#   r_timing.csv    median ms per call: 20 samples of a 20-call loop, Sys.time()\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nsuppressPackageStartupMessages(library(locfit, lib.loc = lib))\nstopifnot(as.character(packageVersion(\"locfit\")) == \"1.5.9.12\")\n\nrefdir <- \"packages/locfit/docs/output/locfit_ref\"\ndir.create(refdir, recursive = TRUE, showWarnings = FALSE)\n\nwr <- function(name, v) {\n  m <- as.matrix(v)\n  storage.mode(m) <- \"double\"\n  lines <- apply(m, 1, function(r) paste(sprintf(\"%.17g\", r), collapse = \",\"))\n  writeLines(lines, file.path(refdir, paste0(name, \".csv\")))\n}\n\ntimed_ms <- function(f) {\n  f()  # one untimed call\n  s <- numeric(20)\n  for (k in 1:20) {\n    t0 <- Sys.time()\n    for (j in 1:20) f()\n    s[k] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000 / 20\n  }\n  median(s)\n}\n\n# ---- fixed inputs -------------------------------------------------------\nset.seed(20241017)\nn1 <- 150\nx1 <- runif(n1)\ny1 <- sin(2 * pi * x1) + rnorm(n1, sd = 0.2)\nw1 <- runif(n1, 0.5, 1.5)\nb1 <- rep(0.05, n1)\ncens1 <- as.numeric(runif(n1) < 0.2)\nx1m <- matrix(x1, ncol = 1)\nn2 <- 100\nx2 <- cbind(runif(n2), runif(n2))\ny2 <- sin(3 * x2[, 1]) + x2[, 2]^2 + rnorm(n2, sd = 0.1)\nxev1 <- seq(0, 1, length.out = 25)\ndsamp <- rnorm(150)\nxa <- x1[1:20]\nxb <- x1[21:40]\nev_data <- list(type = \"data\", xev = 0, mg = 0, cut = 0, ll = 0, ur = 0)\ndf1 <- data.frame(x = x1, y = y1)\ndf2 <- data.frame(x1 = x2[, 1], x2 = x2[, 2], y = y2)\n\nwr(\"in_x1\", x1m); wr(\"in_y1\", y1); wr(\"in_w1\", w1); wr(\"in_b1\", b1)\nwr(\"in_cens1\", cens1); wr(\"in_x2\", x2); wr(\"in_y2\", y2); wr(\"in_xev1\", xev1)\nwr(\"in_dsamp\", dsamp); wr(\"in_xa\", xa); wr(\"in_xb\", xb)\n\n# A fit's reference: eva$coef (R's 11 columns) and the dp summaries.\nrec <- function(name, fit) {\n  wr(paste0(name, \"_coef\"), fit$eva$coef)\n  wr(paste0(name, \"_dp\"), fit$dp[c(\"lk\", \"df1\", \"df2\", \"rv\", \"rsc\")])\n}\n\n# ---- lfmarg -------------------------------------------------------------\nlf1 <- lfmarg(c(0, 1, 2, 3), m = c(5, 4))\nlf2 <- lfmarg(list(mi = c(d = 2), box = c(-1, 0, 1, 2)), m = c(3, 6))\nwr(\"lfmarg_1a\", lf1[[1]]); wr(\"lfmarg_1b\", lf1[[2]])\nwr(\"lfmarg_2a\", lf2[[1]]); wr(\"lfmarg_2b\", lf2[[2]])\n\n# ---- lp -----------------------------------------------------------------\nlp1 <- lp(xa, xb)\nlp2 <- lp(xa, nn = 0.4, h = 0.1, adpen = 2, deg = 1)\nwr(\"lp_1_x\", matrix(as.numeric(lp1), nrow = nrow(lp1)))\nwr(\"lp_1_alpha\", attr(lp1, \"alpha\")); wr(\"lp_1_deg\", attr(lp1, \"deg\"))\nwr(\"lp_2_x\", matrix(as.numeric(lp2), nrow = nrow(lp2)))\nwr(\"lp_2_alpha\", attr(lp2, \"alpha\")); wr(\"lp_2_deg\", attr(lp2, \"deg\"))\n\n# ---- locfit.raw ---------------------------------------------------------\nrawA <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawB <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nrawC <- function() locfit.raw(x1m, y1, weights = w1, base = b1, alpha = 0.5, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawD <- function() locfit.raw(x2, y2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"raw_A\", rawA()); rec(\"raw_B\", rawB()); rec(\"raw_C\", rawC()); rec(\"raw_D\", rawD())\n\n# ---- locfit (formula front end) ----------------------------------------\nF1 <- function() locfit(y ~ x, data = df1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nF2 <- function() locfit(y ~ x1 + x2, data = df2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"locfit_F1\", F1()); rec(\"locfit_F2\", F2())\n\n# ---- locfit.matrix ------------------------------------------------------\nfitM1 <- rawC()\nM1 <- function() locfit.matrix(fitM1, data = NULL)\nmm <- M1()\nwr(\"matrix_M1_x\", mm$x); wr(\"matrix_M1_y\", mm$y); wr(\"matrix_M1_w\", mm$w)\nwr(\"matrix_M1_sc\", mm$sc); wr(\"matrix_M1_ce\", mm$ce); wr(\"matrix_M1_base\", mm$base)\n\n# ---- locfit.censor, locfit.quasi, locfit.robust (need fitted values) ----\nC1 <- function() locfit.censor(x1m, y1, cens = cens1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nQ1 <- function() locfit.quasi(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nR1 <- function() locfit.robust(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrec(\"censor_C1\", C1()); rec(\"quasi_Q1\", Q1()); rec(\"robust_R1\", R1())\n\n# ---- lscv, lscv.exact ---------------------------------------------------\nL1 <- function() lscv(dsamp)\nL2 <- function() lscv.exact(dsamp, h = 0.3)\nwr(\"lscv_L1\", as.numeric(L1()))\nwr(\"lscv_exact_L2\", as.numeric(L2()))\n\n# ---- timing (representative call per function) --------------------------\ntm <- c(\n  lfmarg = timed_ms(function() lfmarg(c(0, 1, 2, 3), m = c(5, 4))),\n  lp = timed_ms(function() lp(xa, xb)),\n  locfit_raw = timed_ms(rawA),\n  locfit = timed_ms(F1),\n  locfit_matrix = timed_ms(M1),\n  locfit_censor = timed_ms(C1),\n  locfit_quasi = timed_ms(Q1),\n  locfit_robust = timed_ms(R1),\n  lscv = timed_ms(L1),\n  lscv_exact = timed_ms(L2)\n)\nwriteLines(paste0(names(tm), \",\", sprintf(\"%.17g\", tm)), file.path(refdir, \"r_timing.csv\"))\nprint(tm)\n",
+          "python": "\"\"\"Proof: locfit.matrix against R locfit 1.5-9.12 on the weighted, based fit C.\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parent))\nimport _locfit10 as L  # noqa: E402\n\nL.load_translated()\nfrom locfit_translated.locfit_raw import locfit_raw  # noqa: E402\nfrom locfit_translated.locfit_matrix import locfit_matrix  # noqa: E402\n\n\ndef main():\n    d = L.inputs()\n    fit = locfit_raw(d[\"x1\"], d[\"y1\"], weights=d[\"w1\"], base=d[\"b1\"], alpha=0.5, deg=2,\n                     kern=\"tricube\", kt=\"sph\", ev={\"type\": \"data\"})\n    mm = locfit_matrix(fit, None)\n    diffs = {\n        \"x\": L.max_diff(mm[\"x\"], L.ref(\"matrix_M1_x\")),\n        \"y\": L.max_diff(mm[\"y\"], L.ref_vec(\"matrix_M1_y\")),\n        \"w\": L.max_diff(mm[\"w\"], L.ref_vec(\"matrix_M1_w\")),\n        \"sc\": L.max_diff(mm[\"sc\"], L.ref_vec(\"matrix_M1_sc\")),\n        \"ce\": L.max_diff(mm[\"ce\"], L.ref_vec(\"matrix_M1_ce\")),\n        \"base\": L.max_diff(mm[\"base\"], L.ref_vec(\"matrix_M1_base\")),\n    }\n    for key in (\"x\", \"y\", \"w\", \"sc\", \"ce\", \"base\"):\n        L.save(f\"locfit_matrix_{key}\", mm[key])\n    ms = L.timed_ms(lambda: locfit_matrix(fit, None))\n    ok = L.finish(\"locfit_matrix\", diffs, ms)\n    sys.exit(0 if ok else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "locfit.quasi",
+      "translated": true,
+      "python": "locfit.locfit_quasi.locfit_quasi",
+      "loads": [],
+      "uses": [],
+      "done": "Default ev = rbox() path matches R at d=1 and d=2 (fit.rs weighted-product grouping and d=1 distance fixed to match R C code).",
+      "not_done": "Speed about 1.0x R at these sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 5.1e-14,
+        "tolerance": 1e-08,
+        "r_ms": 4.39,
+        "translated_ms": 4.17,
+        "speedup": 1.053,
+        "note": "max over d=1 and d=2; timings d=1"
+      }
+    },
+    {
+      "name": "locfit.raw",
+      "translated": true,
+      "python": "locfit.locfit_raw.locfit_raw",
+      "loads": [],
+      "uses": [],
+      "done": "Default kd-tree path matches R (d=1 and d=2) via crates/locfit.",
+      "not_done": "Speedup 0.72 to 0.85 at these small sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "locfit.raw default path, d=1 and d=2",
+        "matches": true,
+        "max_abs_diff": 4.8e-14,
+        "tolerance": 1e-08,
+        "r_ms": 1.842,
+        "translated_ms": 2.179,
+        "speedup": 0.85,
+        "proof": {
+          "r": "packages/locfit/proof/locfit-default-r.R",
+          "python": "packages/locfit/proof/locfit-default-py.py"
+        },
+        "output": {
+          "compare": "packages/locfit/docs/output/locfit_default_path_compare.txt"
+        }
+      }
+    },
+    {
+      "name": "locfit.robust",
+      "translated": true,
+      "python": "locfit.locfit_robust.locfit_robust",
+      "loads": [],
+      "uses": [],
+      "done": "Default ev = rbox() path matches R at d=1 and d=2 (fit.rs weighted-product grouping and d=1 distance fixed to match R C code).",
+      "not_done": "Speed about 1.0x R at these sizes.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 5.2e-14,
+        "tolerance": 1e-08,
+        "r_ms": 5.48,
+        "translated_ms": 5.11,
+        "speedup": 1.072,
+        "note": "max over d=1 and d=2; timings d=1"
+      }
+    },
+    {
+      "name": "lp",
+      "translated": true,
+      "python": "locfit.lp.lp",
+      "loads": [],
+      "uses": [],
+      "done": "R times are 0.03 to 0.05 ms, so the speedup is indicative only.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "lp fixed inputs",
+        "r_ms": 0.0348,
+        "translated_ms": 0.0125,
+        "speedup": 2.784,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# Proof (R side) for the ten locfit functions: lfmarg, locfit, locfit.censor,\n# locfit.matrix, locfit.quasi, locfit.raw, locfit.robust, lp, lscv, lscv.exact.\n#\n# Reference: locfit 1.5-9.12 installed at /tmp/locfit-rlib. Install it once with\n#   R CMD INSTALL --library=/tmp/locfit-rlib cran/contrib/locfit_1.5-9.12.tar.gz\n# Run from the repository root:\n#   Rscript packages/locfit/proof/locfit10_r.R\n#\n# Writes packages/locfit/docs/output/locfit_ref/:\n#   in_*.csv        the fixed inputs (read by the Python proofs)\n#   <case>.csv      R outputs, one row per line, %.17g\n#   r_timing.csv    median ms per call: 20 samples of a 20-call loop, Sys.time()\n\nlib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"/tmp/locfit-rlib\")\nsuppressPackageStartupMessages(library(locfit, lib.loc = lib))\nstopifnot(as.character(packageVersion(\"locfit\")) == \"1.5.9.12\")\n\nrefdir <- \"packages/locfit/docs/output/locfit_ref\"\ndir.create(refdir, recursive = TRUE, showWarnings = FALSE)\n\nwr <- function(name, v) {\n  m <- as.matrix(v)\n  storage.mode(m) <- \"double\"\n  lines <- apply(m, 1, function(r) paste(sprintf(\"%.17g\", r), collapse = \",\"))\n  writeLines(lines, file.path(refdir, paste0(name, \".csv\")))\n}\n\ntimed_ms <- function(f) {\n  f()  # one untimed call\n  s <- numeric(20)\n  for (k in 1:20) {\n    t0 <- Sys.time()\n    for (j in 1:20) f()\n    s[k] <- as.numeric(difftime(Sys.time(), t0, units = \"secs\")) * 1000 / 20\n  }\n  median(s)\n}\n\n# ---- fixed inputs -------------------------------------------------------\nset.seed(20241017)\nn1 <- 150\nx1 <- runif(n1)\ny1 <- sin(2 * pi * x1) + rnorm(n1, sd = 0.2)\nw1 <- runif(n1, 0.5, 1.5)\nb1 <- rep(0.05, n1)\ncens1 <- as.numeric(runif(n1) < 0.2)\nx1m <- matrix(x1, ncol = 1)\nn2 <- 100\nx2 <- cbind(runif(n2), runif(n2))\ny2 <- sin(3 * x2[, 1]) + x2[, 2]^2 + rnorm(n2, sd = 0.1)\nxev1 <- seq(0, 1, length.out = 25)\ndsamp <- rnorm(150)\nxa <- x1[1:20]\nxb <- x1[21:40]\nev_data <- list(type = \"data\", xev = 0, mg = 0, cut = 0, ll = 0, ur = 0)\ndf1 <- data.frame(x = x1, y = y1)\ndf2 <- data.frame(x1 = x2[, 1], x2 = x2[, 2], y = y2)\n\nwr(\"in_x1\", x1m); wr(\"in_y1\", y1); wr(\"in_w1\", w1); wr(\"in_b1\", b1)\nwr(\"in_cens1\", cens1); wr(\"in_x2\", x2); wr(\"in_y2\", y2); wr(\"in_xev1\", xev1)\nwr(\"in_dsamp\", dsamp); wr(\"in_xa\", xa); wr(\"in_xb\", xb)\n\n# A fit's reference: eva$coef (R's 11 columns) and the dp summaries.\nrec <- function(name, fit) {\n  wr(paste0(name, \"_coef\"), fit$eva$coef)\n  wr(paste0(name, \"_dp\"), fit$dp[c(\"lk\", \"df1\", \"df2\", \"rv\", \"rsc\")])\n}\n\n# ---- lfmarg -------------------------------------------------------------\nlf1 <- lfmarg(c(0, 1, 2, 3), m = c(5, 4))\nlf2 <- lfmarg(list(mi = c(d = 2), box = c(-1, 0, 1, 2)), m = c(3, 6))\nwr(\"lfmarg_1a\", lf1[[1]]); wr(\"lfmarg_1b\", lf1[[2]])\nwr(\"lfmarg_2a\", lf2[[1]]); wr(\"lfmarg_2b\", lf2[[2]])\n\n# ---- lp -----------------------------------------------------------------\nlp1 <- lp(xa, xb)\nlp2 <- lp(xa, nn = 0.4, h = 0.1, adpen = 2, deg = 1)\nwr(\"lp_1_x\", matrix(as.numeric(lp1), nrow = nrow(lp1)))\nwr(\"lp_1_alpha\", attr(lp1, \"alpha\")); wr(\"lp_1_deg\", attr(lp1, \"deg\"))\nwr(\"lp_2_x\", matrix(as.numeric(lp2), nrow = nrow(lp2)))\nwr(\"lp_2_alpha\", attr(lp2, \"alpha\")); wr(\"lp_2_deg\", attr(lp2, \"deg\"))\n\n# ---- locfit.raw ---------------------------------------------------------\nrawA <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawB <- function() locfit.raw(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nrawC <- function() locfit.raw(x1m, y1, weights = w1, base = b1, alpha = 0.5, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrawD <- function() locfit.raw(x2, y2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"raw_A\", rawA()); rec(\"raw_B\", rawB()); rec(\"raw_C\", rawC()); rec(\"raw_D\", rawD())\n\n# ---- locfit (formula front end) ----------------------------------------\nF1 <- function() locfit(y ~ x, data = df1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = xev1)\nF2 <- function() locfit(y ~ x1 + x2, data = df2, alpha = 0.5, deg = 1, kern = \"tricube\", kt = \"prod\", ev = ev_data)\nrec(\"locfit_F1\", F1()); rec(\"locfit_F2\", F2())\n\n# ---- locfit.matrix ------------------------------------------------------\nfitM1 <- rawC()\nM1 <- function() locfit.matrix(fitM1, data = NULL)\nmm <- M1()\nwr(\"matrix_M1_x\", mm$x); wr(\"matrix_M1_y\", mm$y); wr(\"matrix_M1_w\", mm$w)\nwr(\"matrix_M1_sc\", mm$sc); wr(\"matrix_M1_ce\", mm$ce); wr(\"matrix_M1_base\", mm$base)\n\n# ---- locfit.censor, locfit.quasi, locfit.robust (need fitted values) ----\nC1 <- function() locfit.censor(x1m, y1, cens = cens1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nQ1 <- function() locfit.quasi(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nR1 <- function() locfit.robust(x1m, y1, alpha = 0.7, deg = 2, kern = \"tricube\", kt = \"sph\", ev = ev_data)\nrec(\"censor_C1\", C1()); rec(\"quasi_Q1\", Q1()); rec(\"robust_R1\", R1())\n\n# ---- lscv, lscv.exact ---------------------------------------------------\nL1 <- function() lscv(dsamp)\nL2 <- function() lscv.exact(dsamp, h = 0.3)\nwr(\"lscv_L1\", as.numeric(L1()))\nwr(\"lscv_exact_L2\", as.numeric(L2()))\n\n# ---- timing (representative call per function) --------------------------\ntm <- c(\n  lfmarg = timed_ms(function() lfmarg(c(0, 1, 2, 3), m = c(5, 4))),\n  lp = timed_ms(function() lp(xa, xb)),\n  locfit_raw = timed_ms(rawA),\n  locfit = timed_ms(F1),\n  locfit_matrix = timed_ms(M1),\n  locfit_censor = timed_ms(C1),\n  locfit_quasi = timed_ms(Q1),\n  locfit_robust = timed_ms(R1),\n  lscv = timed_ms(L1),\n  lscv_exact = timed_ms(L2)\n)\nwriteLines(paste0(names(tm), \",\", sprintf(\"%.17g\", tm)), file.path(refdir, \"r_timing.csv\"))\nprint(tm)\n",
+          "python": "\"\"\"Proof: lp against R locfit 1.5-9.12 (values and the alpha and deg attributes).\"\"\"\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parent))\nimport _locfit10 as L  # noqa: E402\n\nL.load_translated()\nfrom locfit_translated.lp import lp  # noqa: E402\n\n\ndef main():\n    d = L.inputs()\n    xa, xb = d[\"xa\"], d[\"xb\"]\n    case1 = lambda: lp(xa, xb)  # noqa: E731\n    case2 = lambda: lp(xa, nn=0.4, h=0.1, adpen=2, deg=1)  # noqa: E731\n    diffs = {}\n    for tag, call in ((\"1\", case1), (\"2\", case2)):\n        out = call()\n        diffs[f\"{tag}_values\"] = L.max_diff(out, L.ref(f\"lp_{tag}_x\"))\n        diffs[f\"{tag}_alpha\"] = L.max_diff(out.alpha, L.ref_vec(f\"lp_{tag}_alpha\"))\n        diffs[f\"{tag}_deg\"] = L.max_diff([out.deg], L.ref_vec(f\"lp_{tag}_deg\"))\n        L.save(f\"lp_{tag}_x\", out)\n    ms = L.timed_ms(case1)\n    ok = L.finish(\"lp\", diffs, ms)\n    sys.exit(0 if ok else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "lscv",
+      "translated": false,
+      "python": "locfit.lscv.lscv",
+      "loads": [],
+      "uses": [],
+      "done": "Default path d=1 matches R (3.6e-11).",
+      "not_done": "Left: d=1 matches R (3.6e-11). The d=2 path needs a two-dimensional density port (not started). User decision: Left. Raises NotImplementedError for d>=2.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": false,
+        "max_abs_diff": 3.6e-11,
+        "tolerance": 1e-08,
+        "r_ms": 0.59,
+        "translated_ms": 0.593,
+        "speedup": 0.995,
+        "proof": {
+          "r": "packages/locfit/proof/lscv-default-r.R",
+          "python": "packages/locfit/proof/lscv-default-py.py"
+        },
+        "note": "d=1 only; d=2 open"
+      }
+    },
+    {
+      "name": "lscv.exact",
+      "translated": true,
+      "python": "locfit.lscv_exact.lscv_exact",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [
+        "slscv",
+        "kdecri"
+      ],
+      "assigned": "",
+      "check": {
+        "case": "matches R on explicit ev=data path",
+        "r_ms": 0.07,
+        "translated_ms": 0.06,
+        "speedup": 1.1667,
+        "matches": true,
+        "max_abs_diff": 4.4e-16,
+        "tolerance": 1e-08,
+        "proof": null
+      }
+    },
+    {
+      "name": "none",
+      "translated": false,
+      "python": "locfit.none.none",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: no local implementation or source for this name in the locfit record.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rbox",
+      "translated": true,
+      "python": "locfit.rbox.rbox",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "rbox fixed inputs",
+        "r_ms": 0.0096,
+        "translated_ms": 0.00607,
+        "speedup": 1.582,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference for locfit::rbox (locfit 1.5-9.12). Run from the repository root.\nsource(\"packages/locfit/proof/locfit_proof_common.R\")\n\ncases <- list(\n  default = list(),\n  kdtree = list(cut = 0.5, type = \"kdtree\", ll = c(0, 1, 2), ur = c(3, 4, 5)),\n  phull = list(type = \"phull\", cut = 1.25, ll = c(-1, -2), ur = c(1, 2)),\n  kdcenter = list(type = \"kdcenter\", cut = 0.3),\n  bad_type = list(type = \"foo\")\n)\nwrite_fixture(list(cases = cases), \"rbox\")\n\nrun_case <- function(args) {\n  tryCatch(to_plain(do.call(rbox, args)),\n           error = function(e) list(error = TRUE, message = conditionMessage(e)))\n}\nout <- lapply(cases, run_case)\nwrite_r_output(list(cases = out), \"rbox\")\n\ntimed_args <- cases$kdtree\nms <- time_r_ms(function() do.call(rbox, timed_args))\nwrite_r_timing(\"rbox\", ms)\ncat(\"rbox R reference written; r_ms =\", ms, \"\\n\")\n",
+          "python": "\"\"\"Python proof for locfit::rbox against the R reference (locfit 1.5-9.12).\n\nRun from the repository root after rbox_r.R:\n    python3 packages/locfit/proof/rbox_python.py\n\"\"\"\n\nfrom __future__ import annotations\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom locfit_proof_common import (check_case, load, new_state, read_fixture,  # noqa: E402\n                                 read_r_output, read_r_timing, report, time_py_ms,\n                                 to_plain, write_python_output)\n\n\ndef main() -> None:\n    rbox = load(\"rbox\").rbox\n    cases = read_fixture(\"rbox\")[\"cases\"]\n    r_cases = read_r_output(\"rbox\")[\"cases\"]\n    total, lines, py_out = new_state(), [], {}\n    for name, args in cases.items():\n        kwargs = args if isinstance(args, dict) else {}\n        try:\n            value = to_plain(rbox(**kwargs))\n        except ValueError as exc:\n            value = {\"error\": True, \"message\": str(exc)}\n        py_out[name] = value\n        check_case(name, r_cases[name], value, total, lines)\n    write_python_output(\"rbox\", py_out)\n\n    primary = cases[\"kdtree\"]\n    py_ms = time_py_ms(lambda: rbox(**primary))\n    r_ms = read_r_timing(\"rbox\")\n    print(report(\"rbox\", lines, total, r_ms, py_ms))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "regband",
+      "translated": false,
+      "python": "locfit.regband.regband",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: needs the geth = 3 path (simul.c golden section, rband) and the deriv argument; not in crate.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "right",
+      "translated": false,
+      "python": "locfit.right.right",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: no local implementation or source for this name in the locfit record.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "rv",
+      "translated": true,
+      "python": "locfit.rv.rv",
+      "loads": [],
+      "uses": [],
+      "done": "rv returns a plain float without the rv name; values match.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "rv fixed inputs",
+        "r_ms": 0.00494,
+        "translated_ms": 0.00417,
+        "speedup": 1.185,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference for locfit::rv (locfit 1.5-9.12). Run from the repository root.\nsource(\"packages/locfit/proof/locfit_proof_common.R\")\n\nfits <- fixed_fits()\nwrite_fixture(list(cases = lapply(fits, fit_fixture)), \"rv\")\nout <- lapply(fits, function(f) as.numeric(rv(f)))\nwrite_r_output(list(cases = out), \"rv\")\n\nms <- time_r_ms(function() rv(fits$tree))\nwrite_r_timing(\"rv\", ms)\ncat(\"rv R reference written; r_ms =\", ms, \"\\n\")\n",
+          "python": "\"\"\"Python proof for locfit::rv against the R reference (locfit 1.5-9.12).\n\nRun from the repository root after rv_r.R:\n    python3 packages/locfit/proof/rv_python.py\n\"\"\"\n\nfrom __future__ import annotations\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom locfit_proof_common import (check_case, load, new_state, read_fixture,  # noqa: E402\n                                 read_r_output, read_r_timing, report, time_py_ms,\n                                 to_plain, write_python_output)\n\n\ndef main() -> None:\n    rv = load(\"rv\").rv\n    fixtures = read_fixture(\"rv\")[\"cases\"]\n    r_cases = read_r_output(\"rv\")[\"cases\"]\n    total, lines, py_out = new_state(), [], {}\n    for name, fit in fixtures.items():\n        value = to_plain(rv(fit))\n        py_out[name] = value\n        check_case(name, r_cases[name], value, total, lines)\n    write_python_output(\"rv\", py_out)\n\n    fit = fixtures[\"tree\"]\n    py_ms = time_py_ms(lambda: rv(fit))\n    r_ms = read_r_timing(\"rv\")\n    print(report(\"rv\", lines, total, r_ms, py_ms))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "scb",
+      "translated": false,
+      "python": "locfit.scb.scb",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: needs the geth = 81 band path (scb.c, scb_crit.c, simul.c); not in crate.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "sjpi",
+      "translated": true,
+      "python": "locfit.sjpi.sjpi",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sjpi fixed inputs",
+        "r_ms": 0.532234,
+        "translated_ms": 0.511053,
+        "speedup": 1.041,
+        "matches": true,
+        "max_abs_diff": 5.55e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "smooth.lf",
+      "translated": true,
+      "python": "locfit.smooth_lf.smooth_lf",
+      "loads": [],
+      "uses": [],
+      "done": "Matches R on the default ev = rbox() path (d=1, d=2, alpha/deg case).",
+      "not_done": "direct = TRUE (geth = 7) and xev at new points raise NotImplementedError; crate lacks them.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 1.96,
+        "translated_ms": 1.2,
+        "speedup": 1.63,
+        "proof": {
+          "r": "packages/locfit/proof/smooth-lf-r.R",
+          "python": "packages/locfit/proof/smooth-lf-py.py"
+        },
+        "case": "default rbox, d=1 (d=2 1.39x; alpha/deg 0.82x)"
+      }
+    },
+    {
+      "name": "spence.15",
+      "translated": true,
+      "python": "locfit.spence_15.spence_15",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "spence.15 fixed inputs",
+        "r_ms": 0.027227,
+        "translated_ms": 0.070091,
+        "speedup": 0.388,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "spence.21",
+      "translated": true,
+      "python": "locfit.spence_21.spence_21",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "spence.21 fixed inputs",
+        "r_ms": 0.033939,
+        "translated_ms": 0.112512,
+        "speedup": 0.302,
+        "matches": true,
+        "max_abs_diff": 4.44e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "lib <- Sys.getenv(\"LOCFIT_RLIB\", unset = \"\")\nif (nzchar(lib)) library(locfit, lib.loc = lib) else library(locfit)\nout <- \"packages/locfit/docs/output\"\ndir.create(out, recursive = TRUE, showWarnings = FALSE)\n\ncases <- list(\n  \"km.mrl\" = function() km.mrl(c(3, 1, 2, 4), c(0, 1, 1, 0)),\n  \"lfgrid\" = function() lfgrid(2)$mg,\n  \"lflim\" = function() lflim(list(a = c(2, 4)), \"a\", c(0, 0)),\n  \"sjpi\" = function() sjpi(seq(-1, 1, length.out = 20), c(.5, .8)),\n  \"spence.15\" = function() spence.15(seq_len(20)),\n  \"spence.21\" = function() spence.21(seq_len(20))\n)\n\ntimed <- function(fn) {\n  fn()\n  samples <- numeric(20)\n  for (i in seq_len(20)) {\n    start <- Sys.time()\n    for (j in seq_len(20)) fn()\n    samples[i] <- as.numeric(difftime(Sys.time(), start, units = \"secs\")) *\n      1000 / 20\n  }\n  median(samples)\n}\n\ntimings <- character()\nfor (name in names(cases)) {\n  value <- cases[[name]]()\n  write.table(value, file.path(out, paste0(\"locfit_r_\",\n                                            gsub(\"\\\\.\", \"_\", name), \".txt\")),\n              row.names = FALSE, col.names = FALSE, quote = FALSE)\n  timings <- c(timings, paste0(name, \",r_ms=\", format(timed(cases[[name]]),\n                                                      digits = 17)))\n}\nwriteLines(timings, file.path(out, \"locfit_requested_r_timing.txt\"))\n",
+          "python": "\"\"\"Fixed-value and timing proof for the requested locfit helper exports.\"\"\"\n\nfrom __future__ import annotations\n\nimport statistics\nimport time\nfrom pathlib import Path\nimport subprocess\n\nimport numpy as np\n\nimport sys\nsys.path.insert(0, str(Path(__file__).parents[1] / \"locfit\"))\nsys.path.insert(0, str(Path(__file__).parents[1]))\nfrom km_mrl import km_mrl\nfrom lflim import lflim\nfrom lfgrid import lfgrid\nfrom sjpi import sjpi\nfrom spence_15 import spence_15\nfrom spence_21 import spence_21\n\nOUT = Path(__file__).parents[1] / \"docs\" / \"output\"\nTOL = 1e-8\n\n\ndef timed(fn):\n    fn()\n    values = []\n    for _ in range(20):\n        start = time.perf_counter()\n        for _ in range(20):\n            fn()\n        values.append((time.perf_counter() - start) * 1000 / 20)\n    return statistics.median(values)\n\n\ndef main():\n    OUT.mkdir(parents=True, exist_ok=True)\n    subprocess.run([\"Rscript\", \"--vanilla\", \"packages/locfit/proof/requested_proof.R\"],\n                   cwd=Path(__file__).parents[3], check=True)\n    cases = {\n        \"km.mrl\": (lambda: km_mrl([3, 1, 2, 4], [0, 1, 1, 0]),\n                   \"locfit_r_km_mrl.txt\"),\n        \"lfgrid\": (lambda: lfgrid(2)[\"mg\"], np.repeat(2, 10)),\n        \"lflim\": (lambda: lflim({\"a\": [2, 4]}, [\"a\"], [0, 0]),\n                   \"locfit_r_lflim.txt\"),\n        \"sjpi\": (lambda: sjpi(np.linspace(-1, 1, 20), [.5, .8]),\n                 \"locfit_r_sjpi.txt\"),\n        \"spence.15\": (lambda: spence_15(np.arange(1, 21)),\n                      \"locfit_r_spence_15.txt\"),\n        \"spence.21\": (lambda: spence_21(np.arange(1, 21)),\n                      \"locfit_r_spence_21.txt\"),\n    }\n    cases[\"lfgrid\"] = (lambda: lfgrid(2)[\"mg\"], \"locfit_r_lfgrid.txt\")\n    lines = [\"tolerance,1e-8\"]\n    r_times = {}\n    for line in (OUT / \"locfit_requested_r_timing.txt\").read_text().splitlines():\n        name, value = line.split(\",r_ms=\")\n        r_times[name] = float(value)\n    for name, (call, reference) in cases.items():\n        reference = np.loadtxt(OUT / reference)\n        value = np.asarray(call(), dtype=float)\n        diff = float(np.max(np.abs(value - reference)))\n        ms = timed(call)\n        lines.append(f\"{name},matches={diff <= TOL},max_abs_diff={diff:.17g},\"\n                     f\"r_ms={r_times[name]:.17g},translated_ms={ms:.17g},\"\n                     f\"speedup={r_times[name] / ms:.17g}\")\n        np.savetxt(OUT / f\"locfit_python_{name.replace('.', '_')}.txt\",\n                   value.reshape(-1), fmt=\"%.17g\")\n    (OUT / \"locfit_requested_compare.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "store",
+      "translated": false,
+      "python": "locfit.store.store",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: writes R source text with dump(); no numerical output and no Python equivalent (R session).",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xbar",
+      "translated": true,
+      "python": "locfit.xbar.xbar",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "xbar fixed inputs",
+        "r_ms": 0.00392,
+        "translated_ms": 0.00306,
+        "speedup": 1.281,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# R reference for locfit::xbar (locfit 1.5-9.12). Run from the repository root.\nsource(\"packages/locfit/proof/locfit_proof_common.R\")\n\nwrite_fixture(list(cases = list(default = list())), \"xbar\")\nout <- to_plain(xbar())\nwrite_r_output(list(cases = list(default = out)), \"xbar\")\n\nms <- time_r_ms(function() xbar())\nwrite_r_timing(\"xbar\", ms)\ncat(\"xbar R reference written; r_ms =\", ms, \"\\n\")\n",
+          "python": "\"\"\"Python proof for locfit::xbar against the R reference (locfit 1.5-9.12).\n\nRun from the repository root after xbar_r.R:\n    python3 packages/locfit/proof/xbar_python.py\n\"\"\"\n\nfrom __future__ import annotations\n\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom locfit_proof_common import (check_case, load, new_state, read_r_output,  # noqa: E402\n                                 read_r_timing, report, time_py_ms, to_plain,\n                                 write_python_output)\n\n\ndef main() -> None:\n    xbar = load(\"xbar\").xbar\n    r_cases = read_r_output(\"xbar\")[\"cases\"]\n    total, lines = new_state(), []\n    value = to_plain(xbar())\n    write_python_output(\"xbar\", {\"default\": value})\n    check_case(\"default\", r_cases[\"default\"], value, total, lines)\n\n    py_ms = time_py_ms(xbar)\n    r_ms = read_r_timing(\"xbar\")\n    print(report(\"xbar\", lines, total, r_ms, py_ms))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        }
+      }
+    },
+    {
+      "name": "aicplot",
+      "translated": true,
+      "python": "locfit.plotting.aicplot",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 8.88e-15,
+        "tolerance": 1e-08,
+        "r_ms": 1.25134,
+        "translated_ms": 0.893036,
+        "speedup": 1.401,
+        "proof": {
+          "r": "packages/locfit/proof/aicplot-r.R",
+          "python": "packages/locfit/proof/aicplot-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "cpar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: depends on untranslated fitting exports and the default kd-tree path. Revisit after kd-tree work. Not verified. Depends on untranslated fitting exports.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cpplot",
+      "translated": true,
+      "python": "locfit.plotting.cpplot",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.44e-15,
+        "tolerance": 1e-08,
+        "r_ms": 1.66833,
+        "translated_ms": 0.873472,
+        "speedup": 1.91,
+        "proof": {
+          "r": "packages/locfit/proof/cpplot-r.R",
+          "python": "packages/locfit/proof/cpplot-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "gcvplot",
+      "translated": true,
+      "python": "locfit.plotting.gcvplot",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.44e-15,
+        "tolerance": 1e-08,
+        "r_ms": 2.44915,
+        "translated_ms": 0.847775,
+        "speedup": 2.889,
+        "proof": {
+          "r": "packages/locfit/proof/gcvplot-r.R",
+          "python": "packages/locfit/proof/gcvplot-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "lcvplot",
+      "translated": true,
+      "python": "locfit.plotting.lcvplot",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.44e-15,
+        "tolerance": 1e-08,
+        "r_ms": 1.837,
+        "translated_ms": 1.579,
+        "speedup": 1.16,
+        "note": "Earlier 1.41e-4 gap came from stale top-level plotting.py and lcv.py in the proof import.",
+        "proof": {
+          "r": "packages/locfit/proof/lcvplot-r.R",
+          "python": "packages/locfit/proof/lcvplot-py.py"
+        }
+      }
+    },
+    {
+      "name": "lscvplot",
+      "translated": false,
+      "python": "locfit.plotting.lscvplot",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Left: blocked by lscv d>=2, which is Left (user decision). The proof raises NotImplementedError.",
+      "blocked_by": [
+        "lscv"
+      ],
+      "assigned": "",
+      "check": {
+        "matches": false,
+        "max_abs_diff": 3.908,
+        "tolerance": 1e-08,
+        "r_ms": 1.255,
+        "translated_ms": 1.255,
+        "speedup": 1.0,
+        "proof": {
+          "r": "packages/locfit/proof/lscvplot-r.R",
+          "python": "packages/locfit/proof/lscvplot-py.py"
+        }
+      }
+    },
+    {
+      "name": "panel.locfit",
+      "translated": true,
+      "python": "locfit.plotting.panel_locfit",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.538945,
+        "translated_ms": 0.0002615,
+        "speedup": 2060.975,
+        "proof": {
+          "r": "packages/locfit/proof/panel.locfit-r.R",
+          "python": "packages/locfit/proof/panel.locfit-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "panel.xyplot.lf",
+      "translated": true,
+      "python": "locfit.plotting.panel_xyplot_lf",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.660539,
+        "translated_ms": 0.000272999,
+        "speedup": 2419.566,
+        "proof": {
+          "r": "packages/locfit/proof/panel.xyplot.lf-r.R",
+          "python": "packages/locfit/proof/panel.xyplot.lf-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "plot.eval",
+      "translated": true,
+      "python": "locfit.plotting.plot_eval",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 0.935555,
+        "translated_ms": 0.000270999,
+        "speedup": 3452.245,
+        "proof": {
+          "r": "packages/locfit/proof/plot.eval-r.R",
+          "python": "packages/locfit/proof/plot.eval-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    },
+    {
+      "name": "plotbyfactor",
+      "translated": true,
+      "python": "locfit.plotting.plotbyfactor",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "matches": true,
+        "max_abs_diff": 4.44e-16,
+        "tolerance": 1e-08,
+        "r_ms": 0.52762,
+        "translated_ms": 7.46598,
+        "speedup": 0.071,
+        "proof": {
+          "r": "packages/locfit/proof/plotbyfactor-r.R",
+          "python": "packages/locfit/proof/plotbyfactor-py.py"
+        },
+        "note": "Re-run after the shared plot helper was pointed at the locfit/ port."
+      }
+    }
+  ]
+}

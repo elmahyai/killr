@@ -1,0 +1,47 @@
+      SUBROUTINE DEWSET (N, ITOL, RTOL, ATOL, YCUR, EWT)
+      INTEGER N, ITOL
+      INTEGER I
+      DOUBLE PRECISION RTOL, ATOL, YCUR, EWT
+      DIMENSION RTOL(*), ATOL(*), YCUR(N), EWT(N)
+      IF (ITOL .EQ. 1) THEN
+        GOTO 10
+      ELSE IF (ITOL .EQ. 2) THEN
+        GOTO 20
+      ELSE IF (ITOL .EQ. 3) THEN
+        GOTO 30
+      ELSE IF (ITOL .EQ. 4) THEN
+        GOTO 40
+      ENDIF
+ 10   CONTINUE
+      DO 15 I = 1,N
+        EWT(I) = RTOL(1)*ABS(YCUR(I)) + ATOL(1)
+ 15   CONTINUE
+      RETURN
+ 20   CONTINUE
+      DO 25 I = 1,N
+        EWT(I) = RTOL(1)*ABS(YCUR(I)) + ATOL(I)
+ 25   CONTINUE
+      RETURN
+ 30   CONTINUE
+      DO 35 I = 1,N
+        EWT(I) = RTOL(I)*ABS(YCUR(I)) + ATOL(1)
+ 35   CONTINUE
+      RETURN
+ 40   CONTINUE
+      DO 45 I = 1,N
+        EWT(I) = RTOL(I)*ABS(YCUR(I)) + ATOL(I)
+ 45   CONTINUE
+      RETURN
+      END
+
+      DOUBLE PRECISION FUNCTION DVNORM (N, V, W)
+      INTEGER N, I
+      DOUBLE PRECISION V, W, SUM
+      DIMENSION V(N), W(N)
+      SUM = 0.0D0
+      DO 110 I = 1,N
+        SUM = SUM + (V(I)*W(I))**2
+ 110  CONTINUE
+      DVNORM = SQRT(SUM/N)
+      RETURN
+      END

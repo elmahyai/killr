@@ -1,0 +1,1 @@
+BOBYQA, NEWUOA, and UOBYQA leave IERR at 390 on maxfun, and at 10, 20, 320, 430, 3701, or 2101 otherwise. The R wrapper renames those to 1 through 5. A start outside the box uses `pmax(lower, pmax(par, upper))`, which is not a clip.

@@ -1,0 +1,1 @@
+When the regression optimum is not unique, HiGHS and rq.fit.br return different vertices. R warns "Solution may be nonunique". Here rho agrees to 2e-16, but the coefficients of dynrq(uk ~ season(uk), start = c(1975, 1), end = c(1982, 12)) differ by up to 0.026. Check for a tie before blaming the formula when a 1e-8 proof fails.

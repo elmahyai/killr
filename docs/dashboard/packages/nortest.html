@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nortest · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>nortest</h1>
+<p class="note">CRAN 1.0-4</p>
+<p>All five exports match nortest 1.0-4. The normal cdf is math.erf. The log cdf, the normal quantile, and the chi-square tail are SciPy. There is no crate.</p>
+<p class="note">5 of 5 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#ad.test">ad.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Anderson-Darling statistic and Stephens&#x27; p-value. Uses scipy.</td></tr>
+<tr><td><a href="#cvm.test">cvm.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Cramer-von Mises statistic and Stephens&#x27; p-value.</td></tr>
+<tr><td><a href="#lillie.test">lillie.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Lilliefors statistic with the Dallal-Wilkinson and Stephens p-values.</td></tr>
+<tr><td><a href="#pearson.test">pearson.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Pearson chi-square statistic, class count, and chi-square p-value. Uses scipy.</td></tr>
+<tr><td><a href="#sf.test">sf.test</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Shapiro-Francia correlation and Royston&#x27;s p-value. Uses scipy.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>ad.test</td><td>x = c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)</td><td>0.372</td><td>0.142</td><td><button type="button" class="proof-toggle" data-name="ad.test"><span class='yes'>+161%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>3e-15</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:38.3%'></span></div></td></tr>
+<tr><td>cvm.test</td><td>x = c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)</td><td>0.25</td><td>0.0795</td><td><button type="button" class="proof-toggle" data-name="cvm.test"><span class='yes'>+214%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>5.55e-16</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:31.8%'></span></div></td></tr>
+<tr><td>lillie.test</td><td>x = c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)</td><td>0.39</td><td>0.072</td><td><button type="button" class="proof-toggle" data-name="lillie.test"><span class='yes'>+441%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>1.33e-15</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:18.5%'></span></div></td></tr>
+<tr><td>pearson.test</td><td>x = c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)</td><td>0.165</td><td>0.314</td><td><button type="button" class="proof-toggle" data-name="pearson.test"><span class='slower'>-47%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>6.66e-16</td><td><div class='bars'><span class='r' style='width:52.6%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>sf.test</td><td>x = c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)</td><td>0.212</td><td>2.33</td><td><button type="button" class="proof-toggle" data-name="sf.test"><span class='slower'>-91%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>3.22e-15</td><td><div class='bars'><span class='r' style='width:9.1%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "ad.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nortest))\nx \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\none \u003c- function() ad.test(x)\ninvisible(one())\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom nortest import ad_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\n\n\ndef one():\n    return ad_test(x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "cvm.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nortest))\nx \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\none \u003c- function() cvm.test(x)\ninvisible(one())\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom nortest import cvm_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\n\n\ndef one():\n    return cvm_test(x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "lillie.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nortest))\nx \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\none \u003c- function() lillie.test(x)\ninvisible(one())\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom nortest import lillie_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\n\n\ndef one():\n    return lillie_test(x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "pearson.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nortest))\nx \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\none \u003c- function() pearson.test(x)\ninvisible(one())\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom nortest import pearson_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\n\n\ndef one():\n    return pearson_test(x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"}, {"name": "sf.test", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(nortest))\nx \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\none \u003c- function() sf.test(x)\ninvisible(one())\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom nortest import sf_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\n\n\ndef one():\n    return sf_test(x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>stats</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>scipy</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "ad.test", "translated": true, "not_done": "", "title": "Anderson-Darling test for normality", "origin": {"description": "Anderson-Darling test of the composite hypothesis of normality.", "usage": "ad.test(x)", "arguments": [{"name": "x", "text": "Numeric vector with more than 7 non-missing values. Missing values are dropped."}], "details": "The statistic is A = -n - mean(h), where h weights the log of the normal cdf of the standardized order statistics. The p-value uses Stephens' table on A times (1 + 0.75/n + 2.25/n^2). The normal cdf on the log scale is pnorm(z, log.p = TRUE).", "value": "An htest list with statistic A, the p-value, the method, and the data name.", "example": "x \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\nad.test(x)", "output": "output/ad.test-r.txt", "output_blocks": [{"text": "\n\tAnderson-Darling normality test\n\ndata:  x\nA = 0.17224, p-value = 0.9009"}]}, "translation": {"description": "Anderson-Darling test of the composite hypothesis of normality.", "usage": "ad_test(x)", "arguments": [{"name": "x", "text": "Numeric values with more than 7 non-missing entries. NaN is dropped."}], "details": "The statistic is A = -n - mean(h), where h weights the log of the normal cdf of the standardized order statistics. The p-value uses Stephens' table on A times (1 + 0.75/n + 2.25/n^2). The log cdf is SciPy log_ndtr. log(erf) is not accurate enough in the tail.", "value": "An htest object with statistic A, the p-value, the method, and the data name.", "example": "from nortest import ad_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\nprint(ad_test(x), end=\"\")", "output": "output/ad.test-python.txt", "output_blocks": [{"text": "\n\tAnderson-Darling normality test\n\ndata:  x\nA = 0.17224, p-value = 0.9009"}]}}, {"name": "cvm.test", "translated": true, "not_done": "", "title": "Cramer-von Mises test for normality", "origin": {"description": "Cramer-von Mises test of the composite hypothesis of normality.", "usage": "cvm.test(x)", "arguments": [{"name": "x", "text": "Numeric vector with more than 7 non-missing values. Missing values are dropped."}], "details": "W is 1/(12n) plus the sum of squared differences between the normal cdf of the standardized order statistics and (2i-1)/(2n). The p-value uses Stephens' table on W times (1 + 0.5/n). When that adjusted value is at least 1.1, the p-value is 7.37e-10 and a warning says it cannot be computed more accurately.", "value": "An htest list with statistic W, the p-value, the method, and the data name.", "example": "x \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\ncvm.test(x)", "output": "output/cvm.test-r.txt", "output_blocks": [{"text": "\n\tCramer-von Mises normality test\n\ndata:  x\nW = 0.022589, p-value = 0.9269"}]}, "translation": {"description": "Cramer-von Mises test of the composite hypothesis of normality.", "usage": "cvm_test(x)", "arguments": [{"name": "x", "text": "Numeric values with more than 7 non-missing entries. NaN is dropped."}], "details": "W is 1/(12n) plus the sum of squared differences between the normal cdf of the standardized order statistics and (2i-1)/(2n). The p-value uses Stephens' table on W times (1 + 0.5/n). When that adjusted value is at least 1.1, the p-value is 7.37e-10 and a warning says it cannot be computed more accurately. The cdf is math.erf.", "value": "An htest object with statistic W, the p-value, the method, and the data name.", "example": "from nortest import cvm_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\nprint(cvm_test(x), end=\"\")", "output": "output/cvm.test-python.txt", "output_blocks": [{"text": "\n\tCramer-von Mises normality test\n\ndata:  x\nW = 0.022589, p-value = 0.9269"}]}}, {"name": "lillie.test", "translated": true, "not_done": "", "title": "Lilliefors test for normality", "origin": {"description": "Lilliefors Kolmogorov-Smirnov test of the composite hypothesis of normality.", "usage": "lillie.test(x)", "arguments": [{"name": "x", "text": "Numeric vector with more than 4 non-missing values. Missing values are dropped."}], "details": "D is the larger of max(i/n - p) and max(p - (i-1)/n), where p is the normal cdf of the standardized order statistics. The p-value is the Dallal-Wilkinson formula when that approximation is at most 0.1, and Stephens' polynomial otherwise. For n above 100 the Dallal-Wilkinson statistic is scaled by (n/100)^0.49 and evaluated at n = 100.", "value": "An htest list with statistic D, the p-value, the method, and the data name.", "example": "x \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\nlillie.test(x)", "output": "output/lillie.test-r.txt", "output_blocks": [{"text": "\n\tLilliefors (Kolmogorov-Smirnov) normality test\n\ndata:  x\nD = 0.12014, p-value = 0.9502"}]}, "translation": {"description": "Lilliefors Kolmogorov-Smirnov test of the composite hypothesis of normality.", "usage": "lillie_test(x)", "arguments": [{"name": "x", "text": "Numeric values with more than 4 non-missing entries. NaN is dropped."}], "details": "D is the larger of max(i/n - p) and max(p - (i-1)/n), where p is the normal cdf of the standardized order statistics. The p-value is the Dallal-Wilkinson formula when that approximation is at most 0.1, and Stephens' polynomial otherwise. For n above 100 the Dallal-Wilkinson statistic is scaled by (n/100)^0.49 and evaluated at n = 100. The cdf is math.erf.", "value": "An htest object with statistic D, the p-value, the method, and the data name.", "example": "from nortest import lillie_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\nprint(lillie_test(x), end=\"\")", "output": "output/lillie.test-python.txt", "output_blocks": [{"text": "\n\tLilliefors (Kolmogorov-Smirnov) normality test\n\ndata:  x\nD = 0.12014, p-value = 0.9502"}]}}, {"name": "pearson.test", "translated": true, "not_done": "", "title": "Pearson chi-square test for normality", "origin": {"description": "Pearson chi-square test of the composite hypothesis of normality.", "usage": "pearson.test(x, n.classes = ceiling(2 * (n^(2/5))), adjust = TRUE)", "arguments": [{"name": "x", "text": "Numeric vector. Missing values are dropped."}, {"name": "n.classes", "text": "Number of equiprobable classes. The default uses n after missing values are dropped."}, {"name": "adjust", "text": "If TRUE, the chi-square reference has n.classes - 3 degrees of freedom. If FALSE, it has n.classes - 1."}], "details": "Observations are counted in classes formed from the normal cdf of the raw values, using the sample mean and sample standard deviation. A standard deviation of 0 makes pnorm return 0 or 1, so those points fall outside the classes and the statistic is n. A non-positive degrees of freedom makes pchisq warn and return NA.", "value": "An htest list with statistic P, the p-value, the method, the data name, n.classes, and df.", "example": "x \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\npearson.test(x)", "output": "output/pearson.test-r.txt", "output_blocks": [{"text": "\n\tPearson chi-square normality test\n\ndata:  x\nP = 2, p-value = 0.5724"}]}, "translation": {"description": "Pearson chi-square test of the composite hypothesis of normality.", "usage": "pearson_test(x, n_classes=None, adjust=True)", "arguments": [{"name": "x", "text": "Numeric values. NaN is dropped."}, {"name": "n_classes", "text": "Number of equiprobable classes. None uses ceiling(2 * n^(2/5)) after missing values are dropped."}, {"name": "adjust", "text": "If True, the chi-square reference has n_classes - 3 degrees of freedom. If False, it has n_classes - 1."}], "details": "Observations are counted in classes formed from the normal cdf of the raw values, using the sample mean and sample standard deviation. A standard deviation of 0 makes pnorm return 0 or 1, so those points fall outside the classes and the statistic is n. A non-positive degrees of freedom warns and returns NaN. The chi-square tail is SciPy.", "value": "An htest object with statistic P, the p-value, the method, the data name, n_classes, and df.", "example": "from nortest import pearson_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\nprint(pearson_test(x), end=\"\")", "output": "output/pearson.test-python.txt", "output_blocks": [{"text": "\n\tPearson chi-square normality test\n\ndata:  x\nP = 2, p-value = 0.5724"}]}}, {"name": "sf.test", "translated": true, "not_done": "", "title": "Shapiro-Francia test for normality", "origin": {"description": "Shapiro-Francia test of the composite hypothesis of normality.", "usage": "sf.test(x)", "arguments": [{"name": "x", "text": "Numeric vector with between 5 and 5000 non-missing values. Missing values are dropped."}], "details": "W is the squared correlation of the ordered sample with qnorm(ppoints(n, a = 3/8)). The p-value is Royston's normal approximation to log(1 - W). A constant sample makes cor warn that the standard deviation is zero and both W and the p-value are NA.", "value": "An htest list with statistic W, the p-value, the method, and the data name.", "example": "x \u003c- c(2.1, 3.4, NA, 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, NaN, 4.4)\nsf.test(x)", "output": "output/sf.test-r.txt", "output_blocks": [{"text": "\n\tShapiro-Francia normality test\n\ndata:  x\nW = 0.97737, p-value = 0.9543"}]}, "translation": {"description": "Shapiro-Francia test of the composite hypothesis of normality.", "usage": "sf_test(x)", "arguments": [{"name": "x", "text": "Numeric values with between 5 and 5000 non-missing entries. NaN is dropped."}], "details": "W is the squared correlation of the ordered sample with qnorm(ppoints(n, a=3/8)). The p-value is Royston's normal approximation to log(1 - W). A constant sample warns that the standard deviation is zero and both W and the p-value are NaN. The quantile is SciPy's normal ppf.", "value": "An htest object with statistic W, the p-value, the method, and the data name.", "example": "from nortest import sf_test\n\nx = [2.1, 3.4, float(\"nan\"), 1.2, 5.6, 4.0, 3.3, 2.8, 6.1, 1.9, float(\"nan\"), 4.4]\nprint(sf_test(x), end=\"\")", "output": "output/sf.test-python.txt", "output_blocks": [{"text": "\n\tShapiro-Francia normality test\n\ndata:  x\nW = 0.97737, p-value = 0.9543"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

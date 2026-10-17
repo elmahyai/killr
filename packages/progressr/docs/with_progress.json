@@ -1,0 +1,64 @@
+{
+  "name": "with_progress",
+  "title": "Evaluate an expression with progress handlers",
+  "origin": {
+    "description": "Run an expression while progression handlers listen, then shut them down.",
+    "usage": "with_progress(expr, handlers = progressr::handlers(), cleanup = TRUE, delay_terminal = NULL, delay_stdout = NULL, delay_conditions = NULL, interrupts = getOption(\"progressr.interrupts\", TRUE), interval = NULL, enable = NULL)",
+    "arguments": [
+      {
+        "name": "expr",
+        "text": "An R expression. It is not evaluated until the handlers are active."
+      },
+      {
+        "name": "handlers",
+        "text": "One handler or a list of them. An empty list just evaluates expr."
+      },
+      {
+        "name": "enable",
+        "text": "If FALSE, call the expression and report nothing. In batch mode the default option is FALSE."
+      },
+      {
+        "name": "cleanup",
+        "text": "If TRUE, signal shutdown after the expression, including when it fails."
+      },
+      {
+        "name": "interrupts",
+        "text": "When interrupts are enabled, an interrupt or error asks handlers to interrupt, then the error continues."
+      }
+    ],
+    "details": "A reset is signaled before the body. A new initiate shuts down the previous progression when it was not finished. Updates after the progressor has finished warn and are ignored. If any handler target contains terminal, stdout and conditions are delayed and flushed at the end, including messages. The value of the expression is returned.",
+    "value": "The value of expr.",
+    "example": "handler <- make_progression_handler(\"rec\", reporter = list(\n  initiate = function(config, state, progression, ...) {\n    cat(progression$type, \" \", state$step, \"\\n\", sep = \"\")\n  },\n  update = function(config, state, progression, ...) {\n    cat(progression$type, \" \", state$step, \" \", conditionMessage(progression), \"\\n\", sep = \"\")\n  }\n), enable = TRUE, target = \"file\", interval = 0)\ntotal <- with_progress({\n  p <- progressor(along = 1:5)\n  s <- 0\n  for (x in 1:5) {\n    s <- s + x\n    p(message = as.character(x))\n  }\n  s\n}, handlers = handler, enable = TRUE, interval = 0,\n   delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\ncat(total, \"\\n\", sep = \"\")\n",
+    "output": "output/with_progress-r.txt"
+  },
+  "translation": {
+    "description": "Call a zero-argument function while progression handlers listen, then shut them down.",
+    "usage": "with_progress(expr, handlers=None, cleanup=True, delay_terminal=None, delay_stdout=None, delay_conditions=None, interrupts=None, interval=None, enable=None)",
+    "arguments": [
+      {
+        "name": "expr",
+        "text": "A zero-argument callable. R delays the expression; Python would evaluate it before the call, so pass a function."
+      },
+      {
+        "name": "handlers",
+        "text": "One handler or a list of them. An empty list just calls expr."
+      },
+      {
+        "name": "enable",
+        "text": "If False, call the function and report nothing. Pass True when stdin is not a terminal, or the handler is a no-op."
+      },
+      {
+        "name": "cleanup",
+        "text": "If True, signal shutdown after the call, including when it raises."
+      },
+      {
+        "name": "interrupts",
+        "text": "If True, an exception of class interrupt or error asks handlers to interrupt. A normal Python exception is the error path. The exception is not swallowed."
+      }
+    ],
+    "details": "A control reset is signaled before the body. A new initiate shuts down the previous progression when it was not finished. Updates after the progressor has finished warn and are ignored. If any handler target contains terminal, stdout and message conditions are delayed and flushed at the end. That delay works before a newline handler exists. The callable's return value is returned.",
+    "value": "The value returned by expr.",
+    "example": "from progressr.condition import condition_message\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\ndef initiate(config, state, progression, **kwargs):\n    print(progression[\"type\"], format(state[\"step\"], \"g\"))\n\ndef update(config, state, progression, **kwargs):\n    print(progression[\"type\"], format(state[\"step\"], \"g\"), condition_message(progression))\n\nhandler = make_progression_handler(\n    \"rec\", reporter={\"initiate\": initiate, \"update\": update},\n    enable=True, target=\"file\", interval=0,\n)\n\ndef body():\n    progress = progressor(along=range(1, 6))\n    total = 0\n    for value in range(1, 6):\n        total += value\n        progress(message=str(value))\n    return total\n\nprint(with_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=()))\n",
+    "output": "output/with_progress-python.txt"
+  }
+}

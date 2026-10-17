@@ -1,0 +1,1699 @@
+{
+  "name": "boot",
+  "cran_version": "1.3-32",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "CRAN boot 1.3-32 is translated. The exports, the registered S3 methods, and the 50 datasets are in. saddle.distn matches the air-conditioning and big-city quantiles. The city alpha 0.001 quantile differs by 5.3e-8 because that smoothing spline is rank-deficient. The random generator matching R set.seed is in boot/rng.py.",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "matplotlib",
+      "numpy"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "logit",
+      "translated": true,
+      "python": "boot.util.logit",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Logit, matching qlogis. Values outside [0, 1] are NaN with a warning; 0 and 1 are -inf and inf.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "p = (1:5000)/5001",
+        "r_ms": 0.2866983413696289,
+        "translated_ms": 0.08773099966674636,
+        "speedup": 3.267925162812197,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\np <- seq_len(n) / (n + 1)\none <- function() logit(p)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import logit\n\nn = 5000\np = np.arange(1, n + 1, dtype=np.float64) / (n + 1)\n\n\ndef one():\n    return logit(p)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in warm))\n"
+        }
+      }
+    },
+    {
+      "name": "inv.logit",
+      "translated": true,
+      "python": "boot.util.inv_logit",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Inverse logit, matching plogis. -inf and inf return 0 and 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "5000 evenly spaced values from -20 to 20",
+        "r_ms": 0.19884109497070312,
+        "translated_ms": 0.033970999993471196,
+        "speedup": 5.853259986721554,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\nx <- -20 + (seq_len(n) - 1) * 40 / (n - 1)\none <- function() inv.logit(x)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import inv_logit\n\nn = 5000\nx = -20 + np.arange(n, dtype=np.float64) * 40 / (n - 1)\n\n\ndef one():\n    return inv_logit(x)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in warm))\n"
+        }
+      }
+    },
+    {
+      "name": "corr",
+      "translated": true,
+      "python": "boot.util.corr",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Weighted correlation of two columns. The divisor is the sum of the supplied weights, and products follow R recycling.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "5000 rows, columns 1:5000 and (i %% 7) + (i %/% 3)/10, weights 1:5000",
+        "r_ms": 0.5537271499633789,
+        "translated_ms": 0.11392150008759927,
+        "speedup": 4.8606026916569185,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\nx <- seq_len(n)\ny <- (x %% 7) + (x %/% 3) / 10\nd <- cbind(x, y)\none <- function() corr(d, x)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\\n\", warm))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import corr\n\nn = 5000\nx = np.arange(1, n + 1, dtype=np.float64)\ny = (x % 7) + np.floor(x / 3) / 10\nd = np.column_stack([x, y])\n\n\ndef one():\n    return corr(d, x)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(f\"{warm:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "cum3",
+      "translated": true,
+      "python": "boot.util.cum3",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Third-order product moment. The unbiased multiplier is n/((n-1)*(n-2)); otherwise the multiplier is 1/n.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "n = 5000, a = (i %% 5) + 1, b = (i %% 3) + 0.5, c = (i %/% 4) + 1",
+        "r_ms": 0.2447366714477539,
+        "translated_ms": 0.09079650021703856,
+        "speedup": 2.695441684015784,
+        "matches": true,
+        "max_abs_diff": 1.2351231148954867e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\ni <- seq_len(n)\na <- (i %% 5) + 1\nb <- (i %% 3) + 0.5\nc <- (i %/% 4) + 1\none <- function() cum3(a, b, c)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\\n\", warm))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import cum3\n\nn = 5000\ni = np.arange(1, n + 1, dtype=np.float64)\na = (i % 5) + 1\nb = (i % 3) + 0.5\nc = np.floor(i / 4) + 1\n\n\ndef one():\n    return cum3(a, b, c)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(f\"{warm:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "var.linear",
+      "translated": true,
+      "python": "boot.util.var_linear",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Variance from empirical influence values, the sum over strata of sum(L^2) / n_s^2. A missing stratum label makes the result missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "L = sin(1:5000) + 0.25, strata = rep(1:4, length.out = 5000)",
+        "r_ms": 5.943655967712402,
+        "translated_ms": 0.5519990002085251,
+        "speedup": 10.767512197426274,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\nL <- sin(seq_len(n)) + 0.25\nstrata <- rep(1:4, length.out = n)\none <- function() var.linear(L, strata)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\\n\", warm))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import var_linear\n\nn = 5000\nL = np.sin(np.arange(1, n + 1, dtype=np.float64)) + 0.25\nstrata = np.resize(np.arange(1, 5), n)\n\n\ndef one():\n    return var_linear(L, strata)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(f\"{warm:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "k3.linear",
+      "translated": true,
+      "python": "boot.util.k3_linear",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Skewness from empirical influence values, the sum over strata of sum(L^3) / n_s^3. A missing stratum label makes the result missing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "L = sin(1:5000) + 0.25, strata = rep(1:4, length.out = 5000)",
+        "r_ms": 5.881190299987793,
+        "translated_ms": 1.1039690002689895,
+        "speedup": 5.327314714955584,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nn <- 5000\nL <- sin(seq_len(n)) + 0.25\nstrata <- rep(1:4, length.out = n)\none <- function() k3.linear(L, strata)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(sprintf(\"%.17g\\n\", warm))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import k3_linear\n\nn = 5000\nL = np.sin(np.arange(1, n + 1, dtype=np.float64)) + 0.25\nstrata = np.resize(np.arange(1, 5), n)\n\n\ndef one():\n    return k3_linear(L, strata)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(f\"{warm:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "freq.array",
+      "translated": true,
+      "python": "boot.util.freq_array",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Frequency matrix of bootstrap indices. Values are truncated toward zero into bins 1..n. A one-column matrix is returned as one row.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "200 by 40 index matrix, entry (i, j) = ((i + 3*j) mod 40) + 1",
+        "r_ms": 1.8080472946166992,
+        "translated_ms": 0.31392300024890574,
+        "speedup": 5.759524766210569,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nR <- 200L\ncols <- 40L\nrr <- matrix(rep(seq_len(R), cols), R, cols)\ncc <- matrix(rep(seq_len(cols), each = R), R, cols)\ni.array <- ((rr + 3L * cc) %% cols) + 1L\none <- function() freq.array(i.array)\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", as.vector(t(warm))), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.util import freq_array\n\nreplicates, cols = 200, 40\nrow = np.arange(1, replicates + 1)[:, None]\ncol = np.arange(1, cols + 1)[None, :]\ni_array = ((row + 3 * col) % cols) + 1\n\n\ndef one():\n    return freq_array(i_array)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(str(int(value)) for value in np.ravel(warm)))\n"
+        }
+      }
+    },
+    {
+      "name": "simplex",
+      "translated": true,
+      "python": "boot.simplex.simplex",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Two-phase tableau simplex for linear programs with <=, >=, and equality constraints.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Gill, Murray and Wright exercise 7.5: maximize energy with fat <= 13800 and three vitamin minimums",
+        "r_ms": 1.762986183166504,
+        "translated_ms": 0.8748889997605147,
+        "speedup": 2.0150969821875573,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nenj <- c(200, 6000, 3000, -200)\nfat <- c(800, 6000, 1000, 400)\nvitx <- c(50, 3, 150, 100)\nvity <- c(10, 10, 75, 100)\nvitz <- c(150, 35, 75, 5)\none <- function() simplex(a = enj, A1 = fat, b1 = 13800, A2 = rbind(vitx, vity, vitz), b2 = c(600, 300, 550), maxi = TRUE)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom boot.simplex import simplex\n\nenj = [200, 6000, 3000, -200]\nfat = [800, 6000, 1000, 400]\nvitx = [50, 3, 150, 100]\nvity = [10, 10, 75, 100]\nvitz = [150, 35, 75, 5]\n\ndef one():\n    return simplex(a=enj, A1=fat, b1=13800, A2=[vitx, vity, vitz], b2=[600, 300, 550], maxi=True)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "print.simplex",
+      "translated": true,
+      "python": "boot.simplex.print_simplex",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Print a simplex solution and return that text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Printed coefficients, solution, and optimal value of that simplex result",
+        "r_ms": 0.3134012222290039,
+        "translated_ms": 0.10807299986481667,
+        "speedup": 2.899903052760842,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nenj <- c(200, 6000, 3000, -200)\nfat <- c(800, 6000, 1000, 400)\nvitx <- c(50, 3, 150, 100)\nvity <- c(10, 10, 75, 100)\nvitz <- c(150, 35, 75, 5)\nres <- simplex(a = enj, A1 = fat, b1 = 13800, A2 = rbind(vitx, vity, vitz), b2 = c(600, 300, 550), maxi = TRUE)\none <- function() {\n  sink(nullfile())\n  print(res)\n  sink()\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import os\nimport statistics\nimport sys\nimport time\n\nfrom boot.simplex import print_simplex, simplex\n\nenj = [200, 6000, 3000, -200]\nfat = [800, 6000, 1000, 400]\nvitx = [50, 3, 150, 100]\nvity = [10, 10, 75, 100]\nvitz = [150, 35, 75, 5]\nres = simplex(a=enj, A1=fat, b1=13800, A2=[vitx, vity, vitz], b2=[600, 300, 550], maxi=True)\ndevnull = open(os.devnull, \"w\")\n\ndef one():\n    previous = sys.stdout\n    sys.stdout = devnull\n    try:\n        return print_simplex(res)\n    finally:\n        sys.stdout = previous\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "boot",
+      "translated": true,
+      "python": "boot.resample.boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Ordinary, balanced, permutation, antithetic, and parametric bootstraps, including strata and importance weights, on the serial path.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), data 1:10, statistic = function(d, i) mean(d[i]) because mean passes the index as trim, R = 50, sim = ordinary, parallel = no. t0 and t compared. A stratified call was also matched.",
+        "r_ms": 1.5807151794433594,
+        "translated_ms": 3.642534500158945,
+        "speedup": 0.43396024920955,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\none <- function() boot(1:10, stat, R = 50)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.resample import boot\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\n\ndef one():\n    return boot(data, stat, R=50)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "boot.array",
+      "translated": true,
+      "python": "boot.resample.boot_array",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Recreates the 1-based index array or the frequency array from the stored generator state, then restores the generator.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), data 1:10, statistic = function(d, i) mean(d[i]), R = 10, boot.array indices. The R = 50 index and frequency arrays were also compared.",
+        "r_ms": 0.38909912109375,
+        "translated_ms": 0.9163339996121067,
+        "speedup": 0.4246258692337723,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\nb <- boot(1:10, stat, R = 10)\none <- function() boot.array(b, indices = TRUE)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.resample import boot, boot_array\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\nb = boot(data, stat, R=10)\n\ndef one():\n    return boot_array(b, indices=True)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "c.boot",
+      "translated": true,
+      "python": "boot.resample.c_boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Stacks the replicate statistics of bootstrap objects that have the same components.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1) R = 10 stacked with set.seed(2) R = 10, data 1:10, statistic = function(d, i) mean(d[i]). Combined R and t compared.",
+        "r_ms": 0.14710426330566406,
+        "translated_ms": 0.026802999855135567,
+        "speedup": 5.488350710768604,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\nb1 <- boot(1:10, stat, R = 10)\nset.seed(2)\nb2 <- boot(1:10, stat, R = 10)\none <- function() c(b1, b2)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.resample import boot, c_boot\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\nb1 = boot(data, stat, R=10)\nset_seed(2)\nb2 = boot(data, stat, R=10)\n\ndef one():\n    return c_boot(b1, b2)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "print.boot",
+      "translated": true,
+      "python": "boot.resample.print_boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Prints and returns the bootstrap heading, the call, and the original value, bias, and standard error.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "print of the set.seed(1) ordinary mean bootstrap, data 1:10, R = 50. The printed text was compared.",
+        "r_ms": 0.6470680236816406,
+        "translated_ms": 0.12652400027945987,
+        "speedup": 5.114191949767864,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\nb <- boot(1:10, stat, R = 50)\none <- function() capture.output(print(b))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import contextlib\nimport io\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom boot.resample import boot, print_boot\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\nb = boot(data, stat, R=50)\n\ndef one():\n    buffer = io.StringIO()\n    with contextlib.redirect_stdout(buffer):\n        print_boot(b)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "plot.boot",
+      "translated": true,
+      "python": "boot.resample.plot_boot",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws the histogram and normal or chi-squared Q-Q plot with Matplotlib and returns the series the figure is built from.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), data 1:10, statistic = function(d, i) mean(d[i]), R = 50. Histogram breaks, counts, density, and normal Q-Q coordinates compared. R timing used pdf(tempfile()); Python timed plot_boot on the Agg backend.",
+        "r_ms": 5.128264427185059,
+        "translated_ms": 114.1231919996244,
+        "speedup": 0.044936216182964256,
+        "matches": true,
+        "max_abs_diff": 1.3322676295501878e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\nb <- boot(1:10, stat, R = 50)\npdf(tempfile(fileext = \".pdf\"))\none <- function() plot(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nfrom boot.resample import boot, plot_boot\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\nb = boot(data, stat, R=50)\n\ndef one():\n    return plot_boot(b)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    series = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    plt.close(series[\"figure\"])\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "jack.after.boot",
+      "translated": true,
+      "python": "boot.resample.jack_after_boot",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws the jackknife-after-bootstrap diagnostic with Matplotlib and returns the coordinates of the curves.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), data 1:10, statistic = function(d, i) mean(d[i]), R = 50, useJ = TRUE. Sorted jackknife values, percentile curves, and horizontal quantiles compared. R timing used pdf(tempfile()); Python timed jack_after_boot on the Agg backend.",
+        "r_ms": 10.575413703918457,
+        "translated_ms": 82.05096600022443,
+        "speedup": 0.12888835097797058,
+        "matches": true,
+        "max_abs_diff": 5.773159728050814e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstat <- function(d, i) mean(d[i])\nset.seed(1)\nb <- boot(1:10, stat, R = 50)\npdf(tempfile(fileext = \".pdf\"))\none <- function() jack.after.boot(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nfrom boot.resample import boot, jack_after_boot\nfrom boot.rng import set_seed\n\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\n\ndata = np.arange(1, 11, dtype=float)\nset_seed(1)\nb = boot(data, stat, R=50)\n\ndef one():\n    return jack_after_boot(b)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    series = one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    plt.close(series[\"figure\"])\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "boot.ci",
+      "translated": true,
+      "python": "boot.ci.boot_ci",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Normal, basic, studentized, percentile, and BCa intervals from a fixed bootstrap object. The jackknife influence for BCa is private to this module.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "n = 30, data = 1.7 * (1:n), R = 100 fixed replicates, conf = c(0.9, 0.95), all five intervals",
+        "r_ms": 3.665328025817871,
+        "translated_ms": 3.2019154998579324,
+        "speedup": 1.1447297800271432,
+        "matches": true,
+        "max_abs_diff": 3.552713678800501e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(boot))\nver <- read.dcf(system.file(\"DESCRIPTION\", package = \"boot\"), \"Version\")\nif (!identical(as.character(ver), \"1.3-32\")) stop(paste(\"version\", ver))\n\nn <- 30\ndata <- (1:n) * 1.7\nstat <- function(d, w) {\n  m <- sum(d * w)\n  v <- sum(w * (d - m)^2) / length(d)\n  c(m, v)\n}\nR <- 100\nidx <- 1:R\nw0 <- rep(1/n, n)\ncenter <- stat(data, w0)[1]\ntt <- cbind(center + ((idx %% 17) - 8) / 10, 0.3 + (idx %% 5) / 100)\nboot.out <- list(\n  t0 = stat(data, w0), t = tt, R = R, data = data, statistic = stat,\n  sim = \"ordinary\", stype = \"w\", strata = rep(1L, n), weights = w0\n)\nclass(boot.out) <- \"boot\"\nattr(boot.out, \"boot_type\") <- \"boot\"\none <- function() boot.ci(boot.out, conf = c(0.9, 0.95), type = c(\"norm\", \"basic\", \"stud\", \"perc\", \"bca\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  started <- Sys.time()\n  one()\n  elapsed[[i]] <- as.numeric(difftime(Sys.time(), started, units = \"secs\"))\n}\nflat <- unlist(lapply(list(value$normal, value$basic, value$student, value$percent, value$bca), as.vector), use.names = FALSE)\ncat(sprintf(\"%.17g\", flat), sep = \"\\n\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\")\n",
+          "python": "import math\nimport statistics\nimport time\nimport warnings\n\nimport numpy as np\nfrom boot.ci import boot_ci\n\nn = 30\ndata = np.arange(1, n + 1, dtype=float) * 1.7\n\ndef statistic(d, w):\n    mean = math.fsum(np.asarray(d * w, dtype=float).reshape(-1))\n    variance = math.fsum(np.asarray(w * (d - mean) ** 2, dtype=float).reshape(-1)) / len(d)\n    return np.array([mean, variance])\n\nindex = np.arange(1, 101)\nweights = np.full(n, 1.0 / n)\ncenter = statistic(data, weights)[0]\nreplicates = np.column_stack([center + ((index % 17) - 8) / 10.0, 0.3 + (index % 5) / 100.0])\nboot = {\n    \"t0\": statistic(data, weights), \"t\": replicates, \"R\": 100, \"data\": data,\n    \"statistic\": statistic, \"sim\": \"ordinary\", \"stype\": \"w\",\n    \"strata\": np.ones(n, dtype=int), \"weights\": weights, \"boot_type\": \"boot\",\n}\n\ndef one():\n    return boot_ci(boot, conf=[0.9, 0.95], type=[\"norm\", \"basic\", \"stud\", \"perc\", \"bca\"])\n\nwith warnings.catch_warnings():\n    warnings.simplefilter(\"ignore\", UserWarning)\n    one()\n    elapsed = []\n    for _ in range(20):\n        started = time.perf_counter()\n        one()\n        elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "print.bootci",
+      "translated": true,
+      "python": "boot.ci.print_bootci",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Prints the bootci layout, including the scale note and unstable-quantile lines, and returns that text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "print of that same 100-replicate bootci object; interval block from 'Intervals :' compared",
+        "r_ms": 0.80108642578125,
+        "translated_ms": 2.7583809996940545,
+        "speedup": 0.2904190631642628,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(boot))\nver <- read.dcf(system.file(\"DESCRIPTION\", package = \"boot\"), \"Version\")\nif (!identical(as.character(ver), \"1.3-32\")) stop(paste(\"version\", ver))\n\nn <- 30\ndata <- (1:n) * 1.7\nstat <- function(d, w) {\n  m <- sum(d * w)\n  v <- sum(w * (d - m)^2) / length(d)\n  c(m, v)\n}\nR <- 100\nidx <- 1:R\nw0 <- rep(1/n, n)\ncenter <- stat(data, w0)[1]\ntt <- cbind(center + ((idx %% 17) - 8) / 10, 0.3 + (idx %% 5) / 100)\nboot.out <- list(\n  t0 = stat(data, w0), t = tt, R = R, data = data, statistic = stat,\n  sim = \"ordinary\", stype = \"w\", strata = rep(1L, n), weights = w0\n)\nclass(boot.out) <- \"boot\"\nattr(boot.out, \"boot_type\") <- \"boot\"\nci <- boot.ci(boot.out, conf = c(0.9, 0.95), type = c(\"norm\", \"basic\", \"stud\", \"perc\", \"bca\"))\none <- function() capture.output(print(ci))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  started <- Sys.time()\n  one()\n  elapsed[[i]] <- as.numeric(difftime(Sys.time(), started, units = \"secs\"))\n}\ncat(paste(value, collapse = \"\\n\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\")\n",
+          "python": "import contextlib\nimport io\nimport math\nimport statistics\nimport time\nimport warnings\n\nimport numpy as np\nfrom boot.ci import boot_ci, print_bootci\n\nn = 30\ndata = np.arange(1, n + 1, dtype=float) * 1.7\n\ndef statistic(d, w):\n    mean = math.fsum(np.asarray(d * w, dtype=float).reshape(-1))\n    variance = math.fsum(np.asarray(w * (d - mean) ** 2, dtype=float).reshape(-1)) / len(d)\n    return np.array([mean, variance])\n\nindex = np.arange(1, 101)\nweights = np.full(n, 1.0 / n)\ncenter = statistic(data, weights)[0]\nreplicates = np.column_stack([center + ((index % 17) - 8) / 10.0, 0.3 + (index % 5) / 100.0])\nboot = {\n    \"t0\": statistic(data, weights), \"t\": replicates, \"R\": 100, \"data\": data,\n    \"statistic\": statistic, \"sim\": \"ordinary\", \"stype\": \"w\",\n    \"strata\": np.ones(n, dtype=int), \"weights\": weights, \"boot_type\": \"boot\",\n}\n\nwith warnings.catch_warnings():\n    warnings.simplefilter(\"ignore\", UserWarning)\n    ci = boot_ci(boot, conf=[0.9, 0.95], type=[\"norm\", \"basic\", \"stud\", \"perc\", \"bca\"])\n\ndef one():\n    buf = io.StringIO()\n    with contextlib.redirect_stdout(buf):\n        return print_bootci(ci)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "norm.ci",
+      "translated": true,
+      "python": "boot.ci.norm_ci",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Bias-corrected normal interval. One level stays a one-row matrix. qnorm is pure Python.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "air-conditioning hours; normal interval for the mean and exp of the log-mean interval",
+        "r_ms": 0.06186962127685547,
+        "translated_ms": 0.10943749998659769,
+        "speedup": 0.5653420562826487,
+        "matches": true,
+        "max_abs_diff": 7.105427357601002e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(boot))\nver <- read.dcf(system.file(\"DESCRIPTION\", package = \"boot\"), \"Version\")\nif (!identical(as.character(ver), \"1.3-32\")) stop(paste(\"version\", ver))\n\nhours <- c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)\nair.mean <- mean(hours)\nair.n <- length(hours)\none <- function() {\n  a <- norm.ci(t0 = air.mean, var.t0 = air.mean^2 / air.n)\n  b <- exp(norm.ci(t0 = log(air.mean), var.t0 = 1 / air.n)[, 2:3])\n  c(a, b)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  started <- Sys.time()\n  one()\n  elapsed[[i]] <- as.numeric(difftime(Sys.time(), started, units = \"secs\"))\n}\ncat(sprintf(\"%.17g\", value), sep = \"\\n\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\")\n",
+          "python": "import math\nimport statistics\nimport time\n\nimport numpy as np\nfrom boot.ci import norm_ci\n\nhours = np.array([3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487], dtype=float)\nair_mean = float(np.mean(hours))\n\ndef one():\n    a = norm_ci(t0=air_mean, var_t0=air_mean ** 2 / hours.size)\n    b = np.exp(norm_ci(t0=math.log(air_mean), var_t0=1.0 / hours.size)[0, 1:])\n    return np.concatenate([np.ravel(a, order=\"F\"), np.ravel(b, order=\"F\")])\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "abc.ci",
+      "translated": true,
+      "python": "boot.ci.abc_ci",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Approximate bootstrap intervals by numerical differentiation. One level is a length-3 vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y = 1:8, weighted mean, conf = c(0.9, 0.95)",
+        "r_ms": 0.5950927734375,
+        "translated_ms": 1.0847195001133514,
+        "speedup": 0.5486144329251146,
+        "matches": true,
+        "max_abs_diff": 2.6648141471241615e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\nsuppressPackageStartupMessages(library(boot))\nver <- read.dcf(system.file(\"DESCRIPTION\", package = \"boot\"), \"Version\")\nif (!identical(as.character(ver), \"1.3-32\")) stop(paste(\"version\", ver))\n\nmean_w <- function(d, w) sum(d * w)\ny <- 1:8\none <- function() abc.ci(y, mean_w, conf = c(0.9, 0.95))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  started <- Sys.time()\n  one()\n  elapsed[[i]] <- as.numeric(difftime(Sys.time(), started, units = \"secs\"))\n}\ncat(sprintf(\"%.17g\", as.vector(value)), sep = \"\\n\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.ci import abc_ci\n\ndef mean_w(data, weights):\n    return float(np.sum(np.asarray(data, dtype=float) * np.asarray(weights, dtype=float)))\n\ndef one():\n    return abc_ci(np.arange(1, 9, dtype=float), mean_w, conf=[0.9, 0.95])\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "empinf",
+      "translated": true,
+      "python": "boot.influence.empinf",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Infinitesimal, delete-one, positive, and regression empirical influence values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "infinitesimal jackknife of the sample variance of (1:200)/7",
+        "r_ms": 12.276172637939453,
+        "translated_ms": 5.87231100007557,
+        "speedup": 2.090518134646049,
+        "matches": true,
+        "max_abs_diff": 2.8421709430404007e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(boot)\nvar_w <- function(d, w) {\n  n <- length(d)\n  m <- sum(d * w)\n  n / (n - 1) * sum(w * (d - m)^2)\n}\nz <- (1:200) / 7\none <- function() empinf(data = z, statistic = var_w)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.influence import empinf\n\n\ndef var_w(d, w):\n    d = np.asarray(d, dtype=float)\n    w = np.asarray(w, dtype=float)\n    n = d.size\n    m = np.sum(d * w)\n    return n / (n - 1) * np.sum(w * (d - m) ** 2)\n\n\nz = np.arange(1, 201) / 7\n\ndef one():\n    return empinf(data=z, statistic=var_w)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "linear.approx",
+      "translated": true,
+      "python": "boot.influence.linear_approx",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "empinf",
+        "boot.rng"
+      ],
+      "done": "Linear approximation of each ordinary or permutation bootstrap replicate.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "linear approximation of the mean, ordinary bootstrap, n=200, R=200, seed=1",
+        "r_ms": 17.943143844604492,
+        "translated_ms": 149.6651180000299,
+        "speedup": 0.119888615893791,
+        "matches": true,
+        "max_abs_diff": 1.9664234685023985e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(boot)\nmean_w <- function(d, w) sum(d * w) / sum(w)\nz <- (1:200) / 7\nset.seed(1)\nb <- boot(z, mean_w, R = 200, stype = \"w\")\none <- function() linear.approx(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom types import SimpleNamespace\n\nimport numpy as np\nfrom boot.influence import linear_approx\n\n\ndef mean_w(d, w):\n    d = np.asarray(d, dtype=float)\n    w = np.asarray(w, dtype=float)\n    return np.sum(d * w) / np.sum(w)\n\n\nz = np.arange(1, 201) / 7\nboot_out = SimpleNamespace(\n    data=z,\n    statistic=mean_w,\n    stype=\"w\",\n    sim=\"ordinary\",\n    strata=None,\n    R=200,\n    seed=1,\n    t0=np.array([mean_w(z, np.full(z.size, 1.0 / z.size))]),\n)\n\ndef one():\n    return linear_approx(boot_out)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "envelope",
+      "translated": true,
+      "python": "boot.influence.envelope",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Pointwise and overall confidence envelopes for a curve.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pointwise and overall envelopes of a 400 by 12 integer curve at levels 0.8 and 0.95; R time is coordinate arithmetic, not a graphics device",
+        "r_ms": 12.842655181884766,
+        "translated_ms": 8.393079000143189,
+        "speedup": 1.5301482544922627,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(boot)\nmat <- outer(1:400, 1:12, function(a, b) (a * b) %% 97)\none <- function() envelope(mat = mat, level = c(0.8, 0.95))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.influence import envelope\n\nmat = (np.arange(1, 401)[:, None] * np.arange(1, 13)[None, :]) % 97\n\ndef one():\n    return envelope(mat=mat, level=[0.8, 0.95])\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "glm.diag",
+      "translated": true,
+      "python": "boot.glm.glm_diag",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Diagnostics for gaussian and binomial fits match glm.diag on the mammals and nodal examples.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "boot 1.3-32. MASS mammals gaussian log(brain) ~ log(body) and boot nodal binomial r ~ stage + xray + acid. Compared res, rd, rp, cook, h, and sd.",
+        "r_ms": 1.4766454696655273,
+        "translated_ms": 0.17025799979819567,
+        "speedup": 8.672987298193176,
+        "matches": true,
+        "max_abs_diff": 6.022959908591474e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nsuppressPackageStartupMessages(library(MASS))\nmammals.glm <- glm(log(brain) ~ log(body), data = mammals)\nnodal.glm <- glm(r ~ stage + xray + acid, binomial, data = nodal)\none <- function() {\n  c(unlist(glm.diag(mammals.glm)), unlist(glm.diag(nodal.glm)))\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom boot.glm import glm, glm_diag\n\nimport numpy as np\nbody = np.array([3.385, 0.48, 1.35, 465, 36.33, 27.66, 14.83, 1.04, 4.19, 0.425, 0.101, 0.92, 1, 0.005, 0.06, 3.5, 2, 1.7, 2547, 0.023, 187.1, 521, 0.785, 10, 3.3, 0.2, 1.41, 529, 207, 85, 0.75, 62, 6654, 3.5, 6.8, 35, 4.05, 0.12, 0.023, 0.01, 1.4, 250, 2.5, 55.5, 100, 52.16, 10.55, 0.55, 60, 3.6, 4.288, 0.28, 0.075, 0.122, 0.048, 192, 3, 160, 0.9, 1.62, 0.104, 4.235])\nbrain = np.array([44.5, 15.5, 8.1, 423, 119.5, 115, 98.2, 5.5, 58, 6.4, 4, 5.7, 6.6, 0.14, 1, 10.8, 12.3, 6.3, 4603, 0.3, 419, 655, 3.5, 115, 25.6, 5, 17.5, 680, 406, 325, 12.3, 1320, 5712, 3.9, 179, 56, 17, 1, 0.4, 0.25, 12.5, 490, 12.1, 175, 157, 440, 179.5, 2.4, 81, 21, 39.2, 1.9, 1.2, 3, 0.33, 180, 25, 169, 2.6, 11.4, 2.5, 50.4])\nr = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0])\nstage = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0])\nxray = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1])\nacid = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0])\nmammals = {\"body\": body, \"brain\": brain}\nnodal = {\"r\": r, \"stage\": stage, \"xray\": xray, \"acid\": acid}\n\ngaussian = glm(\"log(brain) ~ log(body)\", mammals)\nbinomial = glm(\"r ~ stage + xray + acid\", nodal, family=\"binomial\")\n\ndef one():\n    return glm_diag(gaussian), glm_diag(binomial)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "glm.diag.plots",
+      "translated": true,
+      "python": "boot.glm.glm_diag_plots",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws the four diagnostic panels with Matplotlib. Coordinates match the mammals and nodal fits.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "boot 1.3-32. Panel coordinates for the mammals gaussian fit and the nodal binomial fit. R timing used pdf(tempfile()).",
+        "r_ms": 19.97089385986328,
+        "translated_ms": 374.61042350014395,
+        "speedup": 0.05331110029792219,
+        "matches": true,
+        "max_abs_diff": 6.022959908591474e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nsuppressPackageStartupMessages(library(MASS))\nmammals.glm <- glm(log(brain) ~ log(body), data = mammals)\nnodal.glm <- glm(r ~ stage + xray + acid, binomial, data = nodal)\ngd <- glm.diag(mammals.glm)\nbd <- glm.diag(nodal.glm)\npdf(tempfile())\none <- function() {\n  glm.diag.plots(mammals.glm, gd)\n  glm.diag.plots(nodal.glm, bd)\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nfrom boot.glm import glm, glm_diag, glm_diag_plots\n\nimport numpy as np\nbody = np.array([3.385, 0.48, 1.35, 465, 36.33, 27.66, 14.83, 1.04, 4.19, 0.425, 0.101, 0.92, 1, 0.005, 0.06, 3.5, 2, 1.7, 2547, 0.023, 187.1, 521, 0.785, 10, 3.3, 0.2, 1.41, 529, 207, 85, 0.75, 62, 6654, 3.5, 6.8, 35, 4.05, 0.12, 0.023, 0.01, 1.4, 250, 2.5, 55.5, 100, 52.16, 10.55, 0.55, 60, 3.6, 4.288, 0.28, 0.075, 0.122, 0.048, 192, 3, 160, 0.9, 1.62, 0.104, 4.235])\nbrain = np.array([44.5, 15.5, 8.1, 423, 119.5, 115, 98.2, 5.5, 58, 6.4, 4, 5.7, 6.6, 0.14, 1, 10.8, 12.3, 6.3, 4603, 0.3, 419, 655, 3.5, 115, 25.6, 5, 17.5, 680, 406, 325, 12.3, 1320, 5712, 3.9, 179, 56, 17, 1, 0.4, 0.25, 12.5, 490, 12.1, 175, 157, 440, 179.5, 2.4, 81, 21, 39.2, 1.9, 1.2, 3, 0.33, 180, 25, 169, 2.6, 11.4, 2.5, 50.4])\nr = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0])\nstage = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0])\nxray = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1])\nacid = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0])\nmammals = {\"body\": body, \"brain\": brain}\nnodal = {\"r\": r, \"stage\": stage, \"xray\": xray, \"acid\": acid}\n\ngaussian = glm(\"log(brain) ~ log(body)\", mammals)\nbinomial = glm(\"r ~ stage + xray + acid\", nodal, family=\"binomial\")\ngd = glm_diag(gaussian)\nbd = glm_diag(binomial)\n\ndef one():\n    glm_diag_plots(gaussian, gd)\n    glm_diag_plots(binomial, bd)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n    plt.close(\"all\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "cv.glm",
+      "translated": true,
+      "python": "boot.glm.cv_glm",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Leave-one-out and K-fold prediction error for gaussian and binomial fits, using R's fold split.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "boot 1.3-32. set.seed(1). Mammals leave-one-out and K=6 mean squared error, and nodal leave-one-out and K=11 classification cost. Compared delta.",
+        "r_ms": 539.7355556488037,
+        "translated_ms": 172.99880700011272,
+        "speedup": 3.1198802177199525,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nsuppressPackageStartupMessages(library(MASS))\nmammals.glm <- glm(log(brain) ~ log(body), data = mammals)\nnodal.glm <- glm(r ~ stage + xray + acid, binomial, data = nodal)\ncost <- function(r, pi = 0) mean(abs(r - pi) > 0.5)\none <- function() {\n  set.seed(1)\n  leave <- cv.glm(mammals, mammals.glm)$delta\n  set.seed(1)\n  six <- cv.glm(mammals, mammals.glm, K = 6)$delta\n  set.seed(1)\n  nodal_leave <- cv.glm(nodal, nodal.glm, cost, K = nrow(nodal))$delta\n  set.seed(1)\n  eleven <- cv.glm(nodal, nodal.glm, cost, K = 11)$delta\n  c(leave, six, nodal_leave, eleven)\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.glm import cv_glm, glm\nfrom boot.rng import set_seed\n\nimport numpy as np\nbody = np.array([3.385, 0.48, 1.35, 465, 36.33, 27.66, 14.83, 1.04, 4.19, 0.425, 0.101, 0.92, 1, 0.005, 0.06, 3.5, 2, 1.7, 2547, 0.023, 187.1, 521, 0.785, 10, 3.3, 0.2, 1.41, 529, 207, 85, 0.75, 62, 6654, 3.5, 6.8, 35, 4.05, 0.12, 0.023, 0.01, 1.4, 250, 2.5, 55.5, 100, 52.16, 10.55, 0.55, 60, 3.6, 4.288, 0.28, 0.075, 0.122, 0.048, 192, 3, 160, 0.9, 1.62, 0.104, 4.235])\nbrain = np.array([44.5, 15.5, 8.1, 423, 119.5, 115, 98.2, 5.5, 58, 6.4, 4, 5.7, 6.6, 0.14, 1, 10.8, 12.3, 6.3, 4603, 0.3, 419, 655, 3.5, 115, 25.6, 5, 17.5, 680, 406, 325, 12.3, 1320, 5712, 3.9, 179, 56, 17, 1, 0.4, 0.25, 12.5, 490, 12.1, 175, 157, 440, 179.5, 2.4, 81, 21, 39.2, 1.9, 1.2, 3, 0.33, 180, 25, 169, 2.6, 11.4, 2.5, 50.4])\nr = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0])\nstage = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0])\nxray = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1])\nacid = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0])\nmammals = {\"body\": body, \"brain\": brain}\nnodal = {\"r\": r, \"stage\": stage, \"xray\": xray, \"acid\": acid}\n\n\ndef cost(y, yhat):\n    return float(np.mean(np.abs(np.asarray(y) - np.asarray(yhat)) > 0.5))\n\ngaussian = glm(\"log(brain) ~ log(body)\", mammals)\nbinomial = glm(\"r ~ stage + xray + acid\", nodal, family=\"binomial\")\n\ndef one():\n    set_seed(1)\n    leave = cv_glm(mammals, gaussian)[\"delta\"]\n    set_seed(1)\n    six = cv_glm(mammals, gaussian, K=6)[\"delta\"]\n    set_seed(1)\n    nodal_leave = cv_glm(nodal, binomial, cost, K=len(r))[\"delta\"]\n    set_seed(1)\n    eleven = cv_glm(nodal, binomial, cost, K=11)[\"delta\"]\n    return leave, six, nodal_leave, eleven\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "exp.tilt",
+      "translated": true,
+      "python": "boot.tilt.exp_tilt",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Exponential tilting so the linear approximation has mean theta. The multiplier is the same one-dimensional BFGS search as optim.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "L = c(-1.2, 0.3, 0.5, -0.4, 1.1, 0.2, -0.7, 0.8), theta = c(0.4, -0.2), t0 = 0.1",
+        "r_ms": 9.971976280212402,
+        "translated_ms": 1.6769920000569982,
+        "speedup": 5.946346959242185,
+        "matches": true,
+        "max_abs_diff": 5.728750807065808e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nL <- c(-1.2, 0.3, 0.5, -0.4, 1.1, 0.2, -0.7, 0.8)\none <- function() exp.tilt(L, theta = c(0.4, -0.2), t0 = 0.1)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.tilt import exp_tilt\n\nL = np.array([-1.2, 0.3, 0.5, -0.4, 1.1, 0.2, -0.7, 0.8])\n\ndef one():\n    return exp_tilt(L, theta=[0.4, -0.2], t0=0.1)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "smooth.f",
+      "translated": true,
+      "python": "boot.tilt.smooth_f",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Frequency smoothing of a bootstrap onto the sample points.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(11), x = c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9), mean, R = 40, theta = c(2.5, 3.1)",
+        "r_ms": 2.796769142150879,
+        "translated_ms": 3.968637000070885,
+        "speedup": 0.7047178016283487,
+        "matches": true,
+        "max_abs_diff": 5.551115123125783e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nset.seed(11)\nx <- c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9)\nb <- boot(x, function(d, i) mean(d[i]), R = 40)\none <- function() smooth.f(c(2.5, 3.1), b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.resample import boot\nfrom boot.rng import set_seed\nfrom boot.tilt import smooth_f\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    return float(values.mean())\n\nx = np.array([2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9])\nset_seed(11)\nresult = boot(x, statistic, R=40)\n\ndef one():\n    return smooth_f([2.5, 3.1], result)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "tilt.boot",
+      "translated": true,
+      "python": "boot.tilt.tilt_boot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Ordinary or balanced bootstrap, then importance resampling at tilted weights. Influence values are estimated when L is omitted.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(2), x = c(1.2, 3.4, 2.2, 5.0, 4.1, 0.7), mean, R = c(20, 15), theta = 3.5, stype = \"i\"",
+        "r_ms": 10.990142822265625,
+        "translated_ms": 6.124712999962867,
+        "speedup": 1.7943931123519186,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nx <- c(1.2, 3.4, 2.2, 5.0, 4.1, 0.7)\nstat <- function(d, i) mean(d[i])\none <- function() {\n  set.seed(2)\n  tilt.boot(x, stat, R = c(20, 15), theta = 3.5)\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.rng import set_seed\nfrom boot.tilt import tilt_boot\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    return float(values.mean())\n\nx = np.array([1.2, 3.4, 2.2, 5.0, 4.1, 0.7])\n\ndef one():\n    set_seed(2)\n    return tilt_boot(x, statistic, R=[20, 15], theta=3.5)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "control",
+      "translated": true,
+      "python": "boot.tilt.control",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Post-simulation balance for the bias, and control-variate moments from the linear approximation. Quantiles follow a natural cubic spline through the saddlepoint curve.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(11), x = c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9), statistic c(mean, var), R = 40, index = 2, bias.adj = TRUE. The checked value is the balanced bias.",
+        "r_ms": 1.0565519332885742,
+        "translated_ms": 1.796738499933781,
+        "speedup": 0.5880387899115612,
+        "matches": true,
+        "max_abs_diff": 6.661338147750939e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nset.seed(11)\nx <- c(2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9)\nstat <- function(d, i) c(mean(d[i]), var(d[i]))\nb <- boot(x, stat, R = 40)\none <- function() control(b, index = 2, bias.adj = TRUE)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\nfrom boot.resample import boot\nfrom boot.rng import set_seed\nfrom boot.tilt import control\n\ndef statistic(data, indices):\n    values = np.asarray(data, float)[np.asarray(indices, int) - 1]\n    centre = float(values.mean())\n    variance = float(np.sum((values - centre) ** 2) / (values.size - 1))\n    return np.array([centre, variance])\n\nx = np.array([2.3, 1.1, 4.0, 3.2, 0.7, 5.1, 2.8, 1.9])\nset_seed(11)\nresult = boot(x, statistic, R=40)\n\ndef one():\n    return control(result, index=2, bias_adj=True)\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "imp.weights",
+      "translated": true,
+      "python": "boot.importance.imp_weights",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Importance weights from a copied frequency matrix, including a defensive mixture when R has several values.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), n = 40, R = 200, two strata, unequal runif weights; t, t0, data, weights, and the boot.array frequency matrix copied from that one boot() call. imp.weights(b) with q omitted.",
+        "r_ms": 3.545522689819336,
+        "translated_ms": 0.3175139997892984,
+        "speedup": 11.166508223801587,
+        "matches": true,
+        "max_abs_diff": 8.08242361927114e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# One bootstrap, then imp.weights. The bootstrap is not inside the timer.\n# Writes /tmp/boot-importance-check.bin for the Python script.\nsuppressPackageStartupMessages(library(boot))\nset.seed(1)\nn <- 40\nx <- rnorm(n)\nstrata <- rep(1:2, each = n / 2)\nwts <- runif(n)\nstatistic <- function(d, w) c(sum(d * w) / sum(w), sum(d * d * w) / sum(w))\nb <- boot(x, statistic, R = 200, stype = \"w\", strata = strata, weights = wts)\nf <- boot.array(b)\nwts_m <- as.matrix(b$weights)\ncon <- file(\"/tmp/boot-importance-check.bin\", \"wb\")\nwriteBin(as.integer(c(n, length(b$R), nrow(b$t), ncol(b$t), length(b$t0), nrow(wts_m), ncol(wts_m))), con)\nwriteBin(as.double(b$data), con)\nwriteBin(as.double(as.numeric(b$strata)), con)\nwriteBin(as.integer(b$R), con)\nwriteBin(as.double(b$t0), con)\nwriteBin(as.double(t(b$t)), con)\nwriteBin(as.double(t(wts_m)), con)\nwriteBin(as.double(t(f)), con)\nclose(con)\none <- function() imp.weights(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.importance import imp_weights\n\n\ndef load(path=\"/tmp/boot-importance-check.bin\"):\n    with open(path, \"rb\") as handle:\n        header = np.fromfile(handle, dtype=\"<i4\", count=7)\n        n, n_r, n_t_row, n_t_col, n_t0, n_w_row, n_w_col = (int(value) for value in header)\n        data = np.fromfile(handle, dtype=\"<f8\", count=n)\n        strata = np.fromfile(handle, dtype=\"<f8\", count=n)\n        replicates = np.fromfile(handle, dtype=\"<i4\", count=n_r)\n        t0 = np.fromfile(handle, dtype=\"<f8\", count=n_t0)\n        t = np.fromfile(handle, dtype=\"<f8\", count=n_t_row * n_t_col).reshape(n_t_row, n_t_col)\n        weights = np.fromfile(handle, dtype=\"<f8\", count=n_w_row * n_w_col).reshape(n_w_row, n_w_col)\n        n_rep = int(replicates.sum())\n        frequency = np.fromfile(handle, dtype=\"<f8\", count=n_rep * n).reshape(n_rep, n)\n    return {\n        \"data\": data,\n        \"strata\": strata,\n        \"R\": replicates,\n        \"t0\": t0,\n        \"t\": t,\n        \"weights\": weights,\n        \"frequency\": frequency,\n    }\n\n\nboot_out = load()\n\n\ndef one():\n    imp_weights(boot_out)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "imp.moments",
+      "translated": true,
+      "python": "boot.importance.imp_moments",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "imp.weights"
+      ],
+      "done": "Raw, ratio, and regression mean and variance. Calls imp_weights when the weights are omitted.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Same frozen bootstrap as imp.weights. imp.moments(b), default index 1, weights computed inside the call.",
+        "r_ms": 6.4765214920043945,
+        "translated_ms": 0.6384504997640761,
+        "speedup": 10.144124711935595,
+        "matches": true,
+        "max_abs_diff": 1.6653345369377348e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# One bootstrap, then imp.moments. The bootstrap is not inside the timer.\nsuppressPackageStartupMessages(library(boot))\nset.seed(1)\nn <- 40\nx <- rnorm(n)\nstrata <- rep(1:2, each = n / 2)\nwts <- runif(n)\nstatistic <- function(d, w) c(sum(d * w) / sum(w), sum(d * d * w) / sum(w))\nb <- boot(x, statistic, R = 200, stype = \"w\", strata = strata, weights = wts)\nf <- boot.array(b)\nwts_m <- as.matrix(b$weights)\ncon <- file(\"/tmp/boot-importance-check.bin\", \"wb\")\nwriteBin(as.integer(c(n, length(b$R), nrow(b$t), ncol(b$t), length(b$t0), nrow(wts_m), ncol(wts_m))), con)\nwriteBin(as.double(b$data), con)\nwriteBin(as.double(as.numeric(b$strata)), con)\nwriteBin(as.integer(b$R), con)\nwriteBin(as.double(b$t0), con)\nwriteBin(as.double(t(b$t)), con)\nwriteBin(as.double(t(wts_m)), con)\nwriteBin(as.double(t(f)), con)\nclose(con)\none <- function() imp.moments(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.importance import imp_moments\n\n\ndef load(path=\"/tmp/boot-importance-check.bin\"):\n    with open(path, \"rb\") as handle:\n        header = np.fromfile(handle, dtype=\"<i4\", count=7)\n        n, n_r, n_t_row, n_t_col, n_t0, n_w_row, n_w_col = (int(value) for value in header)\n        data = np.fromfile(handle, dtype=\"<f8\", count=n)\n        strata = np.fromfile(handle, dtype=\"<f8\", count=n)\n        replicates = np.fromfile(handle, dtype=\"<i4\", count=n_r)\n        t0 = np.fromfile(handle, dtype=\"<f8\", count=n_t0)\n        t = np.fromfile(handle, dtype=\"<f8\", count=n_t_row * n_t_col).reshape(n_t_row, n_t_col)\n        weights = np.fromfile(handle, dtype=\"<f8\", count=n_w_row * n_w_col).reshape(n_w_row, n_w_col)\n        n_rep = int(replicates.sum())\n        frequency = np.fromfile(handle, dtype=\"<f8\", count=n_rep * n).reshape(n_rep, n)\n    return {\n        \"data\": data,\n        \"strata\": strata,\n        \"R\": replicates,\n        \"t0\": t0,\n        \"t\": t,\n        \"weights\": weights,\n        \"frequency\": frequency,\n    }\n\n\nboot_out = load()\n\n\ndef one():\n    imp_moments(boot_out)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "imp.prob",
+      "translated": true,
+      "python": "boot.importance.imp_prob",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "imp.weights"
+      ],
+      "done": "Raw, ratio, and regression tail probabilities. Calls imp_weights when the weights are omitted.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Same frozen bootstrap as imp.weights. imp.prob(b) at the observed t0.",
+        "r_ms": 3.879427909851074,
+        "translated_ms": 0.5068845000550937,
+        "speedup": 7.653475119932482,
+        "matches": true,
+        "max_abs_diff": 1.2628786905111156e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# One bootstrap, then imp.prob. The bootstrap is not inside the timer.\nsuppressPackageStartupMessages(library(boot))\nset.seed(1)\nn <- 40\nx <- rnorm(n)\nstrata <- rep(1:2, each = n / 2)\nwts <- runif(n)\nstatistic <- function(d, w) c(sum(d * w) / sum(w), sum(d * d * w) / sum(w))\nb <- boot(x, statistic, R = 200, stype = \"w\", strata = strata, weights = wts)\nf <- boot.array(b)\nwts_m <- as.matrix(b$weights)\ncon <- file(\"/tmp/boot-importance-check.bin\", \"wb\")\nwriteBin(as.integer(c(n, length(b$R), nrow(b$t), ncol(b$t), length(b$t0), nrow(wts_m), ncol(wts_m))), con)\nwriteBin(as.double(b$data), con)\nwriteBin(as.double(as.numeric(b$strata)), con)\nwriteBin(as.integer(b$R), con)\nwriteBin(as.double(b$t0), con)\nwriteBin(as.double(t(b$t)), con)\nwriteBin(as.double(t(wts_m)), con)\nwriteBin(as.double(t(f)), con)\nclose(con)\none <- function() imp.prob(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.importance import imp_prob\n\n\ndef load(path=\"/tmp/boot-importance-check.bin\"):\n    with open(path, \"rb\") as handle:\n        header = np.fromfile(handle, dtype=\"<i4\", count=7)\n        n, n_r, n_t_row, n_t_col, n_t0, n_w_row, n_w_col = (int(value) for value in header)\n        data = np.fromfile(handle, dtype=\"<f8\", count=n)\n        strata = np.fromfile(handle, dtype=\"<f8\", count=n)\n        replicates = np.fromfile(handle, dtype=\"<i4\", count=n_r)\n        t0 = np.fromfile(handle, dtype=\"<f8\", count=n_t0)\n        t = np.fromfile(handle, dtype=\"<f8\", count=n_t_row * n_t_col).reshape(n_t_row, n_t_col)\n        weights = np.fromfile(handle, dtype=\"<f8\", count=n_w_row * n_w_col).reshape(n_w_row, n_w_col)\n        n_rep = int(replicates.sum())\n        frequency = np.fromfile(handle, dtype=\"<f8\", count=n_rep * n).reshape(n_rep, n)\n    return {\n        \"data\": data,\n        \"strata\": strata,\n        \"R\": replicates,\n        \"t0\": t0,\n        \"t\": t,\n        \"weights\": weights,\n        \"frequency\": frequency,\n    }\n\n\nboot_out = load()\n\n\ndef one():\n    imp_prob(boot_out)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "imp.quantile",
+      "translated": true,
+      "python": "boot.importance.imp_quantile",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "imp.weights"
+      ],
+      "done": "Raw, ratio, and regression quantiles. The default levels are 0.01, 0.025, 0.05, 0.95, 0.975, and 0.99.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Same frozen bootstrap as imp.weights. imp.quantile(b) with the default alpha.",
+        "r_ms": 4.240274429321289,
+        "translated_ms": 0.5995919998440513,
+        "speedup": 7.071932965123197,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "# One bootstrap, then imp.quantile. The bootstrap is not inside the timer.\nsuppressPackageStartupMessages(library(boot))\nset.seed(1)\nn <- 40\nx <- rnorm(n)\nstrata <- rep(1:2, each = n / 2)\nwts <- runif(n)\nstatistic <- function(d, w) c(sum(d * w) / sum(w), sum(d * d * w) / sum(w))\nb <- boot(x, statistic, R = 200, stype = \"w\", strata = strata, weights = wts)\nf <- boot.array(b)\nwts_m <- as.matrix(b$weights)\ncon <- file(\"/tmp/boot-importance-check.bin\", \"wb\")\nwriteBin(as.integer(c(n, length(b$R), nrow(b$t), ncol(b$t), length(b$t0), nrow(wts_m), ncol(wts_m))), con)\nwriteBin(as.double(b$data), con)\nwriteBin(as.double(as.numeric(b$strata)), con)\nwriteBin(as.integer(b$R), con)\nwriteBin(as.double(b$t0), con)\nwriteBin(as.double(t(b$t)), con)\nwriteBin(as.double(t(wts_m)), con)\nwriteBin(as.double(t(f)), con)\nclose(con)\none <- function() imp.quantile(b)\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.importance import imp_quantile\n\n\ndef load(path=\"/tmp/boot-importance-check.bin\"):\n    with open(path, \"rb\") as handle:\n        header = np.fromfile(handle, dtype=\"<i4\", count=7)\n        n, n_r, n_t_row, n_t_col, n_t0, n_w_row, n_w_col = (int(value) for value in header)\n        data = np.fromfile(handle, dtype=\"<f8\", count=n)\n        strata = np.fromfile(handle, dtype=\"<f8\", count=n)\n        replicates = np.fromfile(handle, dtype=\"<i4\", count=n_r)\n        t0 = np.fromfile(handle, dtype=\"<f8\", count=n_t0)\n        t = np.fromfile(handle, dtype=\"<f8\", count=n_t_row * n_t_col).reshape(n_t_row, n_t_col)\n        weights = np.fromfile(handle, dtype=\"<f8\", count=n_w_row * n_w_col).reshape(n_w_row, n_w_col)\n        n_rep = int(replicates.sum())\n        frequency = np.fromfile(handle, dtype=\"<f8\", count=n_rep * n).reshape(n_rep, n)\n    return {\n        \"data\": data,\n        \"strata\": strata,\n        \"R\": replicates,\n        \"t0\": t0,\n        \"t\": t,\n        \"weights\": weights,\n        \"frequency\": frequency,\n    }\n\n\nboot_out = load()\n\n\ndef one():\n    imp_quantile(boot_out)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "censboot",
+      "translated": true,
+      "python": "boot.censored.censboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Censored-data bootstrap for ordinary case resampling, the conditional bootstrap, the weird bootstrap, and a supplied Cox fit. Ordinary resampling matches R boot 1.3-32 without the survival package.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), 8x2 times and censoring indicators, sim=ordinary, statistic=mean of column 1, R=30",
+        "r_ms": 3.767728805541992,
+        "translated_ms": 1.9227020002290374,
+        "speedup": 1.959601022463788,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\ndata <- cbind(c(1.2, 3.4, 0.5, 2.2, 8.1, 4.0, 6.5, 1.1), c(1, 1, 0, 1, 0, 1, 1, 0))\nstat <- function(d) mean(d[, 1])\nset.seed(1)\nuntimed <- censboot(data, stat, R = 30, sim = \"ordinary\")\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  set.seed(1)\n  t0 <- Sys.time()\n  censboot(data, stat, R = 30, sim = \"ordinary\")\n  elapsed[i] <- as.numeric(Sys.time() - t0) * 1000\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed)))\ncat(sprintf(\"%.17g\\n\", untimed$t0))\ncat(sprintf(\"%.17g\\n\", untimed$t[, 1]), sep = \"\")\n",
+          "python": "import time\nimport numpy as np\nfrom boot.censored import censboot\nfrom boot.rng import set_seed\n\ndata = np.array([\n    [1.2, 1], [3.4, 1], [0.5, 0], [2.2, 1],\n    [8.1, 0], [4.0, 1], [6.5, 1], [1.1, 0],\n], dtype=float)\n\ndef stat(d):\n    return float(np.mean(d[:, 0]))\n\nset_seed(1)\nuntimed = censboot(data, stat, 30, sim=\"ordinary\")\nelapsed = []\nfor _ in range(20):\n    set_seed(1)\n    t0 = time.perf_counter()\n    censboot(data, stat, 30, sim=\"ordinary\")\n    elapsed.append((time.perf_counter() - t0) * 1000)\nprint(f\"{float(np.median(elapsed)):.17g}\")\nprint(f\"{float(untimed.t0[0]):.17g}\")\nfor value in untimed.t[:, 0]:\n    print(f\"{float(value):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "tsboot",
+      "translated": true,
+      "python": "boot.series.tsboot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Time series bootstrap for fixed blocks, geometric blocks, model replicates, and phase scrambling.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "set.seed(1), series 1:30, statistic mean, R=20, l=5; timed sim=fixed; also sim=geom",
+        "r_ms": 3.7338733673095703,
+        "translated_ms": 1.5638469999430527,
+        "speedup": 2.387620635167979,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "library(boot)\nseries <- 1:30\nstat <- function(tsb) mean(tsb)\nset.seed(1)\nuntimed <- tsboot(series, stat, R = 20, l = 5, sim = \"fixed\")\nset.seed(1)\ngeom <- tsboot(series, stat, R = 20, l = 5, sim = \"geom\")\ntimes <- numeric(20)\nfor (i in 1:20) {\n  set.seed(1)\n  t0 <- Sys.time()\n  tsboot(series, stat, R = 20, l = 5, sim = \"fixed\")\n  times[i] <- as.numeric(Sys.time() - t0) * 1000\n}\ncat(\"T0\\n\")\ncat(sprintf(\"%.17g\\n\", untimed$t0))\ncat(\"FIXED\\n\")\ncat(sprintf(\"%.17g\\n\", untimed$t[, 1]))\ncat(\"GEOM\\n\")\ncat(sprintf(\"%.17g\\n\", geom$t0))\ncat(sprintf(\"%.17g\\n\", geom$t[, 1]))\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(times)))\n",
+          "python": "import time\nimport numpy as np\nfrom boot.rng import set_seed\nfrom boot.series import _PoissonState\nimport boot.series as series\n\nseries._POISSON = _PoissonState()\ndata = np.arange(1, 31)\n\ndef stat(tsb):\n    return float(np.mean(tsb))\n\nset_seed(1)\nuntimed = series.tsboot(data, stat, R=20, l=5, sim=\"fixed\")\nseries._POISSON = _PoissonState()\nset_seed(1)\ngeom = series.tsboot(data, stat, R=20, l=5, sim=\"geom\")\ntimes = []\nfor _ in range(20):\n    set_seed(1)\n    t0 = time.perf_counter()\n    series.tsboot(data, stat, R=20, l=5, sim=\"fixed\")\n    times.append((time.perf_counter() - t0) * 1000)\nprint(\"T0\")\nprint(f\"{float(untimed.t0):.17g}\")\nprint(\"FIXED\")\nfor value in untimed.t[:, 0]:\n    print(f\"{float(value):.17g}\")\nprint(\"GEOM\")\nprint(f\"{float(geom.t0):.17g}\")\nfor value in geom.t[:, 0]:\n    print(f\"{float(value):.17g}\")\nprint(\"MS\")\nprint(f\"{float(np.median(times)):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "saddle",
+      "translated": true,
+      "python": "boot.saddle.saddle",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Saddlepoint tail probability. The multiplier is the last vertex of R's Nelder-Mead simplex.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rd examples: aircondit mean at 80 hours, conditional Poisson, Lugannani-Rice, and the city ratio at 1.25 before the Jacobian.",
+        "r_ms": 20.453691482543945,
+        "translated_ms": 9.197704500365944,
+        "speedup": 2.223782192799319,
+        "matches": true,
+        "max_abs_diff": 1.6653345369377348e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\none <- function() {\n  sp1 <- saddle(A = aircondit$hours/12, u = 80)\n  sp2 <- saddle(A = cbind(aircondit$hours/12, 1), u = c(80, 12), wdist = \"p\", type = \"cond\")\n  sp3 <- saddle(A = cbind(aircondit$hours/12, 1), u = c(80, 12), wdist = \"p\", type = \"cond\", LR = TRUE)\n  city.sp1 <- saddle(A = city$x - 1.25 * city$u, u = 0)\n  c(sp1$spa, sp1$zeta.hat, sp2$spa, sp2$zeta.hat, sp2$zeta2.hat, sp3$spa, city.sp1$spa, city.sp1$zeta.hat)\n}\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.data_sets import aircondit, city\nfrom boot.saddle import saddle\n\nhours = aircondit()[1][:, 0]\ncu = city()[1]\nA = np.column_stack([hours / 12.0, np.ones(len(hours))])\n\n\ndef one():\n    sp1 = saddle(A=hours / 12.0, u=80)\n    sp2 = saddle(A=A, u=np.array([80.0, 12.0]), wdist=\"p\", type=\"cond\")\n    sp3 = saddle(A=A, u=np.array([80.0, 12.0]), wdist=\"p\", type=\"cond\", LR=True)\n    city_sp = saddle(A=cu[:, 1] - 1.25 * cu[:, 0], u=0)\n    return np.concatenate([\n        sp1[\"spa\"], sp1[\"zeta.hat\"],\n        sp2[\"spa\"], sp2[\"zeta.hat\"], sp2[\"zeta2.hat\"],\n        sp3[\"spa\"],\n        city_sp[\"spa\"], city_sp[\"zeta.hat\"],\n    ])\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in warm))\n"
+        }
+      }
+    },
+    {
+      "name": "saddle.distn",
+      "translated": true,
+      "python": "boot.saddle.saddle_distn",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "saddle"
+      ],
+      "done": "Saddlepoint distribution and quantiles. The city alpha 0.001 quantile differs by 5.3e-8 because that smoothing spline is rank-deficient.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three runnable Rd examples: aircondit conditional Poisson, bigcity binary ratio, and city conditional Poisson ratio. The dontrun multinomial saddle.distn is omitted because R stops with unable to find range. The city alpha=0.001 quantile differs by 5.3e-8.",
+        "r_ms": 757.8165531158447,
+        "translated_ms": 614.7975489998316,
+        "speedup": 1.2326278046304513,
+        "matches": false,
+        "max_abs_diff": 5.341550335380418e-08,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nratio <- function(d, w) sum(d$x * w)/sum(d$u * w)\ncity.v <- var.linear(empinf(data = city, statistic = ratio))\nair.t0 <- c(mean(aircondit$hours), sqrt(var(aircondit$hours)/12))\nbigcity.t0 <- c(mean(bigcity$x)/mean(bigcity$u), sqrt(city.v))\ncity.t0 <- c(mean(city$x)/mean(city$u), sqrt(city.v))\nAfn <- function(t, data) cbind(data$x - t * data$u, 1)\nufn <- function(t, data) c(0, 10)\nAfn2 <- function(t, data) cbind(data$x - t * data$u, data$u, 1)\nufn2 <- function(t, data) c(0, sum(data$u), 10)\none <- function() {\n  air <- saddle.distn(A = cbind(aircondit$hours/12, 1), u = 12, wdist = \"p\", type = \"cond\", t0 = air.t0)\n  big <- saddle.distn(A = Afn, u = ufn, wdist = \"b\", type = \"cond\", t0 = bigcity.t0, data = bigcity)\n  ct <- saddle.distn(A = Afn2, u = ufn2, wdist = \"p\", type = \"cond\", t0 = city.t0, data = city)\n  c(air$quantiles[, 2], big$quantiles[, 2], ct$quantiles[, 2])\n}\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", warm), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.data_sets import aircondit, bigcity, city\nfrom boot.saddle import saddle_distn\n\nhours = aircondit()[1][:, 0]\ncu = city()[1]\nbu = bigcity()[1]\nair_t0 = np.array([hours.mean(), np.sqrt(np.var(hours, ddof=1) / 12.0)])\ncity_v = 0.032487013940940376\nbig_t0 = np.array([bu[:, 1].mean() / bu[:, 0].mean(), np.sqrt(city_v)])\ncity_t0 = np.array([cu[:, 1].mean() / cu[:, 0].mean(), np.sqrt(city_v)])\nA = np.column_stack([hours / 12.0, np.ones(len(hours))])\n\n\ndef one():\n    air = saddle_distn(A=A, u=12, wdist=\"p\", type=\"cond\", t0=air_t0)\n    big = saddle_distn(\n        A=lambda t, data: np.column_stack([data[:, 1] - t * data[:, 0], np.ones(len(data))]),\n        u=lambda t, data: np.array([0.0, 10.0]),\n        wdist=\"b\",\n        type=\"cond\",\n        t0=big_t0,\n        data=bu,\n    )\n    ct = saddle_distn(\n        A=lambda t, data: np.column_stack([data[:, 1] - t * data[:, 0], data[:, 0], np.ones(len(data))]),\n        u=lambda t, data: np.array([0.0, float(np.sum(data[:, 0])), 10.0]),\n        wdist=\"p\",\n        type=\"cond\",\n        t0=city_t0,\n        data=cu,\n    )\n    return np.concatenate([air[\"quantiles\"][:, 1], big[\"quantiles\"][:, 1], ct[\"quantiles\"][:, 1]])\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in warm))\n"
+        }
+      }
+    },
+    {
+      "name": "print.saddle.distn",
+      "translated": true,
+      "python": "boot.saddle.print_saddle_distn",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "saddle.distn"
+      ],
+      "done": "Prints the saddlepoint quantiles and returns that text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Printed quantiles of the aircondit conditional saddle.distn. The displayed fields match R; the comparison is the quantile values before rounding.",
+        "r_ms": 0.5391836166381836,
+        "translated_ms": 0.08954750001066714,
+        "speedup": 6.0212023403663375,
+        "matches": true,
+        "max_abs_diff": 2.216761885165397e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nair.t0 <- c(mean(aircondit$hours), sqrt(var(aircondit$hours)/12))\nair <- saddle.distn(A = cbind(aircondit$hours/12, 1), u = 12, wdist = \"p\", type = \"cond\", t0 = air.t0)\none <- function() capture.output(print(air))\nwarm <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", air$quantiles[, 2]), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom boot.data_sets import aircondit\nfrom boot.saddle import print_saddle_distn, saddle_distn\n\nhours = aircondit()[1][:, 0]\nair_t0 = np.array([hours.mean(), np.sqrt(np.var(hours, ddof=1) / 12.0)])\nair = saddle_distn(\n    A=np.column_stack([hours / 12.0, np.ones(len(hours))]),\n    u=12,\n    wdist=\"p\",\n    type=\"cond\",\n    t0=air_t0,\n)\n\n\ndef one():\n    return print_saddle_distn(air)\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in air[\"quantiles\"][:, 1]))\n"
+        }
+      }
+    },
+    {
+      "name": "lines.saddle.distn",
+      "translated": true,
+      "python": "boot.saddle.lines_saddle_distn",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib",
+        "saddle.distn"
+      ],
+      "done": "Draws the saddlepoint density with Matplotlib. The checked coordinates are the smoothed density, and the R time includes a pdf device.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Cut down from the Rd figure, which uses boot(R=9999). Density coordinates of the aircondit conditional saddle.distn, npts=50. R timing used pdf(tempfile()) and plot.new() so lines has an open plot. Python timed the Matplotlib line on the Agg backend.",
+        "r_ms": 1.6052722930908203,
+        "translated_ms": 100.00077799986684,
+        "speedup": 0.016052598041716815,
+        "matches": true,
+        "max_abs_diff": 2.061521458386297e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nstopifnot(packageDescription(\"boot\")$Version == \"1.3-32\")\nair.t0 <- c(mean(aircondit$hours), sqrt(var(aircondit$hours)/12))\nair <- saddle.distn(A = cbind(aircondit$hours/12, 1), u = 12, wdist = \"p\", type = \"cond\", t0 = air.t0)\ntt <- air$points[, 1]\ntt1 <- seq.int(min(tt), max(tt), length.out = 50)\nspl <- smooth.spline(tt, log(air$points[, 2]))\nyy <- exp(predict(spl, tt1)$y)\none <- function() {\n  pdf(tempfile(fileext = \".pdf\"))\n  plot.new()\n  lines(air)\n  dev.off()\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\ncat(paste(sprintf(\"%.17g\", yy), collapse = \" \"), \"\\n\", sep = \"\")\n",
+          "python": "import statistics\nimport time\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nfrom boot.data_sets import aircondit\nfrom boot.saddle import lines_saddle_distn, saddle_distn\n\nhours = aircondit()[1][:, 0]\nair_t0 = np.array([hours.mean(), np.sqrt(np.var(hours, ddof=1) / 12.0)])\nair = saddle_distn(\n    A=np.column_stack([hours / 12.0, np.ones(len(hours))]),\n    u=12,\n    wdist=\"p\",\n    type=\"cond\",\n    t0=air_t0,\n)\n\n\ndef one():\n    fig, ax = plt.subplots()\n    drawn = lines_saddle_distn(air, ax=ax)\n    plt.close(fig)\n    return drawn[\"y\"]\n\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\nprint(\" \".join(f\"{value:.17g}\" for value in warm))\n"
+        }
+      }
+    },
+    {
+      "name": "EL.profile",
+      "translated": true,
+      "python": "boot.profile.el_profile",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Profile empirical log likelihood on the source grid. The multiplier is nlm's estimate, and a constraint failure is a numeric missing value. The installed function errors on R 4.5; this matches the source after that return value is numeric.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y = 50 + (1:120) %% 17 + ((1:120) %% 5) / 10, default grid of 25. Installed EL.profile stops in nlm. Compared with nlm after the objective returns NA_real_ and the code stores estimate.",
+        "r_ms": 5.948066711425781,
+        "translated_ms": 2.2635660000105418,
+        "speedup": 2.627741674595784,
+        "matches": true,
+        "max_abs_diff": 5.893951993130031e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nEL.fixed <- function(y, tmin = min(y) + 0.1, tmax = max(y) - 0.1, n.t = 25,\n                     u = function(y, t) y - t) {\n  EL.loglik <- function(lambda) {\n    temp <- 1 + lambda * EL.stuff$u\n    if (any(!is.finite(temp) | temp <= 0)) NA_real_ else -sum(log(temp))\n  }\n  EL.paras <- matrix(NA_real_, n.t, 3)\n  lam <- 0.001\n  for (it in 0:(n.t - 1)) {\n    t <- tmin + ((tmax - tmin) * it) / (n.t - 1)\n    EL.stuff <- list(u = as.vector(u(y, t)))\n    EL.out <- suppressWarnings(nlm(EL.loglik, lam))\n    i <- 1\n    while (EL.out$code > 2 && (i < 20)) {\n      i <- i + 1\n      lam <- lam / 5\n      EL.out <- suppressWarnings(nlm(EL.loglik, lam))\n    }\n    EL.paras[1 + it, ] <- c(t, EL.loglik(EL.out$estimate), EL.out$estimate)\n    lam <- EL.out$estimate\n  }\n  EL.paras[, 2] <- EL.paras[, 2] - max(EL.paras[, 2])\n  EL.paras\n}\ny <- 50 + (1:120) %% 17 + ((1:120) %% 5) / 10\none <- function() EL.fixed(y)\nresult <- one()\nelapsed <- numeric(20)\nfor (i in 1:20) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(Sys.time() - t0)\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom boot.profile import el_profile\n\ny = 50 + (np.arange(1, 121) % 17) + ((np.arange(1, 121) % 5) / 10.0)\n\ndef one():\n    return el_profile(y)\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "EEF.profile",
+      "translated": true,
+      "python": "boot.profile.eef_profile",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Empirical exponential family profile from a zero-response Poisson log-link fit with no intercept. The installed function errors on R 4.5; this matches glm(rep(0, length(psi)) ~ psi - 1, poisson(log)).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Same y as EL.profile, default grid. Installed EEF.profile stops because zero is a closure. Compared with that glm fit.",
+        "r_ms": 79.96940612792969,
+        "translated_ms": 5.963433500028259,
+        "speedup": 13.40996023977642,
+        "matches": true,
+        "max_abs_diff": 9.094947017729282e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nEEF.fixed <- function(y, n.t = 25) {\n  tmin <- min(y) + 0.1\n  tmax <- max(y) - 0.1\n  EEF.paras <- matrix(NA_real_, n.t + 1, 4)\n  u <- function(y, t) y - t\n  for (it in 0:n.t) {\n    t <- tmin + (tmax - tmin) * it / n.t\n    psi <- as.vector(u(y, t))\n    zero <- rep(0, length(psi))\n    fit <- suppressWarnings(glm(zero ~ psi - 1, poisson(log)))\n    f <- fitted(fit)\n    EEF.paras[1 + it, ] <- c(t, sum(log(f) - log(sum(f))), sum(f - 1), coefficients(fit))\n  }\n  EEF.paras[, 2] <- EEF.paras[, 2] - max(EEF.paras[, 2])\n  EEF.paras[, 3] <- EEF.paras[, 3] - max(EEF.paras[, 3])\n  EEF.paras\n}\ny <- 50 + (1:120) %% 17 + ((1:120) %% 5) / 10\none <- function() EEF.fixed(y)\nresult <- one()\nelapsed <- numeric(20)\nfor (i in 1:20) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(Sys.time() - t0)\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom boot.profile import eef_profile\n\ny = 50 + (np.arange(1, 121) % 17) + ((np.arange(1, 121) % 5) / 10.0)\n\ndef one():\n    return eef_profile(y)\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "lik.CI",
+      "translated": true,
+      "python": "boot.profile.lik_ci",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Likelihood interval from a profile matrix. An interior endpoint is missing because the formula does not square x.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "100000-point quadratic profile on [0, 1], lim = -1. Both endpoints are interior, so both are NA.",
+        "r_ms": 11.84391975402832,
+        "translated_ms": 0.62722549978389,
+        "speedup": 18.883032909390852,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\ntheta <- seq(0, 1, length.out = 100000)\nL <- -((theta - 0.4)^2) * 50\nlike <- cbind(theta, L)\none <- function() lik.CI(like, -1)\nresult <- one()\nelapsed <- numeric(20)\nfor (i in 1:20) {\n  t0 <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(Sys.time() - t0)\n}\ncat(sprintf(\"%.17g %.17g\\n\", result[1], result[2]))\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom boot.profile import lik_ci\n\ntheta = np.linspace(0, 1, 100000)\nlike = np.column_stack([theta, -((theta - 0.4) ** 2) * 50])\n\ndef one():\n    return lik_ci(like, -1)\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "nested.corr",
+      "translated": true,
+      "python": "boot.profile.nested_corr",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Nested correlation pivot and tail probability. The inner sample is boot.resample.boot with stype w, seeded by boot.rng.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cd4, weights 1/20, t0 = corr(cd4), M = 15, set.seed(1) before each call.",
+        "r_ms": 2.0891427993774414,
+        "translated_ms": 4.655668500163301,
+        "speedup": 0.44873100378692404,
+        "matches": true,
+        "max_abs_diff": 2.5142050536688486e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(boot))\nw <- rep(1/20, 20)\nt0 <- corr(cd4)\none <- function() {\n  set.seed(1)\n  nested.corr(cd4, w, t0, M = 15)\n}\nresult <- one()\nelapsed <- numeric(20)\nfor (i in 1:20) {\n  t0t <- Sys.time()\n  one()\n  elapsed[i] <- as.numeric(Sys.time() - t0t)\n}\ncat(sprintf(\"%.17g %.17g\\n\", result[1], result[2]))\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom boot.profile import nested_corr\nfrom boot.rng import set_seed\n\ndata = np.array([\n    [2.12, 2.47], [4.35, 4.61], [3.39, 5.26], [2.51, 3.02],\n    [4.04, 6.36], [5.10, 5.93], [3.77, 3.93], [3.35, 4.09],\n    [4.10, 4.88], [3.35, 3.81], [4.15, 4.74], [3.56, 3.29],\n    [3.39, 5.55], [1.88, 2.82], [2.56, 4.23], [2.96, 3.23],\n    [2.49, 2.56], [3.03, 4.31], [2.66, 4.37], [3.00, 2.40],\n], dtype=float)\nw = np.full(20, 1.0 / 20.0)\nt0 = 0.7231653678920299\n\ndef one():\n    set_seed(1)\n    return nested_corr(data, w, t0, 15)\n\nwarm = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "acme",
+      "translated": true,
+      "python": "boot.data_sets.acme",
+      "loads": [],
+      "uses": [],
+      "done": "The boot acme table, 60 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aids",
+      "translated": true,
+      "python": "boot.data_sets.aids",
+      "loads": [],
+      "uses": [],
+      "done": "The boot aids table, 570 rows and 6 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aircondit",
+      "translated": true,
+      "python": "boot.data_sets.aircondit",
+      "loads": [],
+      "uses": [],
+      "done": "The boot aircondit table, 12 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aircondit7",
+      "translated": true,
+      "python": "boot.data_sets.aircondit7",
+      "loads": [],
+      "uses": [],
+      "done": "The boot aircondit7 table, 24 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "amis",
+      "translated": true,
+      "python": "boot.data_sets.amis",
+      "loads": [],
+      "uses": [],
+      "done": "The boot amis table, 8437 rows and 4 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "aml",
+      "translated": true,
+      "python": "boot.data_sets.aml",
+      "loads": [],
+      "uses": [],
+      "done": "The boot aml table, 23 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "beaver",
+      "translated": true,
+      "python": "boot.data_sets.beaver",
+      "loads": [],
+      "uses": [],
+      "done": "The boot beaver table, 100 rows and 4 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "bigcity",
+      "translated": true,
+      "python": "boot.data_sets.bigcity",
+      "loads": [],
+      "uses": [],
+      "done": "The boot bigcity table, 49 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "brambles",
+      "translated": true,
+      "python": "boot.data_sets.brambles",
+      "loads": [],
+      "uses": [],
+      "done": "The boot brambles table, 823 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "breslow",
+      "translated": true,
+      "python": "boot.data_sets.breslow",
+      "loads": [],
+      "uses": [],
+      "done": "The boot breslow table, 10 rows and 5 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "calcium",
+      "translated": true,
+      "python": "boot.data_sets.calcium",
+      "loads": [],
+      "uses": [],
+      "done": "The boot calcium table, 27 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cane",
+      "translated": true,
+      "python": "boot.data_sets.cane",
+      "loads": [],
+      "uses": [],
+      "done": "The boot cane table, 180 rows and 5 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "capability",
+      "translated": true,
+      "python": "boot.data_sets.capability",
+      "loads": [],
+      "uses": [],
+      "done": "The boot capability table, 75 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "catsM",
+      "translated": true,
+      "python": "boot.data_sets.catsM",
+      "loads": [],
+      "uses": [],
+      "done": "The boot catsM table, 97 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cav",
+      "translated": true,
+      "python": "boot.data_sets.cav",
+      "loads": [],
+      "uses": [],
+      "done": "The boot cav table, 138 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cd4",
+      "translated": true,
+      "python": "boot.data_sets.cd4",
+      "loads": [],
+      "uses": [],
+      "done": "The boot cd4 table, 20 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cd4.nested",
+      "translated": true,
+      "python": "boot.data_sets.cd4_nested",
+      "loads": [],
+      "uses": [],
+      "done": "The boot cd4.nested nested bootstrap, 999 replicates of 2 statistics.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "channing",
+      "translated": true,
+      "python": "boot.data_sets.channing",
+      "loads": [],
+      "uses": [],
+      "done": "The boot channing table, 462 rows and 5 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "city",
+      "translated": true,
+      "python": "boot.data_sets.city",
+      "loads": [],
+      "uses": [],
+      "done": "The boot city table, 10 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "claridge",
+      "translated": true,
+      "python": "boot.data_sets.claridge",
+      "loads": [],
+      "uses": [],
+      "done": "The boot claridge table, 37 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "cloth",
+      "translated": true,
+      "python": "boot.data_sets.cloth",
+      "loads": [],
+      "uses": [],
+      "done": "The boot cloth table, 32 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "co.transfer",
+      "translated": true,
+      "python": "boot.data_sets.co_transfer",
+      "loads": [],
+      "uses": [],
+      "done": "The boot co.transfer table, 7 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "coal",
+      "translated": true,
+      "python": "boot.data_sets.coal",
+      "loads": [],
+      "uses": [],
+      "done": "The boot coal table, 191 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "darwin",
+      "translated": true,
+      "python": "boot.data_sets.darwin",
+      "loads": [],
+      "uses": [],
+      "done": "The boot darwin table, 15 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "dogs",
+      "translated": true,
+      "python": "boot.data_sets.dogs",
+      "loads": [],
+      "uses": [],
+      "done": "The boot dogs table, 7 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "downs.bc",
+      "translated": true,
+      "python": "boot.data_sets.downs_bc",
+      "loads": [],
+      "uses": [],
+      "done": "The boot downs.bc table, 30 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "ducks",
+      "translated": true,
+      "python": "boot.data_sets.ducks",
+      "loads": [],
+      "uses": [],
+      "done": "The boot ducks table, 11 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "fir",
+      "translated": true,
+      "python": "boot.data_sets.fir",
+      "loads": [],
+      "uses": [],
+      "done": "The boot fir table, 50 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "frets",
+      "translated": true,
+      "python": "boot.data_sets.frets",
+      "loads": [],
+      "uses": [],
+      "done": "The boot frets table, 25 rows and 4 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "grav",
+      "translated": true,
+      "python": "boot.data_sets.grav",
+      "loads": [],
+      "uses": [],
+      "done": "The boot grav table, 26 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "gravity",
+      "translated": true,
+      "python": "boot.data_sets.gravity",
+      "loads": [],
+      "uses": [],
+      "done": "The boot gravity table, 81 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "hirose",
+      "translated": true,
+      "python": "boot.data_sets.hirose",
+      "loads": [],
+      "uses": [],
+      "done": "The boot hirose table, 44 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "islay",
+      "translated": true,
+      "python": "boot.data_sets.islay",
+      "loads": [],
+      "uses": [],
+      "done": "The boot islay table, 18 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "manaus",
+      "translated": true,
+      "python": "boot.data_sets.manaus",
+      "loads": [],
+      "uses": [],
+      "done": "The boot manaus series, 1080 observations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "melanoma",
+      "translated": true,
+      "python": "boot.data_sets.melanoma",
+      "loads": [],
+      "uses": [],
+      "done": "The boot melanoma table, 205 rows and 7 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "motor",
+      "translated": true,
+      "python": "boot.data_sets.motor",
+      "loads": [],
+      "uses": [],
+      "done": "The boot motor table, 94 rows and 4 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "neuro",
+      "translated": true,
+      "python": "boot.data_sets.neuro",
+      "loads": [],
+      "uses": [],
+      "done": "The boot neuro matrix, 469 rows and 6 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "nitrofen",
+      "translated": true,
+      "python": "boot.data_sets.nitrofen",
+      "loads": [],
+      "uses": [],
+      "done": "The boot nitrofen table, 50 rows and 5 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "nodal",
+      "translated": true,
+      "python": "boot.data_sets.nodal",
+      "loads": [],
+      "uses": [],
+      "done": "The boot nodal table, 53 rows and 7 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "nuclear",
+      "translated": true,
+      "python": "boot.data_sets.nuclear",
+      "loads": [],
+      "uses": [],
+      "done": "The boot nuclear table, 32 rows and 11 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "paulsen",
+      "translated": true,
+      "python": "boot.data_sets.paulsen",
+      "loads": [],
+      "uses": [],
+      "done": "The boot paulsen table, 346 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "poisons",
+      "translated": true,
+      "python": "boot.data_sets.poisons",
+      "loads": [],
+      "uses": [],
+      "done": "The boot poisons table, 48 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "polar",
+      "translated": true,
+      "python": "boot.data_sets.polar",
+      "loads": [],
+      "uses": [],
+      "done": "The boot polar table, 50 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "remission",
+      "translated": true,
+      "python": "boot.data_sets.remission",
+      "loads": [],
+      "uses": [],
+      "done": "The boot remission table, 27 rows and 3 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "salinity",
+      "translated": true,
+      "python": "boot.data_sets.salinity",
+      "loads": [],
+      "uses": [],
+      "done": "The boot salinity table, 28 rows and 4 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "survival",
+      "translated": true,
+      "python": "boot.data_sets.survival",
+      "loads": [],
+      "uses": [],
+      "done": "The boot survival table, 14 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "tau",
+      "translated": true,
+      "python": "boot.data_sets.tau",
+      "loads": [],
+      "uses": [],
+      "done": "The boot tau table, 60 rows and 2 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "tuna",
+      "translated": true,
+      "python": "boot.data_sets.tuna",
+      "loads": [],
+      "uses": [],
+      "done": "The boot tuna table, 64 rows and 1 column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "urine",
+      "translated": true,
+      "python": "boot.data_sets.urine",
+      "loads": [],
+      "uses": [],
+      "done": "The boot urine table, 79 rows and 7 columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "wool",
+      "translated": true,
+      "python": "boot.data_sets.wool",
+      "loads": [],
+      "uses": [],
+      "done": "The boot wool series, 309 observations.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

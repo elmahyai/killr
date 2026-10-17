@@ -1,0 +1,644 @@
+{
+  "name": "xtable",
+  "cran_version": "1.8-8",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked display, sanitize, caption<-, caption, label, label<-, align<-, align, digits, sanitize.numbers, digits<-, display<-, xtable, xtableMatharray, xalign, xdigits, autoformat, and toLatex.xtable. Checked print.xtable, print.xtableMatharray, xtableList, and xtableLSMeans. The other exports are listed and not translated.",
+  "functions": [
+    {
+      "name": "caption<-",
+      "translated": true,
+      "python": "xtable.caption_replacement.caption_replacement",
+      "loads": [],
+      "uses": [],
+      "done": "Sets the caption attribute on an xtable when the replacement value has R length 0, 1, or 2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "caption replacement on data.frame and matrix xtables, lengths 0 to 2, NA, integers, errors, and 400 repeated assignments",
+        "r_ms": 271.9377279281616,
+        "translated_ms": 1.4059084996915772,
+        "speedup": 193.42491206776137,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nexample <- \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/caption-replacement-r.txt\"\nx <- xtable(data.frame(a = 1:3, b = 4:6))\ncaption(x) <- \"Table caption for the example\"\nsink(example)\nprint(caption(x))\ncaption(x) <- c(\"First line\", \"Second line\")\nprint(caption(x))\nsink()\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  xtable(data.frame(a = seq_len(3 + (i %% 4)), b = seq_len(3 + (i %% 4))))\n}\n\none <- function() {\n  out <- list()\n  caps <- list(\n    \"A short caption\",\n    c(\"Line one\", \"Line two\"),\n    character(0),\n    NA_character_,\n    NA,\n    \"café & naïve\",\n    \"\",\n    c(\"\", \"second\")\n  )\n  for (i in seq_along(caps)) {\n    x <- make_xt(i)\n    x <- `caption<-`(x, caps[[i]])\n    out[[paste0(\"cap_\", i)]] <- attr(x, \"caption\", exact = TRUE)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = c(\"l\", \"l\", \"l\", \"l\", \"l\"),\n    digits = c(0, 0, 0, 0, 0),\n    display = c(\"d\", \"d\", \"d\", \"d\", \"d\")\n  )\n  xmat <- `caption<-`(xmat, \"matrix table\")\n  out$matrix_cap <- attr(xmat, \"caption\", exact = TRUE)\n  out$int_cap <- attr(`caption<-`(make_xt(99L), 1:2), \"caption\", exact = TRUE)\n  out$err_len <- as.character(message_of(`caption<-`(make_xt(1L), c(\"a\", \"b\", \"c\"))))\n  out$err_class <- as.character(message_of(`caption<-`(structure(1, class = \"foo\"), \"x\")))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `caption<-`(x, paste0(\"cap-\", j))\n    repeated <- c(repeated, attr(x, \"caption\", exact = TRUE))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import NA, Xtable, caption_attr, caption_replacement\n\nexample = Path(\n    \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/caption-replacement-python.txt\"\n)\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef message_of(kind):\n    try:\n        return caption_replacement(make_xt(1), kind)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef print_caption(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, list):\n        if not value:\n            return \"character(0)\"\n        parts = []\n        for v in value:\n            if v is NA:\n                parts.append(\"NA\")\n            else:\n                parts.append(f'\"{v}\"')\n        return \"[1] \" + \"  \".join(parts)\n    if value is NA:\n        return \"[1] NA\"\n    return f'[1] \"{value}\"'\n\n\nx = make_xt(0)\ncaption_replacement(x, \"Table caption for the example\")\nlines = [print_caption(caption_attr(x))]\ncaption_replacement(x, [\"First line\", \"Second line\"])\nlines.append(print_caption(caption_attr(x)))\nexample.write_text(\"\\n\".join(lines) + \"\\n\")\n\n\ndef plain(value):\n    if value is NA:\n        return None\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    caps = [\n        \"A short caption\",\n        [\"Line one\", \"Line two\"],\n        [],\n        NA,\n        NA,\n        \"café & naïve\",\n        \"\",\n        [\"\", \"second\"],\n    ]\n    for i, cap in enumerate(caps, start=1):\n        x = make_xt(i)\n        x = caption_replacement(x, cap)\n        out[f\"cap_{i}\"] = caption_attr(x)\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n    )\n    xmat = caption_replacement(xmat, \"matrix table\")\n    out[\"matrix_cap\"] = caption_attr(xmat)\n    out[\"int_cap\"] = caption_attr(caption_replacement(make_xt(99), [1, 2]))\n    err_len = message_of([\"a\", \"b\", \"c\"])\n    out[\"err_len\"] = [err_len] if isinstance(err_len, str) else err_len\n    class foo:\n        pass\n\n    try:\n        caption_replacement(foo(), \"x\")\n        out[\"err_class\"] = None\n    except ValueError as exc:\n        out[\"err_class\"] = [str(exc)]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = caption_replacement(x, f\"cap-{j}\")\n        cap = caption_attr(x)\n        if isinstance(cap, list):\n            repeated.extend(cap)\n        elif cap is not None:\n            repeated.append(cap)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "caption",
+      "translated": true,
+      "python": "xtable.caption.caption",
+      "loads": [],
+      "uses": [],
+      "done": "Retrieves the caption attribute from an xtable, equivalent to attr(x, caption, exact=TRUE).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "caption getter on data.frame and matrix xtables after assignment, lengths 0 to 2, NA, integers, a wrong-class error, and 400 repeated reads",
+        "r_ms": 303.10940742492676,
+        "translated_ms": 1.3803050005662953,
+        "speedup": 219.59596415326365,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nexample <- \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/caption-r.txt\"\nx <- xtable(data.frame(a = 1:3, b = 4:6))\ncaption(x) <- \"Table caption for the example\"\nsink(example)\nprint(caption(x))\ncaption(x) <- c(\"First line\", \"Second line\")\nprint(caption(x))\nsink()\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  xtable(data.frame(a = seq_len(3 + (i %% 4)), b = seq_len(3 + (i %% 4))))\n}\n\none <- function() {\n  out <- list()\n  caps <- list(\n    \"A short caption\",\n    c(\"Line one\", \"Line two\"),\n    character(0),\n    NA_character_,\n    NA,\n    \"caf\\u00e9 & na\\u00efve\",\n    \"\",\n    c(\"\", \"second\")\n  )\n  for (i in seq_along(caps)) {\n    x <- make_xt(i)\n    x <- `caption<-`(x, caps[[i]])\n    out[[paste0(\"cap_\", i)]] <- caption(x)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = c(\"l\", \"l\", \"l\", \"l\", \"l\"),\n    digits = c(0, 0, 0, 0, 0),\n    display = c(\"d\", \"d\", \"d\", \"d\", \"d\")\n  )\n  xmat <- `caption<-`(xmat, \"matrix table\")\n  out$matrix_cap <- caption(xmat)\n  out$int_cap <- caption(`caption<-`(make_xt(99L), 1:2))\n  out$err_class <- as.character(message_of(caption(structure(1, class = \"foo\"))))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `caption<-`(x, paste0(\"cap-\", j))\n    repeated <- c(repeated, caption(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption import caption\nfrom xtable.caption_replacement import NA, Xtable, caption_replacement\n\nexample = Path(\"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/caption-python.txt\")\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef message_of(obj):\n    try:\n        return caption(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef print_caption(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, list):\n        if not value:\n            return \"character(0)\"\n        parts = []\n        for v in value:\n            if v is NA:\n                parts.append(\"NA\")\n            else:\n                parts.append(f'\"{v}\"')\n        return \"[1] \" + \"  \".join(parts)\n    if value is NA:\n        return \"[1] NA\"\n    return f'[1] \"{value}\"'\n\n\nx = make_xt(0)\ncaption_replacement(x, \"Table caption for the example\")\nlines = [print_caption(caption(x))]\ncaption_replacement(x, [\"First line\", \"Second line\"])\nlines.append(print_caption(caption(x)))\nexample.write_text(\"\\n\".join(lines) + \"\\n\")\n\n\ndef plain(value):\n    if value is NA:\n        return None\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    caps = [\n        \"A short caption\",\n        [\"Line one\", \"Line two\"],\n        [],\n        NA,\n        NA,\n        \"café & naïve\",\n        \"\",\n        [\"\", \"second\"],\n    ]\n    for i, cap in enumerate(caps, start=1):\n        x = make_xt(i)\n        x = caption_replacement(x, cap)\n        out[f\"cap_{i}\"] = caption(x)\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n    )\n    xmat = caption_replacement(xmat, \"matrix table\")\n    out[\"matrix_cap\"] = caption(xmat)\n    out[\"int_cap\"] = caption(caption_replacement(make_xt(99), [1, 2]))\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = caption_replacement(x, f\"cap-{j}\")\n        cap = caption(x)\n        if isinstance(cap, list):\n            repeated.extend(cap)\n        elif cap is not None:\n            repeated.append(cap)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "label",
+      "translated": true,
+      "python": "xtable.label.label",
+      "loads": [],
+      "uses": [],
+      "done": "Retrieves the label attribute from an xtable, equivalent to attr(x, label, exact=TRUE).",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "label getter on data.frame and matrix xtables after assignment, length 0 or 1, NA, integer, length error, wrong-class error, and 400 repeated reads",
+        "r_ms": 254.94396686553955,
+        "translated_ms": 1.6295790001095156,
+        "speedup": 156.44774929500568,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nexample <- \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/label-r.txt\"\nx <- xtable(data.frame(a = 1:3, b = 4:6))\nlabel(x) <- \"tab:example\"\nsink(example)\nprint(label(x))\nlabel(x) <- character(0)\nprint(label(x))\nsink()\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  xtable(data.frame(a = seq_len(3 + (i %% 4)), b = seq_len(3 + (i %% 4))))\n}\n\none <- function() {\n  out <- list()\n  labs <- list(\n    \"tab:short\",\n    character(0),\n    NA_character_,\n    NA,\n    \"caf\\u00e9_label\",\n    \"\",\n    42L,\n    c(\"tab:vector\")\n  )\n  for (i in seq_along(labs)) {\n    x <- make_xt(i)\n    x <- `label<-`(x, labs[[i]])\n    out[[paste0(\"lab_\", i)]] <- label(x)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = c(\"l\", \"l\", \"l\", \"l\", \"l\"),\n    digits = c(0, 0, 0, 0, 0),\n    display = c(\"d\", \"d\", \"d\", \"d\", \"d\")\n  )\n  xmat <- `label<-`(xmat, \"tab:matrix\")\n  out$matrix_lab <- label(xmat)\n  out$err_len <- as.character(message_of(`label<-`(make_xt(99L), 1:2)))\n  out$err_class <- as.character(message_of(label(structure(1, class = \"foo\"))))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `label<-`(x, paste0(\"tab-\", j))\n    val <- label(x)\n    if (length(val) == 0) {\n      repeated <- repeated\n    } else {\n      repeated <- c(repeated, val)\n    }\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import NA, Xtable\nfrom xtable.label import label\n\nLOGICAL_NA = object()\n\nexample = Path(\"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/label-python.txt\")\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef _r_length(value: object) -> int:\n    if value is None:\n        return 0\n    if isinstance(value, str):\n        return 1\n    if isinstance(value, (list, tuple)):\n        return len(value)\n    return 1\n\n\ndef set_label(x: Xtable, value: object) -> Xtable:\n    if _r_length(value) > 1:\n        raise ValueError('\"label\" must have length 1')\n    if isinstance(value, (list, tuple)) and len(value) == 0:\n        x.attrs[\"label\"] = []\n    elif value is NA:\n        x.attrs[\"label\"] = [NA]\n    elif value is LOGICAL_NA:\n        x.attrs[\"label\"] = [LOGICAL_NA]\n    elif isinstance(value, (list, tuple)):\n        x.attrs[\"label\"] = list(value)\n    elif isinstance(value, int):\n        x.attrs[\"label\"] = [value]\n    else:\n        x.attrs[\"label\"] = [value]\n    return x\n\n\ndef message_of(obj):\n    try:\n        return label(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef print_label(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, list):\n        if not value:\n            return \"character(0)\"\n        parts = []\n        for v in value:\n            if v is NA:\n                parts.append(\"NA\")\n            elif isinstance(v, int):\n                parts.append(str(v))\n            else:\n                parts.append(f'\"{v}\"')\n        return \"[1] \" + \"  \".join(parts)\n    if value is NA:\n        return \"[1] NA\"\n    if isinstance(value, int):\n        return f\"[1] {value}\"\n    return f'[1] \"{value}\"'\n\n\nx = make_xt(0)\nset_label(x, \"tab:example\")\nlines = [print_label(label(x))]\nset_label(x, [])\nlines.append(print_label(label(x)))\nexample.write_text(\"\\n\".join(lines) + \"\\n\")\n\n\ndef plain(value):\n    if value is NA or value is LOGICAL_NA:\n        return None\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    labs = [\n        \"tab:short\",\n        [],\n        NA,\n        LOGICAL_NA,\n        \"café_label\",\n        \"\",\n        42,\n        [\"tab:vector\"],\n    ]\n    for i, lab in enumerate(labs, start=1):\n        x = make_xt(i)\n        x = set_label(x, lab)\n        out[f\"lab_{i}\"] = label(x)\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n    )\n    xmat = set_label(xmat, \"tab:matrix\")\n    out[\"matrix_lab\"] = label(xmat)\n\n    def err_len():\n        try:\n            set_label(make_xt(99), [1, 2])\n        except ValueError as exc:\n            return str(exc)\n        raise AssertionError(\"expected length error\")\n\n    out[\"err_len\"] = [err_len()]\n\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = set_label(x, f\"tab-{j}\")\n        val = label(x)\n        if isinstance(val, list):\n            repeated.extend(plain(val))\n        elif val is not None:\n            repeated.append(plain(val))\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "label<-",
+      "translated": true,
+      "python": "xtable.label_replacement.label_replacement",
+      "loads": [],
+      "uses": [],
+      "done": "Sets the label attribute on an xtable when the replacement has length 0 or 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Label replacement on data.frame and matrix xtables, length 0 or 1, NA, integer, errors, and 400 repeated assignments",
+        "r_ms": 282.4125289916992,
+        "translated_ms": 1.705393999145599,
+        "speedup": 165.59957941284398,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nexample <- \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/label-replacement-r.txt\"\nx <- xtable(data.frame(a = 1:3, b = 4:6))\nlabel(x) <- \"tab:example\"\nsink(example)\nprint(label(x))\nlabel(x) <- character(0)\nprint(label(x))\nsink()\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  xtable(data.frame(a = seq_len(3 + (i %% 4)), b = seq_len(3 + (i %% 4))))\n}\n\none <- function() {\n  out <- list()\n  labs <- list(\n    \"tab:short\",\n    character(0),\n    NA_character_,\n    NA,\n    \"caf\\u00e9_label\",\n    \"\",\n    42L,\n    c(\"tab:vector\")\n  )\n  for (i in seq_along(labs)) {\n    x <- make_xt(i)\n    x <- `label<-`(x, labs[[i]])\n    out[[paste0(\"lab_\", i)]] <- attr(x, \"label\", exact = TRUE)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = c(\"l\", \"l\", \"l\", \"l\", \"l\"),\n    digits = c(0, 0, 0, 0, 0),\n    display = c(\"d\", \"d\", \"d\", \"d\", \"d\")\n  )\n  xmat <- `label<-`(xmat, \"tab:matrix\")\n  out$matrix_lab <- attr(xmat, \"label\", exact = TRUE)\n  out$err_len <- as.character(message_of(`label<-`(make_xt(99L), 1:2)))\n  out$err_class <- as.character(message_of(`label<-`(structure(1, class = \"foo\"), \"x\")))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `label<-`(x, paste0(\"tab-\", j))\n    val <- attr(x, \"label\", exact = TRUE)\n    if (length(val) == 0) {\n      repeated <- repeated\n    } else {\n      repeated <- c(repeated, val)\n    }\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import NA, Xtable\nfrom xtable.label import label, label_attr\nfrom xtable.label_replacement import label_replacement\n\nLOGICAL_NA = object()\n\nexample = Path(\n    \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/label-replacement-python.txt\"\n)\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef message_of(kind):\n    try:\n        return label_replacement(make_xt(1), kind)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef print_label(value):\n    if value is None:\n        return \"NULL\"\n    if isinstance(value, list):\n        if not value:\n            return \"character(0)\"\n        parts = []\n        for v in value:\n            if v is NA:\n                parts.append(\"NA\")\n            elif v is LOGICAL_NA:\n                parts.append(\"NA\")\n            elif isinstance(v, int):\n                parts.append(str(v))\n            else:\n                parts.append(f'\"{v}\"')\n        return \"[1] \" + \"  \".join(parts)\n    if value is NA:\n        return \"[1] NA\"\n    if isinstance(value, int):\n        return f\"[1] {value}\"\n    return f'[1] \"{value}\"'\n\n\nx = make_xt(0)\nlabel_replacement(x, \"tab:example\")\nlines = [print_label(label(x))]\nlabel_replacement(x, [])\nlines.append(print_label(label(x)))\nexample.parent.mkdir(parents=True, exist_ok=True)\nexample.write_text(\"\\n\".join(lines) + \"\\n\")\n\n\ndef plain(value):\n    if value is NA or value is LOGICAL_NA:\n        return None\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    labs = [\n        \"tab:short\",\n        [],\n        NA,\n        LOGICAL_NA,\n        \"café_label\",\n        \"\",\n        42,\n        [\"tab:vector\"],\n    ]\n    for i, lab in enumerate(labs, start=1):\n        x = make_xt(i)\n        x = label_replacement(x, lab)\n        out[f\"lab_{i}\"] = label_attr(x)\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n    )\n    xmat = label_replacement(xmat, \"tab:matrix\")\n    out[\"matrix_lab\"] = label_attr(xmat)\n    out[\"err_len\"] = [message_of([1, 2])]\n    class foo:\n        pass\n\n    try:\n        label_replacement(foo(), \"x\")\n        out[\"err_class\"] = None\n    except ValueError as exc:\n        out[\"err_class\"] = [str(exc)]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = label_replacement(x, f\"tab-{j}\")\n        val = label_attr(x)\n        if isinstance(val, list):\n            repeated.extend(plain(val))\n        elif val is not None:\n            repeated.append(plain(val))\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "align<-",
+      "translated": true,
+      "python": "xtable.align_replacement.align_replacement",
+      "loads": [],
+      "uses": [],
+      "done": "Sets the align attribute, parsing a single LaTeX alignment string when needed.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Vector and parsed-string alignments including bars, a wide table, length and class errors, and 400 repeated assignments",
+        "r_ms": 317.3438310623169,
+        "translated_ms": 3.332154500640172,
+        "speedup": 95.23682980526532,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  specs <- list(\n    c(\"l\", \"l\", \"l\"),\n    \"lll\",\n    \"l{2in}ll\",\n    c(\"l\", \"|\", \"l\", \"l\"),\n    c(\"r\", \"r\", \"r\"),\n    \"lcr\"\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `align<-`(x, specs[[i]])\n    out[[paste0(\"align_\", i)]] <- attr(x, \"align\", exact = TRUE)\n  }\n  xwide <- structure(\n    matrix(seq_len(15), 3, 5),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 6),\n    digits = rep(0, 6),\n    display = rep(\"d\", 6)\n  )\n  xwide <- `align<-`(xwide, c(\"l\", \"c\", \"c\", \"c\", \"c\", \"c\"))\n  out$wide <- attr(xwide, \"align\", exact = TRUE)\n  out$err_len <- as.character(message_of(`align<-`(make_xt(1L), c(\"l\", \"l\"))))\n  out$err_class <- as.character(\n    message_of(`align<-`(structure(1, class = \"foo\"), \"lll\"))\n  )\n  out$err_brace <- as.character(message_of(`align<-`(make_xt(2L), \"l{2in\")))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    val <- paste0(rep(\"l\", ncol(x) + 1), collapse = \"\")\n    x <- `align<-`(x, val)\n    repeated <- c(repeated, attr(x, \"align\", exact = TRUE))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align_replacement import align_attr, align_replacement\nfrom xtable.caption_replacement import Xtable\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef message_of(kind):\n    try:\n        return align_replacement(make_xt(1), kind)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    specs = [\n        [\"l\", \"l\", \"l\"],\n        \"lll\",\n        \"l{2in}ll\",\n        [\"l\", \"|\", \"l\", \"l\"],\n        [\"r\", \"r\", \"r\"],\n        \"lcr\",\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = align_replacement(x, spec)\n        out[f\"align_{i}\"] = align_attr(x)\n    xwide = Xtable(\n        [[r * 5 + c + 1 for c in range(5)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 6,\n            \"digits\": [0] * 6,\n            \"display\": [\"d\"] * 6,\n        },\n    )\n    xwide = align_replacement(xwide, [\"l\", \"c\", \"c\", \"c\", \"c\", \"c\"])\n    out[\"wide\"] = align_attr(xwide)\n    out[\"err_len\"] = [message_of([\"l\", \"l\"])]\n    class foo:\n        pass\n\n    try:\n        align_replacement(foo(), \"lll\")\n        out[\"err_class\"] = None\n    except ValueError as exc:\n        out[\"err_class\"] = [str(exc)]\n    out[\"err_brace\"] = [message_of(\"l{2in\")]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        val = \"l\" * (x.ncol + 1)\n        x = align_replacement(x, val)\n        attr = align_attr(x)\n        if isinstance(attr, list):\n            repeated.extend(attr)\n        elif attr is not None:\n            repeated.append(attr)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "align",
+      "translated": true,
+      "python": "xtable.align.align",
+      "loads": [],
+      "uses": [],
+      "done": "Retrieves the align attribute from an xtable.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "After align<- sets vector and parsed-string specs, align reads them back and checks the wrong-class error.",
+        "r_ms": 299.86774921417236,
+        "translated_ms": 3.002006999849982,
+        "speedup": 99.88909060810235,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  specs <- list(\n    c(\"l\", \"l\", \"l\"),\n    \"lll\",\n    \"l{2in}ll\",\n    c(\"l\", \"|\", \"l\", \"l\"),\n    c(\"r\", \"r\", \"r\"),\n    \"lcr\"\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `align<-`(x, specs[[i]])\n    out[[paste0(\"align_\", i)]] <- align(x)\n  }\n  xwide <- structure(\n    matrix(seq_len(15), 3, 5),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 6),\n    digits = rep(0, 6),\n    display = rep(\"d\", 6)\n  )\n  xwide <- `align<-`(xwide, c(\"l\", \"c\", \"c\", \"c\", \"c\", \"c\"))\n  out$wide <- align(xwide)\n  out$err_class <- as.character(message_of(align(structure(1, class = \"foo\"))))\n  repeated <- character(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    val <- paste0(rep(\"l\", ncol(x) + 1), collapse = \"\")\n    x <- `align<-`(x, val)\n    repeated <- c(repeated, align(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align import align\nfrom xtable.align_replacement import align_replacement\nfrom xtable.caption_replacement import Xtable\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef message_of(obj):\n    try:\n        return align(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    specs = [\n        [\"l\", \"l\", \"l\"],\n        \"lll\",\n        \"l{2in}ll\",\n        [\"l\", \"|\", \"l\", \"l\"],\n        [\"r\", \"r\", \"r\"],\n        \"lcr\",\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = align_replacement(x, spec)\n        out[f\"align_{i}\"] = align(x)\n    xwide = Xtable(\n        [[r * 5 + c + 1 for c in range(5)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 6,\n            \"digits\": [0] * 6,\n            \"display\": [\"d\"] * 6,\n        },\n    )\n    xwide = align_replacement(xwide, [\"l\", \"c\", \"c\", \"c\", \"c\", \"c\"])\n    out[\"wide\"] = align(xwide)\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        val = \"l\" * (x.ncol + 1)\n        x = align_replacement(x, val)\n        attr = align(x)\n        if isinstance(attr, list):\n            repeated.extend(attr)\n        elif attr is not None:\n            repeated.append(attr)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "digits<-",
+      "translated": true,
+      "python": "xtable.digits_replacement.digits_replacement",
+      "loads": [],
+      "uses": [
+        "align",
+        "caption",
+        "digits",
+        "display"
+      ],
+      "done": "Sets digits on an xtable with R length and ncol validation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Replacement lengths 0–3, matrix digits, errors, repeated assigns",
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  out$default <- digits(make_xt(0L))\n  specs <- list(\n    4,\n    c(1, 2, 3),\n    c(0, 0, 0),\n    c(5, 4, 3),\n    0\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `digits<-`(x, specs[[i]])\n    out[[paste0(\"dig_\", i)]] <- digits(x)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 5),\n    digits = rep(0, 5),\n    display = rep(\"d\", 5)\n  )\n  xmat <- `digits<-`(xmat, matrix(seq_len(15), 3, 5))\n  out$matrix_dig <- digits(xmat)\n  xwide <- structure(\n    matrix(seq_len(6), 2, 3),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 4),\n    digits = matrix(c(1, 2, 3, 4, 5, 6, 7, 8), 2, 4),\n    display = rep(\"d\", 4)\n  )\n  out$wide_preset <- digits(xwide)\n  out$err_class <- as.character(message_of(digits(structure(1, class = \"foo\"))))\n  out$err_len <- as.character(message_of(`digits<-`(make_xt(1L), c(1, 2))))\n  out$err_numeric <- as.character(message_of(`digits<-`(make_xt(1L), c(\"a\", \"b\", \"c\"))))\n  repeated <- numeric(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `digits<-`(x, j %% 7)\n    repeated <- c(repeated, digits(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.digits import digits\nfrom xtable.digits_replacement import digits_replacement\nfrom xtable.xtable_main import RDataFrame, xtable\n\n\ndef make_xt(i: int):\n    n = 3 + (i % 4)\n    return xtable(RDataFrame({\"a\": list(range(1, n + 1)), \"b\": list(range(1, n + 1))}))\n\n\ndef message_of(obj):\n    try:\n        return digits(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef message_of_set(kind):\n    try:\n        return digits_replacement(make_xt(1), kind)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        if value and isinstance(value[0], list):\n            return [plain(row) for row in value]\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    out[\"default\"] = digits(make_xt(0))\n    specs = [\n        4,\n        [1, 2, 3],\n        [0, 0, 0],\n        [5, 4, 3],\n        0,\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = digits_replacement(x, spec)\n        out[f\"dig_{i}\"] = digits(x)\n    from xtable.caption_replacement import Xtable\n\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n        classes=(\"xtable\", \"matrix\"),\n    )\n    xmat = digits_replacement(\n        xmat, [[c * 3 + r + 1 for c in range(5)] for r in range(3)]\n    )\n    out[\"matrix_dig\"] = digits(xmat)\n    xwide = Xtable(\n        [[r * 3 + c + 1 for c in range(3)] for r in range(2)],\n        {\n            \"align\": [\"l\"] * 4,\n            \"digits\": [[1, 3, 5, 7], [2, 4, 6, 8]],\n            \"display\": [\"d\"] * 4,\n        },\n        classes=(\"xtable\", \"matrix\"),\n    )\n    out[\"wide_preset\"] = digits(xwide)\n\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    out[\"err_len\"] = [message_of_set([1, 2])]\n    out[\"err_numeric\"] = [message_of_set([\"a\", \"b\", \"c\"])]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = digits_replacement(x, j % 7)\n        val = digits(x)\n        if isinstance(val, list):\n            if val and isinstance(val[0], list):\n                for row in val:\n                    repeated.extend(row)\n            else:\n                repeated.extend(val)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        },
+        "r_ms": 301.7085790634155,
+        "translated_ms": 11.83343949924165,
+        "speedup": 25.49627089256261,
+        "max_abs_diff": 0.0,
+        "matches": true
+      }
+    },
+    {
+      "name": "digits",
+      "translated": true,
+      "python": "xtable.digits.digits",
+      "loads": [],
+      "uses": [],
+      "done": "Reads the digits attribute of an xtable.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default digits, scalar and vector replacement, a matrix of digits, a wrong class, and 400 repeated reads.",
+        "r_ms": 294.96049880981445,
+        "translated_ms": 2.0347609997770633,
+        "speedup": 144.96075895013297,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  out$default <- digits(make_xt(0L))\n  specs <- list(\n    4,\n    c(1, 2, 3),\n    c(0, 0, 0),\n    c(5, 4, 3),\n    0\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `digits<-`(x, specs[[i]])\n    out[[paste0(\"dig_\", i)]] <- digits(x)\n  }\n  xmat <- structure(\n    matrix(seq_len(12), 3, 4),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 5),\n    digits = rep(0, 5),\n    display = rep(\"d\", 5)\n  )\n  xmat <- `digits<-`(xmat, matrix(seq_len(15), 3, 5))\n  out$matrix_dig <- digits(xmat)\n  xwide <- structure(\n    matrix(seq_len(6), 2, 3),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 4),\n    digits = matrix(c(1, 2, 3, 4, 5, 6, 7, 8), 2, 4),\n    display = rep(\"d\", 4)\n  )\n  out$wide_preset <- digits(xwide)\n  out$err_class <- as.character(message_of(digits(structure(1, class = \"foo\"))))\n  repeated <- numeric(0)\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    x <- `digits<-`(x, j %% 7)\n    repeated <- c(repeated, digits(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import Xtable\nfrom xtable.digits import digits\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef set_digits(x: Xtable, value: object) -> Xtable:\n    \"\"\"Proof helper: store ``digits`` like ``digits<-`` after validation.\"\"\"\n    ncol = x.ncol\n    if isinstance(value, list) and value and isinstance(value[0], list):\n        matrix = value\n        if len(matrix[0]) != ncol + 1 or len(matrix) != x.nrow:\n            raise ValueError(\n                \"if argument 'digits' is a matrix, it must have columns equal \"\n                f\"to {ncol + 1} ( ncol(x) + 1 ) and rows equal to {x.nrow} \"\n                f\"( nrow( x )\"\n            )\n        x.attrs[\"digits\"] = [list(row) for row in matrix]\n    else:\n        if isinstance(value, (list, tuple)):\n            vec = list(value)\n        else:\n            vec = [value]\n        if len(vec) == 1:\n            vec = vec * (ncol + 1)\n        elif len(vec) > 1 and len(vec) != ncol + 1:\n            raise ValueError(\n                \"if argument 'digits' is a vector of length more than one, \"\n                f\"it must have length equal to {ncol + 1} ( ncol(x) + 1 )\"\n            )\n        if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vec):\n            raise ValueError('\"digits\" must be numeric')\n        x.attrs[\"digits\"] = vec\n    return x\n\n\ndef message_of(obj):\n    try:\n        return digits(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        if value and isinstance(value[0], list):\n            return [plain(row) for row in value]\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    x0 = make_xt(0)\n    x0.attrs[\"digits\"] = [0, 2, 2]\n    out[\"default\"] = digits(x0)\n    specs = [\n        4,\n        [1, 2, 3],\n        [0, 0, 0],\n        [5, 4, 3],\n        0,\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = set_digits(x, spec)\n        out[f\"dig_{i}\"] = digits(x)\n    xmat = Xtable(\n        [[r * 4 + c + 1 for c in range(4)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 5,\n            \"digits\": [0] * 5,\n            \"display\": [\"d\"] * 5,\n        },\n    )\n    xmat = set_digits(\n        xmat, [[c * 3 + r + 1 for c in range(5)] for r in range(3)]\n    )\n    out[\"matrix_dig\"] = digits(xmat)\n    xwide = Xtable(\n        [[r * 3 + c + 1 for c in range(3)] for r in range(2)],\n        {\n            \"align\": [\"l\"] * 4,\n            \"digits\": [[1, 3, 5, 7], [2, 4, 6, 8]],\n            \"display\": [\"d\"] * 4,\n        },\n    )\n    out[\"wide_preset\"] = digits(xwide)\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        x = set_digits(x, j % 7)\n        val = digits(x)\n        if isinstance(val, list):\n            if val and isinstance(val[0], list):\n                for row in val:\n                    repeated.extend(row)\n            else:\n                repeated.extend(val)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "display<-",
+      "translated": true,
+      "python": "xtable.display_replacement.display_replacement",
+      "loads": [],
+      "uses": [
+        "align",
+        "caption",
+        "digits",
+        "display"
+      ],
+      "done": "Sets display on an xtable object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Replacement display values and validation",
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  out$default <- display(make_xt(0L))\n  specs <- list(\n    c(\"d\", \"f\", \"s\"),\n    c(\"e\", \"E\", \"g\"),\n    c(\"G\", \"fg\", \"s\"),\n    c(\"s\", \"d\", \"d\"),\n    rep(\"f\", 3)\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `display<-`(x, specs[[i]])\n    out[[paste0(\"disp_\", i)]] <- display(x)\n  }\n  xwide <- structure(\n    matrix(seq_len(15), 3, 5),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 6),\n    digits = rep(0, 6),\n    display = c(\"s\", \"d\", \"f\", \"e\", \"G\", \"fg\")\n  )\n  out$wide_preset <- display(xwide)\n  out$err_class <- as.character(message_of(display(structure(1, class = \"foo\"))))\n  out$err_len <- as.character(message_of(`display<-`(make_xt(1L), c(\"d\", \"f\"))))\n  out$err_mode <- as.character(message_of(`display<-`(make_xt(1L), c(\"d\", \"f\", \"x\"))))\n  repeated <- character(0)\n  modes <- c(\"d\", \"f\", \"e\", \"E\", \"g\", \"G\", \"fg\", \"s\")\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    k <- ncol(x) + 1\n    val <- modes[((seq_len(k) + j - 2L) %% length(modes)) + 1L]\n    x <- `display<-`(x, val)\n    repeated <- c(repeated, display(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import Xtable\nfrom xtable.display import display\nfrom xtable.display_replacement import display_replacement\nfrom xtable.xtable_main import RDataFrame, xtable\n\n\ndef make_xt(i: int):\n    n = 3 + (i % 4)\n    return xtable(RDataFrame({\"a\": list(range(1, n + 1)), \"b\": list(range(1, n + 1))}))\n\n\ndef message_of(obj):\n    try:\n        return display(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef message_of_set(kind):\n    try:\n        return display_replacement(make_xt(1), kind)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    out[\"default\"] = display(make_xt(0))\n    specs = [\n        [\"d\", \"f\", \"s\"],\n        [\"e\", \"E\", \"g\"],\n        [\"G\", \"fg\", \"s\"],\n        [\"s\", \"d\", \"d\"],\n        [\"f\", \"f\", \"f\"],\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = display_replacement(x, spec)\n        out[f\"disp_{i}\"] = display(x)\n    xwide = Xtable(\n        [[r * 5 + c + 1 for c in range(5)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 6,\n            \"digits\": [0] * 6,\n            \"display\": [\"s\", \"d\", \"f\", \"e\", \"G\", \"fg\"],\n        },\n        classes=(\"xtable\", \"matrix\"),\n    )\n    out[\"wide_preset\"] = display(xwide)\n\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    out[\"err_len\"] = [message_of_set([\"d\", \"f\"])]\n    out[\"err_mode\"] = [message_of_set([\"d\", \"f\", \"x\"])]\n    modes = [\"d\", \"f\", \"e\", \"E\", \"g\", \"G\", \"fg\", \"s\"]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        k = x.ncol + 1\n        val = [modes[(idx + j - 1) % len(modes)] for idx in range(k)]\n        x = display_replacement(x, val)\n        attr = display(x)\n        if isinstance(attr, list):\n            repeated.extend(attr)\n        elif attr is not None:\n            repeated.append(attr)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        },
+        "r_ms": 295.96829414367676,
+        "translated_ms": 11.139596499560867,
+        "speedup": 26.56903184557395,
+        "max_abs_diff": 0.0,
+        "matches": true
+      }
+    },
+    {
+      "name": "display",
+      "translated": true,
+      "python": "xtable.display.display",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the display attribute of an xtable object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default and user-set display vectors on a data frame and a wide matrix.",
+        "r_ms": 275.6063938140869,
+        "translated_ms": 2.2263325008680113,
+        "speedup": 123.79390486669553,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n}\n\none <- function() {\n  out <- list()\n  out$default <- display(make_xt(0L))\n  specs <- list(\n    c(\"d\", \"f\", \"s\"),\n    c(\"e\", \"E\", \"g\"),\n    c(\"G\", \"fg\", \"s\"),\n    c(\"s\", \"d\", \"d\"),\n    rep(\"f\", 3)\n  )\n  for (i in seq_along(specs)) {\n    x <- make_xt(i)\n    x <- `display<-`(x, specs[[i]])\n    out[[paste0(\"disp_\", i)]] <- display(x)\n  }\n  xwide <- structure(\n    matrix(seq_len(15), 3, 5),\n    class = c(\"xtable\", \"matrix\"),\n    align = rep(\"l\", 6),\n    digits = rep(0, 6),\n    display = c(\"s\", \"d\", \"f\", \"e\", \"G\", \"fg\")\n  )\n  out$wide_preset <- display(xwide)\n  out$err_class <- as.character(message_of(display(structure(1, class = \"foo\"))))\n  repeated <- character(0)\n  modes <- c(\"d\", \"f\", \"e\", \"E\", \"g\", \"G\", \"fg\", \"s\")\n  for (j in seq_len(400)) {\n    x <- make_xt(j)\n    k <- ncol(x) + 1\n    val <- modes[((seq_len(k) + j - 2L) %% length(modes)) + 1L]\n    x <- `display<-`(x, val)\n    repeated <- c(repeated, display(x))\n  }\n  out$repeated <- repeated\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import Xtable\nfrom xtable.display import display\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable([[a, b] for a, b in zip(range(1, n + 1), range(1, n + 1))])\n\n\ndef set_display(x: Xtable, value: object) -> Xtable:\n    \"\"\"Proof helper: store ``display`` like ``display<-`` after validation.\"\"\"\n    allowed = {\"d\", \"f\", \"e\", \"E\", \"g\", \"G\", \"fg\", \"s\"}\n    if isinstance(value, str):\n        vec = [value]\n    else:\n        vec = list(value)\n    if len(vec) != x.ncol + 1:\n        raise ValueError(\n            f'\"display\" must have length equal to {x.ncol + 1} ( ncol(x) + 1 )'\n        )\n    if not all(v in allowed for v in vec):\n        raise ValueError(\n            '\"display\" must be in {\"d\",\"f\",\"e\",\"E\",\"g\",\"G\", \"fg\", \"s\"}'\n        )\n    x.attrs[\"display\"] = vec\n    return x\n\n\ndef message_of(obj):\n    try:\n        return display(obj)\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    out = {}\n    x0 = make_xt(0)\n    x0.attrs[\"display\"] = [\"s\", \"d\", \"d\"]\n    out[\"default\"] = display(x0)\n    specs = [\n        [\"d\", \"f\", \"s\"],\n        [\"e\", \"E\", \"g\"],\n        [\"G\", \"fg\", \"s\"],\n        [\"s\", \"d\", \"d\"],\n        [\"f\", \"f\", \"f\"],\n    ]\n    for i, spec in enumerate(specs, start=1):\n        x = make_xt(i)\n        x = set_display(x, spec)\n        out[f\"disp_{i}\"] = display(x)\n    xwide = Xtable(\n        [[r * 5 + c + 1 for c in range(5)] for r in range(3)],\n        {\n            \"align\": [\"l\"] * 6,\n            \"digits\": [0] * 6,\n            \"display\": [\"s\", \"d\", \"f\", \"e\", \"G\", \"fg\"],\n        },\n    )\n    out[\"wide_preset\"] = display(xwide)\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(foo())]\n    modes = [\"d\", \"f\", \"e\", \"E\", \"g\", \"G\", \"fg\", \"s\"]\n    repeated = []\n    for j in range(1, 401):\n        x = make_xt(j)\n        k = x.ncol + 1\n        val = [modes[(idx + j - 1) % len(modes)] for idx in range(k)]\n        x = set_display(x, val)\n        attr = display(x)\n        if isinstance(attr, list):\n            repeated.extend(attr)\n        elif attr is not None:\n            repeated.append(attr)\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "xtable",
+      "translated": true,
+      "python": "xtable.xtable_main.xtable",
+      "loads": [],
+      "uses": [
+        "align",
+        "caption",
+        "digits",
+        "display"
+      ],
+      "done": "Builds xtable from data frame or matrix with default attributes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Data frame and matrix inputs",
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\none <- function() {\n  df <- data.frame(\n    a = 1:3,\n    b = 4:6,\n    c = letters[1:3],\n    d = c(TRUE, FALSE, TRUE),\n    e = 1L,\n    stringsAsFactors = FALSE\n  )\n  x <- xtable(df)\n  out <- list(\n    align = align(x),\n    digits = digits(x),\n    display = display(x),\n    class = class(x),\n    logical_col = as.character(x$d),\n    ncol = ncol(x),\n    nrow = nrow(x)\n  )\n  x2 <- xtable(\n    data.frame(a = 1:2, b = 3:4),\n    caption = \"Cap\",\n    label = \"tab:1\",\n    align = c(\"l\", \"l\", \"l\"),\n    digits = c(0, 1, 1),\n    display = c(\"s\", \"d\", \"f\")\n  )\n  out$custom <- list(\n    caption = caption(x2),\n    label = label(x2),\n    align = align(x2),\n    digits = digits(x2),\n    display = display(x2)\n  )\n  xm <- xtable(matrix(1:6, 2, 3))\n  out$matrix <- list(\n    class = class(xm),\n    ncol = ncol(xm),\n    names = names(xm),\n    align = align(xm),\n    digits = digits(xm),\n    display = display(xm)\n  )\n  out$err_class <- as.character(message_of(xtable(structure(1, class = \"foo\"))))\n  repeated <- list()\n  for (j in seq_len(200)) {\n    n <- 2 + (j %% 3)\n    xt <- xtable(data.frame(a = seq_len(n), b = seq_len(n)))\n    repeated[[j]] <- c(align(xt), digits(xt), display(xt))\n  }\n  out$repeated <- unlist(repeated)\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align import align\nfrom xtable.caption import caption\nfrom xtable.digits import digits\nfrom xtable.display import display\nfrom xtable.label import label\nfrom xtable.xtable_main import RDataFrame, xtable\n\n\ndef message_of(expr):\n    try:\n        return expr()\n    except ValueError as exc:\n        return str(exc)\n\n\ndef plain(value):\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    df = RDataFrame(\n        {\n            \"a\": [1, 2, 3],\n            \"b\": [4, 5, 6],\n            \"c\": [\"a\", \"b\", \"c\"],\n            \"d\": [True, False, True],\n            \"e\": [1, 1, 1],\n        }\n    )\n    x = xtable(df)\n    out = {\n        \"align\": align(x),\n        \"digits\": digits(x),\n        \"display\": display(x),\n        \"class\": list(x.classes),\n        \"logical_col\": [row[3] for row in x.data],\n        \"ncol\": [x.ncol],\n        \"nrow\": [x.nrow],\n    }\n    x2 = xtable(\n        RDataFrame({\"a\": [1, 2], \"b\": [3, 4]}),\n        caption=\"Cap\",\n        label=\"tab:1\",\n        align=[\"l\", \"l\", \"l\"],\n        digits=[0, 1, 1],\n        display=[\"s\", \"d\", \"f\"],\n    )\n    out[\"custom\"] = {\n        \"caption\": caption(x2),\n        \"label\": label(x2),\n        \"align\": align(x2),\n        \"digits\": digits(x2),\n        \"display\": display(x2),\n    }\n    xm = xtable([[1, 2, 3], [4, 5, 6]])\n    out[\"matrix\"] = {\n        \"class\": list(xm.classes),\n        \"ncol\": [xm.ncol],\n        \"names\": xm.col_names,\n        \"align\": align(xm),\n        \"digits\": digits(xm),\n        \"display\": display(xm),\n    }\n\n    class foo:\n        pass\n\n    out[\"err_class\"] = [message_of(lambda: xtable(foo()))]\n    repeated = []\n    for j in range(1, 201):\n        n = 2 + (j % 3)\n        xt = xtable(\n            RDataFrame(\n                {\"a\": list(range(1, n + 1)), \"b\": list(range(1, n + 1))}\n            )\n        )\n        repeated.extend(align(xt))\n        repeated.extend(str(v) for v in digits(xt))\n        repeated.extend(display(xt))\n    out[\"repeated\"] = repeated\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        },
+        "r_ms": 139.80472087860107,
+        "translated_ms": 5.16566199985391,
+        "speedup": 27.064240920632223,
+        "max_abs_diff": 0.0,
+        "matches": true
+      }
+    },
+    {
+      "name": "xtableMatharray",
+      "translated": true,
+      "python": "xtable.xtable_matharray.xtableMatharray",
+      "loads": [],
+      "uses": [
+        "align",
+        "caption",
+        "digits",
+        "display"
+      ],
+      "done": "Wraps matrix xtable with xtableMatharray class.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Matrix math array wrapper",
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  m <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8), 2, 4)\n  x <- xtableMatharray(m, caption = \"Var\", label = \"eq:vcov\")\n  list(\n    class = class(x),\n    nrow = nrow(x),\n    ncol = ncol(x),\n    align = align(x),\n    digits = digits(x),\n    display = display(x),\n    caption = caption(x),\n    label = label(x),\n    data = as.matrix(x)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align import align\nfrom xtable.caption import caption\nfrom xtable.digits import digits\nfrom xtable.display import display\nfrom xtable.label import label\nfrom xtable.xtable_matharray import xtable_matharray\n\n\ndef plain(value):\n    if isinstance(value, list):\n        if value and isinstance(value[0], list):\n            return [plain(row) for row in value]\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef one():\n    m = [[1.0, 3.0, 5.0, 7.0], [2.0, 4.0, 6.0, 8.0]]\n    x = xtable_matharray(m, caption=\"Var\", label=\"eq:vcov\")\n    return {\n        \"class\": list(x.classes),\n        \"nrow\": [x.nrow],\n        \"ncol\": [x.ncol],\n        \"align\": align(x),\n        \"digits\": digits(x),\n        \"display\": display(x),\n        \"caption\": caption(x),\n        \"label\": label(x),\n        \"data\": [\n            [int(v) if isinstance(v, float) and v.is_integer() else v for v in row]\n            for row in x.data\n        ],\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        },
+        "r_ms": 0.5005598068237305,
+        "translated_ms": 0.04247750075592194,
+        "speedup": 11.784116247798446,
+        "max_abs_diff": 0.0,
+        "matches": true
+      }
+    },
+    {
+      "name": "xtableList",
+      "translated": true,
+      "python": "xtable.xtable_list.xtable_list",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "xtableList",
+        "case": "xtableList builds a list of xtable objects with shared attributes",
+        "r_ms": 1.0733604431152344,
+        "translated_ms": 0.07679100053792354,
+        "speedup": 13.977685348495376,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  x <- list(\n    data.frame(a = 1:3, b = 4:6),\n    matrix(7:10, 2, 2)\n  )\n  attr(x, \"subheadings\") <- c(\"Part A\", \"Part B\")\n  attr(x, \"message\") <- c(\"note\", \"\")\n  xl <- xtableList(x, caption = \"List cap\", label = \"tab:list\")\n  list(\n    class = class(xl),\n    len = length(xl),\n    caption = attr(xl, \"caption\"),\n    label = attr(xl, \"label\"),\n    message = attr(xl, \"message\"),\n    sub1 = attr(xl[[1]], \"subheading\"),\n    sub2 = attr(xl[[2]], \"subheading\"),\n    align1 = align(xl[[1]]),\n    digits1 = digits(xl[[1]]),\n    display1 = display(xl[[1]]),\n    nrow2 = nrow(xl[[2]])\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = TRUE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align import align\nfrom xtable.digits import digits\nfrom xtable.display import display\nfrom xtable.xtable_list import RList, xtable_list\n\n\ndef one():\n    from xtable.xtable_main import RDataFrame\n\n    x = RList(\n        [\n            RDataFrame({\"a\": [1, 2, 3], \"b\": [4, 5, 6]}),\n            [[7, 8], [9, 10]],\n        ],\n        subheadings=[\"Part A\", \"Part B\"],\n        message=[\"note\", \"\"],\n    )\n    xl = xtable_list(x, caption=\"List cap\", label=\"tab:list\")\n    return {\n        \"class\": list(xl.classes),\n        \"len\": len(xl),\n        \"caption\": xl.attrs.get(\"caption\"),\n        \"label\": xl.attrs.get(\"label\"),\n        \"message\": xl.attrs.get(\"message\"),\n        \"sub1\": xl.items[0].attrs.get(\"subheading\"),\n        \"sub2\": xl.items[1].attrs.get(\"subheading\"),\n        \"align1\": align(xl.items[0]),\n        \"digits1\": digits(xl.items[0]),\n        \"display1\": display(xl.items[0]),\n        \"nrow2\": xl.items[1].nrow,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "xtableLSMeans",
+      "translated": true,
+      "python": "xtable.xtable_lsmeans.xtable_lsmeans",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "xtableLSMeans",
+        "case": "xtableLSMeans wraps lsmeans output as an xtable",
+        "r_ms": 1.6779899597167969,
+        "translated_ms": 0.07430699952237774,
+        "speedup": 22.581855955729527,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  x <- data.frame(est = c(1, 2, 3), trt = factor(c(\"a\", \"b\", \"a\")), se = c(0.1, 0.2, 0.3))\n  attr(x, \"estName\") <- \"lsmean\"\n  attr(x, \"mesg\") <- \"note\"\n  xl <- xtableLSMeans(x, caption = \"LS\", label = \"tab:ls\")\n  list(\n    class = class(xl),\n    len = length(xl),\n    message = attr(xl, \"message\"),\n    sub1 = attr(xl[[1]], \"subheading\"),\n    sub2 = attr(xl[[2]], \"subheading\"),\n    ncol1 = ncol(xl[[1]])\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = TRUE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.xtable_lsmeans import LSMeansFrame, xtable_lsmeans\nfrom xtable.xtable_main import Factor\n\n\ndef one():\n    xl = xtable_lsmeans(\n        LSMeansFrame(\n            {\n                \"est\": [1, 2, 3],\n                \"trt\": Factor([\"a\", \"b\", \"a\"], levels=[\"a\", \"b\"]),\n                \"se\": [0.1, 0.2, 0.3],\n            },\n            est_name=\"lsmean\",\n            mesg=\"note\",\n        ),\n        caption=\"LS\",\n        label=\"tab:ls\",\n    )\n    return {\n        \"class\": list(xl.classes),\n        \"len\": len(xl),\n        \"message\": xl.attrs.get(\"message\"),\n        \"sub1\": xl.items[0].attrs.get(\"subheading\"),\n        \"sub2\": xl.items[1].attrs.get(\"subheading\"),\n        \"ncol1\": xl.items[0].ncol,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "print.xtable",
+      "translated": true,
+      "python": "xtable.print_xtable.print_xtable",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "HTML print.xtable; sanitize.final not wired into line printer.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "print.xtable",
+        "case": "LaTeX print.xtable on proof tables (HTML not ported)",
+        "r_ms": 5.9833526611328125,
+        "translated_ms": 0.17595649842405692,
+        "speedup": 34.00472682010796,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  x <- xtable(data.frame(a = c(\"x&y\", \"z\"), b = c(\"p\", \"q\"), c = pi), caption = \"Cap\")\n  list(\n    latex = print(\n      x,\n      include.rownames = FALSE,\n      print.results = FALSE,\n      comment = FALSE,\n      timestamp = NULL,\n      floating = FALSE\n    ),\n    numeric = print(\n      xtable(data.frame(v = c(1.2345, 1e5)), digits = c(0, 4)),\n      include.rownames = FALSE,\n      include.colnames = FALSE,\n      print.results = FALSE,\n      comment = FALSE,\n      timestamp = NULL,\n      floating = FALSE\n    )\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = TRUE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.print_xtable import print_xtable\nfrom xtable.xtable_main import RDataFrame, xtable\n\n\ndef one():\n    x = xtable(\n        RDataFrame({\"a\": [\"x&y\", \"z\"], \"b\": [\"p\", \"q\"], \"c\": [3.141592653589793, 3.141592653589793]}),\n        caption=\"Cap\",\n    )\n    xnum = xtable(RDataFrame({\"v\": [1.2345, 1e5]}))\n    from xtable.digits_replacement import digits_replacement\n\n    digits_replacement(xnum, [0, 4])\n    return {\n        \"latex\": print_xtable(\n            x,\n            include_rownames=False,\n            print_results=False,\n            comment=False,\n            timestamp=None,\n            floating=False,\n        ),\n        \"numeric\": print_xtable(\n            xnum,\n            include_rownames=False,\n            include_colnames=False,\n            print_results=False,\n            comment=False,\n            timestamp=None,\n            floating=False,\n        ),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "print.xtableMatharray",
+      "translated": true,
+      "python": "xtable.print_xtable_matharray.print_xtable_matharray",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "print.xtableMatharray",
+        "case": "print.xtableMatharray cell grid matches R on proof cases",
+        "r_ms": 2.123594284057617,
+        "translated_ms": 0.07859149991418235,
+        "speedup": 27.02066109409372,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  m <- matrix(1:4, 2, 2)\n  x <- xtableMatharray(m)\n  print.xtableMatharray(\n    x,\n    print.results = FALSE,\n    comment = FALSE,\n    timestamp = NULL\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = TRUE))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.print_xtable_matharray import print_xtable_matharray\nfrom xtable.xtable_matharray import xtable_matharray\n\n\ndef one():\n    x = xtable_matharray([[1, 3], [2, 4]])\n    return print_xtable_matharray(\n        x, print_results=False, comment=False, timestamp=None\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "print.xtableList",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "xtableFtable",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "print.xtableFtable",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "toLatex.xtable",
+      "translated": true,
+      "python": "xtable.to_latex.to_latex_xtable",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "toLatex.xtable",
+        "case": "toLatex.xtable emits LaTeX for xtable objects",
+        "r_ms": 11.473655700683594,
+        "translated_ms": 0.34449850136297755,
+        "speedup": 33.30538639584526,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  out <- list()\n  x1 <- xtable(data.frame(a = 1:3, b = c(1.5, 2, 3.1), c = letters[1:3]))\n  align(x1) <- c(\"l\", \"r\", \"r\", \"l\")\n  digits(x1) <- c(0, 0, 1, 0)\n  display(x1) <- c(\"s\", \"d\", \"f\", \"s\")\n  out$basic <- as.character(toLatex(x1, comment = FALSE, floating = FALSE))\n\n  x2 <- xtable(data.frame(a = 1:2, b = c(1.5, 2)))\n  align(x2) <- c(\"r\", \"r\", \"r\")\n  digits(x2) <- c(0, 0, 1)\n  display(x2) <- c(\"s\", \"d\", \"f\")\n  out$no_row <- as.character(\n    toLatex(x2, comment = FALSE, floating = FALSE, include.rownames = FALSE)\n  )\n\n  x3 <- xtable(data.frame(x = c(0.12, 1.2), y = c(\"a&b\", \"c>d\")))\n  align(x3) <- c(\"l\", \"r\", \"l\")\n  digits(x3) <- c(0, 2, 0)\n  display(x3) <- c(\"s\", \"f\", \"s\")\n  out$sanitize <- as.character(toLatex(x3, comment = FALSE, floating = FALSE))\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align_replacement import align_replacement\nfrom xtable.caption_replacement import Xtable\nfrom xtable.digits_replacement import digits_replacement\nfrom xtable.display_replacement import display_replacement\nfrom xtable.to_latex import to_latex_xtable\n\n\ndef make_x1():\n    x = Xtable(\n        [[1, 1.5, \"a\"], [2, 2.0, \"b\"], [3, 3.1, \"c\"]],\n        col_names=[\"a\", \"b\", \"c\"],\n        row_names=[\"1\", \"2\", \"3\"],\n    )\n    x = align_replacement(x, [\"l\", \"r\", \"r\", \"l\"])\n    x = digits_replacement(x, [0, 0, 1, 0])\n    x = display_replacement(x, [\"s\", \"d\", \"f\", \"s\"])\n    return x\n\n\ndef make_x2():\n    x = Xtable(\n        [[1, 1.5], [2, 2.0]],\n        col_names=[\"a\", \"b\"],\n        row_names=[\"1\", \"2\"],\n    )\n    x = align_replacement(x, [\"r\", \"r\", \"r\"])\n    x = digits_replacement(x, [0, 0, 1])\n    x = display_replacement(x, [\"s\", \"d\", \"f\"])\n    return x\n\n\ndef make_x3():\n    x = Xtable(\n        [[0.12, \"a&b\"], [1.2, \"c>d\"]],\n        col_names=[\"x\", \"y\"],\n        row_names=[\"1\", \"2\"],\n    )\n    x = align_replacement(x, [\"l\", \"r\", \"l\"])\n    x = digits_replacement(x, [0, 2, 0])\n    x = display_replacement(x, [\"s\", \"f\", \"s\"])\n    return x\n\n\ndef one():\n    return {\n        \"basic\": to_latex_xtable(make_x1(), comment=False, floating=False),\n        \"no_row\": to_latex_xtable(\n            make_x2(), comment=False, floating=False, **{\"include.rownames\": False}\n        ),\n        \"sanitize\": to_latex_xtable(make_x3(), comment=False, floating=False),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "autoformat",
+      "translated": true,
+      "python": "xtable.autoformat.autoformat",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "autoformat",
+        "case": "autoformat sets align, digits, and display from column types",
+        "r_ms": 9.215831756591797,
+        "translated_ms": 0.7112675011740066,
+        "speedup": 12.956913877521881,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\none <- function() {\n  out <- list()\n  for (i in 0:7) {\n    n <- 2 + (i %% 5)\n    x <- xtable(data.frame(\n      id = seq_len(n),\n      val = seq_len(n) + i * 0.1,\n      lab = letters[seq_len(n)]\n    ))\n    y <- autoformat(x, zap = 5 + (i %% 3))\n    out[[paste0(\"case_\", i)]] <- list(\n      align = align(y),\n      digits = digits(y),\n      display = display(y)\n    )\n  }\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.align import align\nfrom xtable.autoformat import autoformat\nfrom xtable.caption_replacement import Xtable\nfrom xtable.digits import digits\nfrom xtable.display import display\n\n\ndef one():\n    out = {}\n    for i in range(8):\n        n = 2 + (i % 5)\n        x = Xtable(\n            [\n                [idx, idx + i * 0.1, c]\n                for idx, c in zip(range(1, n + 1), \"abcdef\"[:n])\n            ]\n        )\n        y = autoformat(x, zap=5 + (i % 3))\n        out[f\"case_{i}\"] = {\n            \"align\": align(y),\n            \"digits\": digits(y),\n            \"display\": display(y),\n        }\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "xalign",
+      "translated": true,
+      "python": "xtable.xalign.xalign",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "xalign",
+        "case": "xalign on data.frame and matrix xtables with pad and nopad",
+        "r_ms": 5.0171613693237305,
+        "translated_ms": 0.10263900003337767,
+        "speedup": 48.88162752649749,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(\n    a = seq_len(n),\n    b = seq_len(n) + 0.5,\n    c = letters[seq_len(n)]\n  ))\n}\n\none <- function() {\n  out <- list()\n  for (i in 0:5) {\n    x <- make_xt(i)\n    out[[paste0(\"xalign_\", i)]] <- xalign(x)\n    out[[paste0(\"xalign_nopad_\", i)]] <- xalign(x, pad = FALSE)\n  }\n  out$vec_num <- xalign(c(1, 2, 3.5))\n  out$vec_chr <- xalign(c(\"a\", \"b\"))\n  out$mat <- xalign(matrix(1:6, 2, 3))\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import Xtable\nfrom xtable.table_utils import RMatrix\nfrom xtable.xalign import xalign\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable(\n        [[a, b, c] for a, b, c in zip(range(1, n + 1), range(1, n + 1), \"abcdef\")]\n    )\n\n\ndef one():\n    out = {}\n    for i in range(6):\n        x = make_xt(i)\n        out[f\"xalign_{i}\"] = xalign(x)\n        out[f\"xalign_nopad_{i}\"] = xalign(x, pad=False)\n    out[\"vec_num\"] = xalign([1, 2, 3.5])\n    out[\"vec_chr\"] = xalign([\"a\", \"b\"])\n    out[\"mat\"] = xalign(\n        RMatrix([[1, 3, 5], [2, 4, 6]], nrow=2, ncol=3)\n    )\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "xdigits",
+      "translated": true,
+      "python": "xtable.xdigits.xdigits",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "name": "xdigits",
+        "case": "xdigits reads and formats the digits attribute with zapsmall rounding",
+        "r_ms": 6.321907043457031,
+        "translated_ms": 0.433158498708508,
+        "speedup": 14.594904780366157,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nmake_xt <- function(i) {\n  n <- 3 + (i %% 4)\n  xtable(data.frame(\n    a = seq_len(n),\n    b = seq_len(n) + 0.5,\n    c = letters[seq_len(n)]\n  ))\n}\n\none <- function() {\n  out <- list()\n  for (i in 0:5) {\n    x <- make_xt(i)\n    out[[paste0(\"xdigits_\", i)]] <- xdigits(x)\n    out[[paste0(\"xdigits_zap_\", i)]] <- xdigits(x, zap = 4)\n  }\n  out$vec <- xdigits(c(1.1, 2.22, 3))\n  out$with_na <- xdigits(c(1.5, NA, 2.333))\n  out$mat <- xdigits(matrix(c(1, 2.5, 3.01, 4), 2, 2))\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\"))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.caption_replacement import Xtable\nfrom xtable.table_utils import RMatrix\nfrom xtable.xdigits import xdigits\n\n\ndef make_xt(i: int) -> Xtable:\n    n = 3 + (i % 4)\n    return Xtable(\n        [\n            [a, b, c]\n            for a, b, c in zip(range(1, n + 1), [i + 0.5 for i in range(1, n + 1)], \"abcdef\")\n        ]\n    )\n\n\ndef one():\n    out = {}\n    for i in range(6):\n        x = make_xt(i)\n        out[f\"xdigits_{i}\"] = xdigits(x)\n        out[f\"xdigits_zap_{i}\"] = xdigits(x, zap=4)\n    out[\"vec\"] = xdigits([1.1, 2.22, 3])\n    out[\"with_na\"] = xdigits([1.5, float(\"nan\"), 2.333])\n    out[\"mat\"] = xdigits(RMatrix([[1, 3.01], [2.5, 4]], nrow=2, ncol=2))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": value}))\n"
+        }
+      }
+    },
+    {
+      "name": "xdisplay",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "sanitize",
+      "translated": true,
+      "python": "xtable.sanitize.sanitize",
+      "loads": [],
+      "uses": [],
+      "done": "Replaces LaTeX special characters, and escapes &, <, and > for every other type.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sanitize on the manual's LaTeX and HTML strings, including NA, names, and numbers",
+        "r_ms": 130.3187608718872,
+        "translated_ms": 98.6105715001031,
+        "speedup": 1.321549595438162,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\noptions(width = 80)\n\nexample <- \"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/sanitize-r.txt\"\ninsane <- c(\"&\", \">\", \">\", \"_\", \"%\", \"$\", \"\\\\\", \"#\", \"^\", \"~\", \"{\", \"}\")\nnames(insane) <- c(\n  \"Ampersand\", \"Greater than\", \"Less than\",\n  \"Underscore\", \"Percent\", \"Dollar\",\n  \"Backslash\", \"Hash\", \"Caret\", \"Tilde\",\n  \"Left brace\", \"Right brace\"\n)\nsink(example)\nprint(sanitize(insane, type = \"latex\"))\ninsane <- c(\"&\", \">\", \"<\")\nnames(insane) <- c(\"Ampersand\", \"Greater than\", \"Less than\")\nprint(sanitize(insane, type = \"html\"))\nsink()\n\npiece <- c(\n  \"&\", \">\", \"<\", \"|\", \"{\", \"}\", \"%\", \"_\", \"#\", \"^\", \"~\", \"$\", \"\\\\\",\n  \"SANITIZE.BACKSLASH\",\n  \"\\\\$><|{}%&_#^~\",\n  \"a&b<c>d\",\n  \"&<>&\",\n  \"100%\",\n  \"a_b\",\n  \"\",\n  NA_character_,\n  \"NA\",\n  \"café & naïve\",\n  \"a&\\nb<c>\",\n  \"xSANITIZE.BACKSLASHy\",\n  \"\\\\SANITIZE.BACKSLASH\",\n  \"already &amp;\",\n  \"p|q\",\n  \"~^#_\",\n  \"no specials\",\n  \"\\\\&\\\\%\\\\_\",\n  \"a^b\",\n  \"~~~\"\n)\ntext <- rep(piece, 800)\nexample_latex <- c(\"&\", \">\", \">\", \"_\", \"%\", \"$\", \"\\\\\", \"#\", \"^\", \"~\", \"{\", \"}\")\nnames(example_latex) <- c(\n  \"Ampersand\", \"Greater than\", \"Less than\",\n  \"Underscore\", \"Percent\", \"Dollar\",\n  \"Backslash\", \"Hash\", \"Caret\", \"Tilde\",\n  \"Left brace\", \"Right brace\"\n)\nexample_html <- c(\"&\", \">\", \"<\")\nnames(example_html) <- c(\"Ampersand\", \"Greater than\", \"Less than\")\nnumbers <- c(\n  1e-4, 1e5, 10000, 0.00015, 2e5, NA, NaN, Inf, -Inf, -0, 1 / 3,\n  1e16, 1e15, 1e-20, 0.1, 10, 0.001, 1e4, 123456789012345,\n  1.23456789012345e-8\n)\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\none <- function() {\n  latex_example <- sanitize(example_latex, \"latex\")\n  html_example <- sanitize(example_html, \"html\")\n  list(\n    latex = sanitize(text, \"latex\"),\n    html = sanitize(text, \"html\"),\n    default = sanitize(text),\n    other = sanitize(c(\"a&b<c>d\"), \"foo\"),\n    upper = sanitize(c(\"a&b\", \"c<d\"), \"HTML\"),\n    example_latex = unname(latex_example),\n    example_latex_names = names(latex_example),\n    example_html = unname(html_example),\n    example_html_names = names(html_example),\n    numbers = sanitize(numbers),\n    integer = sanitize(c(100000L, 1L, NA_integer_, -2147483647L, 0L)),\n    logical = sanitize(c(TRUE, FALSE, NA)),\n    mixed = sanitize(c(\"a<\", 1e5, TRUE, 100000L, NA)),\n    empty = sanitize(character(0)),\n    null = sanitize(NULL),\n    na = sanitize(NA_character_),\n    single = sanitize(\"a&b\"),\n    true_type = sanitize(\"a&b\", TRUE),\n    one_type = sanitize(\"a&b\", \"latex\"),\n    plain_names = names(sanitize(\"a&b\")),\n    err_null = message_of(sanitize(\"a\", NULL)),\n    err_na = message_of(sanitize(\"a\", NA)),\n    err_len = message_of(sanitize(\"a\", c(\"latex\", \"html\"))),\n    nan_type = sanitize(\"a&b\", NaN),\n    err_empty_type = message_of(sanitize(\"a\", character(0)))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\", digits = NA))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.sanitize import NA, Strings, sanitize\n\nexample = Path(\"/home/ahmed/killr_projects/killr/packages/xtable/docs/output/sanitize-python.txt\")\n\nLATEX_NAMES = [\n    \"Ampersand\",\n    \"Greater than\",\n    \"Less than\",\n    \"Underscore\",\n    \"Percent\",\n    \"Dollar\",\n    \"Backslash\",\n    \"Hash\",\n    \"Caret\",\n    \"Tilde\",\n    \"Left brace\",\n    \"Right brace\",\n]\nHTML_NAMES = [\"Ampersand\", \"Greater than\", \"Less than\"]\n\n\ndef encode_string(value):\n    if value is NA:\n        return \"NA\"\n    out = ['\"']\n    for ch in value:\n        if ch == \"\\\\\":\n            out.append(\"\\\\\\\\\")\n        elif ch == '\"':\n            out.append('\\\\\"')\n        elif ch == \"\\n\":\n            out.append(\"\\\\n\")\n        elif ch == \"\\r\":\n            out.append(\"\\\\r\")\n        elif ch == \"\\t\":\n            out.append(\"\\\\t\")\n        else:\n            out.append(ch)\n    out.append('\"')\n    return \"\".join(out)\n\n\ndef print_named(values, names, width=80):\n    formatted = [encode_string(value) for value in values]\n    col_w = max(max(len(name) for name in names), max(len(text) for text in formatted))\n    n_per = max(1, width // (col_w + 1))\n    lines = []\n    for start in range(0, len(values), n_per):\n        chunk_names = names[start : start + n_per]\n        chunk_values = formatted[start : start + n_per]\n        lines.append(\"\".join(name.rjust(col_w) + \" \" for name in chunk_names))\n        lines.append(\"\".join(text.rjust(col_w) + \" \" for text in chunk_values))\n    return \"\\n\".join(lines)\n\n\nlatex_in = Strings(\n    [\"&\", \">\", \">\", \"_\", \"%\", \"$\", \"\\\\\", \"#\", \"^\", \"~\", \"{\", \"}\"],\n    LATEX_NAMES,\n)\nhtml_in = Strings([\"&\", \">\", \"<\"], HTML_NAMES)\nprinted = print_named(sanitize(latex_in, type=\"latex\"), LATEX_NAMES)\nprinted += \"\\n\"\nprinted += print_named(sanitize(html_in, type=\"html\"), HTML_NAMES)\nprinted += \"\\n\"\nexample.write_text(printed)\n\npiece = [\n    \"&\",\n    \">\",\n    \"<\",\n    \"|\",\n    \"{\",\n    \"}\",\n    \"%\",\n    \"_\",\n    \"#\",\n    \"^\",\n    \"~\",\n    \"$\",\n    \"\\\\\",\n    \"SANITIZE.BACKSLASH\",\n    \"\\\\$><|{}%&_#^~\",\n    \"a&b<c>d\",\n    \"&<>&\",\n    \"100%\",\n    \"a_b\",\n    \"\",\n    NA,\n    \"NA\",\n    \"café & naïve\",\n    \"a&\\nb<c>\",\n    \"xSANITIZE.BACKSLASHy\",\n    \"\\\\SANITIZE.BACKSLASH\",\n    \"already &amp;\",\n    \"p|q\",\n    \"~^#_\",\n    \"no specials\",\n    \"\\\\&\\\\%\\\\_\",\n    \"a^b\",\n    \"~~~\",\n]\ntext = piece * 800\nexample_latex = Strings(\n    [\"&\", \">\", \">\", \"_\", \"%\", \"$\", \"\\\\\", \"#\", \"^\", \"~\", \"{\", \"}\"],\n    LATEX_NAMES,\n)\nexample_html = Strings([\"&\", \">\", \"<\"], HTML_NAMES)\nnumbers = [\n    1e-4,\n    1e5,\n    10000.0,\n    0.00015,\n    2e5,\n    NA,\n    float(\"nan\"),\n    float(\"inf\"),\n    float(\"-inf\"),\n    -0.0,\n    1 / 3,\n    1e16,\n    1e15,\n    1e-20,\n    0.1,\n    10.0,\n    0.001,\n    1e4,\n    123456789012345.0,\n    1.23456789012345e-8,\n]\n\n\ndef plain(value):\n    if value is NA:\n        return None\n    if isinstance(value, Strings):\n        return [plain(item) for item in value]\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    return value\n\n\ndef message_of(kind):\n    try:\n        return sanitize(\"a\", kind)\n    except ValueError as exc:\n        return [str(exc)]\n\n\ndef one():\n    latex_example = sanitize(example_latex, \"latex\")\n    html_example = sanitize(example_html, \"html\")\n    return {\n        \"latex\": sanitize(text, \"latex\"),\n        \"html\": sanitize(text, \"html\"),\n        \"default\": sanitize(text),\n        \"other\": sanitize([\"a&b<c>d\"], \"foo\"),\n        \"upper\": sanitize([\"a&b\", \"c<d\"], \"HTML\"),\n        \"example_latex\": list(latex_example),\n        \"example_latex_names\": latex_example.names,\n        \"example_html\": list(html_example),\n        \"example_html_names\": html_example.names,\n        \"numbers\": sanitize(numbers),\n        \"integer\": sanitize([100000, 1, NA, -2147483647, 0]),\n        \"logical\": sanitize([True, False, NA]),\n        \"mixed\": sanitize([\"a<\", 1e5, True, 100000, NA]),\n        \"empty\": sanitize([]),\n        \"null\": sanitize(None),\n        \"na\": sanitize(NA),\n        \"single\": sanitize(\"a&b\"),\n        \"true_type\": sanitize(\"a&b\", True),\n        \"one_type\": sanitize(\"a&b\", \"latex\"),\n        \"plain_names\": sanitize(\"a&b\").names,\n        \"err_null\": message_of(None),\n        \"err_na\": message_of(NA),\n        \"err_len\": message_of([\"latex\", \"html\"]),\n        \"nan_type\": sanitize(\"a&b\", float(\"nan\")),\n        \"err_empty_type\": message_of([]),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sanitize.numbers",
+      "translated": true,
+      "python": "xtable.sanitize_numbers.sanitize_numbers",
+      "loads": [],
+      "uses": [],
+      "done": "Formats numbers for LaTeX, and leaves HTML text unchanged.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seventeen strings covering signs, exponents, HTML, and error paths.",
+        "r_ms": 4.616737365722656,
+        "translated_ms": 0.16101299934234703,
+        "speedup": 28.67307226484562,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(xtable))\nsuppressPackageStartupMessages(library(jsonlite))\nstopifnot(packageDescription(\"xtable\")$Version == \"1.8-8\")\n\nbase <- c(\n  \"1e5\", \"1E10\", \"-2.5e+10\", \"1.2e-03\", \"not\", \"1e5e6\", NA_character_, \"\",\n  \"$1e5$\", \"1e+05\", \"1.0e00\", \"3e-0\", \"1e-3\", \"10000\", \"a-b\", \"1-2\", \"-1\"\n)\nnames(base) <- letters[seq_along(base)]\n\nmessage_of <- function(expr) {\n  tryCatch(expr, error = function(e) conditionMessage(e))\n}\n\none <- function() {\n  list(\n    default = sanitize.numbers(base, \"latex\"),\n    html = sanitize.numbers(base, \"html\"),\n    html_opts = sanitize.numbers(base, \"html\", TRUE, TRUE),\n    neg = sanitize.numbers(base, \"latex\", math.style.negative = TRUE),\n    exp = sanitize.numbers(base, \"latex\", math.style.exponents = TRUE),\n    both = sanitize.numbers(base, \"latex\", TRUE, TRUE),\n    numeric = sanitize.numbers(c(1e5, 1000, -1), \"latex\", TRUE, TRUE),\n    numeric_html = sanitize.numbers(1e5, \"html\"),\n    named = sanitize.numbers(base, \"latex\", TRUE, TRUE),\n    named_names = names(sanitize.numbers(base, \"latex\", TRUE, TRUE)),\n    empty = sanitize.numbers(character(0), \"latex\"),\n    single = sanitize.numbers(\"1e5\", \"latex\", FALSE, TRUE),\n    err_type_len = message_of(sanitize.numbers(base, c(\"latex\", \"html\"))),\n    err_type_na = message_of(sanitize.numbers(base, NA)),\n    err_neg_na = message_of(sanitize.numbers(\"1\", \"latex\", math.style.negative = NA)),\n    err_exp_na = message_of(sanitize.numbers(\"1\", \"latex\", math.style.exponents = NA)),\n    err_exp_str = message_of(\n      sanitize.numbers(\"1e5\", \"latex\", math.style.exponents = \"$$\")\n    ),\n    err_neg_len = message_of(\n      sanitize.numbers(\"1\", \"latex\", math.style.negative = c(TRUE, FALSE))\n    ),\n    exp_num = sanitize.numbers(\"1e5\", \"latex\", FALSE, 1),\n    neg_chr = sanitize.numbers(\"-1\", \"latex\", \"TRUE\", \"FALSE\")\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"median_ms\":%.17g,\"value\":', median(elapsed) * 1000))\ncat(toJSON(value, auto_unbox = FALSE, na = \"null\", null = \"null\", digits = NA))\ncat(\"}\\n\")\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/xtable\")\n\nfrom xtable.sanitize import NA, Strings\nfrom xtable.sanitize_numbers import sanitize_numbers\n\nBASE = [\n    \"1e5\",\n    \"1E10\",\n    \"-2.5e+10\",\n    \"1.2e-03\",\n    \"not\",\n    \"1e5e6\",\n    NA,\n    \"\",\n    \"$1e5$\",\n    \"1e+05\",\n    \"1.0e00\",\n    \"3e-0\",\n    \"1e-3\",\n    \"10000\",\n    \"a-b\",\n    \"1-2\",\n    \"-1\",\n]\nBASE_NAMES = [chr(ord(\"a\") + i) for i in range(len(BASE))]\nbase = Strings(BASE, BASE_NAMES)\n\n\ndef plain(value):\n    if value is NA:\n        return None\n    if isinstance(value, Strings):\n        return [plain(item) for item in value]\n    if isinstance(value, list):\n        return [plain(item) for item in value]\n    if isinstance(value, dict):\n        return {key: plain(item) for key, item in value.items()}\n    if isinstance(value, float) and value.is_integer():\n        return int(value)\n    return value\n\n\ndef message_of(expr):\n    try:\n        expr()\n        return [None]\n    except ValueError as exc:\n        return [str(exc)]\n\n\ndef one():\n    both = sanitize_numbers(base, \"latex\", True, True)\n    return {\n        \"default\": sanitize_numbers(base, \"latex\"),\n        \"html\": sanitize_numbers(base, \"html\"),\n        \"html_opts\": sanitize_numbers(base, \"html\", True, True),\n        \"neg\": sanitize_numbers(base, \"latex\", math_style_negative=True),\n        \"exp\": sanitize_numbers(base, \"latex\", math_style_exponents=True),\n        \"both\": both,\n        \"numeric\": sanitize_numbers([1e5, 1000, -1], \"latex\", True, True),\n        \"numeric_html\": [sanitize_numbers(1e5, \"html\")],\n        \"named\": both,\n        \"named_names\": both.names,\n        \"empty\": sanitize_numbers([], \"latex\"),\n        \"single\": sanitize_numbers(\"1e5\", \"latex\", False, True),\n        \"err_type_len\": message_of(\n            lambda: sanitize_numbers(base, [\"latex\", \"html\"])\n        ),\n        \"err_type_na\": message_of(lambda: sanitize_numbers(base, NA)),\n        \"err_neg_na\": message_of(\n            lambda: sanitize_numbers(\"1\", \"latex\", math_style_negative=NA)\n        ),\n        \"err_exp_na\": message_of(\n            lambda: sanitize_numbers(\"1\", \"latex\", math_style_exponents=NA)\n        ),\n        \"err_exp_str\": message_of(\n            lambda: sanitize_numbers(\"1e5\", \"latex\", math_style_exponents=\"$$\")\n        ),\n        \"err_neg_len\": message_of(\n            lambda: sanitize_numbers(\"1\", \"latex\", math_style_negative=[True, False])\n        ),\n        \"exp_num\": sanitize_numbers(\"1e5\", \"latex\", False, 1),\n        \"neg_chr\": sanitize_numbers(\"-1\", \"latex\", \"TRUE\", \"FALSE\"),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"median_ms\": statistics.median(elapsed), \"value\": plain(value)}))\n"
+        }
+      }
+    },
+    {
+      "name": "sanitize.final",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "as.is",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "as.math",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

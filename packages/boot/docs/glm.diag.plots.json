@@ -1,0 +1,75 @@
+{
+  "name": "glm.diag.plots",
+  "title": "Diagnostics plots for generalized linear models",
+  "origin": {
+    "description": "Draws jackknife deviance residuals against the linear predictor, a normal QQ plot of standardized deviance residuals, Cook statistics against leverage over one minus leverage, and Cook statistics against case number.",
+    "usage": "glm.diag.plots(glmfit, glmdiag = glm.diag(glmfit), subset = NULL,\n               iden = FALSE, labels = NULL, ret = FALSE)",
+    "arguments": [
+      {
+        "name": "glmfit",
+        "text": "A glm object, the result of glm()."
+      },
+      {
+        "name": "glmdiag",
+        "text": "Diagnostics from glm.diag. Calculated if not supplied."
+      },
+      {
+        "name": "subset",
+        "text": "Case numbers for the Cook plot. NULL uses every fitted row. A logical vector selects positions. An all-negative vector drops those positions from 1 through length(subset) + n."
+      },
+      {
+        "name": "iden",
+        "text": "If TRUE, prompt for a panel and run identify() until the answer is 0."
+      },
+      {
+        "name": "labels",
+        "text": "Labels for identify(). Defaults to the names of the linear predictor."
+      },
+      {
+        "name": "ret",
+        "text": "If TRUE, return glmdiag. Otherwise return nothing."
+      }
+    ],
+    "details": "Four panels are drawn with par(mfrow = c(2, 2)). The top left panel plots jackknife residuals against the linear predictor. The top right panel plots normal quantiles against standardized deviance residuals, with a dashed line of slope 1 through the origin. The bottom left panel plots Cook statistics against h/(1-h). A dashed horizontal line at 8/(n - 2p) is drawn when that value lies inside the Cook range, and a dashed vertical line at 2p/(n - 2p) when that value lies inside the range of h/(1-h). The bottom right panel plots the Cook statistics against case number and repeats the horizontal line when it was inside range. The example fits a gamma log model to the leukaemia data.",
+    "value": "glmdiag if ret is TRUE, otherwise NULL.",
+    "example": "library(boot)\ndata(leuk, package = \"MASS\")\nleuk.mod <- glm(time ~ ag - 1 + log10(wbc), family = Gamma(log), data = leuk)\nleuk.diag <- glm.diag(leuk.mod)\nglm.diag.plots(leuk.mod, leuk.diag)\n",
+    "output": "output/glm.diag.plots-r.svg"
+  },
+  "translation": {
+    "description": "Draws the four glm.diag.plots panels with Matplotlib for a gaussian or binomial fit.",
+    "usage": "glm_diag_plots(glmfit, glmdiag=None, subset=None, iden=False, labels=None, ret=False)",
+    "arguments": [
+      {
+        "name": "glmfit",
+        "text": "A fit returned by glm() in this module."
+      },
+      {
+        "name": "glmdiag",
+        "text": "Diagnostics from glm_diag. None calculates them."
+      },
+      {
+        "name": "subset",
+        "text": "1-based case numbers for the Cook plot. None uses 1 through n. A boolean array selects positions. An all-negative array drops those positions, matching the R subscript."
+      },
+      {
+        "name": "iden",
+        "text": "Interactive identify() is refused. Leave this false."
+      },
+      {
+        "name": "labels",
+        "text": "Accepted for the R argument. Identification is not drawn."
+      },
+      {
+        "name": "ret",
+        "text": "If true, return the diagnostics dict after drawing. Otherwise return None."
+      }
+    ],
+    "details": "A 2 by 2 Matplotlib figure is opened. Points are open circles. The top right x values are normal quantiles, placed by R's rank: ties share the average rank, and the fractional part is dropped before indexing qnorm(ppoints(n)). The axis titles are the ones in the R source, including the swapped QQ titles. Dashed reference lines use the same rules: 8/(n - 2p) horizontally and 2p/(n - 2p) vertically, and only when the value sits inside the plotted range. The manual example is a gamma model of the leukaemia data. This module fits gaussian and binomial models, so the example below is the mammals gaussian fit from cv.glm.",
+    "value": "The diagnostics dict if ret is true, otherwise None. The figure is left as the current Matplotlib figure.",
+    "example": "from boot.glm import glm, glm_diag_plots\n\nbody = [3.385, 0.48, 1.35, 465, 36.33, 27.66, 14.83, 1.04, 4.19, 0.425, 0.101, 0.92, 1, 0.005, 0.06, 3.5, 2, 1.7, 2547, 0.023, 187.1, 521, 0.785, 10, 3.3, 0.2, 1.41, 529, 207, 85, 0.75, 62, 6654, 3.5, 6.8, 35, 4.05, 0.12, 0.023, 0.01, 1.4, 250, 2.5, 55.5, 100, 52.16, 10.55, 0.55, 60, 3.6, 4.288, 0.28, 0.075, 0.122, 0.048, 192, 3, 160, 0.9, 1.62, 0.104, 4.235]\nbrain = [44.5, 15.5, 8.1, 423, 119.5, 115, 98.2, 5.5, 58, 6.4, 4, 5.7, 6.6, 0.14, 1, 10.8, 12.3, 6.3, 4603, 0.3, 419, 655, 3.5, 115, 25.6, 5, 17.5, 680, 406, 325, 12.3, 1320, 5712, 3.9, 179, 56, 17, 1, 0.4, 0.25, 12.5, 490, 12.1, 175, 157, 440, 179.5, 2.4, 81, 21, 39.2, 1.9, 1.2, 3, 0.33, 180, 25, 169, 2.6, 11.4, 2.5, 50.4]\nfit = glm(\"log(brain) ~ log(body)\", {\"body\": body, \"brain\": brain})\ndiag = glm_diag_plots(fit, ret=True)\nprint(diag[\"sd\"])\n",
+    "output": [
+      "output/glm.diag.plots-python.txt",
+      "output/glm.diag.plots.svg"
+    ]
+  }
+}

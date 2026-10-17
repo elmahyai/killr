@@ -1,0 +1,716 @@
+{
+  "name": "vars",
+  "cran_version": "1.6-1",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All 25 exports and the Canada series are checked against vars 1.6-1. stability calls strucchange.efp. irf is checked with boot=FALSE. SVEC is checked with a fixed start.",
+  "dependencies": {
+    "translated": [
+      "strucchange",
+      "urca"
+    ],
+    "native": [
+      "numpy",
+      "scipy",
+      "matplotlib"
+    ],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "Canada",
+      "translated": true,
+      "python": "vars.Canada",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The quarterly series e, prod, rw, and U.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "first row of Canada",
+        "r_ms": 0.024080276489257812,
+        "translated_ms": 1.2987125028303126,
+        "speedup": 0.018541652934563377,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Canada[1, ]) }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return Canada()[0]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "VAR",
+      "translated": true,
+      "python": "vars.VAR",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Each equation is least squares on the lagged block. The constant is a column.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "VAR(Canada, p=2), first eight coefficients",
+        "r_ms": 15.539407730102539,
+        "translated_ms": 2.2542544993484626,
+        "speedup": 6.89336884304493,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Bcoef(VAR(Canada, p = 2)))[1:8] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return VAR(Canada(), p=2).coefficients.reshape(-1, order='F')[:8]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "VARselect",
+      "translated": true,
+      "python": "vars.VARselect",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The four criteria are AIC, HQ, SC, and FPE. The selection is the 1-based lag.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "VARselect(Canada, lag.max=4) selection",
+        "r_ms": 2.3987293243408203,
+        "translated_ms": 3.3411139993404504,
+        "speedup": 0.7179429749521684,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { VARselect(Canada, lag.max = 4)$selection }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return VARselect(Canada(), lag_max=4)['selection']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Acoef",
+      "translated": true,
+      "python": "vars.Acoef",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The first lag block of the coefficient matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Acoef first lag, first four entries",
+        "r_ms": 22.481441497802734,
+        "translated_ms": 2.683124999748543,
+        "speedup": 8.37882748657243,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Acoef(VAR(Canada, p = 2))[[1]])[1:4] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return Acoef(VAR(Canada(), p=2))[0].reshape(-1, order='F')[:4]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "A",
+      "translated": true,
+      "python": "vars.A",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "A is the deprecated name of Acoef.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A first lag, first four entries",
+        "r_ms": 18.810033798217773,
+        "translated_ms": 1.8642459999682615,
+        "speedup": 10.089888243578375,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(A(VAR(Canada, p = 2))[[1]])[1:4] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return A(VAR(Canada(), p=2))[0].reshape(-1, order='F')[:4]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Bcoef",
+      "translated": true,
+      "python": "vars.Bcoef",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "One row of coefficients per equation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Bcoef, first eight entries",
+        "r_ms": 18.63420009613037,
+        "translated_ms": 1.5752899998915382,
+        "speedup": 11.829060107925127,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Bcoef(VAR(Canada, p = 2)))[1:8] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return Bcoef(VAR(Canada(), p=2)).reshape(-1, order='F')[:8]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "B",
+      "translated": true,
+      "python": "vars.B",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "B is the deprecated name of Bcoef.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "B, first eight entries",
+        "r_ms": 13.842344284057617,
+        "translated_ms": 1.989360001971363,
+        "speedup": 6.958189704397645,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(B(VAR(Canada, p = 2)))[1:8] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return B(VAR(Canada(), p=2)).reshape(-1, order='F')[:8]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "BQ",
+      "translated": true,
+      "python": "vars.BQ",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The long-run impact is the lower Cholesky factor of the inverted lag polynomial.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Blanchard-Quah B, first six entries",
+        "r_ms": 29.312968254089355,
+        "translated_ms": 1.9449804985924857,
+        "speedup": 15.071085944204647,
+        "matches": true,
+        "max_abs_diff": 1.49741330446318e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(BQ(VAR(Canada, p = 2))$B)[1:6] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return BQ(VAR(Canada(), p=2))['B'].reshape(-1, order='F')[:6]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "causality",
+      "translated": true,
+      "python": "vars.causality",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "The Granger statistic uses the pivoted-QR coefficient covariance. Instantaneous causality uses the duplication-matrix Wald statistic.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Granger and instantaneous statistics, cause e",
+        "r_ms": 57.56735801696777,
+        "translated_ms": 6.04796749939851,
+        "speedup": 9.518463520627886,
+        "matches": true,
+        "max_abs_diff": 3.0331293032759277e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { c(causality(VAR(Canada, p = 2), cause = 'e')$Granger$statistic, causality(VAR(Canada, p = 2), cause = 'e')$Instant$statistic) }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return [causality(VAR(Canada(), p=2), cause='e')[key]['statistic'] for key in ('Granger', 'Instant')]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "fanchart",
+      "translated": true,
+      "python": "vars.fanchart",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "The fan fills the normal forecast intervals. The printed path is the 90 percent lower edge.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "90 percent lower path for e",
+        "r_ms": 31.591057777404785,
+        "translated_ms": 93.69528600109334,
+        "speedup": 0.3371680596293409,
+        "matches": true,
+        "max_abs_diff": 3.751665644813329e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { pdf(NULL); fit <- VAR(Canada, p = 2); pr <- predict(fit, n.ahead = 2, ci = 0.9); fanchart(pr, cis = 0.9, names = 'e'); pr$fcst$e[, 'lower'] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return fanchart(predict(VAR(Canada(), p=2), n_ahead=2, ci=0.9), cis=[0.9], names=['e'])['bands'][0]['lower'][:, 0]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "fevd",
+      "translated": true,
+      "python": "vars.fevd",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Forecast-error variance shares for the first series.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "fevd of the first series, first six shares",
+        "r_ms": 28.37204933166504,
+        "translated_ms": 2.0055970016983338,
+        "speedup": 14.146435853084977,
+        "matches": true,
+        "max_abs_diff": 1.5279444376403717e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(fevd(VAR(Canada, p = 2), n.ahead = 3)[[1]])[1:6] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return fevd(VAR(Canada(), p=2), 3)['e'].reshape(-1, order='F')[:6]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "irf",
+      "translated": true,
+      "python": "vars.irf",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Orthogonal impulse responses with the bootstrap left off.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "irf boot=FALSE, first six responses",
+        "r_ms": 21.11637592315674,
+        "translated_ms": 2.078990000882186,
+        "speedup": 10.157035827106597,
+        "matches": true,
+        "max_abs_diff": 5.892335230850421e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(irf(VAR(Canada, p = 2), n.ahead = 2, boot = FALSE)$irf[[1]])[1:6] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return irf(VAR(Canada(), p=2), n_ahead=2, boot=False)['e'].reshape(-1, order='F')[:6]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "normality.test",
+      "translated": true,
+      "python": "vars.normality_test",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Jarque-Bera statistic after the residuals are scaled by the lower Cholesky factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Jarque-Bera statistic",
+        "r_ms": 16.856670379638672,
+        "translated_ms": 3.150042499328265,
+        "speedup": 5.3512517317570465,
+        "matches": true,
+        "max_abs_diff": 1.7328360968349443e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { normality.test(VAR(Canada, p = 2))$jb.mul$JB$statistic }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return normality_test(VAR(Canada(), p=2))['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "normality",
+      "translated": true,
+      "python": "vars.normality",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "normality is the deprecated name of normality.test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "deprecated normality statistic",
+        "r_ms": 23.998498916625977,
+        "translated_ms": 2.679761000763392,
+        "speedup": 8.955462412427618,
+        "matches": true,
+        "max_abs_diff": 1.7328360968349443e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { normality(VAR(Canada, p = 2))$jb.mul$JB$statistic }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return normality(VAR(Canada(), p=2))['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Phi",
+      "translated": true,
+      "python": "vars.Phi",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "The MA coefficient at horizon 1.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Phi at horizon 1, first four entries",
+        "r_ms": 20.556211471557617,
+        "translated_ms": 1.7136425012722611,
+        "speedup": 11.995624207672284,
+        "matches": true,
+        "max_abs_diff": 1.4865886299730846e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Phi(VAR(Canada, p = 2), nstep = 3)[, , 2])[1:4] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return Phi(VAR(Canada(), p=2), 3)[:, :, 1].reshape(-1, order='F')[:4]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "Psi",
+      "translated": true,
+      "python": "vars.Psi",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Phi times the lower Cholesky factor of the residual covariance.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Psi at horizon 0, first four entries",
+        "r_ms": 22.37224578857422,
+        "translated_ms": 1.7836104980233358,
+        "speedup": 12.5432350916122,
+        "matches": true,
+        "max_abs_diff": 5.966060978579435e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(Psi(VAR(Canada, p = 2), nstep = 2)[, , 1])[1:4] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return Psi(VAR(Canada(), p=2), 2)[:, :, 0].reshape(-1, order='F')[:4]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "restrict",
+      "translated": true,
+      "python": "vars.restrict",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Serial elimination drops the smallest absolute t statistic until every remaining one is at least the threshold.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "serial restriction pattern at threshold 2",
+        "r_ms": 79.74779605865479,
+        "translated_ms": 10.650453497873968,
+        "speedup": 7.4877371254260625,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { as.numeric(restrict(VAR(Canada, p = 2), method = 'ser', thresh = 2)$restrictions) }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return restrict(VAR(Canada(), p=2), method='ser', thresh=2).restrictions.reshape(-1, order='F')\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "roots",
+      "translated": true,
+      "python": "vars.roots",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Moduli of the companion-matrix eigenvalues, largest first.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "four largest roots",
+        "r_ms": 23.241758346557617,
+        "translated_ms": 2.654337000421947,
+        "speedup": 8.756144507220819,
+        "matches": true,
+        "max_abs_diff": 6.838973831690964e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { sort(roots(VAR(Canada, p = 2)), decreasing = TRUE)[1:4] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return np.sort(roots(VAR(Canada(), p=2)))[::-1][:4]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "serial.test",
+      "translated": true,
+      "python": "vars.serial_test",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Portmanteau statistic at four lags.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "portmanteau statistic, four lags",
+        "r_ms": 15.329122543334961,
+        "translated_ms": 2.842175501427846,
+        "speedup": 5.393446863374183,
+        "matches": true,
+        "max_abs_diff": 1.4559020655724453e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { serial.test(VAR(Canada, p = 2), lags.pt = 4)$serial$statistic }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return serial_test(VAR(Canada(), p=2), lags_pt=4)['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "serial",
+      "translated": true,
+      "python": "vars.serial",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "serial is the deprecated name of serial.test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "deprecated portmanteau statistic",
+        "r_ms": 27.15432643890381,
+        "translated_ms": 2.6572450005915016,
+        "speedup": 10.218977336624688,
+        "matches": true,
+        "max_abs_diff": 1.4559020655724453e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { serial(VAR(Canada, p = 2), lags.pt = 4)$serial$statistic }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return serial(VAR(Canada(), p=2), lags_pt=4)['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SVAR",
+      "translated": true,
+      "python": "vars.SVAR",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Scoring estimate of a lower-triangular B model. The iteration count is 97.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "SVAR B model, first eight entries",
+        "r_ms": 266.6734457015991,
+        "translated_ms": 97.10158450070594,
+        "speedup": 2.746334646059873,
+        "matches": true,
+        "max_abs_diff": 1.521560655248777e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { B <- diag(4); B[lower.tri(B)] <- NA; as.numeric(SVAR(VAR(Canada, p = 2), Bmat = B)$B)[1:8] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return SVAR(VAR(Canada(), p=2), Bmat=np.array([[1,0,0,0],[np.nan,1,0,0],[np.nan,np.nan,1,0],[np.nan,np.nan,np.nan,1]], dtype=float))['B'].reshape(-1, order='F')[:8]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "SVEC",
+      "translated": true,
+      "python": "vars.SVEC",
+      "loads": [
+        "urca"
+      ],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Scoring estimate from a ca.jo object. start is fixed because the R default draws it with rnorm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "SVEC short-run matrix, first eight entries",
+        "r_ms": 43.25985908508301,
+        "translated_ms": 10.522668499106658,
+        "speedup": 4.111111082588569,
+        "matches": true,
+        "max_abs_diff": 1.3437223556067579e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { jo <- ca.jo(Canada, ecdet = 'const', K = 2); SR <- diag(4); SR[lower.tri(SR)] <- NA; LR <- matrix(NA, 4, 4); as.numeric(SVEC(jo, LR = LR, SR = SR, r = 1, start = rep(0.1, 10), boot = FALSE)$SR)[1:8] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return SVEC(ca_jo(Canada(), ecdet='const', K=2), LR=np.full((4, 4), np.nan), SR=np.array([[1,0,0,0],[np.nan,1,0,0],[np.nan,np.nan,1,0],[np.nan,np.nan,np.nan,1]], dtype=float), r=1, start=np.full(10, 0.1))['SR'].reshape(-1, order='F')[:8]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "vec2var",
+      "translated": true,
+      "python": "vars.vec2var",
+      "loads": [
+        "urca"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Level VAR coefficients recovered from a rank-1 Johansen result.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vec2var A1, first six entries",
+        "r_ms": 12.507915496826172,
+        "translated_ms": 2.671755999472225,
+        "speedup": 4.681533605350552,
+        "matches": true,
+        "max_abs_diff": 2.360117656863281e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { jo <- ca.jo(Canada, type = 'trace', ecdet = 'const', K = 2, spec = 'longrun'); as.numeric(vec2var(jo, r = 1)$A$A1)[1:6] }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return vec2var(ca_jo(Canada(), type='trace', ecdet='const', K=2, spec='longrun'), r=1)['A'][0].reshape(-1, order='F')[:6]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "arch.test",
+      "translated": true,
+      "python": "vars.arch_test",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Multivariate ARCH statistic at two lags.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ARCH statistic, two lags",
+        "r_ms": 38.21444511413574,
+        "translated_ms": 12.179540999568417,
+        "speedup": 3.1375932077809727,
+        "matches": true,
+        "max_abs_diff": 4.865796654485166e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { arch.test(VAR(Canada, p = 2), lags.multi = 2)$arch.mul$statistic }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return arch_test(VAR(Canada(), p=2), lags_multi=2)['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "arch",
+      "translated": true,
+      "python": "vars.arch",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "arch is the deprecated name of arch.test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "deprecated ARCH statistic",
+        "r_ms": 26.660799980163574,
+        "translated_ms": 11.486468501971103,
+        "speedup": 2.321061514736973,
+        "matches": true,
+        "max_abs_diff": 4.865796654485166e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\n\none <- function() { suppressWarnings(arch(VAR(Canada, p = 2), lags.multi = 2)$arch.mul$statistic) }\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics\nimport time\nimport numpy as np\nfrom vars import (\n    A, Acoef, B, BQ, Bcoef, Canada, Phi, Psi, SVAR, SVEC, VAR, VARselect,\n    arch, arch_test, causality, fanchart, fevd, irf, normality, normality_test,\n    predict, restrict, roots, serial, serial_test, vec2var,\n)\nfrom urca import ca_jo, cajorls\n\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\n\ndef one():\n    return arch(VAR(Canada(), p=2), lags_multi=2)['statistic']\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "stability",
+      "translated": true,
+      "python": "vars.stability",
+      "loads": [
+        "strucchange"
+      ],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Each equation is an OLS-CUSUM fluctuation process from strucchange.efp.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "OLS-CUSUM process for e, first six values",
+        "r_ms": 44.78812217712402,
+        "translated_ms": 4.140676001043175,
+        "speedup": 10.816620804390489,
+        "matches": true,
+        "max_abs_diff": 5.056510765655275e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(\"/home/ahmed/R/x86_64-pc-linux-gnu-library/4.5\", .libPaths()))\nsuppressPackageStartupMessages({library(vars); library(urca)})\ndata(Canada)\nshow <- function(x) paste(sprintf(\"%.17g\", as.numeric(x)), collapse = \" \")\none <- function() {\n  s <- stability(VAR(Canada, p = 2), type = \"OLS-CUSUM\")\n  s$stability$e$process[1:6]\n}\nvalue <- show(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value, \"\\n\", sprintf(\"%.17g\", median(elapsed) * 1000), \"\\n\", sep = \"\")\n",
+          "python": "\nimport statistics, time\nimport numpy as np\nfrom vars import Canada, VAR, stability\ndef show(x):\n    return \" \".join(f\"{float(v):.17g}\" for v in np.ravel(np.asarray(x, dtype=float)))\ndef one():\n    return stability(VAR(Canada(), p=2), type=\"OLS-CUSUM\")[\"stability\"][\"e\"].process[:6]\nvalue = show(one())\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter(); one(); elapsed.append((time.perf_counter()-t0)*1000)\nprint(value)\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "download_version",
+  "title": "Download a specified version of a CRAN package",
+  "origin": {
+    "description": "It downloads the package to a temporary file, and returns the name of the file.",
+    "usage": "download_version(package, version = NULL, repos = getOption(\"repos\"), type = getOption(\"pkgType\"), ...)",
+    "arguments": [
+      {
+        "name": "package",
+        "text": "Name of the package to install."
+      },
+      {
+        "name": "version",
+        "text": "Version of the package to install. Can either be a string giving the exact version required, or a specification in the same format as the parenthesized expressions used in package dependencies. One of the following formats: an exact version required, as a string, e.g. \"0.1.13\"; a comparison operator and a version, e.g. \">= 0.1.12\"; several criteria to satisfy, as a comma-separated string, e.g. \">= 1.12.0, < 1.14\"; several criteria to satisfy, as elements of a character vector, e.g. c(\">= 1.12.0\", \"< 1.14\")."
+      },
+      {
+        "name": "repos",
+        "text": "Character vector, the base URL(s) of the repositories to use, e.g., the URL of a CRAN mirror such as \"https://cloud.r-project.org\"."
+      },
+      {
+        "name": "type",
+        "text": "Character, indicating the type of package to download and install. Will be \"source\" except on Windows and some macOS builds."
+      },
+      {
+        "name": "...",
+        "text": "Other arguments passed on to utils::install.packages(). download_version accepts them and does not use them."
+      }
+    ],
+    "details": "A missing version selects the current row from available.packages on contrib.url. A version such as \"2.5.0\" is treated as ==. The repositories are checked in order, current rows first, then each archive. An older tarball is the last matching row of src/contrib/Meta/archive.rds, whose row names are package/package_version.tar.gz. The file is written to tempfile().",
+    "value": "Name of the downloaded file.",
+    "example": "path <- download_version(\"remotes\", \"2.5.0\", repos = \"https://cloud.r-project.org\", type = \"source\")\nfiles <- untar(path, list = TRUE)\ndesc <- files[grepl(\"DESCRIPTION$\", files)][[1]]\nex <- tempfile()\ndir.create(ex)\nuntar(path, files = desc, exdir = ex)\ndcf <- read.dcf(file.path(ex, desc))\nbase <- paste0(dcf[1, \"Package\"], \"_\", dcf[1, \"Version\"], \".tar.gz\")\ncat(paste0('download_version(\"remotes\", \"2.5.0\", repos = \"https://cloud.r-project.org\", type = \"source\") downloads ', base, '.\\n'))",
+    "output": "output/download_version-r.txt"
+  },
+  "translation": {
+    "description": "It downloads the package to a temporary file, and returns the name of the file.",
+    "usage": "download_version(package, version=None, repos=\"https://cloud.r-project.org\", type=\"source\", **extra)",
+    "arguments": [
+      {
+        "name": "package",
+        "text": "Name of the package."
+      },
+      {
+        "name": "version",
+        "text": "Version to download. None selects the current contrib row. \"2.5.0\" means == 2.5.0. A comparison such as \">= 2.0.0, < 2.4.0\", or a list of criteria, uses the same operators as a package dependency."
+      },
+      {
+        "name": "repos",
+        "text": "Base URL of a CRAN-like repository, or a list or dict of them. Default https://cloud.r-project.org."
+      },
+      {
+        "name": "type",
+        "text": "Package type passed to the contrib URL. \"source\" reads src/contrib. \"both\" and, on Linux, \"binary\" are source. Default \"source\"."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments are accepted and ignored."
+      }
+    ],
+    "details": "The current row is read from the contrib PACKAGES index, with the R version and OS_type filters. \"2.5\" and \"2.5.0\" compare equal. An older version is taken from src/contrib/Meta/archive.rds, gzip around an XDR version-2 file. The tarball names are that data frame's row names, and the last row that satisfies the version is used. The download uses urllib and follows redirects. The returned path is a temporary file; its basename is not the tarball name.",
+    "value": "Path of the downloaded file.",
+    "example": "from remotes.download_version import download_version\nimport tarfile\npath = download_version(\"remotes\", \"2.5.0\", repos=\"https://cloud.r-project.org\", type=\"source\")\nwith tarfile.open(path, \"r:gz\") as tar:\n    name = next(n for n in tar.getnames() if n.endswith(\"DESCRIPTION\"))\n    text = tar.extractfile(name).read().decode()\nfields = {}\nfor line in text.splitlines():\n    if \":\" in line and not line[:1].isspace():\n        key, value = line.split(\":\", 1)\n        fields[key] = value.strip()\nbase = fields[\"Package\"] + \"_\" + fields[\"Version\"] + \".tar.gz\"\nprint('download_version(\"remotes\", \"2.5.0\", repos = \"https://cloud.r-project.org\", type = \"source\") downloads ' + base + '.')",
+    "output": "output/download_version-python.txt"
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "name": "minpack.lm",
+  "cran_version": "1.2-4",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [
+    {
+      "name": "lmdif",
+      "origin": "minpack.lm src/lmdif.f src/lmder.f src/lmpar.f src/qrfac.f src/qrsolv.f src/fdjac2.f src/enorm.f src/dpmpar.f src/dogleg.f src/qform.f src/r1mpyq.f src/r1updt.f src/rwupdt.f src/chkder.f",
+      "loaded_by": [
+        "minpack.lm"
+      ],
+      "assigned": ""
+    }
+  ],
+  "resume": "Checked nls.lm and nlsLM against minpack.lm 1.2-4. The Levenberg-Marquardt kernel is the lmdif crate.",
+  "functions": [
+    {
+      "name": "nls.lm",
+      "translated": true,
+      "python": "minpacklm.nls_lm.nls_lm",
+      "loads": [],
+      "uses": [],
+      "done": "Minimizes the residual sum of squares with MINPACK lmdif or lmder, clamps each step to the bounds, and rebuilds the Hessian from the factored Jacobian.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Rosenbrock finite differences, analytic Jacobian, bounds [0, 0.5] x [0, 2], maxiter 2, diag c(1, 2), and a named list of starts.",
+        "r_ms": 2.689957618713379,
+        "translated_ms": 2.161519500077702,
+        "speedup": 1.2444752955579075,
+        "matches": true,
+        "max_abs_diff": 0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minpack.lm))\nstopifnot(packageVersion(\"minpack.lm\") == \"1.2.4\")\n\nfn <- function(p) c(1 - p[1], 10 * (p[2] - p[1]^2))\njac <- function(p) c(-1, -20 * p[1], 0, 10)\nfn_list <- function(p) c(1 - p$a, 10 * (p$b - p$a^2))\n\npack <- function(fit) {\n  diag_is_list <- is.list(fit$diag)\n  c(\n    as.numeric(unlist(fit$par)),\n    as.numeric(fit$hessian),\n    as.numeric(fit$fvec),\n    as.numeric(fit$info),\n    as.numeric(fit$niter),\n    as.numeric(fit$deviance),\n    as.numeric(diag_is_list),\n    as.numeric(unlist(fit$diag)),\n    as.numeric(fit$rsstrace[seq_len(fit$niter)])\n  )\n}\n\none <- function() {\n  finite <- nls.lm(par = c(-1.2, 1), fn = fn)\n  analytic <- nls.lm(par = c(-1.2, 1), fn = fn, jac = jac)\n  bounded <- nls.lm(\n    par = c(1, 1), fn = fn,\n    lower = c(0, 0), upper = c(0.5, 2)\n  )\n  stopped <- nls.lm(\n    par = c(-1.2, 1), fn = fn,\n    control = nls.lm.control(maxiter = 2)\n  )\n  scaled <- nls.lm(\n    par = c(-1.2, 1), fn = fn,\n    control = nls.lm.control(diag = c(1, 2))\n  )\n  named <- nls.lm(par = list(a = -1.2, b = 1), fn = fn_list)\n  stopifnot(finite$message == \"Relative error between `par' and the solution is at most `ptol'.\")\n  stopifnot(grepl(\"gtol\", analytic$message, fixed = TRUE))\n  stopifnot(stopped$info == -1L)\n  stopifnot(grepl(\"maxiter\", stopped$message, fixed = TRUE))\n  c(\n    pack(finite),\n    pack(analytic),\n    pack(bounded),\n    pack(stopped),\n    pack(scaled),\n    pack(named)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom minpacklm.nls_lm import nls_lm\nfrom minpacklm.nls_lm_control import nls_lm_control\n\n\ndef fn(p):\n    return np.array([1.0 - p[0], 10.0 * (p[1] - p[0] ** 2)])\n\n\ndef jac(p):\n    return np.array([-1.0, -20.0 * p[0], 0.0, 10.0])\n\n\ndef fn_list(p):\n    return np.array([1.0 - p[\"a\"], 10.0 * (p[\"b\"] - p[\"a\"] ** 2)])\n\n\ndef pack(fit):\n    diag = fit[\"diag\"]\n    diag_is_list = isinstance(diag, list)\n    if isinstance(diag, np.ndarray):\n        diag_vals = [float(item) for item in np.ravel(diag)]\n    else:\n        diag_vals = [float(item) for item in diag]\n    par = fit[\"par\"]\n    if isinstance(par, dict):\n        par_vals = [float(par[name]) for name in par]\n    else:\n        par_vals = [float(item) for item in np.ravel(par)]\n    hessian = np.asarray(fit[\"hessian\"], dtype=float).ravel(order=\"F\")\n    return [\n        *par_vals,\n        *[float(item) for item in hessian],\n        *[float(item) for item in np.ravel(fit[\"fvec\"])],\n        float(fit[\"info\"]),\n        float(fit[\"niter\"]),\n        float(fit[\"deviance\"]),\n        1.0 if diag_is_list else 0.0,\n        *diag_vals,\n        *[float(item) for item in np.ravel(fit[\"rsstrace\"])[: int(fit[\"niter\"])]],\n    ]\n\n\ndef one():\n    finite = nls_lm(np.array([-1.2, 1.0]), fn)\n    analytic = nls_lm(np.array([-1.2, 1.0]), fn, jac=jac)\n    bounded = nls_lm(\n        np.array([1.0, 1.0]),\n        fn,\n        lower=np.array([0.0, 0.0]),\n        upper=np.array([0.5, 2.0]),\n    )\n    stopped = nls_lm(\n        np.array([-1.2, 1.0]),\n        fn,\n        control=nls_lm_control(maxiter=2),\n    )\n    scaled = nls_lm(\n        np.array([-1.2, 1.0]),\n        fn,\n        control=nls_lm_control(diag=np.array([1.0, 2.0])),\n    )\n    named = nls_lm({\"a\": -1.2, \"b\": 1.0}, fn_list)\n    if finite[\"message\"] != \"Relative error between `par' and the solution is at most `ptol'.\":\n        raise AssertionError(finite[\"message\"])\n    if \"gtol\" not in analytic[\"message\"]:\n        raise AssertionError(analytic[\"message\"])\n    if int(stopped[\"info\"]) != -1 or \"maxiter\" not in stopped[\"message\"]:\n        raise AssertionError(stopped[\"message\"])\n    packed = []\n    for fit in (finite, analytic, bounded, stopped, scaled, named):\n        packed.extend(pack(fit))\n    return packed\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(part) for part in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "nls.lm.control",
+      "translated": true,
+      "python": "minpacklm.nls_lm_control.nls_lm_control",
+      "loads": [],
+      "uses": [],
+      "done": "Stores the nine Levenberg-Marquardt controls, leaving maxfev as an empty integer and diag as an empty list.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Defaults, maxiter 4, positional ftol and ptol, a numeric diag with maxfev 200, and an integer maxfev with a list diag.",
+        "r_ms": 0.09298324584960938,
+        "translated_ms": 0.05005549974157475,
+        "speedup": 1.85760298727734,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minpack.lm))\nstopifnot(packageVersion(\"minpack.lm\") == \"1.2.4\")\n\npack <- function(ctrl) {\n  diag_is_list <- is.list(ctrl$diag)\n  if (is.null(ctrl$diag)) {\n    diag_vals <- numeric(0)\n    diag_len <- 0\n  } else if (diag_is_list) {\n    diag_vals <- as.numeric(unlist(ctrl$diag, use.names = FALSE))\n    if (is.null(diag_vals)) diag_vals <- numeric(0)\n    diag_len <- length(ctrl$diag)\n  } else {\n    diag_vals <- as.numeric(ctrl$diag)\n    diag_len <- length(diag_vals)\n  }\n  maxfev_vals <- as.numeric(ctrl$maxfev)\n  if (is.null(maxfev_vals)) maxfev_vals <- numeric(0)\n  c(\n    as.numeric(ctrl$ftol),\n    as.numeric(ctrl$ptol),\n    as.numeric(ctrl$gtol),\n    as.numeric(ctrl$epsfcn),\n    as.numeric(ctrl$factor),\n    as.numeric(ctrl$maxiter),\n    as.numeric(ctrl$nprint),\n    as.numeric(diag_is_list),\n    diag_len,\n    diag_vals,\n    as.numeric(is.integer(ctrl$maxfev)),\n    length(maxfev_vals),\n    maxfev_vals\n  )\n}\n\none <- function() {\n  defaults <- nls.lm.control()\n  example <- nls.lm.control(maxiter = 4)\n  positional <- nls.lm.control(1e-4, 1e-5)\n  numeric_diag <- nls.lm.control(\n    ftol = 1e-6, ptol = 1e-7, gtol = 1e-5,\n    diag = c(1.5, 2.5, 3.5), epsfcn = 1e-8, factor = 10,\n    maxfev = 200, maxiter = 4, nprint = 1\n  )\n  integer_maxfev <- nls.lm.control(\n    diag = list(2, 4), maxfev = 200L, maxiter = 4L, nprint = 1L\n  )\n  c(\n    pack(defaults),\n    pack(example),\n    pack(positional),\n    pack(numeric_diag),\n    pack(integer_maxfev)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom minpacklm.nls_lm_control import nls_lm_control\n\n\ndef pack(ctrl):\n    diag = ctrl[\"diag\"]\n    diag_is_list = isinstance(diag, list)\n    if diag is None:\n        diag_vals = []\n        diag_len = 0\n    elif isinstance(diag, np.ndarray):\n        diag_vals = [float(item) for item in np.ravel(diag)]\n        diag_len = int(diag.size)\n    elif isinstance(diag, (list, tuple)):\n        diag_vals = [float(item) for item in diag]\n        diag_len = len(diag)\n    else:\n        diag_vals = [float(diag)]\n        diag_len = 1\n    maxfev = ctrl[\"maxfev\"]\n    maxfev_is_int = _is_integer(maxfev)\n    if isinstance(maxfev, np.ndarray):\n        maxfev_vals = [float(item) for item in np.ravel(maxfev)]\n    elif isinstance(maxfev, (list, tuple)):\n        maxfev_vals = [float(item) for item in maxfev]\n    elif maxfev is None:\n        maxfev_vals = []\n    else:\n        maxfev_vals = [float(maxfev)]\n    return [\n        float(ctrl[\"ftol\"]),\n        float(ctrl[\"ptol\"]),\n        float(ctrl[\"gtol\"]),\n        float(ctrl[\"epsfcn\"]),\n        float(ctrl[\"factor\"]),\n        float(ctrl[\"maxiter\"]),\n        float(ctrl[\"nprint\"]),\n        1.0 if diag_is_list else 0.0,\n        float(diag_len),\n        *diag_vals,\n        1.0 if maxfev_is_int else 0.0,\n        float(len(maxfev_vals)),\n        *maxfev_vals,\n    ]\n\n\ndef _is_integer(value):\n    if isinstance(value, bool):\n        return False\n    if isinstance(value, int):\n        return True\n    return isinstance(value, np.ndarray) and np.issubdtype(value.dtype, np.integer)\n\n\ndef one():\n    defaults = nls_lm_control()\n    example = nls_lm_control(maxiter=4)\n    positional = nls_lm_control(1e-4, 1e-5)\n    numeric_diag = nls_lm_control(\n        ftol=1e-6,\n        ptol=1e-7,\n        gtol=1e-5,\n        diag=np.array([1.5, 2.5, 3.5]),\n        epsfcn=1e-8,\n        factor=10,\n        maxfev=200.0,\n        maxiter=4,\n        nprint=1,\n    )\n    integer_maxfev = nls_lm_control(\n        diag=[2, 4],\n        maxfev=200,\n        maxiter=4,\n        nprint=1,\n    )\n    packed = []\n    for ctrl in (defaults, example, positional, numeric_diag, integer_maxfev):\n        packed.extend(pack(ctrl))\n    return packed\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(part) for part in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "nlsLM",
+      "translated": true,
+      "python": "minpacklm.nlsLM.nlsLM",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a formula by nls.lm. residuals is the response residual, and deviance is the weighted sum of squares.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Puromycin treated, the same fit weighted by 1/rate, y = 2x + 3, and that line on the first five points.",
+        "r_ms": 11.345982551574707,
+        "translated_ms": 7.393791498543578,
+        "speedup": 1.5345283341854619,
+        "matches": true,
+        "max_abs_diff": 2.2737367544323206e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minpack.lm))\nstopifnot(packageVersion(\"minpack.lm\") == \"1.2.4\")\n\nTreated <- Puromycin[Puromycin$state == \"treated\", ]\nx <- 1:10\ny <- 2 * x + 3\n\npack_fit <- function(fit) {\n  w <- if (is.null(fit$weights)) numeric(0) else as.numeric(fit$weights)\n  c(\n    as.numeric(coef(fit)),\n    as.numeric(residuals(fit)),\n    as.numeric(fitted(fit)),\n    as.numeric(deviance(fit)),\n    as.numeric(fit$convInfo$isConv),\n    as.numeric(fit$convInfo$finIter),\n    as.numeric(fit$convInfo$finTol),\n    as.numeric(fit$convInfo$stopCode),\n    as.numeric(length(w)),\n    w\n  )\n}\n\none <- function() {\n  plain <- nlsLM(\n    rate ~ Vm * conc / (K + conc),\n    data = Treated,\n    start = c(Vm = 200, K = 0.05)\n  )\n  weighted <- nlsLM(\n    rate ~ Vm * conc / (K + conc),\n    data = Treated,\n    start = c(Vm = 200, K = 0.05),\n    weights = 1 / rate\n  )\n  linear <- nlsLM(y ~ a + b * x, start = list(a = 0.12345, b = 0.54321))\n  part <- nlsLM(\n    y ~ a + b * x,\n    start = list(a = 0.12345, b = 0.54321),\n    subset = 1:5\n  )\n  stopifnot(plain$convInfo$isConv)\n  stopifnot(plain$convInfo$stopMessage == \"Relative error in the sum of squares is at most `ftol'.\")\n  c(pack_fit(plain), pack_fit(weighted), pack_fit(linear), pack_fit(part))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom minpacklm.nlsLM import nlsLM\nfrom minpacklm.wfct import puromycin_treated\n\n\ndef pack_fit(fit):\n    weights = fit.weights\n    if weights is None:\n        weight_vals = []\n    else:\n        weight_vals = [float(item) for item in np.ravel(weights)]\n    coef = [float(fit.coefficients[name]) for name in fit.coefficients]\n    return [\n        *coef,\n        *[float(item) for item in np.ravel(fit.residuals)],\n        *[float(item) for item in np.ravel(fit.fitted)],\n        float(fit.deviance),\n        1.0 if fit.conv_info[\"isConv\"] else 0.0,\n        float(fit.conv_info[\"finIter\"]),\n        float(fit.conv_info[\"finTol\"]),\n        float(fit.conv_info[\"stopCode\"]),\n        float(len(weight_vals)),\n        *weight_vals,\n    ]\n\n\ndef one():\n    treated = puromycin_treated()\n    plain = nlsLM(\n        \"rate ~ Vm * conc / (K + conc)\",\n        data=treated,\n        start={\"Vm\": 200.0, \"K\": 0.05},\n    )\n    weighted = nlsLM(\n        \"rate ~ Vm * conc / (K + conc)\",\n        data=treated,\n        start={\"Vm\": 200.0, \"K\": 0.05},\n        weights=1.0 / treated[\"rate\"],\n    )\n    x = np.arange(1, 11, dtype=float)\n    y = 2.0 * x + 3.0\n    frame = {\"x\": x, \"y\": y}\n    start = {\"a\": 0.12345, \"b\": 0.54321}\n    linear = nlsLM(\"y ~ a + b * x\", data=frame, start=start)\n    part = nlsLM(\"y ~ a + b * x\", data=frame, start=start, subset=np.arange(1, 6))\n    if not plain.conv_info[\"isConv\"]:\n        raise AssertionError(plain.conv_info)\n    if plain.conv_info[\"stopMessage\"] != \"Relative error in the sum of squares is at most `ftol'.\":\n        raise AssertionError(plain.conv_info[\"stopMessage\"])\n    packed = []\n    for fit in (plain, weighted, linear, part):\n        packed.extend(pack_fit(fit))\n    return packed\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(part) for part in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "wfct",
+      "translated": true,
+      "python": "minpacklm.wfct.wfct",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates a weight expression from model data and, when the expression uses fitted or resid, from an unweighted nlsLM fit on the same call.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Puromycin treated: wfct(1/rate), wfct(sqrt(conc)), and wfct(1/fitted^2) inside nlsLM",
+        "r_ms": 18.761157989501953,
+        "translated_ms": 2.182487000027322,
+        "speedup": 8.596228976056713,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(minpack.lm))\nstopifnot(packageVersion(\"minpack.lm\") == \"1.2.4\")\n\nTreated <- Puromycin[Puromycin$state == \"treated\", ]\n\n.pack <- c(\n  as.numeric(\n    nlsLM(\n      rate ~ Vm * conc / (K + conc),\n      data = Treated,\n      start = c(Vm = 200, K = 0.05),\n      weights = wfct(1 / rate)\n    )$weights\n  ),\n  as.numeric(\n    nlsLM(\n      rate ~ Vm * conc / (K + conc),\n      data = Treated,\n      start = c(Vm = 200, K = 0.05),\n      weights = wfct(sqrt(conc))\n    )$weights\n  ),\n  as.numeric(\n    nlsLM(\n      rate ~ Vm * conc / (K + conc),\n      data = Treated,\n      start = c(Vm = 200, K = 0.05),\n      weights = wfct(1 / fitted^2)\n    )$weights\n  )\n)\n\nvalue <- .pack\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  .pack <- c(\n    as.numeric(\n      nlsLM(\n        rate ~ Vm * conc / (K + conc),\n        data = Treated,\n        start = c(Vm = 200, K = 0.05),\n        weights = wfct(1 / rate)\n      )$weights\n    ),\n    as.numeric(\n      nlsLM(\n        rate ~ Vm * conc / (K + conc),\n        data = Treated,\n        start = c(Vm = 200, K = 0.05),\n        weights = wfct(sqrt(conc))\n      )$weights\n    ),\n    as.numeric(\n      nlsLM(\n        rate ~ Vm * conc / (K + conc),\n        data = Treated,\n        start = c(Vm = 200, K = 0.05),\n        weights = wfct(1 / fitted^2)\n      )$weights\n    )\n  )\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(sprintf(\"%.17g\", value), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom minpacklm.wfct import puromycin_treated, wfct_eval\n\nFORMULA = \"rate ~ Vm * conc/(K + conc)\"\nSTART = {\"Vm\": 200.0, \"K\": 0.05}\n\n\ndef one():\n    treated = puromycin_treated()\n    return np.concatenate(\n        [\n            wfct_eval(\"1/rate\", formula=FORMULA, data=treated, start=START),\n            wfct_eval(\"sqrt(conc)\", formula=FORMULA, data=treated, start=START),\n            wfct_eval(\"1/fitted**2\", formula=FORMULA, data=treated, start=START),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    '{\"value\":[%s],\"median_ms\":%.17g}'\n    % (\n        \",\".join(\"%.17g\" % float(part) for part in value),\n        statistics.median(elapsed),\n    )\n)\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low",
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy"
+    ],
+    "rust": [
+      "lmdif"
+    ]
+  }
+}

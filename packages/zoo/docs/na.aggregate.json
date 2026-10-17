@@ -1,0 +1,64 @@
+{
+  "name": "na.aggregate",
+  "title": "Replace NA by aggregation",
+  "origin": {
+    "description": "Replace NA by aggregation.",
+    "usage": "na.aggregate(object, ...)\nna.aggregate.default(object, by = 1, ..., FUN = mean, na.rm = FALSE, maxgap = Inf)",
+    "arguments": [
+      {
+        "name": "object",
+        "text": "Series or vector."
+      },
+      {
+        "name": "by",
+        "text": "Group ids recycled to the series, or a function of the time index."
+      },
+      {
+        "name": "FUN",
+        "text": "Applied to the non-missing values in each group. The default is the mean."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, trim remaining missing values."
+      },
+      {
+        "name": "maxgap",
+        "text": "Only gaps no longer than maxgap are replaced."
+      }
+    ],
+    "details": "Each missing value is replaced by FUN of the non-missing values in its group. The default group is the whole series and FUN is the mean. A group with no observations yields NaN from mean, not NA.",
+    "value": "The mean of 1 and 3 is 2, so c(1, NA, 3, NA, NA) returns 1, 2, 3, 2, 2.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(zoo))\nstopifnot(packageVersion(\"zoo\") == \"1.9-1\")\nx <- na.aggregate(c(1, NA, 3, NA, NA))\ncat(paste(vapply(as.numeric(x), function(v) if (is.nan(v)) \"NaN\" else if (is.na(v)) \"NA\" else sprintf(\"%.12g\", v), \"\"), collapse = \" \"), \"\\n\", sep = \"\")\n",
+    "output": "output/na.aggregate-r.txt"
+  },
+  "translation": {
+    "description": "Replace NA by aggregation.",
+    "usage": "na_aggregate(object, by=1, fun=None, na_rm=False, maxgap=inf, **kwargs)",
+    "arguments": [
+      {
+        "name": "object",
+        "text": "Series or vector."
+      },
+      {
+        "name": "by",
+        "text": "Group ids recycled to the series, or a function of the time index."
+      },
+      {
+        "name": "FUN",
+        "text": "Applied to the non-missing values in each group. The default is the mean."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, trim remaining missing values."
+      },
+      {
+        "name": "maxgap",
+        "text": "Only gaps no longer than maxgap are replaced."
+      }
+    ],
+    "details": "Each missing value is replaced by FUN of the non-missing values in its group. The default group is the whole series and FUN is the mean. A group with no observations yields NaN from mean, not NA.",
+    "value": "The mean of 1 and 3 is 2, so c(1, NA, 3, NA, NA) returns 1, 2, 3, 2, 2.",
+    "example": "import math\nimport sys\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/zoo\")\nfrom zoo.na import na_aggregate\nfrom zoo.series import Zoo\n\nNA = np.array(np.uint64(0x7FF00000000007A2)).view(np.float64)[()]\n\n\ndef series():\n    return np.array([1.0, NA, 3.0, NA, NA], dtype=np.float64)\n\n\ndef tok(number):\n    if math.isnan(float(number)):\n        bits = int(np.float64(number).view(np.uint64))\n        return \"NA\" if (bits & 0xFFFFFFFF) == 1954 else \"NaN\"\n    return format(float(number), \".12g\")\n\n\nvalue = na_aggregate(series())\nprint(\" \".join(tok(number) for number in np.asarray(value, dtype=float).reshape(-1)))\n",
+    "output": "output/na.aggregate-python.txt"
+  }
+}

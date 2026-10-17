@@ -1,0 +1,64 @@
+{
+  "name": "handler_filesize",
+  "title": "Progression Handler: Progress Reported as the Size of a File on the File System",
+  "origin": {
+    "description": "Report progress by setting the size of a file to about the percent complete.",
+    "usage": "handler_filesize(file = \"default.progress\", intrusiveness = getOption(\"progressr.intrusiveness.file\", 5), target = \"file\", enable = getOption(\"progressr.enable\", TRUE), ...)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path of the progress file. The default is \"default.progress\"."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.file, or 5."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"file\"."
+      },
+      {
+        "name": "enable",
+        "text": "If FALSE, the file is left untouched. The default is the option progressr.enable, or TRUE when that option is unset."
+      },
+      {
+        "name": "...",
+        "text": "Further arguments passed to make_progression_handler()."
+      }
+    ],
+    "details": "On initiate, interrupt, and update, when the handler is enabled, the file size is round(100 * step / max_steps), or 100 when max_steps is 0. A size of 0 or an amount of 0 leaves the body unchanged. The body is \"step/max: \", the message, padding dots, and \" [percent%]\", cut to that many bytes. finish removes the file when clear is TRUE and the file exists. Otherwise it writes the final size.",
+    "value": "A function of class progression_handler.",
+    "example": "path <- tempfile(fileext = \".progress\")\nhandler <- handler_filesize(file = path, enable = TRUE, clear = FALSE, intrusiveness = 0)\nwith_progress({\n  p <- progressor(steps = 4, on_exit = FALSE)\n  p(message = \"work\")\n  p(message = \"work\")\n  p(message = \"work\")\n  p(message = \"work\")\n}, handlers = handler, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\ncat(\"handler_filesize wrote \", file.size(path), \" bytes.\\n\", sep = \"\")\n",
+    "output": "output/handler_filesize-r.txt"
+  },
+  "translation": {
+    "description": "Report progress by setting the size of a file to about the percent complete.",
+    "usage": "handler_filesize(file=\"default.progress\", intrusiveness=None, target=\"file\", enable=None, **extra)",
+    "arguments": [
+      {
+        "name": "file",
+        "text": "Path of the progress file, or a text stream whose name is a path. The default is \"default.progress\"."
+      },
+      {
+        "name": "intrusiveness",
+        "text": "How disruptive the reporter is. The default is the option progressr.intrusiveness.file, or 5."
+      },
+      {
+        "name": "target",
+        "text": "Where progress is rendered. The default is \"file\"."
+      },
+      {
+        "name": "enable",
+        "text": "If False, the file is left untouched. The default is the option progressr.enable, or True when that option is unset."
+      },
+      {
+        "name": "extra",
+        "text": "Further arguments passed to make_progression_handler(), including clear."
+      }
+    ],
+    "details": "On initiate, interrupt, and update, when the handler is enabled, the file size is round(100 * step / max_steps), or 100 when max_steps is 0. A size of 0 or an amount of 0 leaves the body unchanged. The body is \"step/max: \", the message, padding dots, and \" [percent%]\", cut to that many bytes. finish removes the file when clear is true and file_test_f says the file exists. Otherwise it writes the final size.",
+    "value": "A calling handler.",
+    "example": "import os\nimport tempfile\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_filesize\n\npath = os.path.join(tempfile.mkdtemp(), \"script.progress\")\nhandler = handler_filesize(file=path, enable=True, clear=False, intrusiveness=0)\n\ndef body():\n    progress = progressor(steps=4, on_exit=False)\n    progress(message=\"work\")\n    progress(message=\"work\")\n    progress(message=\"work\")\n    progress(message=\"work\")\n\nwith_progress(body, handlers=handler, enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\nprint(f\"handler_filesize wrote {os.path.getsize(path)} bytes.\")\n",
+    "output": "output/handler_filesize-python.txt"
+  }
+}

@@ -1,0 +1,551 @@
+{
+  "name": "pbapply",
+  "cran_version": "1.7-5",
+  "inventory": "complete",
+  "status": "replaced",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked getTimeAsString, startpb, getpb, setpb, closepb, pboptions, dopb, pbtypes, timerProgressBar, pbapply, pbsapply, pblapply, and pbreplicate, pbmapply, pb.mapply, pbtapply, and pbwalk. The other exports are listed and not translated.",
+  "functions": [
+    {
+      "name": "pbapply",
+      "translated": true,
+      "python": "pbapply.pbapply.pbapply",
+      "loads": [],
+      "uses": [
+        "pblapply",
+        "pboptions"
+      ],
+      "done": "Array apply by margin via aperm and pblapply.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "3x4 matrix: row sums and column means, type none",
+        "r_ms": 0.3026723861694336,
+        "translated_ms": 0.14415850091609173,
+        "speedup": 2.099580560605342,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  op <- pboptions(type = \"none\")\n  on.exit(pboptions(op))\n  m <- matrix(1:12, 3, 4)\n  c(as.numeric(pbapply(m, 1, sum)), as.numeric(pbapply(m, 2, mean)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nimport numpy as np\n\nfrom pbapply.pbapply import pbapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        m = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"F\")\n        row_sums = pbapply(m, 1, sum)\n        col_means = pbapply(m, 2, np.mean)\n        return [float(v) for v in row_sums] + [float(v) for v in col_means]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbsapply",
+      "translated": true,
+      "python": "pbapply.pbsapply.pbsapply",
+      "loads": [],
+      "uses": [
+        "pblapply",
+        "pboptions"
+      ],
+      "done": "pblapply with simplify2array-style simplification.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sqrt on list 1,4,9 and empty list length, type none",
+        "r_ms": 0.14722347259521484,
+        "translated_ms": 0.039321999793173745,
+        "speedup": 3.7440484555613236,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  op <- pboptions(type = \"none\")\n  on.exit(pboptions(op))\n  c(as.numeric(pbsapply(as.list(c(1, 4, 9)), sqrt)), length(pbsapply(list(), sqrt)))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.pbsapply import pbsapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        roots = pbsapply([1, 4, 9], math.sqrt)\n        empty = pbsapply([], math.sqrt)\n        return [float(v) for v in roots] + [float(len(empty))]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pblapply",
+      "translated": true,
+      "python": "pbapply.pblapply.pblapply",
+      "loads": [],
+      "uses": [
+        "startpb",
+        "setpb",
+        "closepb",
+        "dopb",
+        "pboptions"
+      ],
+      "done": "List apply with split progress chunks; type none in proof.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Square 1:10 with type none; empty list length",
+        "r_ms": 0.476837158203125,
+        "translated_ms": 0.01509100002294872,
+        "speedup": 31.59745261930978,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  op <- pboptions(type = \"none\", nout = 3)\n  on.exit(pboptions(op))\n  x <- as.list(1:10)\n  out <- unlist(pblapply(x, function(i) i * i))\n  c(out, length(pblapply(integer(0), identity)))\n}\n\nquiet_one <- function() {\n  capture.output(v <- one(), type = \"output\")\n  v\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  quiet_one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pblapply import pblapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\", nout=3)\n    try:\n        x = list(range(1, 11))\n        out = [float(v) for v in pblapply(x, lambda i: i * i)]\n        out.append(float(len(pblapply([], lambda i: i))))\n        return out\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbreplicate",
+      "translated": true,
+      "python": "pbapply.pbreplicate.pbreplicate",
+      "loads": [],
+      "uses": [
+        "pbsapply",
+        "pboptions"
+      ],
+      "done": "pbsapply over integer n replicates of an expression.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Six replicates of max(1:3), simplify TRUE, type none",
+        "r_ms": 0.1856088638305664,
+        "translated_ms": 0.10824099808814935,
+        "speedup": 1.7147741346528436,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  op <- pboptions(type = \"none\")\n  on.exit(pboptions(op))\n  as.numeric(pbreplicate(6, max(1:3), simplify = TRUE))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pbreplicate import pbreplicate\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        out = pbreplicate(6, lambda: max([1, 2, 3]), simplify=True)\n        return [float(v) for v in out]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbmapply",
+      "translated": true,
+      "python": "pbapply.pbmapply.pbmapply",
+      "loads": [],
+      "uses": [
+        "startpb",
+        "setpb",
+        "closepb",
+        "pboptions"
+      ],
+      "done": "mapply with progress updates after each vectorized call.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Plus 1:3 and 4:6, MoreArgs product, paste with SIMPLIFY FALSE; type none",
+        "r_ms": 4.754781723022461,
+        "translated_ms": 0.1206284996442264,
+        "speedup": 39.41673598731556,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  opb <- pboptions(type = \"none\")\n  on.exit(pboptions(opb), add = TRUE)\n  c(\n    as.numeric(pbmapply(`+`, 1:3, 4:6)),\n    as.numeric(pbmapply(function(x, y, z) x * y * z, 1:4, 2, MoreArgs = list(z = 3))),\n    as.numeric(nchar(unlist(pbmapply(paste, c(\"a\", \"b\"), c(\"1\", \"2\"), SIMPLIFY = FALSE))))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pbmapply import pbmapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        return [\n            *list(\n                pbmapply(\n                    lambda x, y: x + y,\n                    [1, 2, 3],\n                    [4, 5, 6],\n                )\n            ),\n            *list(\n                pbmapply(\n                    lambda x, y, z: x * y * z,\n                    [1, 2, 3, 4],\n                    2,\n                    MoreArgs={\"z\": 3},\n                )\n            ),\n            *[\n                float(len(s))\n                for s in pbmapply(\n                    lambda a, b: f\"{a} {b}\",\n                    [\"a\", \"b\"],\n                    [\"1\", \"2\"],\n                    SIMPLIFY=False,\n                )\n            ],\n        ]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": value,\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "pb.mapply",
+      "translated": true,
+      "python": "pbapply.pb_mapply.pb_mapply",
+      "loads": [],
+      "uses": [
+        "startpb",
+        "setpb",
+        "closepb",
+        "pboptions"
+      ],
+      "done": "List-argument mapply with progress bar.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pb.mapply on list(1:3, 4:6) with plus; type none",
+        "r_ms": 2.189159393310547,
+        "translated_ms": 0.0385329985874705,
+        "speedup": 56.812588523084216,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  opb <- pboptions(type = \"none\")\n  on.exit(pboptions(opb), add = TRUE)\n  as.numeric(pb.mapply(`+`, list(1:3, 4:6), MoreArgs = NULL))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.mapply import pb_mapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        return list(pb_mapply(lambda x, y: x + y, [[1, 2, 3], [4, 5, 6]], MoreArgs=None))\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbtapply",
+      "translated": true,
+      "python": "pbapply.pbtapply.pbtapply",
+      "loads": [],
+      "uses": [
+        "pblapply",
+        "pboptions"
+      ],
+      "done": "tapply grouping via splitpb and pblapply.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two-level INDEX sums and NULL FUN length; type none",
+        "r_ms": 0.653386116027832,
+        "translated_ms": 0.08794499990472104,
+        "speedup": 7.429485664173127,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  opb <- pboptions(type = \"none\")\n  on.exit(pboptions(opb), add = TRUE)\n  X <- 1:12\n  INDEX <- list(\n    c(\"a\", \"a\", \"a\", \"a\", \"b\", \"b\", \"b\", \"b\", \"c\", \"c\", \"c\", \"c\"),\n    c(1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2)\n  )\n  c(\n    as.numeric(pbtapply(X, INDEX, sum)),\n    as.numeric(pbtapply(X, INDEX, NULL))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pbtapply import pbtapply\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        x = list(range(1, 13))\n        index = [\n            [\"a\", \"a\", \"a\", \"a\", \"b\", \"b\", \"b\", \"b\", \"c\", \"c\", \"c\", \"c\"],\n            [1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2],\n        ]\n        y1 = pbtapply(x, index, sum)\n        y2 = pbtapply(x, index, None)\n        return [*y1.data, *y2]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbwalk",
+      "translated": true,
+      "python": "pbapply.pbwalk.pbwalk",
+      "loads": [],
+      "uses": [
+        "pblapply",
+        "pboptions"
+      ],
+      "done": "Side-effect pblapply over a list; named sum helper.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Accumulating walk and invisible sum on list(10, 20); type none",
+        "r_ms": 0.14126300811767578,
+        "translated_ms": 0.020019000658066943,
+        "speedup": 7.0564465494810715,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  opb <- pboptions(type = \"none\")\n  on.exit(pboptions(opb), add = TRUE)\n  z <- list(a = 1, b = 2, c = 3)\n  acc <- 0\n  pbwalk(z, function(x) {\n    acc <<- acc + x\n  })\n  c(\n    acc,\n    as.numeric(unlist(invisible(pbwalk(list(10, 20), sum))))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pbwalk import pbwalk\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    former = replace_pboptions(type=\"none\")\n    try:\n        z = {\"a\": 1, \"b\": 2, \"c\": 3}\n        acc = [0]\n\n        def bump(x):\n            acc[0] += x\n\n        pbwalk(z, bump)\n        ret = pbwalk([10, 20], sum)\n        return [float(acc[0]), float(ret[0]), float(ret[1])]\n    finally:\n        reset_pboptions(former)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbeapply",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pbvapply",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pbby",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pbMap",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "startpb",
+      "translated": true,
+      "python": "pbapply.startpb.startpb",
+      "loads": [],
+      "uses": [],
+      "done": "Starts a progress bar from pboptions when progress is enabled, otherwise returns None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getpb(startpb(min, max)) for several ranges, then initial 0.25, then type \"none\"",
+        "r_ms": 1.2415647506713867,
+        "translated_ms": 0.034487000448280014,
+        "speedup": 36.00094918470382,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  pairs <- list(c(0, 1), c(0, 10), c(2, 5), c(-10, 10))\n  out <- numeric(0)\n  opb <- pboptions(\n    type = \"timer\",\n    style = 3,\n    char = \"+\",\n    txt.width = 50,\n    initial = 0,\n    min_time = 0\n  )\n  for (p in pairs) {\n    pb <- startpb(p[[1]], p[[2]])\n    out <- c(out, if (is.null(pb)) NA_real_ else getpb(pb))\n    closepb(pb)\n  }\n  pboptions(initial = 0.25)\n  pb <- startpb(0, 10)\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  pboptions(type = \"none\")\n  pb <- startpb(0, 1)\n  out <- c(out, if (is.null(pb)) NA_real_ else getpb(pb))\n  closepb(pb)\n  pboptions(opb)\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.startpb import closepb, getpb, replace_pboptions, reset_pboptions, startpb\n\nPAIRS = [(0, 1), (0, 10), (2, 5), (-10, 10)]\n\n\ndef one():\n    out = []\n    former = replace_pboptions(\n        type=\"timer\",\n        style=3,\n        char=\"+\",\n        **{\"txt.width\": 50},\n        initial=0,\n        min_time=0,\n    )\n    try:\n        for min_val, max_val in PAIRS:\n            pb = startpb(min_val, max_val)\n            out.append(float(\"nan\") if pb is None else getpb(pb))\n            closepb(pb)\n        replace_pboptions(initial=0.25)\n        pb = startpb(0, 10)\n        out.append(getpb(pb))\n        closepb(pb)\n        replace_pboptions(type=\"none\")\n        pb = startpb(0, 1)\n        out.append(float(\"nan\") if pb is None else getpb(pb))\n        closepb(pb)\n    finally:\n        reset_pboptions(former)\n    return out\n\n\ndef json_number(x):\n    if x is None or (isinstance(x, float) and math.isnan(x)):\n        return None\n    return x\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [json_number(v) for v in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "setpb",
+      "translated": true,
+      "python": "pbapply.setpb.setpb",
+      "loads": [],
+      "uses": [],
+      "done": "Updates a progress bar and returns the previous value, or None when progress is disabled.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getpb and setpb round-trip on several ranges, initial 0.25, then type \"none\"",
+        "r_ms": 1.8047094345092773,
+        "translated_ms": 0.036765000004379544,
+        "speedup": 49.08770391117355,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  pairs <- list(c(0, 10), c(2, 5), c(-10, 10))\n  out <- numeric(0)\n  opb <- pboptions(\n    type = \"timer\",\n    style = 3,\n    char = \"+\",\n    txt.width = 50,\n    initial = 0,\n    min_time = 0\n  )\n  for (p in pairs) {\n    pb <- startpb(p[[1]], p[[2]])\n    mid <- p[[1]] + 0.5 * (p[[2]] - p[[1]])\n    out <- c(out, getpb(pb))\n    out <- c(out, setpb(pb, mid))\n    out <- c(out, getpb(pb))\n    out <- c(out, setpb(pb, p[[2]]))\n    out <- c(out, getpb(pb))\n    closepb(pb)\n  }\n  pboptions(initial = 0.25)\n  pb <- startpb(0, 10)\n  out <- c(out, getpb(pb))\n  out <- c(out, setpb(pb, 5))\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  pboptions(type = \"none\")\n  pb <- startpb(0, 1)\n  prev <- setpb(pb, 0.5)\n  out <- c(out, if (is.null(prev)) NA_real_ else prev)\n  closepb(pb)\n  pboptions(opb)\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.setpb import setpb\nfrom pbapply.startpb import closepb, getpb, replace_pboptions, reset_pboptions, startpb\n\nPAIRS = [(0, 10), (2, 5), (-10, 10)]\n\n\ndef one():\n    out = []\n    former = replace_pboptions(\n        type=\"timer\",\n        style=3,\n        char=\"+\",\n        **{\"txt.width\": 50},\n        initial=0,\n        min_time=0,\n    )\n    try:\n        for min_val, max_val in PAIRS:\n            pb = startpb(min_val, max_val)\n            mid = min_val + 0.5 * (max_val - min_val)\n            out.append(getpb(pb))\n            out.append(setpb(pb, mid))\n            out.append(getpb(pb))\n            out.append(setpb(pb, max_val))\n            out.append(getpb(pb))\n            closepb(pb)\n        replace_pboptions(initial=0.25)\n        pb = startpb(0, 10)\n        out.append(getpb(pb))\n        out.append(setpb(pb, 5))\n        out.append(getpb(pb))\n        closepb(pb)\n        replace_pboptions(type=\"none\")\n        pb = startpb(0, 1)\n        prev = setpb(pb, 0.5)\n        out.append(float(\"nan\") if prev is None else prev)\n        closepb(pb)\n    finally:\n        reset_pboptions(former)\n    return out\n\n\ndef json_number(x):\n    if x is None or (isinstance(x, float) and math.isnan(x)):\n        return None\n    return x\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [json_number(v) for v in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "getpb",
+      "translated": true,
+      "python": "pbapply.getpb.getpb",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the current bar value when progress is enabled, otherwise None.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "getpb(startpb(min, max)) for several ranges, then initial 0.25, then type \"none\"",
+        "r_ms": 1.1560916900634766,
+        "translated_ms": 0.051895500291720964,
+        "speedup": 22.277301183430563,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  pairs <- list(c(0, 1), c(0, 10), c(2, 5), c(-10, 10))\n  out <- numeric(0)\n  opb <- pboptions(\n    type = \"timer\",\n    style = 3,\n    char = \"+\",\n    txt.width = 50,\n    initial = 0,\n    min_time = 0\n  )\n  for (p in pairs) {\n    pb <- startpb(p[[1]], p[[2]])\n    out <- c(out, if (is.null(pb)) NA_real_ else getpb(pb))\n    closepb(pb)\n  }\n  pboptions(initial = 0.25)\n  pb <- startpb(0, 10)\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  pboptions(type = \"none\")\n  pb <- startpb(0, 1)\n  out <- c(out, if (is.null(pb)) NA_real_ else getpb(pb))\n  closepb(pb)\n  pboptions(opb)\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.getpb import getpb\nfrom pbapply.startpb import closepb, replace_pboptions, reset_pboptions, startpb\n\nPAIRS = [(0, 1), (0, 10), (2, 5), (-10, 10)]\n\n\ndef one():\n    out = []\n    former = replace_pboptions(\n        type=\"timer\",\n        style=3,\n        char=\"+\",\n        **{\"txt.width\": 50},\n        initial=0,\n        min_time=0,\n    )\n    try:\n        for min_val, max_val in PAIRS:\n            pb = startpb(min_val, max_val)\n            out.append(float(\"nan\") if pb is None else getpb(pb))\n            closepb(pb)\n        replace_pboptions(initial=0.25)\n        pb = startpb(0, 10)\n        out.append(getpb(pb))\n        closepb(pb)\n        replace_pboptions(type=\"none\")\n        pb = startpb(0, 1)\n        out.append(float(\"nan\") if pb is None else getpb(pb))\n        closepb(pb)\n    finally:\n        reset_pboptions(former)\n    return out\n\n\ndef json_number(x):\n    if x is None or (isinstance(x, float) and math.isnan(x)):\n        return None\n    return x\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [json_number(v) for v in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "closepb",
+      "translated": true,
+      "python": "pbapply.closepb.closepb",
+      "loads": [],
+      "uses": [],
+      "done": "Closes an active progress bar and does nothing when the bar is NULL.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Timer and txt bars record the value before close and a closed flag after, then a NULL close and type none",
+        "r_ms": 3.128647804260254,
+        "translated_ms": 0.04636900030163815,
+        "speedup": 67.47283279578755,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\nclosed_flag <- function(pb) {\n  as.numeric(!inherits(try(isOpen(pb), silent = TRUE), \"try-error\"))\n}\n\none <- function() {\n  out <- numeric(0)\n  opb <- pboptions(\n    type = \"timer\",\n    style = 3,\n    char = \"+\",\n    txt.width = 50,\n    initial = 0,\n    min_time = 0\n  )\n  for (p in list(c(0, 10), c(2, 5))) {\n    pb <- startpb(p[[1]], p[[2]])\n    setpb(pb, p[[1]] + 3)\n    out <- c(out, getpb(pb))\n    closepb(pb)\n    out <- c(out, closed_flag(pb))\n  }\n  closepb(NULL)\n  out <- c(out, 0)\n  pboptions(type = \"none\")\n  closepb(startpb(0, 1))\n  out <- c(out, 0)\n  pboptions(type = \"txt\")\n  pb <- startpb(0, 5)\n  setpb(pb, 2)\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  out <- c(out, closed_flag(pb))\n  pboptions(opb)\n  out\n}\n\nquiet_one <- function() {\n  capture.output(one(), type = \"output\")\n  invisible(NULL)\n}\n\nvalue <- {\n  capture.output(v <- one(), type = \"output\")\n  v\n}\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  quiet_one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.closepb import closepb\nfrom pbapply.startpb import (\n    _TimerProgressBar,\n    _TxtProgressBar,\n    replace_pboptions,\n    reset_pboptions,\n    startpb,\n)\nfrom pbapply.setpb import setpb\nfrom pbapply.getpb import getpb\n\n\ndef closed_flag(pb) -> float:\n    if pb is None:\n        return float(\"nan\")\n    if isinstance(pb, (_TxtProgressBar, _TimerProgressBar)):\n        return 0.0 if pb._closed else 1.0\n    return float(\"nan\")\n\n\ndef one():\n    out = []\n    former = replace_pboptions(\n        type=\"timer\",\n        style=3,\n        char=\"+\",\n        **{\"txt.width\": 50},\n        initial=0,\n        min_time=0,\n    )\n    try:\n        for min_val, max_val in [(0, 10), (2, 5)]:\n            pb = startpb(min_val, max_val)\n            setpb(pb, min_val + 3)\n            out.append(getpb(pb))\n            closepb(pb)\n            out.append(closed_flag(pb))\n        closepb(None)\n        out.append(0.0)\n        replace_pboptions(type=\"none\")\n        closepb(startpb(0, 1))\n        out.append(0.0)\n        replace_pboptions(type=\"txt\")\n        pb = startpb(0, 5)\n        setpb(pb, 2)\n        out.append(getpb(pb))\n        closepb(pb)\n        out.append(closed_flag(pb))\n    finally:\n        reset_pboptions(former)\n    return out\n\n\ndef json_number(x):\n    if x is None or (isinstance(x, float) and math.isnan(x)):\n        return None\n    return x\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [json_number(v) for v in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "dopb",
+      "translated": true,
+      "python": "pbapply.dopb.dopb",
+      "loads": [],
+      "uses": [],
+      "done": "Reports whether a progress bar should run for the current options.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Eight dopb results: default off, timer, txt, shiny, none, NULL, knitr suppression, and a prefix",
+        "r_ms": 0.3554821014404297,
+        "translated_ms": 0.041316499846288934,
+        "speedup": 8.603877452420724,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\none <- function() {\n  out <- logical(0)\n  out <- c(out, dopb())\n  op <- pboptions(type = \"timer\")\n  out <- c(out, dopb())\n  pboptions(op)\n  op <- pboptions(type = \"none\")\n  out <- c(out, dopb())\n  pboptions(op)\n  op <- pboptions(type = \"txt\")\n  out <- c(out, dopb())\n  pboptions(op)\n  op <- pboptions(type = \"shiny\")\n  out <- c(out, dopb())\n  pboptions(op)\n  op <- options(pboptions = list(type = NULL))\n  out <- c(out, dopb())\n  options(op)\n  op <- pboptions(type = \"timer\")\n  op2 <- options(knitr.in.progress = TRUE)\n  out <- c(out, dopb())\n  options(op2)\n  pboptions(op)\n  op <- pboptions(type = \"tim\")\n  out <- c(out, dopb())\n  pboptions(op)\n  as.numeric(out)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, sprintf, character(1), fmt = \"%.17g\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.dopb import dopb, replace_session_options, reset_session_options\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\n\n\ndef one():\n    out = []\n    out.append(float(dopb()))\n    former = replace_pboptions(type=\"timer\")\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    former = replace_pboptions(type=\"none\")\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    former = replace_pboptions(type=\"txt\")\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    former = replace_pboptions(type=\"shiny\")\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    former = replace_pboptions(type=None)\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    former = replace_pboptions(type=\"timer\")\n    knitr = replace_session_options(**{\"knitr.in.progress\": True})\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_session_options(knitr)\n        reset_pboptions(former)\n    former = replace_pboptions(type=\"tim\")\n    try:\n        out.append(float(dopb()))\n    finally:\n        reset_pboptions(former)\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": value,\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "doshiny",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "pboptions",
+      "translated": true,
+      "python": "pbapply.pboptions.pboptions",
+      "loads": [],
+      "uses": [],
+      "done": "Returns the previous progress-bar options and applies a tagged merge or a full restore.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A tagged merge of initial, then restoring the former options",
+        "r_ms": 0.3364086151123047,
+        "translated_ms": 0.026331000299251173,
+        "speedup": 12.776142618549581,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\nnumopts <- function(o) {\n  c(\n    as.numeric(o$style),\n    as.numeric(o$txt.width),\n    as.numeric(o$gui.width),\n    as.numeric(o$initial),\n    as.numeric(o$nout),\n    as.numeric(o$min_time),\n    as.numeric(o$use_lb)\n  )\n}\n\none <- function() {\n  out <- numeric(0)\n  opb <- pboptions(type = \"txt\", style = 1, char = \">\", initial = 0.5, nout = 50)\n  out <- c(out, numopts(opb))\n  pb <- startpb(0, 10)\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  pboptions(style = 3, initial = 0.25)\n  pb <- startpb(0, 10)\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  pboptions(opb)\n  pb <- startpb(0, 10)\n  if (!is.null(pb)) out <- c(out, getpb(pb))\n  closepb(pb)\n  out <- c(out, numopts(getOption(\"pboptions\")))\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.closepb import closepb\nfrom pbapply.getpb import getpb\nfrom pbapply.pboptions import pboptions\nfrom pbapply.startpb import startpb\n\n\ndef numopts(o):\n    return [\n        float(o[\"style\"]),\n        float(o[\"txt.width\"]),\n        float(o[\"gui.width\"]),\n        float(o[\"initial\"]),\n        float(o[\"nout\"]),\n        float(o[\"min_time\"]),\n        float(o[\"use_lb\"]),\n    ]\n\n\ndef one():\n    out = []\n    opb = pboptions(type=\"txt\", style=1, char=\">\", initial=0.5, nout=50)\n    out.extend(numopts(opb))\n    pb = startpb(0, 10)\n    out.append(getpb(pb))\n    closepb(pb)\n    pboptions(style=3, initial=0.25)\n    pb = startpb(0, 10)\n    out.append(getpb(pb))\n    closepb(pb)\n    pboptions(opb)\n    pb = startpb(0, 10)\n    if pb is not None:\n        out.append(getpb(pb))\n    closepb(pb)\n    out.extend(numopts(pboptions()))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "pbtypes",
+      "translated": true,
+      "python": "pbapply.pbtypes.pbtypes",
+      "loads": [],
+      "uses": [],
+      "done": "pbtypes returns the supported progress-bar type names, with win appended on Windows.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One call to pbtypes on Linux yields timer, txt, tk, none, and shiny in that order.",
+        "r_ms": 0.0057220458984375,
+        "translated_ms": 0.0012114996934542432,
+        "speedup": 4.723109654384419,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() as.character(pbtypes())\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(vapply(value, json_str, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom pbapply.pbtypes import pbtypes\n\n\ndef one():\n    return list(pbtypes())\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "timerProgressBar",
+      "translated": true,
+      "python": "pbapply.timerProgressBar.timerProgressBar",
+      "loads": [],
+      "uses": [
+        "getTimeAsString"
+      ],
+      "done": "Text timer progress bar with styles 1 to 6, compatible with getpb, setpb, and closepb.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Styles 1 to 6 on several ranges, writing the bar to a temp file and comparing the numeric value trace.",
+        "r_ms": 13.875484466552734,
+        "translated_ms": 0.9998614996220567,
+        "speedup": 13.877406492596831,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\nrun_case <- function(...) {\n  out <- numeric(0)\n  f <- tempfile()\n  on.exit(unlink(f))\n  con <- file(f, open = \"wt\")\n  on.exit(close(con), add = TRUE)\n  pb <- timerProgressBar(..., file = con)\n  out <- c(out, getpb(pb))\n  out <- c(out, setpb(pb, 2.5))\n  out <- c(out, getpb(pb))\n  out <- c(out, setpb(pb, NA))\n  out <- c(out, getpb(pb))\n  out <- c(out, setpb(pb, 100))\n  out <- c(out, getpb(pb))\n  out <- c(out, setpb(pb, 5))\n  out <- c(out, getpb(pb))\n  closepb(pb)\n  out\n}\n\none <- function() {\n  out <- numeric(0)\n  opb <- pboptions(type = \"timer\")\n  on.exit(pboptions(opb), add = TRUE)\n  for (sty in 1:6) {\n    out <- c(out, run_case(0, 10, initial = 0, style = sty, width = 35, char = \"+\"))\n  }\n  out <- c(out, run_case(0, 10, initial = 0.25, style = 3, width = 50, char = \".\"))\n  out <- c(out, run_case(2, 5, initial = 2, style = 1, width = 0, char = \"    \"))\n  out <- c(out, run_case(-10, 10, initial = -10, style = 5, width = 35, char = \"[=-]\"))\n  out <- c(out, run_case(0, 1, initial = 0, style = 6, width = 50, char = \"{*.}\"))\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nparts <- vapply(value, function(x) if (is.na(x)) \"null\" else sprintf(\"%.17g\", x), \"\")\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(parts, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import io\nimport json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.closepb import closepb\nfrom pbapply.getpb import getpb\nfrom pbapply.setpb import setpb\nfrom pbapply.startpb import replace_pboptions, reset_pboptions\nfrom pbapply.timerProgressBar import timerProgressBar\n\n\ndef quiet_run(**kwargs):\n    sink = io.StringIO()\n    former = replace_pboptions(type=\"timer\")\n    try:\n        pb = timerProgressBar(**kwargs, file=sink)\n        out = [getpb(pb)]\n        out.append(setpb(pb, 2.5))\n        out.append(getpb(pb))\n        out.append(setpb(pb, float(\"nan\")))\n        out.append(getpb(pb))\n        out.append(setpb(pb, 100))\n        out.append(getpb(pb))\n        out.append(setpb(pb, 5))\n        out.append(getpb(pb))\n        closepb(pb)\n        return out\n    finally:\n        reset_pboptions(former)\n\n\ndef one():\n    out = []\n    for sty in range(1, 7):\n        out.extend(\n            quiet_run(min=0, max=10, initial=0, style=sty, width=35, char=\"+\")\n        )\n    out.extend(\n        quiet_run(min=0, max=10, initial=0.25, style=3, width=50, char=\".\")\n    )\n    out.extend(\n        quiet_run(min=2, max=5, initial=2, style=1, width=0, char=\"    \")\n    )\n    out.extend(\n        quiet_run(min=-10, max=10, initial=-10, style=5, width=35, char=\"[=-]\")\n    )\n    out.extend(quiet_run(min=0, max=1, initial=0, style=6, width=50, char=\"{*.}\"))\n    return out\n\n\ndef json_number(x):\n    if x is None or (isinstance(x, float) and math.isnan(x)):\n        return None\n    return x\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\n    json.dumps(\n        {\n            \"value\": [json_number(v) for v in value],\n            \"median_ms\": statistics.median(elapsed),\n        }\n    )\n)\n"
+        }
+      }
+    },
+    {
+      "name": "setTimerProgressBar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getTimerProgressBar",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "splitpb",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    },
+    {
+      "name": "getTimeAsString",
+      "translated": true,
+      "python": "pbapply.time.getTimeAsString",
+      "loads": [],
+      "uses": [],
+      "done": "Formats one time in seconds as days, hours, minutes, and seconds, and returns calculating for NULL.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sapply(list(NULL, 0, 0.4, 0.5, 0.6, 15, 59.5, 60, 65, 90.5, 119.5, 3599, 3600, 6005, 86399, 86400, 86401, 90061, 1e6, 1e10, 2147483647 * 86400, 2147483647 * 86400 - 1, -1, -15, -59.5, -60, -61, -3600, -86400, -90061, -1e10, Inf, -Inf), getTimeAsString)",
+        "r_ms": 0.7935762405395508,
+        "translated_ms": 0.24404000009781157,
+        "speedup": 3.251828553603853,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(pbapply))\nstopifnot(packageVersion(\"pbapply\") == \"1.7-5\")\nstopifnot(packageDescription(\"pbapply\")$Version == \"1.7-5\")\n\njson_str <- function(s) {\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\ntimes <- list(\n  NULL, 0, 0.4, 0.5, 0.6, 15, 59.5, 60, 65, 90.5, 119.5,\n  3599, 3600, 6005, 86399, 86400, 86401, 90061, 1e6, 1e10,\n  2147483647 * 86400, 2147483647 * 86400 - 1,\n  -1, -15, -59.5, -60, -61, -3600, -86400, -90061, -1e10,\n  Inf, -Inf\n)\n\none <- function() vapply(times, getTimeAsString, \"\")\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(vapply(value, json_str, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport math\nimport statistics\nimport time\n\nfrom pbapply.time import getTimeAsString\n\nTIMES = [\n    None,\n    0,\n    0.4,\n    0.5,\n    0.6,\n    15,\n    59.5,\n    60,\n    65,\n    90.5,\n    119.5,\n    3599,\n    3600,\n    6005,\n    86399,\n    86400,\n    86401,\n    90061,\n    1e6,\n    1e10,\n    2147483647 * 86400,\n    2147483647 * 86400 - 1,\n    -1,\n    -15,\n    -59.5,\n    -60,\n    -61,\n    -3600,\n    -86400,\n    -90061,\n    -1e10,\n    math.inf,\n    -math.inf,\n]\n\n\ndef one():\n    return [getTimeAsString(value) for value in TIMES]\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": ".pb_env",
+      "translated": false,
+      "python": "",
+      "loads": [],
+      "uses": [],
+      "done": "",
+      "not_done": "Package is replaced (cran/replaced.json). Not translated.",
+      "blocked_by": [],
+      "assigned": ""
+    }
+  ]
+}

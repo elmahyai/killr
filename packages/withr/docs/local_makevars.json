@@ -1,0 +1,56 @@
+{
+  "name": "local_makevars",
+  "title": "Makevars file",
+  "origin": {
+    "description": "Point R_MAKEVARS_USER at a rewritten Makevars file.",
+    "usage": "local_makevars(..., .local_envir = parent.frame())",
+    "arguments": [
+      {
+        "name": "_new",
+        "text": "Variable names and values."
+      },
+      {
+        "name": "_path",
+        "text": "Existing Makevars file. The user file when omitted."
+      },
+      {
+        "name": "_assignment",
+        "text": "One of =, :=, ?=, +=."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the cleanup."
+      }
+    ],
+    "details": "An existing assignment for the same name is replaced. Other lines are kept. The assignment form is =, :=, ?=, or +=.",
+    "value": "The previous Makevars lines, or NULL when there was no file.",
+    "example": "src <- tempfile()\nwriteLines(\"CFLAGS = -O2\", src)\nbefore <- Sys.getenv(\"R_MAKEVARS_USER\")\nlines <- local({\n  local_makevars(CFLAGS = \"-O3\", .path = src)\n  readLines(Sys.getenv(\"R_MAKEVARS_USER\"))\n})\nc(lines, if (identical(Sys.getenv(\"R_MAKEVARS_USER\"), before)) \"restored\" else \"open\")\n",
+    "output": "output/local_makevars-r.txt"
+  },
+  "translation": {
+    "description": "Point R_MAKEVARS_USER at a rewritten Makevars file.",
+    "usage": "local_makevars(..., _local_envir=None)",
+    "arguments": [
+      {
+        "name": "_new",
+        "text": "Variable names and values."
+      },
+      {
+        "name": "_path",
+        "text": "Existing Makevars file. The user file when omitted."
+      },
+      {
+        "name": "_assignment",
+        "text": "One of =, :=, ?=, +=."
+      },
+      {
+        "name": "_local_envir",
+        "text": "Frame that owns the cleanup."
+      }
+    ],
+    "details": "An existing assignment for the same name is replaced. Other lines are kept. The assignment form is =, :=, ?=, or +=. code is a callable, and local_* is a context manager.",
+    "value": "The previous Makevars lines, or NULL when there was no file.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\nfd, src = tempfile.mkstemp()\nos.close(fd)\nwith open(src, \"w\") as handle:\n    handle.write(\"CFLAGS = -O2\\n\")\nbefore = os.environ.get(\"R_MAKEVARS_USER\")\nwith local_makevars(CFLAGS=\"-O3\", _path=src):\n    with open(os.environ[\"R_MAKEVARS_USER\"]) as handle:\n        lines = handle.read().splitlines()\nafter = os.environ.get(\"R_MAKEVARS_USER\")\nos.remove(src)\nreturn lines + [\"restored\" if after == before else \"open\"]\n",
+    "output": "output/local_makevars-python.txt"
+  }
+}

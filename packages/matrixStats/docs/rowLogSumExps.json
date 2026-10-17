@@ -1,0 +1,72 @@
+{
+  "name": "rowLogSumExps",
+  "title": "Accurately computes the logarithm of the sum of exponentials across rows",
+  "origin": {
+    "description": "Accurately computes the logarithm of the sum of exponentials across rows or columns.",
+    "usage": "rowLogSumExps(lx, rows = NULL, cols = NULL, na.rm = FALSE,\n  dim. = dim(lx), ..., useNames = TRUE)",
+    "arguments": [
+      {
+        "name": "lx",
+        "text": "A numeric N x K matrix. Typically lx are log(x) values."
+      },
+      {
+        "name": "rows, cols",
+        "text": "A vector indicating subset of rows (and/or columns) to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, any missing values are ignored, otherwise not."
+      },
+      {
+        "name": "dim.",
+        "text": "An integer vector of length two specifying the dimension of x, also when not a matrix."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      },
+      {
+        "name": "useNames",
+        "text": "If TRUE (default), names attributes of the result are set, otherwise not."
+      }
+    ],
+    "details": "The native code computes log(sum(exp(lx))) for each row by subtracting the row maximum before exponentiating. Rows and columns are 1-based. An empty column selection returns -Inf for each selected row. A missing row index returns -Inf when na.rm is TRUE and NA otherwise. The same calculation on a vector is logSumExp().",
+    "value": "A numeric vector of length N (one value for each selected row).",
+    "example": "lx <- matrix(c(0, 0, log(2), log(3)), nrow = 2)\nrowLogSumExps(lx)",
+    "output": "output/rowLogSumExps-r.txt"
+  },
+  "translation": {
+    "description": "Accurately computes the logarithm of the sum of exponentials across rows or columns.",
+    "usage": "rowLogSumExps(lx, rows=None, cols=None, na_rm=False, dim=None,\n              use_names=True)",
+    "arguments": [
+      {
+        "name": "lx",
+        "text": "An N by K array of log values, or a one-dimensional vector when dim is given. A two-dimensional array is read with axis 0 as rows and axis 1 as columns, matching the printed R matrix. A missing double is NaN."
+      },
+      {
+        "name": "rows",
+        "text": "1-based rows to include. None uses every row. Zeros are dropped and negative values exclude, as in R. A positive index past the margin is an error."
+      },
+      {
+        "name": "cols",
+        "text": "1-based columns to include. None uses every column."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values are excluded. This is na.rm. An all-missing row is -Inf when na_rm is True and NaN otherwise. A missing row index is -Inf when na_rm is True and NaN otherwise."
+      },
+      {
+        "name": "dim",
+        "text": "Two integers giving the shape of lx, also when lx is not a matrix. This is dim. When lx is one-dimensional, the values fill that shape in column-major order."
+      },
+      {
+        "name": "use_names",
+        "text": "Accepted for compatibility with useNames. The result is always a plain float64 vector; names are not attached."
+      }
+    ],
+    "details": "Each selected row is passed to the logsumexp crate, which is the max-subtraction sum from matrixStats src/logSumExp.c: max(lx) + log1p(sum(exp(lx - max))). The row walk is the rowlogsumexps crate, ported from src/rowLogSumExp.c with hasNA TRUE and byrow TRUE. An empty column selection returns -Inf for each selected row. An empty row selection returns a zero-length vector.",
+    "value": "A float64 vector of length N, one value for each selected row.",
+    "example": "import numpy as np\nfrom matrixstats.rowlogsumexps import rowLogSumExps\n\nlx = np.array([[0.0, np.log(2.0)], [0.0, np.log(3.0)]])\nrowLogSumExps(lx)",
+    "output": "output/rowLogSumExps-python.txt"
+  }
+}

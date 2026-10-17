@@ -1,0 +1,232 @@
+{
+  "name": "utf8",
+  "cran_version": "1.2.6",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All nine exports are done. Widths use the utf8lite table from utf8 1.2.6. The compiled code is C, so there is no crate. Python strings have no R encoding mark; bytes stand for a byte string.",
+  "dependencies": {
+    "translated": [],
+    "native": [],
+    "rust": []
+  },
+  "functions": [
+    {
+      "name": "as_utf8",
+      "translated": true,
+      "python": "utf8.as_utf8",
+      "loads": [],
+      "uses": [],
+      "done": "Decodes UTF-8 bytes and, when asked, composes to NFC.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A plus a combining ring, composed",
+        "r_ms": 0.04374980926513672,
+        "translated_ms": 0.001387999418511754,
+        "speedup": 31.52004869861279,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() as_utf8(\"A\\u030a\", normalize = TRUE)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return as_utf8(\"A\\u030a\", normalize=True)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_valid",
+      "translated": true,
+      "python": "utf8.utf8_valid",
+      "loads": [],
+      "uses": [],
+      "done": "A string is valid. bytes are valid when they decode as UTF-8.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "façile and abc are valid UTF-8",
+        "r_ms": 0.006198883056640625,
+        "translated_ms": 0.0009384998520545196,
+        "speedup": 6.605097532056423,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() utf8_valid(c(\"fa\\u00e7ile\", \"abc\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return utf8_valid([\"fa\\u00e7ile\", \"abc\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_normalize",
+      "translated": true,
+      "python": "utf8.utf8_normalize",
+      "loads": [],
+      "uses": [],
+      "done": "Composes to NFC. Compatibility mapping turns off the non-ASCII casefold.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "three angstrom letters compose to U+00C5",
+        "r_ms": 0.04863739013671875,
+        "translated_ms": 0.00925900030779303,
+        "speedup": 5.252985043728973,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() utf8_normalize(c(\"\\u00c5\", \"A\\u030a\", \"\\u212b\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return utf8_normalize([\"\\u00c5\", \"A\\u030a\", \"\\u212b\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_encode",
+      "translated": true,
+      "python": "utf8.utf8_encode",
+      "loads": [],
+      "uses": [],
+      "done": "Escapes controls in C style. A style code wraps an escape, and only the first byte of a backslash escape.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "a newline in hello world",
+        "r_ms": 0.10991096496582031,
+        "translated_ms": 0.008999999863590347,
+        "speedup": 12.21232962574444,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() utf8_encode(\"hello\\nworld\")\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return utf8_encode(\"hello\\nworld\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_format",
+      "translated": true,
+      "python": "utf8.utf8_format",
+      "loads": [],
+      "uses": [],
+      "done": "Truncates to a display width and adds an ellipsis. Right justification keeps the end.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "façile limited to 3 display units",
+        "r_ms": 0.10585784912109375,
+        "translated_ms": 0.023606500235473504,
+        "speedup": 4.484266963131667,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() utf8_format(\"fa\\u00e7ile\", chars = 3)\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return utf8_format(\"fa\\u00e7ile\", chars=3)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_print",
+      "translated": true,
+      "python": "utf8.utf8_print",
+      "loads": [],
+      "uses": [],
+      "done": "Prints a named vector in columns after formatting it, and returns the same object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "names a and b, façile truncated to 3 units",
+        "r_ms": 0.5807876586914062,
+        "translated_ms": 0.05375749969971366,
+        "speedup": 10.803844336802364,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() local({con <- textConnection(\"out\", \"w\"); sink(con); utf8_print(c(a = \"fa\\u00e7ile\", b = \"x\"), chars = 3); sink(); close(con); paste(out, collapse = \"\\n\")})\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    buf = io.StringIO()\n    utf8_print({\"a\": \"fa\\u00e7ile\", \"b\": \"x\"}, chars=3, file=buf)\n    return buf.getvalue().rstrip(\"\\n\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "utf8_width",
+      "translated": true,
+      "python": "utf8.utf8_width",
+      "loads": [],
+      "uses": [],
+      "done": "Sums utf8lite character widths. Controls are missing unless they are escaped.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "façile, an emoji, a CJK character, and a combining mark",
+        "r_ms": 0.041484832763671875,
+        "translated_ms": 0.039025999740260886,
+        "speedup": 1.0630049976881015,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() utf8_width(c(\"fa\\u00e7ile\", \"\\U0001F600\", \"\\u4e16\", \"e\\u0301\"))\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return utf8_width([\"fa\\u00e7ile\", \"\\U0001F600\", \"\\u4e16\", \"e\\u0301\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "output_ansi",
+      "translated": true,
+      "python": "utf8.output_ansi",
+      "loads": [],
+      "uses": [],
+      "done": "True when stdout is a terminal, or RStudio has set console color.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "stdout is not a terminal",
+        "r_ms": 0.01811981201171875,
+        "translated_ms": 0.0037454997254826594,
+        "speedup": 4.837755530574431,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() output_ansi()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return output_ansi()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "output_utf8",
+      "translated": true,
+      "python": "utf8.output_utf8",
+      "loads": [],
+      "uses": [],
+      "done": "True when the character locale is UTF-8. The C locale is false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the process locale is UTF-8",
+        "r_ms": 0.009775161743164062,
+        "translated_ms": 0.0009824998414842412,
+        "speedup": 9.94927564405195,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "\n.libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(utf8))\njson_str <- function(s) {\n  if (length(s) == 0 || is.na(s)) return(\"null\")\n  chars <- strsplit(enc2utf8(s), \"\")[[1]]\n  parts <- character(length(chars))\n  for (i in seq_along(chars)) {\n    cp <- utf8ToInt(chars[[i]])\n    parts[[i]] <- if (cp == 34) paste0(\"\\\\\", '\"')\n      else if (cp == 92) paste0(\"\\\\\", \"\\\\\")\n      else if (cp == 10) paste0(\"\\\\\", \"n\")\n      else if (cp == 13) paste0(\"\\\\\", \"r\")\n      else if (cp == 9) paste0(\"\\\\\", \"t\")\n      else if (cp < 32 || cp == 127) sprintf(\"\\\\u%04x\", cp)\n      else chars[[i]]\n  }\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_val <- function(x) {\n  if (is.null(x)) return(\"null\")\n  if (is.logical(x)) {\n    parts <- ifelse(is.na(x), \"null\", ifelse(x, \"true\", \"false\"))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  if (is.numeric(x)) {\n    parts <- ifelse(is.na(x), \"null\", sprintf(\"%.17g\", x))\n    if (length(parts) == 1) return(parts[[1]])\n    return(paste0(\"[\", paste(parts, collapse = \",\"), \"]\"))\n  }\n  x <- as.character(x)\n  if (length(x) == 1) return(json_str(x[[1]]))\n  paste0(\"[\", paste(vapply(x, json_str, \"\"), collapse = \",\"), \"]\")\n}\none <- function() output_utf8()\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"value\":%s,\"median_ms\":%.17g}\\n', json_val(value), median(elapsed) * 1000))\n",
+          "python": "import io\nimport json\nimport statistics\nimport time\n\nfrom utf8 import (\n    as_utf8,\n    output_ansi,\n    output_utf8,\n    utf8_encode,\n    utf8_format,\n    utf8_normalize,\n    utf8_print,\n    utf8_valid,\n    utf8_width,\n)\ndef one():\n    return output_utf8()\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}, ensure_ascii=False))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "with_makevars",
+  "title": "Makevars file",
+  "origin": {
+    "description": "Run code with R_MAKEVARS_USER pointing at a rewritten Makevars file.",
+    "usage": "with_makevars(new, code, ...)",
+    "arguments": [
+      {
+        "name": "new",
+        "text": "Variables to set."
+      },
+      {
+        "name": "code",
+        "text": "Callable run while R_MAKEVARS_USER points at the new file."
+      },
+      {
+        "name": "path",
+        "text": "Existing Makevars file to start from."
+      },
+      {
+        "name": "assignment",
+        "text": "One of =, :=, ?=, +=."
+      }
+    ],
+    "details": "The rewritten file is removed afterwards and R_MAKEVARS_USER is restored.",
+    "value": "Whatever code returns.",
+    "example": "src <- tempfile()\nwriteLines(\"CFLAGS = -O2\", src)\nbefore <- Sys.getenv(\"R_MAKEVARS_USER\")\nlines <- with_makevars(c(CFLAGS = \"-O3\"), readLines(Sys.getenv(\"R_MAKEVARS_USER\")), path = src)\nc(lines, if (identical(Sys.getenv(\"R_MAKEVARS_USER\"), before)) \"restored\" else \"open\")\n",
+    "output": "output/with_makevars-r.txt"
+  },
+  "translation": {
+    "description": "Run code with R_MAKEVARS_USER pointing at a rewritten Makevars file.",
+    "usage": "with_makevars(new, code, ...)",
+    "arguments": [
+      {
+        "name": "new",
+        "text": "Variables to set."
+      },
+      {
+        "name": "code",
+        "text": "Callable run while R_MAKEVARS_USER points at the new file."
+      },
+      {
+        "name": "path",
+        "text": "Existing Makevars file to start from."
+      },
+      {
+        "name": "assignment",
+        "text": "One of =, :=, ?=, +=."
+      }
+    ],
+    "details": "The rewritten file is removed afterwards and R_MAKEVARS_USER is restored. code is a callable, and local_* is a context manager.",
+    "value": "Whatever code returns.",
+    "example": "import os\nimport tempfile\nfrom withr import *\n\nfd, src = tempfile.mkstemp()\nos.close(fd)\nwith open(src, \"w\") as handle:\n    handle.write(\"CFLAGS = -O2\\n\")\nbefore = os.environ.get(\"R_MAKEVARS_USER\")\nlines = with_makevars(\n    {\"CFLAGS\": \"-O3\"},\n    lambda: open(os.environ[\"R_MAKEVARS_USER\"]).read().splitlines(),\n    path=src,\n)\nafter = os.environ.get(\"R_MAKEVARS_USER\")\nos.remove(src)\nreturn lines + [\"restored\" if after == before else \"open\"]\n",
+    "output": "output/with_makevars-python.txt"
+  }
+}

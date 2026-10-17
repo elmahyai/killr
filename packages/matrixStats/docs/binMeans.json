@@ -1,0 +1,84 @@
+{
+  "name": "binMeans",
+  "title": "Fast mean calculations in non-overlapping bins",
+  "origin": {
+    "description": "Computes the sample means in non-overlapping bins.",
+    "usage": "binMeans(y, x, idxs = NULL, bx, na.rm = TRUE, count = TRUE,\n  right = FALSE, ...)",
+    "arguments": [
+      {
+        "name": "y",
+        "text": "A numeric or logical vector of K values to calculate means on."
+      },
+      {
+        "name": "x",
+        "text": "A numeric vector of K positions for to be binned."
+      },
+      {
+        "name": "idxs",
+        "text": "A vector indicating the subset of elements to operate over. If NULL, no subsetting is done."
+      },
+      {
+        "name": "bx",
+        "text": "A numeric vector of B + 1 ordered positions specifying the B > 0 bins [bx[1], bx[2]), [bx[2], bx[3]), ..., [bx[B], bx[B + 1])."
+      },
+      {
+        "name": "na.rm",
+        "text": "If TRUE, missing values in y are dropped before calculating the mean, otherwise not."
+      },
+      {
+        "name": "count",
+        "text": "If TRUE, the number of data points in each bin is returned as attribute count, an integer vector of length B."
+      },
+      {
+        "name": "right",
+        "text": "If TRUE, the bins are right-closed (left open), otherwise left-closed (right open)."
+      },
+      {
+        "name": "...",
+        "text": "Not used."
+      }
+    ],
+    "details": "binMeans(x, bx, right = TRUE) gives equivalent results as rev(binMeans(-x, bx = sort(-bx), right = FALSE)), but is faster. Data points where either of y and x is missing are dropped, and therefore are also not counted. Non-finite values in y are not allowed and give an error. Missing values in bx are not allowed and give an error.",
+    "value": "A numeric vector of length B.",
+    "example": "x <- 1:200\nmu <- double(length(x))\nmu[1:50] <- 5\nmu[101:150] <- -5\ny <- mu + rnorm(length(x))\n\nbx <- c(0, 50, 100, 150, 200) + 0.5\ny_s <- binMeans(y, x = x, bx = bx)\n\nplot(x, y)\nfor (kk in seq_along(y_s)) {\n  lines(bx[c(kk, kk + 1)], y_s[c(kk, kk)], col = \"blue\", lwd = 2)\n}",
+    "output": "output/binMeans-r.txt"
+  },
+  "translation": {
+    "description": "Computes the sample means in non-overlapping bins.",
+    "usage": "binMeans(y, x, bx, idxs=None, na_rm=True, count=True, right=True)",
+    "arguments": [
+      {
+        "name": "y",
+        "text": "A one-dimensional numeric or logical vector of K values to average. Logical values are 1 and 0. Infinite values are an error when y is floating point."
+      },
+      {
+        "name": "x",
+        "text": "A one-dimensional numeric vector of K positions to be binned. Missing positions are dropped, together with the paired y value."
+      },
+      {
+        "name": "bx",
+        "text": "A numeric vector of B + 1 ordered break points. The bins are [bx[j], bx[j + 1]) when right is false."
+      },
+      {
+        "name": "idxs",
+        "text": "A 1-based subscript applied to both y and x, with the same rules as R's x[idxs]. None keeps every element."
+      },
+      {
+        "name": "na_rm",
+        "text": "If True, missing values in y are dropped before the mean is calculated. This is na.rm in R. Missing x is always dropped."
+      },
+      {
+        "name": "count",
+        "text": "If True, the number of data points in each bin is attached as the integer count attribute."
+      },
+      {
+        "name": "right",
+        "text": "If True, the bins are right-closed and left-open, (bx[j], bx[j + 1]]. If False, they are left-closed and right-open. The default is True."
+      }
+    ],
+    "details": "Means and counts come from the binmeans crate, a port of matrixStats src/binMeans.c. Pairs are ordered by x before the bins are filled. A position that lands on a break belongs to the closed side of that break. An empty bin has a NaN mean and a zero count. Missing bx is an error.",
+    "value": "A one-dimensional float array of length B. When count is true, the result is a BinMeansResult whose count attribute is an int32 array of length B.",
+    "example": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom matrixstats.binmeans import binMeans\n\nx = np.arange(1, 201)\nmu = np.zeros(x.size)\nmu[:50] = 5\nmu[100:150] = -5\ny = mu + np.random.default_rng(1).normal(size=x.size)\nbx = np.array([0, 50, 100, 150, 200]) + 0.5\ny_s = binMeans(y, x, bx)\n\nplt.plot(x, y)\nfor kk, mean in enumerate(y_s):\n    plt.plot(bx[kk:kk + 2], [mean, mean], color=\"blue\", linewidth=2)",
+    "output": "output/binMeans-python.txt"
+  }
+}

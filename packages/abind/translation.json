@@ -1,0 +1,136 @@
+{
+  "name": "abind",
+  "cran_version": "1.4-8",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Exports: 5. All translated. Complete.",
+  "functions": [
+    {
+      "name": "abind",
+      "translated": true,
+      "python": "abind.abind.abind",
+      "loads": [],
+      "uses": [],
+      "done": "Binds vectors, matrices, and arrays along one margin, inserting a dimension when along falls outside the current rank, and builds dimnames from argument names and the inputs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "15 by 16 matrices bound along 1.5, 1, 2, and 0",
+        "r_ms": 2.248525619506836,
+        "translated_ms": 0.8706549999715207,
+        "speedup": 2.5825678593477157,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\none <- function() {\n  x <- matrix(1:240, 15, 16)\n  y <- matrix(241:480, 15, 16)\n  along15 <- abind(x, y, along = 1.5)\n  along1 <- abind(x, y, along = 1)\n  along2 <- abind(x, y, along = 2)\n  along0 <- abind(x, y, along = 0)\n  c(dim(along15), dim(along1), dim(along2), dim(along0), as.numeric(along15), as.numeric(along1), as.numeric(along2), as.numeric(along0))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import abind\n\n\ndef one():\n    x = np.arange(1, 241).reshape((15, 16), order=\"F\")\n    y = np.arange(241, 481).reshape((15, 16), order=\"F\")\n    parts = [\n        abind(x, y, along=1.5),\n        abind(x, y, along=1),\n        abind(x, y, along=2),\n        abind(x, y, along=0),\n    ]\n    dims = []\n    values = []\n    for part in parts:\n        data = np.asarray(part.data, dtype=float)\n        dims.extend(float(size) for size in data.shape)\n        values.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return dims + values\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "asub",
+      "translated": true,
+      "python": "abind.asub.asub",
+      "loads": [],
+      "uses": [],
+      "done": "Builds R-style combined indexing on selected dimensions, honors drop=FALSE, and drops all singleton dimensions when drop is omitted.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "3D and 8D arrays subset with asub on several margins",
+        "r_ms": 9.140849113464355,
+        "translated_ms": 25.539736499922583,
+        "speedup": 0.35790694682742963,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\none <- function() {\n  x <- array(1:24, dim = c(2, 3, 4))\n  y <- array(seq_len(prod(1:8)), dim = 1:8)\n  parts <- list(\n    asub(x, 1, 1, drop = FALSE),\n    asub(x, list(1:2, 3:4), c(1, 3)),\n    asub(x, list(1:2, 2, 1:2), c(1, 2, 3)),\n    asub(y, 1, 1),\n    asub(y, 1, 2),\n    asub(y, 1, 3),\n    asub(y, 1, 3, drop = FALSE),\n    asub(y, list(1, 1), c(3, 5), drop = FALSE),\n    asub(y, list(1, 1), c(3, 5))\n  )\n  out <- c()\n  for (part in parts) {\n    d <- dim(part)\n    if (is.null(d)) d <- length(part)\n    out <- c(out, d, as.numeric(part))\n  }\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.asub import asub\n\n\ndef one():\n    x = np.arange(1, 25, dtype=float).reshape((2, 3, 4), order=\"F\")\n    y = np.arange(1, int(np.prod(np.arange(1, 9))) + 1, dtype=float).reshape(\n        tuple(range(1, 9)), order=\"F\"\n    )\n    parts = [\n        asub(x, 1, 1, drop=False),\n        asub(x, [np.array([1, 2]), np.array([3, 4])], dims=[1, 3]),\n        asub(\n            x,\n            [np.array([1, 2]), np.array([2]), np.array([1, 2])],\n            dims=[1, 2, 3],\n        ),\n        asub(y, 1, 1),\n        asub(y, 1, 2),\n        asub(y, 1, 3),\n        asub(y, 1, 3, drop=False),\n        asub(y, [np.array([1]), np.array([1])], dims=[3, 5], drop=False),\n        asub(y, [np.array([1]), np.array([1])], dims=[3, 5]),\n    ]\n    out = []\n    for part in parts:\n        data = np.asarray(part.data if hasattr(part, \"data\") else part, dtype=float)\n        if data.ndim == 0:\n            dims = [1]\n        else:\n            dims = list(data.shape)\n        out.extend(float(size) for size in dims)\n        out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "afill<-",
+      "translated": true,
+      "python": "abind.afill_replacement.afill_replacement",
+      "loads": [],
+      "uses": [
+        "asub"
+      ],
+      "done": "Assigns into arrays by matching value dimnames on omitted index slots, and honors excess_ok.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Matrix and 3D arrays filled via dimnames, TRUE margins, replication, and excess_ok",
+        "r_ms": 2.3859739303588867,
+        "translated_ms": 1.8206194999947911,
+        "speedup": 1.3105286032395638,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\none <- function() {\n  out <- c()\n\n  x <- matrix(0, ncol = 3, nrow = 4, dimnames = list(letters[1:4], LETTERS[24:26]))\n  y <- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))\n  afill(x) <- y\n  out <- c(out, as.numeric(x))\n\n  x3 <- array(0, dim = c(2, 4, 3), dimnames = list(LETTERS[1:2], letters[1:4], LETTERS[24:26]))\n  y3 <- matrix(1:4, ncol = 2, nrow = 2, dimnames = list(letters[2:3], LETTERS[25:26]))\n  afill(x3, 1, , ) <- y3\n  out <- c(out, as.numeric(x3))\n\n  x4 <- array(0, dim = c(2, 4, 3), dimnames = list(LETTERS[1:2], letters[1:4], LETTERS[24:26]))\n  afill(x4, TRUE, , ) <- y3\n  out <- c(out, as.numeric(x4))\n\n  x5 <- array(0, dim = c(2, 3, 4), dimnames = list(letters[1:2], LETTERS[1:3], letters[23:26]))\n  afill(x5, TRUE, , ) <- matrix(1:6, ncol = 3, dimnames = list(c(\"A\", \"B\"), c(\"w\", \"x\", \"y\")))\n  out <- c(out, as.numeric(x5))\n\n  x6 <- array(1:24, dim = c(6, 4), dimnames = list(LETTERS[1:6], letters[23:26]))\n  afill(x6) <- array(-(1:6), dim = c(3, 2), dimnames = list(LETTERS[2:4], letters[24:25]))\n  out <- c(out, as.numeric(x6))\n\n  x7 <- array(1:24, dim = c(6, 4), dimnames = list(LETTERS[1:6], letters[23:26]))\n  afill(x7, excess.ok = TRUE) <- array(-(1:6), dim = c(3, 2), dimnames = list(LETTERS[5:7], letters[24:25]))\n  out <- c(out, as.numeric(x7))\n\n  xv <- c(A = 0, B = 0, C = 0, D = 0)\n  afill(xv) <- c(B = 1, C = 2)\n  out <- c(out, as.numeric(xv))\n\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.afill_replacement import afill_replacement\n\n\ndef one():\n    out = []\n\n    x = Array(\n        np.zeros((4, 3), order=\"F\"),\n        dimnames=[list(\"abcd\"), list(\"XYZ\")],\n    )\n    y = Array(\n        np.arange(1, 5, dtype=float).reshape((2, 2), order=\"F\"),\n        dimnames=[list(\"bc\"), list(\"YZ\")],\n    )\n    afill_replacement(x, value=y)\n    out.extend(float(v) for v in np.ravel(x.data, order=\"F\"))\n\n    x3 = Array(\n        np.zeros((2, 4, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"abcd\"), list(\"XYZ\")],\n    )\n    y3 = Array(\n        np.arange(1, 5, dtype=float).reshape((2, 2), order=\"F\"),\n        dimnames=[list(\"bc\"), list(\"YZ\")],\n    )\n    afill_replacement(x3, 1, None, None, value=y3)\n    out.extend(float(v) for v in np.ravel(x3.data, order=\"F\"))\n\n    x4 = Array(\n        np.zeros((2, 4, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"abcd\"), list(\"XYZ\")],\n    )\n    afill_replacement(x4, True, None, None, value=y3)\n    out.extend(float(v) for v in np.ravel(x4.data, order=\"F\"))\n\n    x5 = Array(\n        np.zeros((2, 3, 4), order=\"F\"),\n        dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n    )\n    y5 = Array(\n        np.arange(1, 7, dtype=float).reshape((2, 3), order=\"F\"),\n        dimnames=[list(\"AB\"), list(\"wxy\")],\n    )\n    afill_replacement(x5, True, None, None, value=y5)\n    out.extend(float(v) for v in np.ravel(x5.data, order=\"F\"))\n\n    x6 = Array(\n        np.arange(1, 25, dtype=float).reshape((6, 4), order=\"F\"),\n        dimnames=[list(\"ABCDEF\"), list(\"wxyz\")],\n    )\n    y6 = Array(\n        -np.arange(1, 7, dtype=float).reshape((3, 2), order=\"F\"),\n        dimnames=[list(\"BCD\"), list(\"xy\")],\n    )\n    afill_replacement(x6, value=y6)\n    out.extend(float(v) for v in np.ravel(x6.data, order=\"F\"))\n\n    x7 = Array(\n        np.arange(1, 25, dtype=float).reshape((6, 4), order=\"F\"),\n        dimnames=[list(\"ABCDEF\"), list(\"wxyz\")],\n    )\n    y7 = Array(\n        -np.arange(1, 7, dtype=float).reshape((3, 2), order=\"F\"),\n        dimnames=[list(\"EFG\"), list(\"xy\")],\n    )\n    afill_replacement(x7, excess_ok=True, value=y7)\n    out.extend(float(v) for v in np.ravel(x7.data, order=\"F\"))\n\n    xv = Array(np.zeros(4), names=list(\"ABCD\"))\n    afill_replacement(xv, value=Array(np.array([1.0, 2.0]), names=list(\"BC\")))\n    out.extend(float(v) for v in np.ravel(xv.data, order=\"F\"))\n\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "adrop",
+      "translated": true,
+      "python": "abind.adrop.adrop",
+      "loads": [],
+      "uses": [],
+      "done": "Drops length-1 margins named in drop, adjusts dimnames, and returns an array or a named vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "3D array slices with numeric, logical, and NULL drop, plus a named vector versus a 1-D array",
+        "r_ms": 1.3794898986816406,
+        "translated_ms": 0.985134499387641,
+        "speedup": 1.40030615062119,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\nflatten <- function(z) {\n  out <- c()\n  d <- dim(z)\n  if (is.null(d)) {\n    out <- c(out, 0, length(z))\n    nm <- names(z)\n    if (is.null(nm)) {\n      out <- c(out, 0)\n    } else {\n      out <- c(out, 1, utf8ToInt(paste(nm, collapse = \"\\n\")))\n    }\n    out <- c(out, as.numeric(z))\n    return(out)\n  }\n  out <- c(out, length(d), d)\n  dn <- dimnames(z)\n  if (is.null(dn)) {\n    out <- c(out, 0)\n  } else {\n    out <- c(out, 1, length(dn))\n    for (margin in dn) {\n      if (is.null(margin)) {\n        out <- c(out, 0)\n      } else {\n        out <- c(out, 1, utf8ToInt(paste(margin, collapse = \"\\n\")))\n      }\n    }\n  }\n  out <- c(out, as.numeric(z))\n  out\n}\n\none <- function() {\n  x <- array(\n    1:24,\n    dim = c(2, 3, 4),\n    dimnames = list(letters[1:2], LETTERS[1:3], letters[23:26])\n  )\n  parts <- list(\n    adrop(x[1, , , drop = FALSE], drop = 1),\n    adrop(x[, 1, , drop = FALSE], drop = 2),\n    adrop(x[, , 1, drop = FALSE], drop = 3),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 2),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 3),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2, one.d = TRUE),\n    adrop(x[1, 1, 1, drop = FALSE], drop = 1:2, named = FALSE),\n    adrop(x[1, 1, 1, drop = FALSE], drop = NULL),\n    adrop(x[1, 1, , drop = FALSE], drop = c(FALSE, TRUE, FALSE))\n  )\n  out <- c()\n  for (part in parts) {\n    out <- c(out, flatten(part))\n  }\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.adrop import adrop\nfrom abind.asub import asub\n\n\ndef flatten(part):\n    out = []\n    if isinstance(part, Array):\n        data = part.data\n        names = part.names\n        dimnames = part.dimnames\n    else:\n        data = np.asarray(part)\n        names = None\n        dimnames = None\n\n    if data.ndim == 0:\n        out.extend([0, 1])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.append(float(data.reshape(-1)[0]))\n        return out\n\n    r_dim = getattr(part, \"_r_dim\", None) if isinstance(part, Array) else list(data.shape)\n    if isinstance(part, Array) and part._r_dim is None and data.ndim == 1:\n        out.extend([0, int(data.size)])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.extend(float(value) for value in data.reshape(-1))\n        return out\n\n    shape = list(r_dim if isinstance(part, Array) and part._r_dim is not None else data.shape)\n    out.extend([len(shape), *shape])\n    if dimnames is None:\n        out.append(0)\n    else:\n        out.append(1)\n        out.append(len(dimnames))\n        for margin in dimnames:\n            if margin is None:\n                out.append(0)\n            else:\n                out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in margin)]])\n    out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\ndef one():\n    base = Array(\n        np.arange(1, 25, dtype=float).reshape((2, 3, 4), order=\"F\"),\n        dimnames=[list(\"ab\"), list(\"ABC\"), list(\"wxyz\")],\n    )\n    scalar = asub(asub(asub(base, 1, 1, drop=False), 1, 2, drop=False), 1, 3, drop=False)\n    parts = [\n        adrop(asub(base, 1, 1, drop=False), drop=1),\n        adrop(asub(base, 1, 2, drop=False), drop=2),\n        adrop(asub(base, 1, 3, drop=False), drop=3),\n        adrop(scalar, drop=1),\n        adrop(scalar, drop=2),\n        adrop(scalar, drop=3),\n        adrop(scalar, drop=[1, 2]),\n        adrop(scalar, drop=[1, 2], one_d_array=True),\n        adrop(scalar, drop=[1, 2], named_vector=False),\n        adrop(scalar, drop=None),\n        adrop(asub(asub(base, 1, 1, drop=False), 1, 2, drop=False), drop=[False, True, False]),\n    ]\n    out = []\n    for part in parts:\n        out.extend(flatten(part))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    },
+    {
+      "name": "acorn",
+      "translated": true,
+      "python": "abind.acorn.acorn",
+      "loads": [],
+      "uses": [
+        "asub"
+      ],
+      "done": "Builds corner index lists and subsets with asub, optionally labeling blank dimnames.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Flattened corners of a 4 by 3 by 2 array, named-vector head and tail, and a 4D margin count",
+        "r_ms": 1.5593767166137695,
+        "translated_ms": 1.0261130000799312,
+        "speedup": 1.5196929738657425,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(abind))\nif (packageDescription(\"abind\")$Version != \"1.4-8\") stop(\"expected abind 1.4-8\")\n\nflatten <- function(z) {\n  out <- c()\n  d <- dim(z)\n  if (is.null(d)) {\n    out <- c(out, 0, length(z))\n    nm <- names(z)\n    if (is.null(nm)) {\n      out <- c(out, 0)\n    } else {\n      out <- c(out, 1, utf8ToInt(paste(nm, collapse = \"\\n\")))\n    }\n    out <- c(out, as.numeric(z))\n    return(out)\n  }\n  out <- c(out, length(d), d)\n  dn <- dimnames(z)\n  if (is.null(dn)) {\n    out <- c(out, 0)\n  } else {\n    out <- c(out, 1, length(dn))\n    for (margin in dn) {\n      if (is.null(margin)) {\n        out <- c(out, 0)\n      } else {\n        out <- c(out, 1, utf8ToInt(paste(margin, collapse = \"\\n\")))\n      }\n    }\n  }\n  out <- c(out, as.numeric(z))\n  out\n}\n\none <- function() {\n  x <- array(\n    1:24,\n    dim = c(4, 3, 2),\n    dimnames = rev(list(letters[1:2], LETTERS[1:3], letters[23:26]))\n  )\n  w <- 1:10\n  names(w) <- letters[1:10]\n  y4 <- array(1:16, dim = c(2, 2, 2, 2))\n  parts <- list(\n    acorn(x),\n    acorn(x, 3),\n    acorn(x, -3),\n    acorn(x, 3, -2),\n    acorn(x, addrownums = FALSE),\n    acorn(w, 4),\n    acorn(w, -3),\n    acorn(y4, 1, 1, 1, 2),\n    acorn(y4, -1, -1, -1, -2)\n  )\n  out <- c()\n  for (part in parts) {\n    out <- c(out, flatten(part))\n  }\n  out\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(jsonlite::toJSON(list(value = value, median_ms = median(elapsed) * 1000), auto_unbox = FALSE, digits = 17))\n",
+          "python": "import json\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/abind\")\nfrom abind.abind import Array\nfrom abind.acorn import acorn\n\n\ndef flatten(part):\n    out = []\n    if isinstance(part, Array):\n        data = part.data\n        names = part.names\n        dimnames = part.dimnames\n    else:\n        data = np.asarray(part)\n        names = None\n        dimnames = None\n\n    if data.ndim == 0:\n        out.extend([0, 1])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.append(float(data.reshape(-1)[0]))\n        return out\n\n    r_dim = getattr(part, \"_r_dim\", None) if isinstance(part, Array) else list(data.shape)\n    if isinstance(part, Array) and part._r_dim is None and data.ndim == 1:\n        out.extend([0, int(data.size)])\n        if names is None:\n            out.append(0)\n        else:\n            out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in names)]])\n        out.extend(float(value) for value in data.reshape(-1))\n        return out\n\n    shape = list(r_dim if isinstance(part, Array) and part._r_dim is not None else data.shape)\n    out.extend([len(shape), *shape])\n    if dimnames is None:\n        out.append(0)\n    else:\n        out.append(1)\n        out.append(len(dimnames))\n        for margin in dimnames:\n            if margin is None:\n                out.append(0)\n            else:\n                out.extend([1, *[ord(ch) for ch in \"\\n\".join(str(n) for n in margin)]])\n    out.extend(float(value) for value in np.ravel(data, order=\"F\"))\n    return out\n\n\ndef one():\n    x = Array(\n        np.arange(1, 25, dtype=float).reshape((4, 3, 2), order=\"F\"),\n        dim=(4, 3, 2),\n        dimnames=[list(\"wxyz\"), list(\"ABC\"), list(\"ab\")],\n    )\n    w = Array(np.arange(1, 11, dtype=float), names=list(\"abcdefghij\"))\n    y4 = Array(np.arange(1, 17, dtype=float).reshape((2, 2, 2, 2), order=\"F\"), dim=(2, 2, 2, 2))\n    parts = [\n        acorn(x),\n        acorn(x, 3),\n        acorn(x, -3),\n        acorn(x, 3, -2),\n        acorn(x, addrownums=False),\n        acorn(w, 4),\n        acorn(w, -3),\n        acorn(y4, 1, 1, 1, 2),\n        acorn(y4, -1, -1, -1, -2),\n    ]\n    out = []\n    for part in parts:\n        out.extend(flatten(part))\n    return out\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"value\": value, \"median_ms\": [statistics.median(elapsed)]}))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small"
+}

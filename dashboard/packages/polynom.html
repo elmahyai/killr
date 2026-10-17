@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>polynom · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>polynom</h1>
+<p class="note">CRAN 1.4-1</p>
+<p>All exports of polynom 1.4-1 are checked, including derivative, prediction, roots, summary, and the plot curve. Coefficient arithmetic stays in Python. Roots are NumPy eigenvalues of the companion matrix. Orthogonal polynomials use NumPy&#x27;s QR, matching stats::poly. plot draws the curve with Matplotlib. There is no crate.</p>
+<p class="note">21 of 21 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#polynomial">polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A coefficient vector becomes a polynomial, lowest degree first.</td></tr>
+<tr><td><a href="#as.polynomial">as.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A numeric vector is coerced with as.polynomial.</td></tr>
+<tr><td><a href="#is.polynomial">is.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A polynomial is recognized. A bare number is not.</td></tr>
+<tr><td><a href="#GCD">GCD</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The gcd of (1 + x)^2 and 1 + x is 1 + x.</td></tr>
+<tr><td><a href="#LCM">LCM</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The lcm of x^2 - 1 and 1 + x is x^2 - 1.</td></tr>
+<tr><td><a href="#polylist">polylist</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>polylist keeps each argument as a polynomial.</td></tr>
+<tr><td><a href="#as.polylist">as.polylist</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A list of coefficient vectors becomes a polylist.</td></tr>
+<tr><td><a href="#is.polylist">is.polylist</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>A polylist is recognized. One polynomial is not.</td></tr>
+<tr><td><a href="#change.origin">change.origin</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Shifting (1 + x)^2 to the origin 1 gives 4 + 4*x + x^2.</td></tr>
+<tr><td><a href="#integral">integral</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Integration divides each coefficient by its new degree.</td></tr>
+<tr><td><a href="#monic">monic</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>monic divides by the leading coefficient.</td></tr>
+<tr><td><a href="#poly.calc">poly.calc</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The interpolating polynomial through (0, 1), (1, 2), and (2, 4).</td></tr>
+<tr><td><a href="#poly.from.values">poly.from.values</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>poly.from.values is the same interpolation.</td></tr>
+<tr><td><a href="#poly.from.roots">poly.from.roots</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The monic polynomial with roots 1 and -1.</td></tr>
+<tr><td><a href="#poly.from.zeros">poly.from.zeros</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>poly.from.zeros is the same root polynomial.</td></tr>
+<tr><td><a href="#poly.orth">poly.orth</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The coefficients come from NumPy QR, matching stats::poly. Uses numpy.</td></tr>
+<tr><td><a href="#deriv.polynomial">deriv.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The derivative of 1 + 2*x + x^2.</td></tr>
+<tr><td><a href="#predict.polynomial">predict.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Horner evaluation at 0, 1, and 2.</td></tr>
+<tr><td><a href="#solve.polynomial">solve.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Roots are the eigenvalues of the companion matrix. Uses numpy.</td></tr>
+<tr><td><a href="#summary.polynomial">summary.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The summary lists zeros, stationary points, and inflexions. Uses numpy.</td></tr>
+<tr><td><a href="#plot.polynomial">plot.polynomial</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>plot draws the polynomial and a dashed grid. The check is the curve values. Uses numpy, matplotlib.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>polynomial</td><td>1 + 2*x + x^2</td><td>0.135</td><td>0.0185</td><td><button type="button" class="proof-toggle" data-name="polynomial"><span class='yes'>+632%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:13.7%'></span></div></td></tr>
+<tr><td>as.polynomial</td><td>1 + x</td><td>0.0824</td><td>0.0244</td><td><button type="button" class="proof-toggle" data-name="as.polynomial"><span class='yes'>+238%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:29.6%'></span></div></td></tr>
+<tr><td>is.polynomial</td><td>TRUE,FALSE</td><td>0.0521</td><td>0.00395</td><td><button type="button" class="proof-toggle" data-name="is.polynomial"><span class='yes'>+1218%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:7.6%'></span></div></td></tr>
+<tr><td>GCD</td><td>1 + x</td><td>0.404</td><td>0.039</td><td><button type="button" class="proof-toggle" data-name="GCD"><span class='yes'>+937%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:9.6%'></span></div></td></tr>
+<tr><td>LCM</td><td>-1 + x^2</td><td>0.954</td><td>0.0953</td><td><button type="button" class="proof-toggle" data-name="LCM"><span class='yes'>+901%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:10.0%'></span></div></td></tr>
+<tr><td>polylist</td><td>1 + x | x</td><td>0.456</td><td>0.0471</td><td><button type="button" class="proof-toggle" data-name="polylist"><span class='yes'>+869%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:10.3%'></span></div></td></tr>
+<tr><td>as.polylist</td><td>1 + 2*x + x^2</td><td>0.122</td><td>0.0227</td><td><button type="button" class="proof-toggle" data-name="as.polylist"><span class='yes'>+438%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:18.6%'></span></div></td></tr>
+<tr><td>is.polylist</td><td>TRUE,FALSE</td><td>0.0974</td><td>0.0081</td><td><button type="button" class="proof-toggle" data-name="is.polylist"><span class='yes'>+1102%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.3%'></span></div></td></tr>
+<tr><td>change.origin</td><td>4 + 4*x + x^2</td><td>0.338</td><td>0.0908</td><td><button type="button" class="proof-toggle" data-name="change.origin"><span class='yes'>+272%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:26.9%'></span></div></td></tr>
+<tr><td>integral</td><td>The indefinite integral and the definite integral from 0 to 1.</td><td>0.234</td><td>0.0374</td><td><button type="button" class="proof-toggle" data-name="integral"><span class='yes'>+526%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:16.0%'></span></div></td></tr>
+<tr><td>monic</td><td>0.5 + x</td><td>0.104</td><td>0.0346</td><td><button type="button" class="proof-toggle" data-name="monic"><span class='yes'>+200%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:33.4%'></span></div></td></tr>
+<tr><td>poly.calc</td><td>1 + 0.5*x + 0.5*x^2</td><td>0.224</td><td>0.0931</td><td><button type="button" class="proof-toggle" data-name="poly.calc"><span class='yes'>+141%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:41.5%'></span></div></td></tr>
+<tr><td>poly.from.values</td><td>1 + 0.5*x + 0.5*x^2</td><td>0.182</td><td>0.0662</td><td><button type="button" class="proof-toggle" data-name="poly.from.values"><span class='yes'>+174%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:36.5%'></span></div></td></tr>
+<tr><td>poly.from.roots</td><td>-1 + x^2</td><td>0.0978</td><td>0.0355</td><td><button type="button" class="proof-toggle" data-name="poly.from.roots"><span class='yes'>+176%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:36.3%'></span></div></td></tr>
+<tr><td>poly.from.zeros</td><td>-1 + x^2</td><td>0.211</td><td>0.02</td><td><button type="button" class="proof-toggle" data-name="poly.from.zeros"><span class='yes'>+957%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:9.5%'></span></div></td></tr>
+<tr><td>poly.orth</td><td>Orthogonal polynomials of degree 0 and 1 on 1:5.</td><td>0.84</td><td>0.292</td><td><button type="button" class="proof-toggle" data-name="poly.orth"><span class='yes'>+187%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>2.22e-16</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:34.8%'></span></div></td></tr>
+<tr><td>deriv.polynomial</td><td>2 + 2*x</td><td>0.22</td><td>0.0316</td><td><button type="button" class="proof-toggle" data-name="deriv.polynomial"><span class='yes'>+596%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:14.4%'></span></div></td></tr>
+<tr><td>predict.polynomial</td><td>Values 1, 4, and 9.</td><td>0.0765</td><td>0.0175</td><td><button type="button" class="proof-toggle" data-name="predict.polynomial"><span class='yes'>+337%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:22.9%'></span></div></td></tr>
+<tr><td>solve.polynomial</td><td>Roots -1 and 1 of x^2 - 1.</td><td>0.263</td><td>0.0589</td><td><button type="button" class="proof-toggle" data-name="solve.polynomial"><span class='yes'>+347%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:22.4%'></span></div></td></tr>
+<tr><td>summary.polynomial</td><td>A double root at -1.</td><td>0.904</td><td>0.105</td><td><button type="button" class="proof-toggle" data-name="summary.polynomial"><span class='yes'>+762%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:11.6%'></span></div></td></tr>
+<tr><td>plot.polynomial</td><td>The curve on (0, 1), five points, is the polynomial values. Matplotlib draws that line.</td><td>7.11</td><td>17.5</td><td><button type="button" class="proof-toggle" data-name="plot.polynomial"><span class='slower'>-59%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:40.7%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(polynomial(c(1, 2, 1)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, as_character\n\ndef one():\n    return as_character(polynomial([1, 2, 1]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "as.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(as.polynomial(c(1, 1)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import as_polynomial, as_character\n\ndef one():\n    return as_character(as_polynomial([1, 1]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "is.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(is.polynomial(polynomial(1)), is.polynomial(1), sep=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, is_polynomial\n\ndef one():\n    return (\"TRUE\" if is_polynomial(polynomial(1)) else \"FALSE\") + \",\" + (\"TRUE\" if is_polynomial(1) else \"FALSE\")\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "GCD", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(GCD(polynomial(c(1, 2, 1)), polynomial(c(1, 1))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, GCD, as_character\n\ndef one():\n    return as_character(GCD(polynomial([1, 2, 1]), polynomial([1, 1])))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "LCM", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(LCM(polynomial(c(-1, 0, 1)), polynomial(c(1, 1))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, LCM, as_character\n\ndef one():\n    return as_character(LCM(polynomial([-1, 0, 1]), polynomial([1, 1])))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "polylist", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(sapply(polylist(c(1, 1), c(0, 1)), as.character), collapse=\" | \")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polylist, as_character\n\ndef one():\n    return \" | \".join(as_character(item) for item in polylist([1, 1], [0, 1]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "as.polylist", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(as.polylist(list(c(1, 2, 1)))[[1]])\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import as_polylist, as_character\n\ndef one():\n    return as_character(as_polylist([[1, 2, 1]])[0])\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "is.polylist", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(is.polylist(polylist(1)), is.polylist(polynomial(1)), sep=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polylist, polynomial, is_polylist\n\ndef one():\n    left = \"TRUE\" if is_polylist(polylist(1)) else \"FALSE\"\n    right = \"TRUE\" if is_polylist(polynomial(1)) else \"FALSE\"\n    return left + \",\" + right\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "change.origin", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(change.origin(polynomial(c(1, 2, 1)), 1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, change_origin, as_character\n\ndef one():\n    return as_character(change_origin(polynomial([1, 2, 1]), 1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "integral", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(as.character(integral(polynomial(c(1, 2, 1)))), sprintf(\"%.17g\", integral(polynomial(c(1, 2, 1)), c(0, 1))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, integral, as_character\n\ndef one():\n    p = polynomial([1, 2, 1])\n    return as_character(integral(p)) + \" \" + f\"{integral(p, [0, 1])[0]:.17g}\"\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "monic", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(monic(polynomial(c(2, 4))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, monic, as_character\n\ndef one():\n    return as_character(monic(polynomial([2, 4])))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "poly.calc", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(poly.calc(c(0, 1, 2), c(1, 2, 4)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import poly_calc, as_character\n\ndef one():\n    return as_character(poly_calc([0, 1, 2], [1, 2, 4]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "poly.from.values", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(poly.from.values(c(0, 1, 2), c(1, 2, 4)))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import poly_from_values, as_character\n\ndef one():\n    return as_character(poly_from_values([0, 1, 2], [1, 2, 4]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "poly.from.roots", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(poly.from.roots(1, -1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import poly_from_roots, as_character\n\ndef one():\n    return as_character(poly_from_roots(1, -1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "poly.from.zeros", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(poly.from.zeros(1, -1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import poly_from_zeros, as_character\n\ndef one():\n    return as_character(poly_from_zeros(1, -1))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "poly.orth", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  o \u003c- poly.orth(1:5, 2); paste(sprintf(\"%.17g\", c(coef(o[[1]]), coef(o[[2]]))), collapse=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import poly_orth, coef\n\ndef one():\n    orth = poly_orth([1, 2, 3, 4, 5], 2)\n    values = coef(orth[0]) + coef(orth[1])\n    return \",\".join(f\"{v:.17g}\" for v in values)\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "deriv.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  as.character(deriv(polynomial(c(1, 2, 1))))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, deriv, as_character\n\ndef one():\n    return as_character(deriv(polynomial([1, 2, 1])))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "predict.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(predict(polynomial(c(1, 2, 1)), c(0, 1, 2)), collapse=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, predict\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in predict(polynomial([1, 2, 1]), [0, 1, 2]))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "solve.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(sprintf(\"%.17g\", solve(polynomial(c(-1, 0, 1)))), collapse=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, solve\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in solve(polynomial([-1, 0, 1])))\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "summary.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  paste(sprintf(\"%.17g\", summary(polynomial(c(1, 2, 1)))$zeros), collapse=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "from polynom import polynomial, summary\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in summary(polynomial([1, 2, 1]))[\"zeros\"])\n\nimport statistics\nimport time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelse:\n    shown = str(value)\nprint(\"VALUE \" + shown.replace(\"\\n\", \" / \"))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "plot.polynomial", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(polynom))\none \u003c- function() {\n  png(tempfile()); p \u003c- polynomial(c(1, 2, 1)); plot(p, xlim = c(0, 1), len = 5); xlim \u003c- c(0, 1); eps \u003c- diff(xlim)/100; xlim \u003c- xlim + c(-eps, eps); x \u003c- seq(xlim[1], xlim[2], len = 5); paste(sprintf(\"%.17g\", predict(p, x)), collapse=\",\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import matplotlib\nmatplotlib.use(\"Agg\")\nfrom polynom import polynomial, plot_polynomial\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in plot_polynomial(polynomial([1, 2, 1]), xlim=[0, 1], len_=5)[1])\n\nimport statistics, time\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter(); one(); elapsed.append((time.perf_counter()-started)*1000)\nprint(\"VALUE \" + str(value))\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p>stats</p><p>graphics</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>numpy, matplotlib</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "polynomial", "translated": true, "not_done": "", "title": "A coefficient vector becomes a polynomial, lowest degree first.", "origin": {"description": "A coefficient vector becomes a polynomial, lowest degree first.", "usage": "polynomial", "arguments": [], "details": "1 + 2*x + x^2", "value": "The same value R returns for this call.", "example": "as.character(polynomial(c(1, 2, 1)))", "output": "output/polynomial-r.txt", "output_blocks": [{"text": "1 + 2*x + x^2"}]}, "translation": {"description": "A coefficient vector becomes a polynomial, lowest degree first.", "usage": "polynomial", "arguments": [], "details": "1 + 2*x + x^2", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, as_character\n\ndef one():\n    return as_character(polynomial([1, 2, 1]))\nprint(one())\n", "output": "output/polynomial-python.txt", "output_blocks": [{"text": "1 + 2*x + x^2"}]}}, {"name": "as.polynomial", "translated": true, "not_done": "", "title": "A numeric vector is coerced with as.polynomial.", "origin": {"description": "A numeric vector is coerced with as.polynomial.", "usage": "as.polynomial", "arguments": [], "details": "1 + x", "value": "The same value R returns for this call.", "example": "as.character(as.polynomial(c(1, 1)))", "output": "output/as.polynomial-r.txt", "output_blocks": [{"text": "1 + x"}]}, "translation": {"description": "A numeric vector is coerced with as.polynomial.", "usage": "as_polynomial", "arguments": [], "details": "1 + x", "value": "The same value R returns for this call.", "example": "from polynom import as_polynomial, as_character\n\ndef one():\n    return as_character(as_polynomial([1, 1]))\nprint(one())\n", "output": "output/as.polynomial-python.txt", "output_blocks": [{"text": "1 + x"}]}}, {"name": "is.polynomial", "translated": true, "not_done": "", "title": "A polynomial is recognized. A bare number is not.", "origin": {"description": "A polynomial is recognized. A bare number is not.", "usage": "is.polynomial", "arguments": [], "details": "TRUE,FALSE", "value": "The same value R returns for this call.", "example": "paste(is.polynomial(polynomial(1)), is.polynomial(1), sep=\",\")", "output": "output/is.polynomial-r.txt", "output_blocks": [{"text": "TRUE,FALSE"}]}, "translation": {"description": "A polynomial is recognized. A bare number is not.", "usage": "is_polynomial", "arguments": [], "details": "TRUE,FALSE", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, is_polynomial\n\ndef one():\n    return (\"TRUE\" if is_polynomial(polynomial(1)) else \"FALSE\") + \",\" + (\"TRUE\" if is_polynomial(1) else \"FALSE\")\nprint(one())\n", "output": "output/is.polynomial-python.txt", "output_blocks": [{"text": "TRUE,FALSE"}]}}, {"name": "GCD", "translated": true, "not_done": "", "title": "The gcd of (1 + x)^2 and 1 + x is 1 + x.", "origin": {"description": "The gcd of (1 + x)^2 and 1 + x is 1 + x.", "usage": "GCD", "arguments": [], "details": "1 + x", "value": "The same value R returns for this call.", "example": "as.character(GCD(polynomial(c(1, 2, 1)), polynomial(c(1, 1))))", "output": "output/GCD-r.txt", "output_blocks": [{"text": "1 + x"}]}, "translation": {"description": "The gcd of (1 + x)^2 and 1 + x is 1 + x.", "usage": "GCD", "arguments": [], "details": "1 + x", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, GCD, as_character\n\ndef one():\n    return as_character(GCD(polynomial([1, 2, 1]), polynomial([1, 1])))\nprint(one())\n", "output": "output/GCD-python.txt", "output_blocks": [{"text": "1 + x"}]}}, {"name": "LCM", "translated": true, "not_done": "", "title": "The lcm of x^2 - 1 and 1 + x is x^2 - 1.", "origin": {"description": "The lcm of x^2 - 1 and 1 + x is x^2 - 1.", "usage": "LCM", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "as.character(LCM(polynomial(c(-1, 0, 1)), polynomial(c(1, 1))))", "output": "output/LCM-r.txt", "output_blocks": [{"text": "-1 + x^2"}]}, "translation": {"description": "The lcm of x^2 - 1 and 1 + x is x^2 - 1.", "usage": "LCM", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, LCM, as_character\n\ndef one():\n    return as_character(LCM(polynomial([-1, 0, 1]), polynomial([1, 1])))\nprint(one())\n", "output": "output/LCM-python.txt", "output_blocks": [{"text": "-1 + x^2"}]}}, {"name": "polylist", "translated": true, "not_done": "", "title": "polylist keeps each argument as a polynomial.", "origin": {"description": "polylist keeps each argument as a polynomial.", "usage": "polylist", "arguments": [], "details": "1 + x | x", "value": "The same value R returns for this call.", "example": "paste(sapply(polylist(c(1, 1), c(0, 1)), as.character), collapse=\" | \")", "output": "output/polylist-r.txt", "output_blocks": [{"text": "1 + x | x"}]}, "translation": {"description": "polylist keeps each argument as a polynomial.", "usage": "polylist", "arguments": [], "details": "1 + x | x", "value": "The same value R returns for this call.", "example": "from polynom import polylist, as_character\n\ndef one():\n    return \" | \".join(as_character(item) for item in polylist([1, 1], [0, 1]))\nprint(one())\n", "output": "output/polylist-python.txt", "output_blocks": [{"text": "1 + x | x"}]}}, {"name": "as.polylist", "translated": true, "not_done": "", "title": "A list of coefficient vectors becomes a polylist.", "origin": {"description": "A list of coefficient vectors becomes a polylist.", "usage": "as.polylist", "arguments": [], "details": "1 + 2*x + x^2", "value": "The same value R returns for this call.", "example": "as.character(as.polylist(list(c(1, 2, 1)))[[1]])", "output": "output/as.polylist-r.txt", "output_blocks": [{"text": "1 + 2*x + x^2"}]}, "translation": {"description": "A list of coefficient vectors becomes a polylist.", "usage": "as_polylist", "arguments": [], "details": "1 + 2*x + x^2", "value": "The same value R returns for this call.", "example": "from polynom import as_polylist, as_character\n\ndef one():\n    return as_character(as_polylist([[1, 2, 1]])[0])\nprint(one())\n", "output": "output/as.polylist-python.txt", "output_blocks": [{"text": "1 + 2*x + x^2"}]}}, {"name": "is.polylist", "translated": true, "not_done": "", "title": "A polylist is recognized. One polynomial is not.", "origin": {"description": "A polylist is recognized. One polynomial is not.", "usage": "is.polylist", "arguments": [], "details": "TRUE,FALSE", "value": "The same value R returns for this call.", "example": "paste(is.polylist(polylist(1)), is.polylist(polynomial(1)), sep=\",\")", "output": "output/is.polylist-r.txt", "output_blocks": [{"text": "TRUE,FALSE"}]}, "translation": {"description": "A polylist is recognized. One polynomial is not.", "usage": "is_polylist", "arguments": [], "details": "TRUE,FALSE", "value": "The same value R returns for this call.", "example": "from polynom import polylist, polynomial, is_polylist\n\ndef one():\n    left = \"TRUE\" if is_polylist(polylist(1)) else \"FALSE\"\n    right = \"TRUE\" if is_polylist(polynomial(1)) else \"FALSE\"\n    return left + \",\" + right\nprint(one())\n", "output": "output/is.polylist-python.txt", "output_blocks": [{"text": "TRUE,FALSE"}]}}, {"name": "change.origin", "translated": true, "not_done": "", "title": "Shifting (1 + x)^2 to the origin 1 gives 4 + 4*x + x^2.", "origin": {"description": "Shifting (1 + x)^2 to the origin 1 gives 4 + 4*x + x^2.", "usage": "change.origin", "arguments": [], "details": "4 + 4*x + x^2", "value": "The same value R returns for this call.", "example": "as.character(change.origin(polynomial(c(1, 2, 1)), 1))", "output": "output/change.origin-r.txt", "output_blocks": [{"text": "4 + 4*x + x^2"}]}, "translation": {"description": "Shifting (1 + x)^2 to the origin 1 gives 4 + 4*x + x^2.", "usage": "change_origin", "arguments": [], "details": "4 + 4*x + x^2", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, change_origin, as_character\n\ndef one():\n    return as_character(change_origin(polynomial([1, 2, 1]), 1))\nprint(one())\n", "output": "output/change.origin-python.txt", "output_blocks": [{"text": "4 + 4*x + x^2"}]}}, {"name": "integral", "translated": true, "not_done": "", "title": "Integration divides each coefficient by its new degree.", "origin": {"description": "Integration divides each coefficient by its new degree.", "usage": "integral", "arguments": [], "details": "The indefinite integral and the definite integral from 0 to 1.", "value": "The same value R returns for this call.", "example": "paste(as.character(integral(polynomial(c(1, 2, 1)))), sprintf(\"%.17g\", integral(polynomial(c(1, 2, 1)), c(0, 1))))", "output": "output/integral-r.txt", "output_blocks": [{"text": "x + x^2 + 0.333333333333333*x^3 2.333333333333333"}]}, "translation": {"description": "Integration divides each coefficient by its new degree.", "usage": "integral", "arguments": [], "details": "The indefinite integral and the definite integral from 0 to 1.", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, integral, as_character\n\ndef one():\n    p = polynomial([1, 2, 1])\n    return as_character(integral(p)) + \" \" + f\"{integral(p, [0, 1])[0]:.17g}\"\nprint(one())\n", "output": "output/integral-python.txt", "output_blocks": [{"text": "x + x^2 + 0.333333333333333*x^3 2.333333333333333"}]}}, {"name": "monic", "translated": true, "not_done": "", "title": "monic divides by the leading coefficient.", "origin": {"description": "monic divides by the leading coefficient.", "usage": "monic", "arguments": [], "details": "0.5 + x", "value": "The same value R returns for this call.", "example": "as.character(monic(polynomial(c(2, 4))))", "output": "output/monic-r.txt", "output_blocks": [{"text": "0.5 + x"}]}, "translation": {"description": "monic divides by the leading coefficient.", "usage": "monic", "arguments": [], "details": "0.5 + x", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, monic, as_character\n\ndef one():\n    return as_character(monic(polynomial([2, 4])))\nprint(one())\n", "output": "output/monic-python.txt", "output_blocks": [{"text": "0.5 + x"}]}}, {"name": "poly.calc", "translated": true, "not_done": "", "title": "The interpolating polynomial through (0, 1), (1, 2), and (2, 4).", "origin": {"description": "The interpolating polynomial through (0, 1), (1, 2), and (2, 4).", "usage": "poly.calc", "arguments": [], "details": "1 + 0.5*x + 0.5*x^2", "value": "The same value R returns for this call.", "example": "as.character(poly.calc(c(0, 1, 2), c(1, 2, 4)))", "output": "output/poly.calc-r.txt", "output_blocks": [{"text": "1 + 0.5*x + 0.5*x^2"}]}, "translation": {"description": "The interpolating polynomial through (0, 1), (1, 2), and (2, 4).", "usage": "poly_calc", "arguments": [], "details": "1 + 0.5*x + 0.5*x^2", "value": "The same value R returns for this call.", "example": "from polynom import poly_calc, as_character\n\ndef one():\n    return as_character(poly_calc([0, 1, 2], [1, 2, 4]))\nprint(one())\n", "output": "output/poly.calc-python.txt", "output_blocks": [{"text": "1 + 0.5*x + 0.5*x^2"}]}}, {"name": "poly.from.values", "translated": true, "not_done": "", "title": "poly.from.values is the same interpolation.", "origin": {"description": "poly.from.values is the same interpolation.", "usage": "poly.from.values", "arguments": [], "details": "1 + 0.5*x + 0.5*x^2", "value": "The same value R returns for this call.", "example": "as.character(poly.from.values(c(0, 1, 2), c(1, 2, 4)))", "output": "output/poly.from.values-r.txt", "output_blocks": [{"text": "1 + 0.5*x + 0.5*x^2"}]}, "translation": {"description": "poly.from.values is the same interpolation.", "usage": "poly_from_values", "arguments": [], "details": "1 + 0.5*x + 0.5*x^2", "value": "The same value R returns for this call.", "example": "from polynom import poly_from_values, as_character\n\ndef one():\n    return as_character(poly_from_values([0, 1, 2], [1, 2, 4]))\nprint(one())\n", "output": "output/poly.from.values-python.txt", "output_blocks": [{"text": "1 + 0.5*x + 0.5*x^2"}]}}, {"name": "poly.from.roots", "translated": true, "not_done": "", "title": "The monic polynomial with roots 1 and -1.", "origin": {"description": "The monic polynomial with roots 1 and -1.", "usage": "poly.from.roots", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "as.character(poly.from.roots(1, -1))", "output": "output/poly.from.roots-r.txt", "output_blocks": [{"text": "-1 + x^2"}]}, "translation": {"description": "The monic polynomial with roots 1 and -1.", "usage": "poly_from_roots", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "from polynom import poly_from_roots, as_character\n\ndef one():\n    return as_character(poly_from_roots(1, -1))\nprint(one())\n", "output": "output/poly.from.roots-python.txt", "output_blocks": [{"text": "-1 + x^2"}]}}, {"name": "poly.from.zeros", "translated": true, "not_done": "", "title": "poly.from.zeros is the same root polynomial.", "origin": {"description": "poly.from.zeros is the same root polynomial.", "usage": "poly.from.zeros", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "as.character(poly.from.zeros(1, -1))", "output": "output/poly.from.zeros-r.txt", "output_blocks": [{"text": "-1 + x^2"}]}, "translation": {"description": "poly.from.zeros is the same root polynomial.", "usage": "poly_from_zeros", "arguments": [], "details": "-1 + x^2", "value": "The same value R returns for this call.", "example": "from polynom import poly_from_zeros, as_character\n\ndef one():\n    return as_character(poly_from_zeros(1, -1))\nprint(one())\n", "output": "output/poly.from.zeros-python.txt", "output_blocks": [{"text": "-1 + x^2"}]}}, {"name": "poly.orth", "translated": true, "not_done": "", "title": "The coefficients come from NumPy QR, matching stats::poly.", "origin": {"description": "The coefficients come from NumPy QR, matching stats::poly.", "usage": "poly.orth", "arguments": [], "details": "Orthogonal polynomials of degree 0 and 1 on 1:5.", "value": "The same value R returns for this call.", "example": "o \u003c- poly.orth(1:5, 2); paste(sprintf(\"%.17g\", c(coef(o[[1]]), coef(o[[2]]))), collapse=\",\")", "output": "output/poly.orth-r.txt", "output_blocks": [{"text": "0.44721359549995793,-0.94868329805051366,0.31622776601683789"}]}, "translation": {"description": "The coefficients come from NumPy QR, matching stats::poly.", "usage": "poly_orth", "arguments": [], "details": "Orthogonal polynomials of degree 0 and 1 on 1:5.", "value": "The same value R returns for this call.", "example": "from polynom import poly_orth, coef\n\ndef one():\n    orth = poly_orth([1, 2, 3, 4, 5], 2)\n    values = coef(orth[0]) + coef(orth[1])\n    return \",\".join(f\"{v:.17g}\" for v in values)\nprint(one())\n", "output": "output/poly.orth-python.txt", "output_blocks": [{"text": "0.44721359549995798,-0.94868329805051388,0.31622776601683794"}]}}, {"name": "deriv.polynomial", "translated": true, "not_done": "", "title": "The derivative of 1 + 2*x + x^2.", "origin": {"description": "The derivative of 1 + 2*x + x^2.", "usage": "deriv.polynomial", "arguments": [], "details": "2 + 2*x", "value": "The same value R returns for this call.", "example": "as.character(deriv(polynomial(c(1, 2, 1))))", "output": "output/deriv.polynomial-r.txt", "output_blocks": [{"text": "2 + 2*x"}]}, "translation": {"description": "The derivative of 1 + 2*x + x^2.", "usage": "deriv", "arguments": [], "details": "2 + 2*x", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, deriv, as_character\n\ndef one():\n    return as_character(deriv(polynomial([1, 2, 1])))\nprint(one())\n", "output": "output/deriv.polynomial-python.txt", "output_blocks": [{"text": "2 + 2*x"}]}}, {"name": "predict.polynomial", "translated": true, "not_done": "", "title": "Horner evaluation at 0, 1, and 2.", "origin": {"description": "Horner evaluation at 0, 1, and 2.", "usage": "predict.polynomial", "arguments": [], "details": "Values 1, 4, and 9.", "value": "The same value R returns for this call.", "example": "paste(predict(polynomial(c(1, 2, 1)), c(0, 1, 2)), collapse=\",\")", "output": "output/predict.polynomial-r.txt", "output_blocks": [{"text": "1,4,9"}]}, "translation": {"description": "Horner evaluation at 0, 1, and 2.", "usage": "predict", "arguments": [], "details": "Values 1, 4, and 9.", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, predict\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in predict(polynomial([1, 2, 1]), [0, 1, 2]))\nprint(one())\n", "output": "output/predict.polynomial-python.txt", "output_blocks": [{"text": "1,4,9"}]}}, {"name": "solve.polynomial", "translated": true, "not_done": "", "title": "Roots are the eigenvalues of the companion matrix.", "origin": {"description": "Roots are the eigenvalues of the companion matrix.", "usage": "solve.polynomial", "arguments": [], "details": "Roots -1 and 1 of x^2 - 1.", "value": "The same value R returns for this call.", "example": "paste(sprintf(\"%.17g\", solve(polynomial(c(-1, 0, 1)))), collapse=\",\")", "output": "output/solve.polynomial-r.txt", "output_blocks": [{"text": "-1,1"}]}, "translation": {"description": "Roots are the eigenvalues of the companion matrix.", "usage": "solve", "arguments": [], "details": "Roots -1 and 1 of x^2 - 1.", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, solve\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in solve(polynomial([-1, 0, 1])))\nprint(one())\n", "output": "output/solve.polynomial-python.txt", "output_blocks": [{"text": "-1,1"}]}}, {"name": "summary.polynomial", "translated": true, "not_done": "", "title": "The summary lists zeros, stationary points, and inflexions.", "origin": {"description": "The summary lists zeros, stationary points, and inflexions.", "usage": "summary.polynomial", "arguments": [], "details": "A double root at -1.", "value": "The same value R returns for this call.", "example": "paste(sprintf(\"%.17g\", summary(polynomial(c(1, 2, 1)))$zeros), collapse=\",\")", "output": "output/summary.polynomial-r.txt", "output_blocks": [{"text": "-1,-1"}]}, "translation": {"description": "The summary lists zeros, stationary points, and inflexions.", "usage": "summary", "arguments": [], "details": "A double root at -1.", "value": "The same value R returns for this call.", "example": "from polynom import polynomial, summary\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in summary(polynomial([1, 2, 1]))[\"zeros\"])\nprint(one())\n", "output": "output/summary.polynomial-python.txt", "output_blocks": [{"text": "-1,-1"}]}}, {"name": "plot.polynomial", "translated": true, "not_done": "", "title": "plot draws the polynomial and a dashed grid. The check is the curve values.", "origin": {"description": "plot draws the polynomial and a dashed grid. The check is the curve values.", "usage": "plot.polynomial", "arguments": [], "details": "The curve on (0, 1), five points, is the polynomial values. Matplotlib draws that line.", "value": "The same value R returns for this call.", "example": "png(tempfile()); p \u003c- polynomial(c(1, 2, 1)); plot(p, xlim = c(0, 1), len = 5); xlim \u003c- c(0, 1); eps \u003c- diff(xlim)/100; xlim \u003c- xlim + c(-eps, eps); x \u003c- seq(xlim[1], xlim[2], len = 5); paste(sprintf(\"%.17g\", predict(p, x)), collapse=\",\")", "output": "output/plot.polynomial-r.txt", "output_blocks": [{"text": "0.98009999999999997,1.550025,2.25,3.080025,4.0400999999999998"}]}, "translation": {"description": "plot draws the polynomial and a dashed grid. The check is the curve values.", "usage": "plot_polynomial", "arguments": [], "details": "The curve on (0, 1), five points, is the polynomial values. Matplotlib draws that line.", "value": "The same value R returns for this call.", "example": "import matplotlib\nmatplotlib.use(\"Agg\")\nfrom polynom import polynomial, plot_polynomial\n\ndef one():\n    return \",\".join(f\"{v:.17g}\" for v in plot_polynomial(polynomial([1, 2, 1]), xlim=[0, 1], len_=5)[1])\nprint(one())\n", "output": "output/plot.polynomial-python.txt", "output_blocks": [{"text": "0.98009999999999997,1.550025,2.25,3.080025,4.0400999999999998"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

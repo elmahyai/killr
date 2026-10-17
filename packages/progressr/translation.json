@@ -1,0 +1,892 @@
+{
+  "name": "progressr",
+  "cran_version": "1.0.0",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "All thirty-four exports match R. The text progress bar is drawn in Python. The Tcl/Tk window uses tkinter.",
+  "functions": [
+    {
+      "name": "handler_ascii_alert",
+      "translated": true,
+      "python": "progressr.reporters.handler_ascii_alert",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Writes a bell when the amount is not zero.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The bell is written only when the amount is not 0, and interrupt is framed like newline.",
+        "r_ms": 12.982845306396484,
+        "translated_ms": 38.95080899928871,
+        "speedup": 0.33331388076261953,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    if (ch == \"\\a\") return(\"\\\\u0007\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\n\nread_all <- function(path) {\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\none <- function() {\n  bare <- handler_ascii_alert()\n  path <- tempfile(\"al\")\n  con <- file(path, open = \"wt\")\n  handler <- handler_ascii_alert(file = con, enable = TRUE, intrusiveness = 1)\n  with_progress({\n    p <- progressor(steps = 4, on_exit = FALSE)\n    p(message = \"a\")\n    p(amount = 0, message = \"zero\")\n    p(message = \"ding\", amount = 0, type = \"interrupt\", class = \"control_progression\")\n    p(message = \"b\")\n    p(message = \"c\")\n    p(message = \"d\")\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  close(con)\n  target <- environment(bare)$target\n  list(\n    intrusiveness = environment(bare)$intrusiveness,\n    target = target,\n    text = read_all(path)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ntarget_json <- paste0(\"[\", paste(vapply(value$target, json_str, \"\"), collapse = \",\"), \"]\")\ncat(sprintf(\n  '{\"intrusiveness\":%s,\"target\":%s,\"text\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value$intrusiveness), target_json, json_str(value$text),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_ascii_alert\n\n\ndef _fresh(name):\n    return os.path.join(tempfile.mkdtemp(), name)\n\n\ndef one():\n    bare = handler_ascii_alert()\n    path = _fresh(\"alert.txt\")\n    handle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\n\n    def body():\n        progress = progressor(steps=4, on_exit=False)\n        progress(message=\"a\")\n        progress(amount=0, message=\"zero\")\n        progress(message=\"ding\", amount=0, type=\"interrupt\", class_=\"control_progression\")\n        progress(message=\"b\")\n        progress(message=\"c\")\n        progress(message=\"d\")\n\n    with_progress(\n        body,\n        handlers=handler_ascii_alert(file=handle, enable=True, intrusiveness=1),\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    handle.close()\n    return {\n        \"intrusiveness\": bare._env[\"intrusiveness\"],\n        \"target\": list(bare._env[\"target\"]),\n        \"text\": open(path, encoding=\"utf-8\").read(),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_beepr",
+      "translated": true,
+      "python": "progressr.external.handler_beepr",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing beepr message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_beepr() missing package message",
+        "r_ms": 0.5316734313964844,
+        "translated_ms": 0.003402001311769709,
+        "speedup": 156.2825474396745,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_beepr(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_beepr\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_beepr()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_beepr() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_brrr",
+      "translated": true,
+      "python": "progressr.external.handler_brrr",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing BRRR message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_brrr() missing package message",
+        "r_ms": 0.6121397018432617,
+        "translated_ms": 0.0016235007933573797,
+        "speedup": 377.0492163279849,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_brrr(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_brrr\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_brrr()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_brrr() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_cli",
+      "translated": true,
+      "python": "progressr.cli_handlers.handler_cli",
+      "loads": [
+        "cli"
+      ],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Format strings, a custom format, and the quiet paths match R. The drawn 4-step bar does not: cli_progress_bar returns an id and does not emit the bar text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "type formats, total 0 skips cli, show_after still calls cli, enable_after 1000 does not",
+        "r_ms": 27.901768684387207,
+        "translated_ms": 77.36582049983554,
+        "speedup": 0.3606472277308365,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  if (is.null(s)) return(\"null\")\n  s <- enc2utf8(paste(as.character(s), collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    cp <- utf8ToInt(ch)\n    if (length(cp) != 1) return(ch)\n    if (cp == 34) return('\\\\\"')\n    if (cp == 92) return(\"\\\\\\\\\")\n    if (cp == 10) return(\"\\\\n\")\n    if (cp == 13) return(\"\\\\r\")\n    if (cp == 9) return(\"\\\\t\")\n    if (cp < 32 || cp == 127) return(sprintf(\"\\\\u%04x\", cp))\n    ch\n  }, character(1))\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\ncap <- function(expr) {\n  path <- tempfile(\"cap\")\n  con <- file(path, open = \"wt\")\n  sink(con, type = \"message\")\n  force(expr)\n  sink(type = \"message\")\n  close(con)\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\nids <- character()\ninvisible(trace(cli::cli_progress_bar, exit = function() {\n  val <- returnValue()\n  ids <<- c(ids, if (length(val) == 1 && is.na(val)) \"NA\" else \"id\")\n}, print = FALSE))\non.exit(untrace(cli::cli_progress_bar), add = TRUE)\n\nformats <- function(type) {\n  h <- handler_cli(type = type, enable = TRUE)\n  env <- environment(environment(h)$reporter$initiate)\n  backend <- parent.env(env)$backend_args\n  list(format = backend$format, format_done = backend$format_done)\n}\n\nfmt_json <- function(pair) {\n  sprintf('{\"format\":%s,\"format_done\":%s}', json_str(pair$format), json_str(pair$format_done))\n}\n\nrun_cli <- function(steps, clear, type = \"steps\", show_after = 0, enable_after = NULL) {\n  ids <<- character()\n  args <- list(type = type, clear = clear, enable = TRUE, show_after = show_after)\n  if (!is.null(enable_after)) args$enable_after <- enable_after\n  handler <- do.call(handler_cli, args)\n  err <- cap({\n    with_progress({\n      p <- progressor(steps = steps, on_exit = FALSE)\n      if (steps > 0) for (i in seq_len(steps)) p(message = paste0(\"m\", i))\n    }, handlers = handler, enable = TRUE, interval = 0,\n       delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  })\n  list(called = length(ids) > 0, err = err)\n}\n\nrun_json <- function(x) {\n  sprintf('{\"called\":%s,\"err\":%s}', if (isTRUE(x$called)) \"true\" else \"false\", json_str(x$err))\n}\n\none <- function() {\n  custom_h <- handler_cli(type = \"steps\", format = \"CUSTOM\", enable = TRUE)\n  env <- environment(environment(custom_h)$reporter$initiate)\n  custom <- parent.env(env)$backend_args\n  bad <- tryCatch(handler_cli(type = \"nope\"), error = function(e) conditionMessage(e))\n  zero <- run_cli(0, FALSE, \"default\")\n  shown <- run_cli(2, FALSE, \"time\", show_after = 1000)\n  after <- run_cli(2, FALSE, \"time\", enable_after = 1000)\n  sprintf(\n    paste0(\n      '{\"default\":%s,\"steps\":%s,\"percent\":%s,\"time\":%s,\"prefix\":%s,',\n      '\"custom_format\":%s,\"custom_done\":%s,\"bad_type\":%s,',\n      '\"zero\":%s,\"show_called\":%s,\"after\":%s'\n    ),\n    fmt_json(formats(\"default\")),\n    fmt_json(formats(\"steps\")),\n    fmt_json(formats(\"percent\")),\n    fmt_json(formats(\"time\")),\n    fmt_json(formats(\"st\")),\n    json_str(custom$format),\n    json_str(custom$format_done),\n    json_str(bad),\n    run_json(zero),\n    if (isTRUE(shown$called)) \"true\" else \"false\",\n    run_json(after)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(value)\ncat(sprintf(',\"median_ms\":%.17g}\\n', median(elapsed) * 1000))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nimport progressr.cli_handlers as handlers\nfrom progressr.cli_handlers import handler_cli\nfrom progressr.evaluate import with_progress\nfrom progressr.options import ProgressrError\nfrom progressr.progressor import progressor\n\n_calls = []\n_real = handlers.cli_progress_bar\n\n\ndef _spy(*args, **kwargs):\n    result = _real(*args, **kwargs)\n    _calls.append(\"id\" if isinstance(result, str) and not result.startswith(\"NA\") else \"NA\")\n    return result\n\n\nhandlers.cli_progress_bar = _spy\n\n\ndef _capture(fn):\n    buf = io.StringIO()\n    with contextlib.redirect_stderr(buf):\n        fn()\n    return buf.getvalue()\n\n\ndef _run(steps, clear, type=\"steps\", show_after=0.0, enable_after=None):\n    _calls.clear()\n    kwargs = {\"type\": type, \"clear\": clear, \"enable\": True, \"show_after\": show_after}\n    if enable_after is not None:\n        kwargs[\"enable_after\"] = enable_after\n\n    def go():\n        handler = handler_cli(**kwargs)\n\n        def body():\n            progress = progressor(steps=steps, on_exit=False)\n            if steps > 0:\n                for index in range(1, steps + 1):\n                    progress(message=f\"m{index}\")\n\n        with_progress(\n            body,\n            handlers=handler,\n            enable=True,\n            interval=0,\n            delay_terminal=False,\n            delay_stdout=False,\n            delay_conditions=(),\n        )\n\n    err = _capture(go)\n    return {\"called\": bool(_calls), \"err\": err}\n\n\ndef _formats(type):\n    try:\n        args = handler_cli(type=type, enable=True).backend_args\n    except ProgressrError as exc:\n        return {\"error\": str(exc)}\n    return {\"format\": args.get(\"format\"), \"format_done\": args.get(\"format_done\")}\n\n\ndef one():\n    custom = handler_cli(type=\"steps\", format=\"CUSTOM\", enable=True).backend_args\n    try:\n        handler_cli(type=\"nope\")\n        bad = \"\"\n    except ProgressrError as exc:\n        bad = str(exc)\n    return {\n        \"default\": _formats(\"default\"),\n        \"steps\": _formats(\"steps\"),\n        \"percent\": _formats(\"percent\"),\n        \"time\": _formats(\"time\"),\n        \"prefix\": _formats(\"st\"),\n        \"custom_format\": custom.get(\"format\"),\n        \"custom_done\": custom.get(\"format_done\"),\n        \"bad_type\": bad,\n        \"zero\": _run(0, False, \"default\"),\n        \"show_called\": _run(2, False, \"time\", show_after=1000)[\"called\"],\n        \"after\": _run(2, False, \"time\", enable_after=1000),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_debug",
+      "translated": true,
+      "python": "progressr.reporters.handler_debug",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Writes a debug line whose step, message, and flags match R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Parsed type, step, max_steps, delta, message, clear, enabled, and status. Timestamps and UUID text are left out of the comparison.",
+        "r_ms": 29.90102767944336,
+        "translated_ms": 56.80746150028426,
+        "speedup": 0.5263573990063565,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\njson_bool <- function(x) if (isTRUE(x)) \"true\" else \"false\"\n\nparse_line <- function(line) {\n  suffix <- grepl(\" [progressor=\", line, fixed = TRUE)\n  line <- sub(\" \\\\[progressor=.*$\", \"\", line)\n  pat <- \"^\\\\[.*\\\\] \\\\([0-9.]+s => \\\\+[+-]?[0-9.]+s\\\\) ([^:]+): ([0-9.]+)/([0-9.]+) \\\\(([+-][^)]*)\\\\) '(.*)' \\\\{clear=([^,]*), enabled=([^,]*), status=(.*)\\\\}$\"\n  matched <- regexec(pat, line, perl = TRUE)\n  parts <- regmatches(line, matched)[[1]]\n  if (length(parts) == 0) stop(\"unparsed: \", line)\n  list(\n    type = parts[[2]],\n    step = as.numeric(parts[[3]]),\n    max_steps = as.numeric(parts[[4]]),\n    delta = as.numeric(parts[[5]]),\n    message = parts[[6]],\n    clear = parts[[7]],\n    enabled = parts[[8]],\n    status = parts[[9]],\n    uuid_suffix = suffix\n  )\n}\n\ncapture_debug <- function(handler, expr) {\n  path <- tempfile(\"dbg\")\n  con <- file(path, open = \"wt\")\n  sink(con, type = \"message\")\n  force(expr)\n  sink(type = \"message\")\n  close(con)\n  lines <- readLines(path, warn = FALSE)\n  lapply(lines, parse_line)\n}\n\none <- function() {\n  plain <- capture_debug(handler_debug(enable = TRUE, uuid = FALSE), with_progress({\n    p <- progressor(steps = 4, on_exit = FALSE)\n    p(message = \"one\")\n    p(message = \"two\", amount = 0, class = \"sticky\")\n    p(message = \"halt\", amount = 0, type = \"interrupt\", class = \"control_progression\")\n    p(message = \"three\")\n    p(message = \"four\")\n  }, handlers = handler_debug(enable = TRUE, uuid = FALSE), enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character()))\n  marked <- capture_debug(handler_debug(enable = TRUE, uuid = TRUE), with_progress({\n    p <- progressor(steps = 1, on_exit = FALSE)\n    p(message = \"z\")\n  }, handlers = handler_debug(enable = TRUE, uuid = TRUE), enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character()))\n  list(events = plain, uuid_events = marked)\n}\n\nevent_json <- function(ev) {\n  paste0(\n    '{\"type\":', json_str(ev$type),\n    ',\"step\":', json_num(ev$step),\n    ',\"max_steps\":', json_num(ev$max_steps),\n    ',\"delta\":', json_num(ev$delta),\n    ',\"message\":', json_str(ev$message),\n    ',\"clear\":', json_str(ev$clear),\n    ',\"enabled\":', json_str(ev$enabled),\n    ',\"status\":', json_str(ev$status), \"}\"\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nuuid_suffix <- all(vapply(value$uuid_events, function(ev) isTRUE(ev$uuid_suffix), TRUE))\ncat(sprintf(\n  '{\"events\":[%s],\"uuid_events\":[%s],\"uuid_suffix\":%s,\"median_ms\":%.17g}\\n',\n  paste(vapply(value$events, event_json, \"\"), collapse = \",\"),\n  paste(vapply(value$uuid_events, event_json, \"\"), collapse = \",\"),\n  json_bool(uuid_suffix),\n  median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport re\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_debug\n\n_LINE = re.compile(\n    r\"^\\[.*?\\] \\([0-9.]+s => \\+[+-]?[0-9.]+s\\) ([^:]+): ([0-9.]+)/([0-9.]+) \"\n    r\"\\(([+-][^)]*)\\) '(.*)' \\{clear=([^,]*), enabled=([^,]*), status=(.*)\\}\"\n    r\"(?: \\[progressor=.*, owner=.*\\])?$\"\n)\n\n\ndef _parse(text):\n    events = []\n    for line in text.splitlines():\n        match = _LINE.match(line)\n        if match is None:\n            raise RuntimeError(line)\n        events.append(\n            {\n                \"type\": match.group(1),\n                \"step\": float(match.group(2)),\n                \"max_steps\": float(match.group(3)),\n                \"delta\": float(match.group(4)),\n                \"message\": match.group(5),\n                \"clear\": match.group(6),\n                \"enabled\": match.group(7),\n                \"status\": match.group(8),\n                \"uuid_suffix\": \" [progressor=\" in line,\n            }\n        )\n    return events\n\n\ndef _run(handler, fn):\n    err = io.StringIO()\n    with contextlib.redirect_stderr(err):\n        with_progress(\n            fn,\n            handlers=handler,\n            enable=True,\n            interval=0,\n            delay_terminal=False,\n            delay_stdout=False,\n            delay_conditions=(),\n        )\n    return _parse(err.getvalue())\n\n\ndef one():\n    def plain():\n        progress = progressor(steps=4, on_exit=False)\n        progress(message=\"one\")\n        progress(message=\"two\", amount=0, class_=\"sticky\")\n        progress(message=\"halt\", amount=0, type=\"interrupt\", class_=\"control_progression\")\n        progress(message=\"three\")\n        progress(message=\"four\")\n\n    def marked():\n        progress = progressor(steps=1, on_exit=False)\n        progress(message=\"z\")\n\n    events = _run(handler_debug(enable=True, uuid=False), plain)\n    uuid_events = _run(handler_debug(enable=True, uuid=True), marked)\n    for item in events:\n        item.pop(\"uuid_suffix\")\n    suffix = all(item.pop(\"uuid_suffix\") for item in uuid_events)\n    return {\"events\": events, \"uuid_events\": uuid_events, \"uuid_suffix\": suffix}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_filesize",
+      "translated": true,
+      "python": "progressr.reporters.handler_filesize",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Reports progress as the size of a file, from 0 to 100 bytes.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "File body and size at 25 percent, after a zero amount, after interrupt, and at 100 percent. clear removes the file.",
+        "r_ms": 31.797409057617188,
+        "translated_ms": 80.28909249969729,
+        "speedup": 0.3960364735438637,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_bool <- function(x) if (isTRUE(x)) \"true\" else \"false\"\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\n\nread_all <- function(path) {\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\none <- function() {\n  bare <- handler_filesize(file = tempfile(\"fsdef\"))\n  fpath <- tempfile(\"fs\")\n  snaps <- with_progress({\n    p <- progressor(steps = 4, on_exit = FALSE)\n    init <- if (file.exists(fpath)) file.size(fpath) else -1\n    p(message = \"work\")\n    first <- read_all(fpath)\n    p(amount = 0, message = \"hold\")\n    zero <- read_all(fpath)\n    p(message = \"broke\", amount = 1, type = \"interrupt\", class = \"control_progression\")\n    interrupt <- read_all(fpath)\n    p(message = \"go\")\n    p(message = \"go\")\n    p(message = \"go\")\n    list(init = init, first = first, zero = zero, interrupt = interrupt)\n  }, handlers = handler_filesize(file = fpath, enable = TRUE, clear = FALSE, intrusiveness = 0),\n     enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  fclear <- tempfile(\"fsc\")\n  with_progress({\n    p <- progressor(steps = 2, on_exit = FALSE)\n    p(message = \"x\")\n    p(message = \"y\")\n  }, handlers = handler_filesize(file = fclear, enable = TRUE, clear = TRUE, intrusiveness = 0),\n     enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  fzero <- tempfile(\"fsz\")\n  with_progress({\n    p <- progressor(steps = 0, on_exit = FALSE)\n  }, handlers = handler_filesize(file = fzero, enable = TRUE, clear = FALSE, intrusiveness = 0),\n     enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  fdis <- tempfile(\"fsd\")\n  with_progress({\n    p <- progressor(steps = 2, on_exit = FALSE)\n    p(message = \"x\")\n    p(message = \"y\")\n  }, handlers = handler_filesize(file = fdis, enable = FALSE),\n     enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  c(\n    list(\n      intrusiveness = environment(bare)$intrusiveness,\n      target = environment(bare)$target,\n      final = read_all(fpath),\n      final_size = file.size(fpath),\n      cleared = file.exists(fclear),\n      zero_steps = read_all(fzero),\n      zero_size = file.size(fzero),\n      disabled = file.exists(fdis)\n    ),\n    snaps\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"intrusiveness\":%s,\"target\":%s,\"init\":%s,\"first\":%s,\"zero\":%s,\"interrupt\":%s,\"final\":%s,\"final_size\":%s,\"cleared\":%s,\"zero_steps\":%s,\"zero_size\":%s,\"disabled\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value$intrusiveness), json_str(value$target), json_num(value$init),\n  json_str(value$first), json_str(value$zero), json_str(value$interrupt),\n  json_str(value$final), json_num(value$final_size), json_bool(value$cleared),\n  json_str(value$zero_steps), json_num(value$zero_size), json_bool(value$disabled),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_filesize\n\n\ndef _fresh(name):\n    return os.path.join(tempfile.mkdtemp(), name)\n\n\ndef _read(path):\n    with open(path, encoding=\"utf-8\") as handle:\n        return handle.read()\n\n\ndef _run(handler, fn):\n    return with_progress(\n        fn,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n\n\ndef one():\n    bare = handler_filesize(file=_fresh(\"default.progress\"))\n    path = _fresh(\"run.progress\")\n    box = {}\n\n    def body():\n        progress = progressor(steps=4, on_exit=False)\n        box[\"init\"] = os.path.getsize(path)\n        progress(message=\"work\")\n        box[\"first\"] = _read(path)\n        progress(amount=0, message=\"hold\")\n        box[\"zero\"] = _read(path)\n        progress(message=\"broke\", amount=1, type=\"interrupt\", class_=\"control_progression\")\n        box[\"interrupt\"] = _read(path)\n        progress(message=\"go\")\n        progress(message=\"go\")\n        progress(message=\"go\")\n\n    _run(handler_filesize(file=path, enable=True, clear=False, intrusiveness=0), body)\n    cleared = _fresh(\"clear.progress\")\n\n    def clear_body():\n        progress = progressor(steps=2, on_exit=False)\n        progress(message=\"x\")\n        progress(message=\"y\")\n\n    _run(handler_filesize(file=cleared, enable=True, clear=True, intrusiveness=0), clear_body)\n    zero = _fresh(\"zero.progress\")\n\n    def zero_body():\n        progressor(steps=0, on_exit=False)\n\n    _run(handler_filesize(file=zero, enable=True, clear=False, intrusiveness=0), zero_body)\n    missing = _fresh(\"off.progress\")\n\n    def off_body():\n        progress = progressor(steps=2, on_exit=False)\n        progress(message=\"x\")\n        progress(message=\"y\")\n\n    _run(handler_filesize(file=missing, enable=False), off_body)\n    return {\n        \"intrusiveness\": bare._env[\"intrusiveness\"],\n        \"target\": bare._env[\"target\"],\n        \"init\": box[\"init\"],\n        \"first\": box[\"first\"],\n        \"zero\": box[\"zero\"],\n        \"interrupt\": box[\"interrupt\"],\n        \"final\": _read(path),\n        \"final_size\": os.path.getsize(path),\n        \"cleared\": os.path.exists(cleared),\n        \"zero_steps\": _read(zero),\n        \"zero_size\": os.path.getsize(zero),\n        \"disabled\": os.path.exists(missing),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_newline",
+      "translated": true,
+      "python": "progressr.reporters.handler_newline",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Writes the symbol on initiate, update, and finish.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The symbol is written on initiate, update, finish, and a zero amount, and interrupt is a blank line, the message, and a blank line.",
+        "r_ms": 14.314532279968262,
+        "translated_ms": 38.80374500022299,
+        "speedup": 0.368895638291768,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    if (ch == \"\\a\") return(\"\\\\u0007\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\n\nread_all <- function(path) {\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\none <- function() {\n  bare <- handler_newline()\n  path <- tempfile(\"nl\")\n  con <- file(path, open = \"wt\")\n  handler <- handler_newline(file = con, enable = TRUE)\n  with_progress({\n    p <- progressor(steps = 3, on_exit = FALSE)\n    p(message = \"a\")\n    p(amount = 0, message = \"still\")\n    p(type = \"hide\", class = \"control_progression\", amount = 0)\n    p(type = \"unhide\", class = \"control_progression\", amount = 0)\n    p(message = \"halted\", amount = 0, type = \"interrupt\", class = \"control_progression\")\n    p(message = \"b\")\n    p(message = \"c\")\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  close(con)\n  list(\n    intrusiveness = environment(bare)$intrusiveness,\n    target = environment(bare)$target,\n    text = read_all(path)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"intrusiveness\":%s,\"target\":%s,\"text\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value$intrusiveness), json_str(value$target), json_str(value$text),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_newline\n\n\ndef _fresh(name):\n    return os.path.join(tempfile.mkdtemp(), name)\n\n\ndef one():\n    bare = handler_newline()\n    path = _fresh(\"newline.txt\")\n    handle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\n\n    def body():\n        progress = progressor(steps=3, on_exit=False)\n        progress(message=\"a\")\n        progress(amount=0, message=\"still\")\n        progress(type=\"hide\", class_=\"control_progression\", amount=0)\n        progress(type=\"unhide\", class_=\"control_progression\", amount=0)\n        progress(message=\"halted\", amount=0, type=\"interrupt\", class_=\"control_progression\")\n        progress(message=\"b\")\n        progress(message=\"c\")\n\n    with_progress(\n        body,\n        handlers=handler_newline(file=handle, enable=True),\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    handle.close()\n    return {\n        \"intrusiveness\": bare._env[\"intrusiveness\"],\n        \"target\": bare._env[\"target\"],\n        \"text\": open(path, encoding=\"utf-8\").read(),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_notifier",
+      "translated": true,
+      "python": "progressr.external.handler_notifier",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing notifier message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_notifier() missing package message",
+        "r_ms": 0.7363557815551758,
+        "translated_ms": 0.0014175002434058115,
+        "speedup": 519.4748889678793,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_notifier(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_notifier\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_notifier()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_notifier() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_ntfy",
+      "translated": true,
+      "python": "progressr.external.handler_ntfy",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing ntfy message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_ntfy() missing package message",
+        "r_ms": 0.5850791931152344,
+        "translated_ms": 0.0025460030883550644,
+        "speedup": 229.80301783264747,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_ntfy(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_ntfy\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_ntfy()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_ntfy() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_pbcol",
+      "translated": true,
+      "python": "progressr.cli_handlers.handler_pbcol",
+      "loads": [
+        "cli"
+      ],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "The plain color-bar layout matches R. A 4-step run is 82 characters shorter because with_progress does not signal reset.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "pbcol width 20 at fraction 0.5, width 12 at fraction 1, and a truncated 200-character message at width 40",
+        "r_ms": 0.3902912139892578,
+        "translated_ms": 5.1785655014100485,
+        "speedup": 0.0753666655144146,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\noptions(cli.num_colors = 1, width = 80)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(as.character(s), collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    cp <- utf8ToInt(ch)\n    if (length(cp) != 1) return(ch)\n    if (cp == 34) return('\\\\\"')\n    if (cp == 92) return(\"\\\\\\\\\")\n    if (cp == 10) return(\"\\\\n\")\n    if (cp == 13) return(\"\\\\r\")\n    if (cp < 32 || cp == 127) return(sprintf(\"\\\\u%04x\", cp))\n    ch\n  }, character(1))\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  list(\n    half = progressr:::pbcol(fraction = 0.5, msg = \"Hi\", width = 20),\n    full = progressr:::pbcol(fraction = 1, msg = \"\", width = 12),\n    long = progressr:::pbcol(fraction = 0.5, msg = paste(rep(\"x\", 200), collapse = \"\"), width = 40)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"half\":%s,\"full\":%s,\"long\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$half), json_str(value$full), json_str(value$long),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom cli import options as cli_options\nfrom progressr.cli_handlers import pbcol\n\ncli_options(**{\"cli.num_colors\": 1, \"width\": 80})\n\n\ndef one():\n    return {\n        \"half\": pbcol(fraction=0.5, msg=\"Hi\", width=20),\n        \"full\": pbcol(fraction=1, msg=\"\", width=12),\n        \"long\": pbcol(fraction=0.5, msg=\"x\" * 200, width=40),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_pbmcapply",
+      "translated": true,
+      "python": "progressr.external.handler_pbmcapply",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing pbmcapply message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_pbmcapply() missing package message",
+        "r_ms": 0.5837678909301758,
+        "translated_ms": 0.004704999810201116,
+        "speedup": 124.07394569166253,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_pbmcapply(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_pbmcapply\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_pbmcapply()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_pbmcapply() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_progress",
+      "translated": true,
+      "python": "progressr.backends.handler_progress",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Draws the progress bar in Python. A four-step line at width 40 matches R, including the spinner and the percent.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "width 40, four steps, spinner bar percent and message; bad type uses double quotes",
+        "r_ms": 15.137791633605957,
+        "translated_ms": 19.45266599977913,
+        "speedup": 0.7781859634961006,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\noptions(width = 80)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(as.character(s), collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    cp <- utf8ToInt(ch)\n    if (length(cp) != 1) return(ch)\n    if (cp == 34) return('\\\\\"')\n    if (cp == 92) return(\"\\\\\\\\\")\n    if (cp == 10) return(\"\\\\n\")\n    if (cp == 13) return(\"\\\\r\")\n    if (cp == 9) return(\"\\\\t\")\n    ch\n  }, character(1))\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\ncap <- function(expr) {\n  path <- tempfile(\"cap\")\n  con <- file(path, open = \"wt\")\n  sink(con, type = \"message\")\n  force(expr)\n  sink(type = \"message\")\n  close(con)\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\none <- function() {\n  bad <- tryCatch(handler_progress(type = \"nope\"), error = function(e) conditionMessage(e))\n  err <- cap({\n    with_progress({\n      p <- progressor(steps = 4, on_exit = FALSE)\n      for (i in 1:4) p(message = paste0(\"m\", i))\n    }, handlers = handler_progress(\n         format = \":spin [:bar] :percent :message\", width = 40,\n         clear = FALSE, enable = TRUE),\n       enable = TRUE, interval = 0, delay_terminal = FALSE,\n       delay_stdout = FALSE, delay_conditions = character())\n  })\n  list(bad_type = bad, err = err, nchar = nchar(err))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"bad_type\":%s,\"err\":%s,\"nchar\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$bad_type), json_str(value$err),\n  sprintf(\"%.17g\", value$nchar), median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom progressr.backends import handler_progress\nfrom progressr.evaluate import with_progress\nfrom progressr.options import ProgressrError\nfrom progressr.progressor import progressor\n\n\ndef one():\n    try:\n        handler_progress(type=\"nope\")\n        bad = \"\"\n    except ProgressrError as exc:\n        bad = str(exc)\n    buf = io.StringIO()\n\n    def body():\n        progress = progressor(steps=4, on_exit=False)\n        for index in range(1, 5):\n            progress(message=f\"m{index}\")\n\n    with contextlib.redirect_stderr(buf):\n        with_progress(\n            body,\n            handlers=handler_progress(\n                format=\":spin [:bar] :percent :message\",\n                width=40,\n                clear=False,\n                enable=True,\n            ),\n            enable=True,\n            interval=0,\n            delay_terminal=False,\n            delay_stdout=False,\n            delay_conditions=(),\n        )\n    err = buf.getvalue()\n    return {\"bad_type\": bad, \"err\": err, \"nchar\": len(err)}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_rpushbullet",
+      "translated": true,
+      "python": "progressr.external.handler_rpushbullet",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing RPushbullet message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_rpushbullet() missing package message",
+        "r_ms": 0.4323720932006836,
+        "translated_ms": 0.0023360007617156953,
+        "speedup": 185.09073296839352,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(handler_rpushbullet(), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import handler_rpushbullet\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_rpushbullet()\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_rpushbullet() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_rstudio",
+      "translated": true,
+      "python": "progressr.external.handler_rstudio",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a handler. A step stops with the missing rstudioapi message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_rstudio(enable=TRUE) with a 2-step progressor",
+        "r_ms": 3.714919090270996,
+        "translated_ms": 16.551653499845997,
+        "speedup": 0.22444398623409806,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(with_progress({\n  p <- progressor(steps = 2, on_exit = FALSE)\n  p()\n  p()\n}, handlers = handler_rstudio(enable = TRUE), enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character()), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.external import handler_rstudio\nfrom progressr.options import ProgressrError\nfrom progressr.progressor import progressor\n\n\ndef one():\n    def body():\n        progress = progressor(steps=2, on_exit=False)\n        progress()\n        progress()\n    try:\n        with_progress(body, handlers=handler_rstudio(enable=True), enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_rstudio() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_shiny",
+      "translated": true,
+      "python": "progressr.external.handler_shiny",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a handler. A step stops with the missing shiny message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "handler_shiny(enable=TRUE) with a 2-step progressor",
+        "r_ms": 4.690766334533691,
+        "translated_ms": 19.14591749846295,
+        "speedup": 0.24500086427878268,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(with_progress({\n  p <- progressor(steps = 2, on_exit = FALSE)\n  p()\n  p()\n}, handlers = handler_shiny(enable = TRUE), enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character()), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.external import handler_shiny\nfrom progressr.options import ProgressrError\nfrom progressr.progressor import progressor\n\n\ndef one():\n    def body():\n        progress = progressor(steps=2, on_exit=False)\n        progress()\n        progress()\n    try:\n        with_progress(body, handlers=handler_shiny(enable=True), enable=True, interval=0, delay_terminal=False, delay_stdout=False, delay_conditions=())\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"handler_shiny() did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_slowdown",
+      "translated": true,
+      "python": "progressr.reporters.handler_slowdown",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Sleeps for a share of duration on each update. The check uses duration 0.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "duration 0 with 20 steps returns the sum 210. Intrusiveness is 0 and target is void.",
+        "r_ms": 23.358821868896484,
+        "translated_ms": 70.85038949935551,
+        "speedup": 0.3296922152998039,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\n\none <- function() {\n  handler <- handler_slowdown(duration = 0, enable = TRUE)\n  total <- with_progress({\n    p <- progressor(steps = 20, on_exit = FALSE)\n    s <- 0\n    for (i in 1:20) {\n      p(message = \"s\")\n      s <- s + i\n    }\n    s\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  list(\n    intrusiveness = environment(handler)$intrusiveness,\n    target = environment(handler)$target,\n    result = total\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"intrusiveness\":%s,\"target\":%s,\"result\":%s,\"median_ms\":%.17g}\\n',\n  json_num(value$intrusiveness), json_str(value$target), json_num(value$result),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_slowdown\n\n\ndef one():\n    handler = handler_slowdown(duration=0, enable=True)\n\n    def body():\n        progress = progressor(steps=20, on_exit=False)\n        total = 0\n        for i in range(1, 21):\n            progress(message=\"s\")\n            total += i\n        return total\n\n    result = with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    return {\n        \"intrusiveness\": handler._env[\"intrusiveness\"],\n        \"target\": handler._env[\"target\"],\n        \"result\": result,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_tkprogressbar",
+      "translated": true,
+      "python": "progressr.backends.handler_tkprogressbar",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Opens a tkinter window. Title, label, percent, and size match R, and clear TRUE destroys the window.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "zero, one, and four steps, plus clear TRUE; missing inputs use the R list message",
+        "r_ms": 469.5953130722046,
+        "translated_ms": 886.7904745002306,
+        "speedup": 0.5295448322636245,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\nlibrary(tcltk)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(as.character(s), collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    cp <- utf8ToInt(ch)\n    if (length(cp) != 1) return(ch)\n    if (cp == 34) return('\\\\\"')\n    if (cp == 92) return(\"\\\\\\\\\")\n    if (cp == 10) return(\"\\\\n\")\n    if (cp == 13) return(\"\\\\r\")\n    ch\n  }, character(1))\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nstate <- function(steps, clear) {\n  with_progress({\n    p <- progressor(steps = 4, on_exit = FALSE)\n    if (steps > 0) for (i in seq_len(steps)) p(message = paste0(\"m\", i))\n  }, handlers = handler_tkprogressbar(clear = clear, enable = TRUE),\n     enable = TRUE, interval = 0, delay_terminal = FALSE,\n     delay_stdout = FALSE, delay_conditions = character())\n  wins <- as.character(tcl(\"winfo\", \"children\", \".\"))\n  wins <- wins[nzchar(wins)]\n  if (length(wins) == 0) return(list(gone = TRUE))\n  w <- wins[[length(wins)]]\n  title <- paste(as.character(tcl(\"wm\", \"title\", w)), collapse = \" \")\n  subs <- as.character(tcl(\"winfo\", \"children\", w))\n  label <- \"\"\n  pct <- NA_real_\n  for (s in subs) {\n    cls <- tryCatch(as.character(tcl(\"winfo\", \"class\", s))[[1]], error = function(e) \"\")\n    if (identical(cls, \"Label\") && !nzchar(label)) {\n      label <- paste(as.character(tcl(s, \"cget\", \"-text\")), collapse = \" \")\n    }\n    if (identical(cls, \"TProgressbar\")) {\n      var <- as.character(tcl(s, \"cget\", \"-variable\"))\n      pct <- as.numeric(tcl(\"set\", var))\n    }\n  }\n  geom <- strsplit(as.character(tcl(\"wm\", \"geometry\", w)), \"+\", fixed = TRUE)[[1]][[1]]\n  tcl(\"destroy\", w)\n  list(gone = FALSE, title = title, label = label, percent = pct, geometry = geom)\n}\n\none <- function() {\n  bad <- tryCatch(\n    handler_tkprogressbar(inputs = \"x\", enable = TRUE),\n    error = function(e) conditionMessage(e)\n  )\n  list(\n    bad_inputs = bad,\n    none = state(0, FALSE),\n    one = state(1, FALSE),\n    four = state(4, FALSE),\n    cleared = state(4, TRUE)\n  )\n}\n\nsnap <- function(item) {\n  if (isTRUE(item$gone)) return('{\"gone\":true}')\n  sprintf(\n    '{\"gone\":false,\"title\":%s,\"label\":%s,\"percent\":%.17g,\"geometry\":%s}',\n    json_str(item$title), json_str(item$label), item$percent, json_str(item$geometry)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"bad_inputs\":%s,\"none\":%s,\"one\":%s,\"four\":%s,\"cleared\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$bad_inputs), snap(value$none), snap(value$one),\n  snap(value$four), snap(value$cleared), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.backends import handler_tkprogressbar\nfrom progressr.evaluate import with_progress\nfrom progressr.options import ProgressrError\nfrom progressr.progressor import progressor\n\n\ndef _open_bar(handler):\n    finish = handler._env[\"reporter\"][\"initiate\"]\n    closed = dict(\n        zip(finish.__code__.co_freevars, (cell.cell_contents for cell in finish.__closure__))\n    )\n    box = closed[\"pb_config\"]\n    if box[0] is None:\n        return None\n    return box[0][\"pb\"]\n\n\ndef state(steps, clear):\n    handler = handler_tkprogressbar(clear=clear, enable=True)\n\n    def body():\n        progress = progressor(steps=4, on_exit=False)\n        for index in range(1, steps + 1):\n            progress(message=f\"m{index}\")\n\n    with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    pb = _open_bar(handler)\n    if pb is None:\n        return {\"gone\": True}\n    try:\n        snap = pb.snapshot()\n    finally:\n        pb.kill()\n    return {\n        \"gone\": False,\n        \"title\": snap[\"title\"],\n        \"label\": snap[\"label\"],\n        \"percent\": snap[\"percent\"],\n        \"geometry\": snap[\"geometry\"],\n    }\n\n\ndef one():\n    try:\n        handler_tkprogressbar(inputs=\"x\", enable=True)\n        bad = \"\"\n    except ProgressrError as exc:\n        bad = str(exc)\n    return {\n        \"bad_inputs\": bad,\n        \"none\": state(0, False),\n        \"one\": state(1, False),\n        \"four\": state(4, False),\n        \"cleared\": state(4, True),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_tutorial",
+      "translated": true,
+      "python": "progressr.cli_handlers.handler_tutorial",
+      "loads": [
+        "handler_cli",
+        "handler_progress"
+      ],
+      "uses": [],
+      "done": "spec cli returns a cli handler. An unknown spec uses the same match.arg error as R.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "spec cli first class cli_progression_handler, clear FALSE, target terminal, prefix c, and the invalid-spec message",
+        "r_ms": 0.9641647338867188,
+        "translated_ms": 4.206639499898301,
+        "speedup": 0.2292007037707957,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(as.character(s), collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    cp <- utf8ToInt(ch)\n    if (length(cp) != 1) return(ch)\n    if (cp == 34) return('\\\\\"')\n    if (cp == 92) return(\"\\\\\\\\\")\n    if (cp == 10) return(\"\\\\n\")\n    if (cp == 13) return(\"\\\\r\")\n    if (cp < 32 || cp == 127) return(sprintf(\"\\\\u%04x\", cp))\n    ch\n  }, character(1))\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  handler <- handler_tutorial(spec = \"cli\", enable = TRUE)\n  prefixed <- handler_tutorial(spec = \"c\", enable = TRUE)\n  bad <- tryCatch(handler_tutorial(spec = \"invalid\"), error = function(e) conditionMessage(e))\n  list(\n    class = class(handler)[1],\n    clear = environment(handler)$clear,\n    target = environment(handler)$target,\n    prefix = class(prefixed)[1],\n    bad_spec = bad\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"class\":%s,\"clear\":%s,\"target\":%s,\"prefix\":%s,\"bad_spec\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$class),\n  if (isTRUE(value$clear)) \"true\" else \"false\",\n  json_str(value$target),\n  json_str(value$prefix),\n  json_str(value$bad_spec),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.cli_handlers import handler_tutorial\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    handler = handler_tutorial(spec=\"cli\", enable=True)\n    prefixed = handler_tutorial(spec=\"c\", enable=True)\n    try:\n        handler_tutorial(spec=\"invalid\")\n        bad = \"\"\n    except ProgressrError as exc:\n        bad = str(exc)\n    return {\n        \"class\": handler.classes[0],\n        \"clear\": handler._env[\"clear\"],\n        \"target\": handler._env[\"target\"],\n        \"prefix\": prefixed.classes[0],\n        \"bad_spec\": bad,\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value, ensure_ascii=False))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_txtprogressbar",
+      "translated": true,
+      "python": "progressr.bars.handler_txtprogressbar",
+      "loads": [
+        "utils"
+      ],
+      "uses": [],
+      "done": "Draws a utils text bar. Style 3 and style 1 match the file text.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "style 3 and style 1, clear FALSE, steps 4, full file text",
+        "r_ms": 15.747547149658203,
+        "translated_ms": 50.33928899865714,
+        "speedup": 0.31282815993047275,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nread_all <- function(path) {\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\nbar_text <- function(style) {\n  path <- tempfile(\"txt\")\n  con <- file(path, open = \"wt\")\n  handler <- handler_txtprogressbar(style = style, file = con, enable = TRUE, clear = FALSE)\n  with_progress({\n    p <- progressor(steps = 4, on_exit = FALSE)\n    p(message = \"one\")\n    p(message = \"two\")\n    p(message = \"three\")\n    p(message = \"four\")\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  close(con)\n  read_all(path)\n}\n\none <- function() {\n  list(style3 = bar_text(3L), style1 = bar_text(1L))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"style3\":%s,\"style1\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$style3), json_str(value$style1), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport os\nimport statistics\nimport tempfile\nimport time\n\nfrom progressr.bars import handler_txtprogressbar\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\n\n\ndef _fresh(name):\n    return os.path.join(tempfile.mkdtemp(), name)\n\n\ndef bar_text(style):\n    path = _fresh(\"txt.txt\")\n    handle = open(path, \"w\", encoding=\"utf-8\", newline=\"\\n\")\n    handler = handler_txtprogressbar(style=style, file=handle, enable=True, clear=False)\n\n    def body():\n        progress = progressor(steps=4, on_exit=False)\n        progress(message=\"one\")\n        progress(message=\"two\")\n        progress(message=\"three\")\n        progress(message=\"four\")\n\n    with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    handle.close()\n    return open(path, \"rb\").read().decode(\"utf-8\")\n\n\ndef one():\n    return {\"style3\": bar_text(3), \"style1\": bar_text(1)}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_void",
+      "translated": true,
+      "python": "progressr.reporters.handler_void",
+      "loads": [],
+      "uses": [
+        "make_progression_handler"
+      ],
+      "done": "Accepts progress and writes nothing.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Default enable is false, target is void, and intrusiveness is 0. An enabled run returns 6 and writes nothing.",
+        "r_ms": 8.286833763122559,
+        "translated_ms": 31.080412999472173,
+        "speedup": 0.26662559996430196,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    if (ch == \"\\a\") return(\"\\\\u0007\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\njson_bool <- function(x) if (isTRUE(x)) \"true\" else \"false\"\njson_num <- function(x) sprintf(\"%.17g\", as.numeric(x))\n\nread_all <- function(path) {\n  n <- file.info(path)$size\n  if (is.na(n) || n == 0) return(\"\")\n  readChar(path, n, useBytes = TRUE)\n}\n\none <- function() {\n  bare <- handler_void()\n  out <- tempfile(\"void\")\n  con <- file(out, open = \"wt\")\n  sink(con)\n  sink(con, type = \"message\")\n  value <- with_progress({\n    p <- progressor(steps = 2, on_exit = FALSE)\n    p(message = \"a\")\n    p(message = \"b\")\n    6\n  }, handlers = handler_void(enable = TRUE), enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  sink(type = \"message\")\n  sink()\n  close(con)\n  list(\n    enable = environment(bare)$enable,\n    target = environment(bare)$target,\n    intrusiveness = environment(bare)$intrusiveness,\n    result = value,\n    output = read_all(out)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"enable\":%s,\"target\":%s,\"intrusiveness\":%s,\"result\":%s,\"output\":%s,\"median_ms\":%.17g}\\n',\n  json_bool(value$enable), json_str(value$target), json_num(value$intrusiveness),\n  json_num(value$result), json_str(value$output), median(elapsed) * 1000\n))\n",
+          "python": "import contextlib\nimport io\nimport json\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.progressor import progressor\nfrom progressr.reporters import handler_void\n\n\ndef one():\n    bare = handler_void()\n    out = io.StringIO()\n    err = io.StringIO()\n\n    def body():\n        progress = progressor(steps=2, on_exit=False)\n        progress(message=\"a\")\n        progress(message=\"b\")\n        return 6\n\n    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):\n        value = with_progress(\n            body,\n            handlers=handler_void(enable=True),\n            enable=True,\n            interval=0,\n            delay_terminal=False,\n            delay_stdout=False,\n            delay_conditions=(),\n        )\n    return {\n        \"enable\": bare._env[\"enable\"],\n        \"target\": bare._env[\"target\"],\n        \"intrusiveness\": bare._env[\"intrusiveness\"],\n        \"result\": value,\n        \"output\": out.getvalue() + err.getvalue(),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handler_winprogressbar",
+      "translated": true,
+      "python": "progressr.bars.handler_winprogressbar",
+      "loads": [
+        "utils"
+      ],
+      "uses": [],
+      "done": "On unix, stops with the Windows requirement before it checks inputs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "unix OS error before inputs are checked",
+        "r_ms": 0.28336048126220703,
+        "translated_ms": 0.007139500667108223,
+        "speedup": 39.68911755518879,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  err <- tryCatch(\n    handler_winprogressbar(enable = TRUE, inputs = list(title = \"nope\")),\n    error = function(e) conditionMessage(e)\n  )\n  list(error = paste(err, collapse = \"\"))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"error\":%s,\"median_ms\":%.17g}\\n',\n  json_str(value$error), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.bars import handler_winprogressbar\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        handler_winprogressbar(enable=True, inputs={\"title\": \"nope\"})\n    except ProgressrError as exc:\n        return {\"error\": str(exc)}\n    return {\"error\": \"\"}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "handlers",
+      "translated": true,
+      "python": "progressr.handlers.handlers",
+      "loads": [],
+      "uses": [],
+      "done": "Gets and sets the named list of progression handlers.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "register a recording handler under a name, read it back, append a second, previous list length",
+        "r_ms": 0.6273984909057617,
+        "translated_ms": 6.0673905009025475,
+        "speedup": 0.10340499607078757,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  options(progressr.handlers = NULL)\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    update = function(config, state, progression, ...) NULL\n  ), enable = TRUE, target = \"file\", interval = 0)\n  second <- make_progression_handler(\"other\", enable = TRUE, target = \"file\")\n  handlers(rec = handler)\n  current <- handlers()\n  previous <- handlers(extra = second, append = TRUE)\n  list(\n    read_back = length(current),\n    name = names(current)[[1]],\n    previous = length(previous),\n    after = length(handlers())\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"read_back\":%.17g,\"name\":%s,\"previous\":%.17g,\"after\":%.17g,\"median_ms\":%.17g}\\n',\n  value$read_back,\n  json_str(value$name),\n  value$previous,\n  value$after,\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.factory import make_progression_handler\nfrom progressr.handlers import handlers\nfrom progressr.options import set_option\n\n\ndef one():\n    set_option(\"progressr.handlers\", None)\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\"update\": lambda config, state, progression, **_kwargs: None},\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n    second = make_progression_handler(\"other\", enable=True, target=\"file\")\n    handlers(rec=handler)\n    current = handlers()\n    previous = handlers(extra=second, append=True)\n    return {\n        \"read_back\": len(current),\n        \"name\": current._names[0],\n        \"previous\": len(previous),\n        \"after\": len(handlers()),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "make_progression_handler",
+      "translated": true,
+      "python": "progressr.factory.make_progression_handler",
+      "loads": [],
+      "uses": [],
+      "done": "Tracks steps and calls the reporter at each milestone.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "steps 4, amounts 1,1,1,1, messages a,b,c,d; record update steps and messages",
+        "r_ms": 3.1267404556274414,
+        "translated_ms": 14.008514499437297,
+        "speedup": 0.22320285678777993,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  steps <- numeric()\n  messages <- character()\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    update = function(config, state, progression, ...) {\n      steps <<- c(steps, state$step)\n      messages <<- c(messages, state$message)\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  withCallingHandlers({\n    signalCondition(progression(\n      type = \"initiate\", steps = 4, auto_finish = TRUE,\n      progressor_uuid = \"p\", progression_index = 1L\n    ))\n    signalCondition(progression(\n      type = \"update\", amount = 1, message = \"a\",\n      progressor_uuid = \"p\", progression_index = 2L\n    ))\n    signalCondition(progression(\n      type = \"update\", amount = 1, message = \"b\",\n      progressor_uuid = \"p\", progression_index = 3L\n    ))\n    signalCondition(progression(\n      type = \"update\", amount = 1, message = \"c\",\n      progressor_uuid = \"p\", progression_index = 4L\n    ))\n    signalCondition(progression(\n      type = \"update\", amount = 1, message = \"d\",\n      progressor_uuid = \"p\", progression_index = 5L\n    ))\n  }, progression = handler)\n  list(steps = steps, messages = messages)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nsteps <- paste(sprintf(\"%.17g\", value$steps), collapse = \",\")\nmessages <- paste(vapply(value$messages, json_str, \"\"), collapse = \",\")\ncat(sprintf(\n  '{\"steps\":[%s],\"messages\":[%s],\"median_ms\":%.17g}\\n',\n  steps, messages, median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import progression, signal_condition, with_calling_handlers\nfrom progressr.factory import make_progression_handler\n\n\ndef one():\n    steps = []\n    messages = []\n\n    def update(config, state, progression, **_kwargs):\n        steps.append(state[\"step\"])\n        messages.append(state[\"message\"])\n\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\"update\": update},\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n\n    def go():\n        signal_condition(\n            progression(\n                type=\"initiate\",\n                steps=4,\n                auto_finish=True,\n                progressor_uuid=\"p\",\n                progression_index=1,\n            )\n        )\n        for index, text in enumerate((\"a\", \"b\", \"c\", \"d\"), start=2):\n            signal_condition(\n                progression(\n                    type=\"update\",\n                    amount=1,\n                    message=text,\n                    progressor_uuid=\"p\",\n                    progression_index=index,\n                )\n            )\n\n    with_calling_handlers(go, progression=handler)\n    return {\"steps\": steps, \"messages\": messages}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "progress_aggregator",
+      "translated": true,
+      "python": "progressr.aggregator.progress_aggregator",
+      "loads": [],
+      "uses": [
+        "progressor",
+        "with_progress",
+        "make_progression_handler"
+      ],
+      "done": "Forwards child update amounts to the parent progressor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "progress_aggregator forwards two child amounts",
+        "r_ms": 12.264013290405273,
+        "translated_ms": 79.5513025004766,
+        "speedup": 0.15416483332038214,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\none <- function() {\n  amounts <- numeric()\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    update = function(config, state, progression, ...) {\n      child <- progression$child\n      if (!is.null(child)) amounts <<- c(amounts, child$amount)\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  value <- with_progress({\n    progress <- progressor(steps = 2, initiate = TRUE)\n    relay <- progress_aggregator(progress)\n    relay({\n      p <- progressor(steps = 2)\n      p(amount = 1)\n      p(amount = 1)\n      2\n    })\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  list(value = as.numeric(value), child_amounts = as.numeric(amounts))\n}\n\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%.17g,\"child_amounts\":[%s],\"median_ms\":%.17g}\\n',\n  ans$value,\n  paste(sprintf(\"%.17g\", ans$child_amounts), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.aggregator import progress_aggregator\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.options import set_option\nfrom progressr.progressor import progressor\n\nset_option(\"progressr.enable\", True)\n\n\ndef one():\n    amounts = []\n\n    def update(config, state, progression, **_kwargs):\n        child = progression.get(\"child\")\n        if child is not None:\n            amounts.append(child[\"amount\"])\n\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\"update\": update},\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n\n    def body():\n        progress = progressor(steps=2, initiate=True)\n        relay = progress_aggregator(progress)\n\n        def child():\n            step = progressor(steps=2)\n            step(amount=1)\n            step(amount=1)\n            return 2\n\n        return relay(child)\n\n    value = with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    return {\"value\": value, \"child_amounts\": amounts}\n\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nans[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(ans))\n"
+        }
+      }
+    },
+    {
+      "name": "progress_progressr",
+      "translated": true,
+      "python": "progressr.external.progress_progressr",
+      "loads": [],
+      "uses": [],
+      "done": "Signals initiate, two updates, and finish for three steps.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "init(3), two steps, term; types and amounts",
+        "r_ms": 7.720232009887695,
+        "translated_ms": 20.597390501279733,
+        "speedup": 0.3748160238748705,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\n\none <- function() {\n  events <- list()\n  push <- function(progression) {\n    events[[length(events) + 1L]] <<- list(type = progression$type, amount = as.numeric(progression$amount))\n  }\n  recorder <- make_progression_handler(\"record\", reporter = list(\n    initiate = function(config, state, progression, ...) push(progression),\n    update = function(config, state, progression, ...) push(progression),\n    finish = function(config, state, progression, ...) push(progression)\n  ), enable = TRUE, intrusiveness = 1, interval = 0)\n  value <- with_progress({\n    bar <- progress_progressr()\n    bar$init(3)\n    bar$step()\n    bar$step()\n    bar$term()\n    3\n  }, handlers = recorder, enable = TRUE, interval = 0, delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  list(\n    result = value,\n    types = vapply(events, function(ev) ev$type, \"\"),\n    amounts = vapply(events, function(ev) ev$amount, 0)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\n\ntypes <- paste(vapply(value$types, json_str, \"\"), collapse = \",\")\namounts <- paste(sprintf(\"%.17g\", value$amounts), collapse = \",\")\ncat(sprintf('{\"result\":%.17g,\"types\":[%s],\"amounts\":[%s],\"median_ms\":%.17g}\\n', value$result, types, amounts, median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.evaluate import with_progress\nfrom progressr.external import progress_progressr\nfrom progressr.factory import make_progression_handler\n\n\ndef one():\n    events = []\n\n    def push(config, state, progression, **kwargs):\n        events.append((progression[\"type\"], progression[\"amount\"]))\n\n    handler = make_progression_handler(\n        \"record\",\n        reporter={\"initiate\": push, \"update\": push, \"finish\": push},\n        enable=True,\n        intrusiveness=1,\n        interval=0,\n    )\n\n    def body():\n        bar = progress_progressr()\n        bar[\"init\"](3)\n        bar[\"step\"]()\n        bar[\"step\"]()\n        bar[\"term\"]()\n        return 3\n\n    result = with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    return {\n        \"result\": result,\n        \"types\": [item[0] for item in events],\n        \"amounts\": [item[1] for item in events],\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "progression",
+      "translated": true,
+      "python": "progressr.condition.progression",
+      "loads": [
+        "digest"
+      ],
+      "uses": [
+        "digest"
+      ],
+      "done": "Builds a progression condition and pastes its message.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "message hello, amount 2, type update; compare amount, type, message, and class",
+        "r_ms": 0.20241737365722656,
+        "translated_ms": 0.6900534999658703,
+        "speedup": 0.29333576841105513,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  p <- progression(message = \"hello\", amount = 2, type = \"update\")\n  msg <- conditionMessage(p)\n  if (length(msg) == 0) msg <- \"\"\n  list(\n    amount = p$amount,\n    type = p$type,\n    message = paste(msg, collapse = \"\"),\n    class = class(p)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncls <- paste(vapply(value$class, json_str, \"\"), collapse = \",\")\ncat(sprintf(\n  '{\"amount\":%.17g,\"type\":%s,\"message\":%s,\"class\":[%s],\"median_ms\":%.17g}\\n',\n  value$amount,\n  json_str(value$type),\n  json_str(value$message),\n  cls,\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import condition_message, progression\n\n\ndef one():\n    condition = progression(message=\"hello\", amount=2, type=\"update\")\n    return {\n        \"amount\": condition[\"amount\"],\n        \"type\": condition[\"type\"],\n        \"message\": condition_message(condition),\n        \"class\": list(condition.classes),\n    }\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "progressor",
+      "translated": true,
+      "python": "progressr.progressor.progressor",
+      "loads": [],
+      "uses": [
+        "progression"
+      ],
+      "done": "Signals initiate and update conditions from inside a function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "inside a function, steps 4, four updates; compare type, amount, message, and length",
+        "r_ms": 7.048606872558594,
+        "translated_ms": 39.29332149982656,
+        "speedup": 0.17938434837049105,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  seen <- list()\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    update = function(config, state, progression, ...) {\n      msg <- conditionMessage(progression)\n      if (length(msg) == 0) msg <- \"\"\n      seen[[length(seen) + 1L]] <<- list(\n        type = progression$type,\n        amount = progression$amount,\n        message = paste(msg, collapse = \"\")\n      )\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  n <- with_progress({\n    p <- progressor(steps = 4)\n    p(message = \"one\")\n    p(message = \"two\")\n    p(message = \"three\")\n    p(message = \"four\")\n    length(p)\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  list(length = n, events = seen)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nevents <- vapply(value$events, function(ev) {\n  sprintf(\n    '{\"type\":%s,\"amount\":%.17g,\"message\":%s}',\n    json_str(ev$type), ev$amount, json_str(ev$message)\n  )\n}, \"\")\ncat(sprintf(\n  '{\"length\":%.17g,\"events\":[%s],\"median_ms\":%.17g}\\n',\n  value$length,\n  paste(events, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import condition_message\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\n\ndef one():\n    seen = []\n\n    def update(config, state, progression, **_kwargs):\n        seen.append(\n            {\n                \"type\": progression[\"type\"],\n                \"amount\": progression[\"amount\"],\n                \"message\": condition_message(progression),\n            }\n        )\n\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\"update\": update},\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n    box = {}\n\n    def body():\n        progress = progressor(steps=4)\n        box[\"length\"] = len(progress)\n        for text in (\"one\", \"two\", \"three\", \"four\"):\n            progress(message=text)\n\n    with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    return {\"length\": box[\"length\"], \"events\": seen}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "slow_sqrt",
+      "translated": true,
+      "python": "progressr.demo.slow_sqrt",
+      "loads": [],
+      "uses": [
+        "slow_sqrt_p"
+      ],
+      "done": "Takes square roots with progress reporting off.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "slow_sqrt(c(1,4,9), delay=0) returns 1, 2, 3",
+        "r_ms": 0.09429454803466797,
+        "translated_ms": 0.9165139999822713,
+        "speedup": 0.10288391452448295,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\none <- function() {\n  value <- slow_sqrt(c(1, 4, 9), delay = 0)\n  as.numeric(value)\n}\n\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(sprintf(\"%.17g\", ans), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.demo import slow_sqrt\nfrom progressr.options import set_option\n\nset_option(\"progressr.enable\", True)\n\n\ndef one():\n    return {\"value\": slow_sqrt([1, 4, 9], delay=0)}\n\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nans[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(ans))\n"
+        }
+      }
+    },
+    {
+      "name": "slow_sqrt_p",
+      "translated": true,
+      "python": "progressr.demo.slow_sqrt_p",
+      "loads": [],
+      "uses": [
+        "progressor"
+      ],
+      "done": "Takes square roots without signaling when progress is false.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "slow_sqrt_p(c(4,9), delay=0, message=FALSE, stdout=FALSE, sticky=FALSE, progress=FALSE) returns 2, 3",
+        "r_ms": 0.07045269012451172,
+        "translated_ms": 0.6840964997536503,
+        "speedup": 0.10298647946580988,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\none <- function() {\n  value <- slow_sqrt_p(c(4, 9), delay = 0, message = FALSE, stdout = FALSE, sticky = FALSE, progress = FALSE)\n  as.numeric(value)\n}\n\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":[%s],\"median_ms\":%.17g}\\n',\n  paste(sprintf(\"%.17g\", ans), collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.demo import slow_sqrt_p\nfrom progressr.options import set_option\n\nset_option(\"progressr.enable\", True)\n\n\ndef one():\n    return {\n        \"value\": slow_sqrt_p(\n            [4, 9],\n            delay=0,\n            message=False,\n            stdout=False,\n            sticky=False,\n            progress=False,\n        )\n    }\n\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nans[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(ans))\n"
+        }
+      }
+    },
+    {
+      "name": "slow_sum",
+      "translated": true,
+      "python": "progressr.demo.slow_sum",
+      "loads": [],
+      "uses": [
+        "slow_sum_p"
+      ],
+      "done": "Sums a vector with progress reporting off.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "slow_sum(1:10) with delay 0 is 55",
+        "r_ms": 0.2758502960205078,
+        "translated_ms": 3.1814979993214365,
+        "speedup": 0.08670453229244285,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\none <- function() {\n  value <- slow_sum(1:10, delay = 0)\n  list(value = as.numeric(value), storage = storage.mode(value))\n}\n\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"value\":%.17g,\"storage\":\"%s\",\"median_ms\":%.17g}\\n',\n  ans$value, ans$storage, median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.demo import slow_sum\nfrom progressr.options import set_option\n\nset_option(\"progressr.enable\", True)\n\n\ndef one():\n    value = slow_sum(list(range(1, 11)), delay=0)\n    storage = \"integer\" if type(value) is int else \"double\"\n    return {\"value\": value, \"storage\": storage}\n\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nans[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(ans))\n"
+        }
+      }
+    },
+    {
+      "name": "slow_sum_p",
+      "translated": true,
+      "python": "progressr.demo.slow_sum_p",
+      "loads": [],
+      "uses": [
+        "progressor"
+      ],
+      "done": "Sums a vector and signals the M: and P: lines.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "slow_sum_p(1:3, delay=0, stdout=FALSE, message=TRUE, sticky=FALSE, progress=TRUE) returns 6 and emits the M: and P: messages",
+        "r_ms": 22.90797233581543,
+        "translated_ms": 143.84560899998178,
+        "speedup": 0.1592538868240207,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  lines <- character()\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    update = function(config, state, progression, ...) {\n      msg <- gsub(\"\\n\", \"\", paste(conditionMessage(progression), collapse = \"\"), fixed = TRUE)\n      if (nzchar(msg)) lines <<- c(lines, msg)\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  value <- withCallingHandlers({\n    with_progress({\n      slow_sum_p(1:3, delay = 0, stdout = FALSE, message = TRUE, sticky = FALSE, progress = TRUE)\n    }, handlers = handler, enable = TRUE, interval = 0,\n       delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  }, message = function(m) {\n    lines <<- c(lines, gsub(\"\\n\", \"\", paste(conditionMessage(m), collapse = \"\"), fixed = TRUE))\n    invokeRestart(\"muffleMessage\")\n  })\n  list(value = as.numeric(value), storage = storage.mode(value), lines = lines)\n}\n\nans <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nquoted <- vapply(ans$lines, json_str, \"\")\ncat(sprintf(\n  '{\"value\":%.17g,\"storage\":\"%s\",\"lines\":[%s],\"median_ms\":%.17g}\\n',\n  ans$value, ans$storage, paste(quoted, collapse = \",\"), median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import condition_message, try_invoke_restart, with_calling_handlers\nfrom progressr.demo import slow_sum_p\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.options import set_option\n\nset_option(\"progressr.enable\", True)\n\n\ndef one():\n    lines = []\n\n    def update(config, state, progression, **_kwargs):\n        text = condition_message(progression).replace(\"\\n\", \"\")\n        if text:\n            lines.append(text)\n\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\"update\": update},\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n\n    def on_message(condition):\n        lines.append(condition_message(condition).replace(\"\\n\", \"\"))\n        try_invoke_restart(\"muffleMessage\", condition)\n\n    def body():\n        return slow_sum_p(\n            list(range(1, 4)),\n            delay=0,\n            stdout=False,\n            message=True,\n            sticky=False,\n            progress=True,\n        )\n\n    def run():\n        return with_progress(\n            body,\n            handlers=handler,\n            enable=True,\n            interval=0,\n            delay_terminal=False,\n            delay_stdout=False,\n            delay_conditions=(),\n        )\n\n    value = with_calling_handlers(run, message=on_message)\n    storage = \"integer\" if type(value) is int else \"double\"\n    return {\"value\": value, \"storage\": storage, \"lines\": lines}\n\n\nans = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nans[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(ans))\n"
+        }
+      }
+    },
+    {
+      "name": "withProgressShiny",
+      "translated": true,
+      "python": "progressr.external.with_progress_shiny",
+      "loads": [],
+      "uses": [],
+      "done": "Stops with the missing shiny message before the expression runs.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "withProgressShiny(1+1) before the expression runs",
+        "r_ms": 0.6480216979980469,
+        "translated_ms": 1.9927204975829227,
+        "speedup": 0.3251944759860036,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nlibrary(progressr)\noptions(progressr.enable = TRUE)\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    if (ch == \"\\r\") return(\"\\\\r\")\n    if (ch == \"\\t\") return(\"\\\\t\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\none <- function() {\n  tryCatch(withProgressShiny(1 + 1), error = function(e) conditionMessage(e))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf('{\"message\":%s,\"median_ms\":%.17g}\\n', json_str(value), median(elapsed) * 1000))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.external import with_progress_shiny\nfrom progressr.options import ProgressrError\n\n\ndef one():\n    try:\n        with_progress_shiny(lambda: 1 + 1)\n    except ProgressrError as exc:\n        return str(exc)\n    raise AssertionError(\"with_progress_shiny(lambda: 1 + 1) did not error\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(json.dumps({\"message\": value, \"median_ms\": statistics.median(elapsed)}))\n"
+        }
+      }
+    },
+    {
+      "name": "with_progress",
+      "translated": true,
+      "python": "progressr.evaluate.with_progress",
+      "loads": [],
+      "uses": [
+        "handlers",
+        "make_progression_handler"
+      ],
+      "done": "Calls a zero-argument function while handlers receive progression conditions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "sum of 1:5, recording handler sees initiate plus five updates, enable true, delay 0",
+        "r_ms": 7.653594017028809,
+        "translated_ms": 46.51671850024286,
+        "speedup": 0.16453426346032662,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\njson_str <- function(s) {\n  s <- enc2utf8(paste(s, collapse = \"\"))\n  chars <- strsplit(s, \"\", fixed = TRUE)[[1]]\n  if (length(chars) == 0) return('\"\"')\n  parts <- vapply(chars, function(ch) {\n    if (ch == '\"') return('\\\\\"')\n    if (ch == \"\\\\\") return(\"\\\\\\\\\")\n    if (ch == \"\\n\") return(\"\\\\n\")\n    ch\n  }, \"\")\n  paste0('\"', paste(parts, collapse = \"\"), '\"')\n}\n\nrecord <- function(config, state, progression) {\n  msg <- conditionMessage(progression)\n  if (length(msg) == 0) msg <- \"\"\n  list(\n    type = progression$type,\n    amount = progression$amount,\n    message = paste(msg, collapse = \"\"),\n    step = state$step,\n    max_steps = config$max_steps\n  )\n}\n\none <- function() {\n  seen <- list()\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    initiate = function(config, state, progression, ...) {\n      seen[[length(seen) + 1L]] <<- record(config, state, progression)\n    },\n    update = function(config, state, progression, ...) {\n      seen[[length(seen) + 1L]] <<- record(config, state, progression)\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  total <- with_progress({\n    p <- progressor(along = 1:5)\n    s <- 0\n    for (x in 1:5) {\n      s <- s + x\n      p(message = as.character(x))\n    }\n    s\n  }, handlers = handler, enable = TRUE, interval = 0,\n     delay_terminal = FALSE, delay_stdout = FALSE, delay_conditions = character())\n  list(sum = total, events = seen)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\nevents <- vapply(value$events, function(ev) {\n  sprintf(\n    '{\"type\":%s,\"amount\":%.17g,\"message\":%s,\"step\":%.17g,\"max_steps\":%.17g}',\n    json_str(ev$type), ev$amount, json_str(ev$message), ev$step, ev$max_steps\n  )\n}, \"\")\ncat(sprintf(\n  '{\"sum\":%.17g,\"events\":[%s],\"median_ms\":%.17g}\\n',\n  value$sum,\n  paste(events, collapse = \",\"),\n  median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import condition_message\nfrom progressr.evaluate import with_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\n\ndef _record(config, state, progression):\n    return {\n        \"type\": progression[\"type\"],\n        \"amount\": progression[\"amount\"],\n        \"message\": condition_message(progression),\n        \"step\": state[\"step\"],\n        \"max_steps\": config[\"max_steps\"],\n    }\n\n\ndef one():\n    seen = []\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\n            \"initiate\": lambda config, state, progression, **_kwargs: seen.append(\n                _record(config, state, progression)\n            ),\n            \"update\": lambda config, state, progression, **_kwargs: seen.append(\n                _record(config, state, progression)\n            ),\n        },\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n\n    def body():\n        progress = progressor(along=range(1, 6))\n        total = 0\n        for value in range(1, 6):\n            total += value\n            progress(message=str(value))\n        return total\n\n    total = with_progress(\n        body,\n        handlers=handler,\n        enable=True,\n        interval=0,\n        delay_terminal=False,\n        delay_stdout=False,\n        delay_conditions=(),\n    )\n    return {\"sum\": total, \"events\": seen}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    },
+    {
+      "name": "without_progress",
+      "translated": true,
+      "python": "progressr.evaluate.without_progress",
+      "loads": [],
+      "uses": [
+        "progressor"
+      ],
+      "done": "Calls a zero-argument function and muffles progression conditions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "the same sum, and the recording handler sees nothing",
+        "r_ms": 0.3038644790649414,
+        "translated_ms": 2.4174865002351,
+        "speedup": 0.12569438507118474,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(progressr))\n\none <- function() {\n  seen <- 0L\n  handler <- make_progression_handler(\"rec\", reporter = list(\n    initiate = function(config, state, progression, ...) {\n      seen <<- seen + 1L\n    },\n    update = function(config, state, progression, ...) {\n      seen <<- seen + 1L\n    }\n  ), enable = TRUE, target = \"file\", interval = 0)\n  total <- withCallingHandlers({\n    without_progress({\n      p <- progressor(along = 1:5)\n      s <- 0\n      for (x in 1:5) {\n        s <- s + x\n        p(message = as.character(x))\n      }\n      s\n    })\n  }, progression = handler)\n  list(sum = total, seen = seen)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  '{\"sum\":%.17g,\"seen\":%.17g,\"median_ms\":%.17g}\\n',\n  value$sum, value$seen, median(elapsed) * 1000\n))\n",
+          "python": "import json\nimport statistics\nimport time\n\nfrom progressr.condition import with_calling_handlers\nfrom progressr.evaluate import without_progress\nfrom progressr.factory import make_progression_handler\nfrom progressr.progressor import progressor\n\n\ndef one():\n    seen = []\n    handler = make_progression_handler(\n        \"rec\",\n        reporter={\n            \"initiate\": lambda **_kwargs: seen.append(\"i\"),\n            \"update\": lambda **_kwargs: seen.append(\"u\"),\n        },\n        enable=True,\n        target=\"file\",\n        interval=0,\n    )\n\n    def body():\n        progress = progressor(along=range(1, 6))\n        total = 0\n        for value in range(1, 6):\n            total += value\n            progress(message=str(value))\n        return total\n\n    def wrapped():\n        return without_progress(body)\n\n    total = with_calling_handlers(wrapped, progression=handler)\n    return {\"sum\": total, \"seen\": len(seen)}\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nvalue[\"median_ms\"] = statistics.median(elapsed)\nprint(json.dumps(value))\n"
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "translated": [
+      "cli",
+      "digest",
+      "utils"
+    ],
+    "native": [
+      "tkinter"
+    ],
+    "rust": []
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "name": "plot.boot",
+  "title": "Plots of the output of a bootstrap simulation",
+  "origin": {
+    "description": "Draw a histogram of bootstrap replicates and a Q-Q plot against normal or chi-squared quantiles. Optionally add a jackknife-after-bootstrap plot.",
+    "usage": "plot.boot(x, index = 1, t0 = NULL, t = NULL, jack = FALSE,\n     qdist = \"norm\", nclass = NULL, df, ...)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A bootstrap object."
+      },
+      {
+        "name": "index",
+        "text": "Which column of the bootstrap statistics to plot. Ignored when t is supplied."
+      },
+      {
+        "name": "t0",
+        "text": "The original statistic. Defaults to boot.out$t0[index] unless t is supplied, in which case it defaults to NULL and no vertical line is drawn."
+      },
+      {
+        "name": "t",
+        "text": "Replicates to plot. The default is boot.out$t[, index]."
+      },
+      {
+        "name": "jack",
+        "text": "If TRUE, add a jackknife-after-bootstrap plot under the histogram and the Q-Q plot."
+      },
+      {
+        "name": "qdist",
+        "text": "Reference distribution for the Q-Q plot: \"norm\" or \"chisq\". Anything else warns and uses the normal."
+      },
+      {
+        "name": "nclass",
+        "text": "Number of histogram classes. The default is the integer between 10 and 100 closest to ceiling(length(t) / 25)."
+      },
+      {
+        "name": "df",
+        "text": "Degrees of freedom for qdist = \"chisq\"."
+      },
+      {
+        "name": "...",
+        "text": "Passed to jack.after.boot when jack is TRUE."
+      }
+    ],
+    "details": "When t0 is known, one histogram breakpoint is placed at t0 and the classes have equal width. The Q-Q plot uses quantiles qnorm((1:R)/(R+1)), or chi-squared quantiles, against the order statistics of the finite replicates. The normal reference line has intercept mean(t) and slope sqrt(var(t)). The chi-squared line is the unit line.",
+    "value": "The bootstrap object, invisibly.",
+    "example": "# We fit an exponential model to the air-conditioning data and use\n# that for a parametric bootstrap.  Then we look at plots of the\n# resampled means.\nair.rg <- function(data, mle) rexp(length(data), 1/mle)\n\nair.boot <- boot(aircondit$hours, mean, R = 999, sim = \"parametric\",\n                 ran.gen = air.rg, mle = mean(aircondit$hours))\nplot(air.boot)",
+    "output": "output/plot.boot-r.txt"
+  },
+  "translation": {
+    "description": "Draw a histogram of bootstrap replicates and a Q-Q plot with Matplotlib. The returned dict is the series the figure is built from.",
+    "usage": "plot_boot(x, index=1, t0=None, t=None, jack=False, qdist=\"norm\", nclass=None, df=None, **kwargs)",
+    "arguments": [
+      {
+        "name": "x",
+        "text": "A BootResult."
+      },
+      {
+        "name": "index",
+        "text": "1-based column of t to plot. Ignored when t is supplied."
+      },
+      {
+        "name": "t0",
+        "text": "Original statistic. When t is omitted this defaults to t0[index]. When t is supplied and t0 is omitted, no vertical line is drawn."
+      },
+      {
+        "name": "t",
+        "text": "Replicates to plot instead of column index of x.t."
+      },
+      {
+        "name": "jack",
+        "text": "If true, add a jackknife-after-bootstrap panel under the histogram and the Q-Q plot."
+      },
+      {
+        "name": "qdist",
+        "text": "\"norm\" or \"chisq\". Any other string warns and uses the normal."
+      },
+      {
+        "name": "nclass",
+        "text": "Number of histogram classes. The default follows ceiling(length(t) / 25), bounded by 10 and 100."
+      },
+      {
+        "name": "df",
+        "text": "Degrees of freedom when qdist is \"chisq\"."
+      },
+      {
+        "name": "kwargs",
+        "text": "Passed to jack_after_boot when jack is true."
+      }
+    ],
+    "details": "Breakpoints put t0 on a boundary and use equal widths, matching the R formula. Counts use right-closed bins and include the left edge in the first bin. Theoretical quantiles are qnorm((1:R)/(R+1)) or the chi-squared quantile at those probabilities. The normal line is mean(t) + sqrt(var(t)) * quantile. Matplotlib draws the bars, the points, and the line.",
+    "value": "A dict with breaks, counts, density, qq_x, qq_y, line_intercept, and line_slope. figure is the Matplotlib figure.",
+    "example": "from boot.resample import boot, plot_boot\nfrom boot.rng import set_seed\nimport numpy as np\n\ndef stat(d, i):\n    i = np.asarray(i, dtype=int)\n    return float(np.mean(np.asarray(d)[i - 1]))\n\nset_seed(1)\nresult = boot(np.arange(1, 11), stat, R=50)\nseries = plot_boot(result)\nprint(series[\"counts\"])",
+    "output": ["output/plot.boot-python.txt", "output/plot.boot.svg"]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "dev_package_deps",
+  "title": "List the status of a local package's dependencies",
+  "origin": {
+    "description": "List the status of the dependencies of a local package.",
+    "usage": "dev_package_deps(pkgdir = \".\", dependencies = NA, repos = getOption(\"repos\"), type = getOption(\"pkgType\"))",
+    "arguments": [
+      {
+        "name": "pkgdir",
+        "text": "Path to a package directory, or to a package tarball."
+      },
+      {
+        "name": "dependencies",
+        "text": "Which DESCRIPTION fields local_package_deps reads. A length-1 logical NA selects Depends, Imports, and LinkingTo."
+      },
+      {
+        "name": "repos",
+        "text": "Repository URLs, passed to package_deps after any Additional_repositories field is appended."
+      },
+      {
+        "name": "type",
+        "text": "Package type passed to package_deps. source reads the CRAN source index."
+      }
+    ],
+    "details": "Calls local_package_deps, then package_deps on those names. The recursive CRAN walk still uses Depends, Imports, and LinkingTo. A package with no Remotes field does not look up GitHub. Additional repositories named in the DESCRIPTION are appended. A Bioconductor package, one with a biocviews field, gains any missing Bioconductor repositories. Rows are matched on the package name and the last copy is kept.",
+    "value": "A data frame with columns package, installed, available, diff, and is_cran.",
+    "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\ndir <- tempfile()\ndir.create(dir)\nwriteLines(c(\n  \"Package: toydeps\",\n  \"Version: 0.0.1\",\n  \"Imports: remotes\"\n), file.path(dir, \"DESCRIPTION\"))\nx <- dev_package_deps(dir, repos = \"https://cloud.r-project.org\", type = \"source\")\nrow <- x[1, ]\ncat(paste0(\n  \"dev_package_deps returns \", row$package,\n  \", installed \", row$installed,\n  \", available \", row$available,\n  \", diff \", row$diff,\n  \", cran \", if (isTRUE(row$is_cran)) \"TRUE\" else \"FALSE\",\n  \".\\n\"\n))",
+    "output": "output/dev_package_deps-r.txt"
+  },
+  "translation": {
+    "description": "List the status of the dependencies of a local package.",
+    "usage": "dev_package_deps(pkgdir=\".\", dependencies=NA, repos=None, type=\"source\")",
+    "arguments": [
+      {
+        "name": "pkgdir",
+        "text": "Path to a package directory, or to a package tarball."
+      },
+      {
+        "name": "dependencies",
+        "text": "Which DESCRIPTION fields local_package_deps reads. The NA object selects Depends, Imports, and LinkingTo."
+      },
+      {
+        "name": "repos",
+        "text": "Repository URL or URLs, passed to package_deps. None uses https://cloud.r-project.org. Additional_repositories from the DESCRIPTION are appended."
+      },
+      {
+        "name": "type",
+        "text": "source reads the CRAN source index. Another type raises invalid 'type'."
+      }
+    ],
+    "details": "Calls local_package_deps, then package_deps on those names. The recursive CRAN walk still uses Depends, Imports, and LinkingTo. A package with no Remotes field does not look up GitHub. A DESCRIPTION that contains a Remotes field raises ValueError instead of fetching that host. A biocviews field adds Bioconductor repository URLs whose names are not already present. Rows keep the last copy of each package name.",
+    "value": "A list of dicts with keys package, installed, available, diff, and is_cran.",
+    "example": "import os\nimport tempfile\nfrom remotes.deps import dev_package_deps\n\ndirectory = tempfile.mkdtemp()\nwith open(os.path.join(directory, \"DESCRIPTION\"), \"w\", encoding=\"utf-8\") as handle:\n    handle.write(\"Package: toydeps\\nVersion: 0.0.1\\nImports: remotes\\n\")\nrows = dev_package_deps(directory, repos=\"https://cloud.r-project.org\", type=\"source\")\nrow = rows[0]\ncran = \"TRUE\" if row[\"is_cran\"] else \"FALSE\"\nprint(\n    \"dev_package_deps returns \"\n    + row[\"package\"]\n    + \", installed \"\n    + row[\"installed\"]\n    + \", available \"\n    + row[\"available\"]\n    + \", diff \"\n    + str(row[\"diff\"])\n    + \", cran \"\n    + cran\n    + \".\"\n)",
+    "output": "output/dev_package_deps-python.txt"
+  }
+}

@@ -1,0 +1,1297 @@
+{
+  "name": "statmod",
+  "cran_version": "1.5.2",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "resume": "Checked qresid, qresiduals, mixedModel2Fit, randomizedBlock, randomizedBlockFit, compareGrowthCurves, plotGrowthCurves, qres.invgauss, qres.nbinom, qres.default, and qres.tweedie, qres.gamma, varfun.digamma, and compareTwoGrowthCurves, rinvgauss, qres.pois, meanval.digamma, pinvgauss, qres.binom, vecmat, remlscoregamma, remlscore, glmnb.fit, tweedie, eldaOneGroup, logmdigamma, gauss, expectedDeviance, forward, glm, sage, mscale, power, fitNBP, and glmgam.fit.fisher.test, and gauss.quad.prob.test.scoretest.quad, canonic.digamma, cumulant.digamma, d2cumulant.digamma, permp, Digamma, dinvgauss, and matvec, hommel.test, meanT, qinvgauss, elda, limdil, unitdeviance.digamma, mixedModel2. The other exports are listed and not translated. All exports translated.",
+  "functions": [
+    {
+      "name": "canonic.digamma",
+      "translated": true,
+      "python": "statmod.canonic_digamma.canonic_digamma",
+      "loads": [],
+      "uses": [],
+      "done": "Inverts meanval.digamma with three Newton steps on the log scale, using the package logmdigamma port and trigamma from its digamma identity.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty log-spaced means from 0.01 to 1000, four extra means, and meanval.digamma round-trip on 0.25, 1.5, and 7.5",
+        "r_ms": 0.5152225494384766,
+        "translated_ms": 4.8175269994317205,
+        "speedup": 0.10694751674443187,
+        "matches": true,
+        "max_abs_diff": 7.314552045653566e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  mus <- exp(seq(log(0.01), log(1000), length.out = 50))\n  theta <- canonic.digamma(mus)\n  c(\n    theta,\n    canonic.digamma(c(0.5, 1, 2, 5)),\n    meanval.digamma(canonic.digamma(c(0.25, 1.5, 7.5)))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.canonic_digamma import _meanval_digamma, canonic_digamma\n\n\ndef one():\n    mus = np.exp(np.linspace(np.log(0.01), np.log(1000), 50))\n    theta = canonic_digamma(mus)\n    roundtrip = _meanval_digamma(canonic_digamma(np.array([0.25, 1.5, 7.5], dtype=float)))\n    return np.concatenate(\n        [\n            np.asarray(theta, dtype=float),\n            canonic_digamma(np.array([0.5, 1, 2, 5], dtype=float)),\n            np.asarray(roundtrip, dtype=float),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "compareGrowthCurves",
+      "translated": true,
+      "python": "statmod.compare_growth_curves.compareGrowthCurves",
+      "loads": [],
+      "uses": [],
+      "done": "Compares growth curves by permutation.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three groups, nsim 40, seed 424242.",
+        "r_ms": 60.91868877410889,
+        "translated_ms": 66.4211110006363,
+        "speedup": 0.9171585337307185,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\nmain_group <- function() {\n  c(\"B\", \"B\", \"A\", \"A\", \"A\", \"C\", \"C\", \"D\", NA)\n}\n\nmain_y <- function() {\n  matrix(\n    c(\n      1.0, 1.2, 1.1, 0.9,\n      1.1, 1.3, 1.0, 1.0,\n      2.0, 2.1, 1.9, 2.2,\n      2.2, 2.0, 2.3, 2.1,\n      2.1, NA, 2.0, 2.0,\n      3.0, 3.2, 3.1, 2.9,\n      3.1, 3.0, NA, 3.2,\n      4.0, 4.1, 4.2, 4.0,\n      0.5, 0.4, 0.6, 0.5\n    ),\n    nrow = 9,\n    byrow = TRUE\n  )\n}\n\ncollect <- function(tab) {\n  c(tab$Stat, tab$P.Value, tab$adj.P.Value)\n}\n\none <- function() {\n  set.seed(424242)\n  main <- NULL\n  capture.output(\n    main <- compareGrowthCurves(main_group(), main_y(), nsim = 40, times = c(1, 3, 4), verbose = TRUE)\n  )\n  set.seed(7)\n  numeric_groups <- compareGrowthCurves(\n    c(10, 2, 10, 2, 2),\n    matrix(\n      c(\n        5.0, 5.2, 5.1,\n        1.0, 1.4, 1.2,\n        5.3, 4.9, 5.0,\n        1.3, 1.1, 1.5,\n        0.9, 1.2, 1.0\n      ),\n      nrow = 5,\n      byrow = TRUE\n    ),\n    nsim = 25,\n    verbose = FALSE,\n    adjust = \"bonferroni\",\n    n0 = 1\n  )\n  set.seed(99)\n  chosen <- compareGrowthCurves(\n    main_group()[1:7],\n    main_y()[1:7, ],\n    levels = c(\"C\", \"A\"),\n    nsim = 15,\n    verbose = FALSE,\n    adjust = \"BH\"\n  )\n  c(collect(main), collect(numeric_groups), collect(chosen))\n}\n\nexample <- capture.output({\n  set.seed(424242)\n  print(compareGrowthCurves(main_group(), main_y(), nsim = 40, times = c(1, 3, 4), verbose = TRUE))\n})\nwriteLines(example, file.path(out_dir, \"compareGrowthCurves-r.txt\"))\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\n\nfrom boot.rng import set_seed\nfrom statmod.compare_growth_curves import compareGrowthCurves\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\n\ndef main_group():\n    return np.array([\"B\", \"B\", \"A\", \"A\", \"A\", \"C\", \"C\", \"D\", None], dtype=object)\n\n\ndef main_y():\n    return np.array(\n        [\n            [1.0, 1.2, 1.1, 0.9],\n            [1.1, 1.3, 1.0, 1.0],\n            [2.0, 2.1, 1.9, 2.2],\n            [2.2, 2.0, 2.3, 2.1],\n            [2.1, np.nan, 2.0, 2.0],\n            [3.0, 3.2, 3.1, 2.9],\n            [3.1, 3.0, np.nan, 3.2],\n            [4.0, 4.1, 4.2, 4.0],\n            [0.5, 0.4, 0.6, 0.5],\n        ],\n        dtype=float,\n    )\n\n\ndef collect(tab):\n    return np.concatenate(\n        [\n            np.asarray(tab[\"Stat\"], dtype=float),\n            np.asarray(tab[\"P.Value\"], dtype=float),\n            np.asarray(tab[\"adj.P.Value\"], dtype=float),\n        ]\n    )\n\n\ndef one():\n    import io\n    import contextlib\n\n    set_seed(424242)\n    with contextlib.redirect_stdout(io.StringIO()):\n        main = compareGrowthCurves(main_group(), main_y(), nsim=40, times=[1, 3, 4], verbose=True)\n    set_seed(7)\n    numeric_groups = compareGrowthCurves(\n        np.array([10, 2, 10, 2, 2], dtype=float),\n        np.array(\n            [\n                [5.0, 5.2, 5.1],\n                [1.0, 1.4, 1.2],\n                [5.3, 4.9, 5.0],\n                [1.3, 1.1, 1.5],\n                [0.9, 1.2, 1.0],\n            ],\n            dtype=float,\n        ),\n        nsim=25,\n        verbose=False,\n        adjust=\"bonferroni\",\n        n0=1,\n    )\n    set_seed(99)\n    chosen = compareGrowthCurves(\n        main_group()[:7],\n        main_y()[:7, :],\n        levels=[\"C\", \"A\"],\n        nsim=15,\n        verbose=False,\n        adjust=\"BH\",\n    )\n    return np.concatenate([collect(main), collect(numeric_groups), collect(chosen)])\n\n\ndef _format_table(tab):\n    lines = [\"  Group1 Group2 Stat P.Value adj.P.Value\"]\n    for i, stat in enumerate(tab[\"Stat\"]):\n        lines.append(\n            \"%s %s %.17g %.17g %.17g\"\n            % (\n                tab[\"Group1\"][i],\n                tab[\"Group2\"][i],\n                float(stat),\n                float(tab[\"P.Value\"][i]),\n                float(tab[\"adj.P.Value\"][i]),\n            )\n        )\n    return \"\\n\".join(lines)\n\n\nimport io\nimport contextlib\n\nbuffer = io.StringIO()\nset_seed(424242)\nwith contextlib.redirect_stdout(buffer):\n    example = compareGrowthCurves(main_group(), main_y(), nsim=40, times=[1, 3, 4], verbose=True)\n(OUT / \"compareGrowthCurves-python.txt\").write_text(\n    buffer.getvalue() + _format_table(example) + \"\\n\",\n    encoding=\"utf-8\",\n)\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      },
+      "origin": {
+        "output": "output/compareGrowthCurves-r.txt"
+      },
+      "translation": {
+        "output": "output/compareGrowthCurves-python.txt"
+      }
+    },
+    {
+      "name": "compareTwoGrowthCurves",
+      "translated": true,
+      "python": "statmod.compare_two_growth_curves.compareTwoGrowthCurves",
+      "loads": [
+        "boot"
+      ],
+      "uses": [
+        "meanT"
+      ],
+      "done": "Permutation test for two groups of growth curves.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An 8 by 4 matrix, nsim 80, seed 424242",
+        "r_ms": 30.789732933044434,
+        "translated_ms": 29.61805000086315,
+        "speedup": 1.0395597594084398,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\nproof_data <- function() {\n  group <- c(2, 2, 2, 1, 1, 1, 2, 1)\n  y <- matrix(\n    c(\n      1.0, 1.2, 1.1, 0.9,\n      1.1, 1.3, 1.0, 1.0,\n      0.9, 1.0, 1.2, 1.1,\n      2.0, 2.1, 1.9, 2.2,\n      2.2, 2.0, 2.3, 2.1,\n      2.1, 2.4, 2.0, 2.0,\n      1.0, NA, 1.1, 1.0,\n      2.1, 2.0, NA, 2.2\n    ),\n    nrow = 8,\n    ncol = 4,\n    byrow = TRUE\n  )\n  list(group = group, y = y)\n}\n\none <- function() {\n  d <- proof_data()\n  set.seed(424242)\n  out <- compareTwoGrowthCurves(d$group, d$y, nsim = 80)\n  c(out$stat, out$p.value)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", value), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\n\nfrom boot.rng import set_seed\nfrom statmod.compare_two_growth_curves import compareTwoGrowthCurves\n\n\ndef proof_data():\n    group = np.array([2, 2, 2, 1, 1, 1, 2, 1], dtype=float)\n    y = np.array(\n        [\n            [1.0, 1.2, 1.1, 0.9],\n            [1.1, 1.3, 1.0, 1.0],\n            [0.9, 1.0, 1.2, 1.1],\n            [2.0, 2.1, 1.9, 2.2],\n            [2.2, 2.0, 2.3, 2.1],\n            [2.1, 2.4, 2.0, 2.0],\n            [1.0, np.nan, 1.1, 1.0],\n            [2.1, 2.0, np.nan, 2.2],\n        ],\n        dtype=float,\n    )\n    return group, y\n\n\ndef one():\n    group, y = proof_data()\n    set_seed(424242)\n    out = compareTwoGrowthCurves(group, y, nsim=80)\n    return np.array([out[\"stat\"], out[\"p.value\"]], dtype=float)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(f\"{float(x):.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "cumulant.digamma",
+      "translated": true,
+      "python": "statmod.cumulant_digamma.cumulant_digamma",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates 2*(theta*(log(-theta)-1)+lgamma(-theta)) with vectorized math.lgamma.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty negative canonical parameters from -1e-3 through -500, plus six extras",
+        "r_ms": 0.05030632019042969,
+        "translated_ms": 0.08927900125854649,
+        "speedup": 0.5634731513712354,
+        "matches": true,
+        "max_abs_diff": 4.547473508864641e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  theta <- c(\n    -exp(seq(log(1e-3), log(500), length.out = 50)),\n    -1e-6,\n    -0.5,\n    -1,\n    -2,\n    -10,\n    -1000\n  )\n  cumulant.digamma(theta)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.cumulant_digamma import cumulant_digamma\n\n\ndef one():\n    theta = np.concatenate(\n        [\n            -np.exp(np.linspace(np.log(1e-3), np.log(500), 50)),\n            np.array([-1e-6, -0.5, -1, -2, -10, -1000], dtype=float),\n        ]\n    )\n    return cumulant_digamma(theta)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "d2cumulant.digamma",
+      "translated": true,
+      "python": "statmod.d2cumulant_digamma.d2cumulant_digamma",
+      "loads": [],
+      "uses": [],
+      "done": "Evaluates 2*(1/theta + trigamma(-theta)) with the large-theta patch and the logmdigamma trigamma.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty negative canonical parameters from -1e-3 through -500, plus six extras",
+        "r_ms": 0.06520748138427734,
+        "translated_ms": 3.5635079993880936,
+        "speedup": 0.018298676864335485,
+        "matches": true,
+        "max_abs_diff": 4.656612873077393e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  theta <- c(\n    -exp(seq(log(1e-3), log(500), length.out = 50)),\n    -1e-6,\n    -0.5,\n    -1,\n    -2,\n    -10,\n    -1000\n  )\n  d2cumulant.digamma(theta)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\", category=RuntimeWarning)\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.d2cumulant_digamma import d2cumulant_digamma\n\n\ndef one():\n    theta = np.concatenate(\n        [\n            -np.exp(np.linspace(np.log(1e-3), np.log(500), 50)),\n            np.array([-1e-6, -0.5, -1, -2, -10, -1000], dtype=float),\n        ]\n    )\n    return d2cumulant_digamma(theta)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "Digamma",
+      "translated": true,
+      "python": "statmod.digamma.Digamma",
+      "loads": [
+        "stats"
+      ],
+      "uses": [
+        "canonic.digamma",
+        "cumulant.digamma",
+        "d2cumulant.digamma"
+      ],
+      "done": "Builds the Digamma glm family, wiring variance and deviance through the digamma helpers.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Forty log-spaced means from 0.05 to 50, plus the first three probit-link values",
+        "r_ms": 0.9977817535400391,
+        "translated_ms": 24.504371500370326,
+        "speedup": 0.04071852051071622,
+        "matches": true,
+        "max_abs_diff": 1.4949819160392508e-11,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  f <- Digamma()\n  f2 <- Digamma(link = 2)\n  mus <- exp(seq(log(0.05), log(50), length.out = 40))\n  y <- mus * 1.1\n  eta <- f$linkfun(mus)\n  c(\n    as.numeric(f$linkinv(eta)),\n    as.numeric(f$mu.eta(eta)),\n    as.numeric(f$variance(mus)),\n    as.numeric(f$dev.resids(y, mus, 1)),\n    as.integer(f$validmu(mus)),\n    as.integer(f$valideta(eta)),\n    as.numeric(f2$linkfun(mus[c(1, 2, 3)]))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.digamma import Digamma\n\n\ndef one():\n    f = Digamma()\n    f2 = Digamma(link=2)\n    mus = np.exp(np.linspace(np.log(0.05), np.log(50), 40))\n    y = mus * 1.1\n    eta = f.linkfun(mus)\n    return np.concatenate(\n        [\n            np.asarray(f.linkinv(eta), dtype=float),\n            np.asarray(f.mu_eta(eta), dtype=float),\n            np.asarray(f.variance(mus), dtype=float),\n            np.asarray(f.dev_resids(y, mus, 1), dtype=float),\n            np.array([int(f.validmu(mus))], dtype=float),\n            np.array([int(f.valideta(eta))], dtype=float),\n            np.asarray(f2.linkfun(mus[:3]), dtype=float),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "dinvgauss",
+      "translated": true,
+      "python": "statmod.dinvgauss.dinvgauss",
+      "loads": [],
+      "uses": [],
+      "done": "Inverse Gaussian density with R's limit cases, shape override, and recycling.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Nine recycled x, mean, and dispersion values including NA and limits, plus log, shape, a short dispersion vector, and a matrix",
+        "r_ms": 0.4292726516723633,
+        "translated_ms": 1.0905585004366003,
+        "speedup": 0.39362643223679045,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  xs <- c(0.2, 1, 2.5, 10, NA, -1, 0, Inf, NaN)\n  mus <- c(1, 1.5, 2, 0.5, 1, 1, 0, Inf, 1)\n  phis <- c(0.3, 0.7, 1, 2, 0.5, 1, 1, 1, 0)\n  c(\n    dinvgauss(xs, mean = mus, dispersion = phis),\n    dinvgauss(xs, mean = mus, dispersion = phis, log = TRUE),\n    dinvgauss(1.2, mean = 2, shape = 4),\n    dinvgauss(c(0.5, 1.5), mean = 1, dispersion = c(0.2, 0.8)),\n    as.numeric(dinvgauss(matrix(c(0.8, 1.2), nrow = 2), mean = 1, dispersion = 0.5))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.dinvgauss import dinvgauss\n\n\ndef one():\n    xs = np.array([0.2, 1, 2.5, 10, np.nan, -1, 0, np.inf, np.nan], dtype=float)\n    mus = np.array([1, 1.5, 2, 0.5, 1, 1, 0, np.inf, 1], dtype=float)\n    phis = np.array([0.3, 0.7, 1, 2, 0.5, 1, 1, 1, 0], dtype=float)\n    return np.concatenate(\n        [\n            np.asarray(dinvgauss(xs, mean=mus, dispersion=phis), dtype=float).reshape(-1),\n            np.asarray(dinvgauss(xs, mean=mus, dispersion=phis, log=True), dtype=float).reshape(\n                -1\n            ),\n            np.asarray([dinvgauss(1.2, mean=2, shape=4)], dtype=float),\n            np.asarray(dinvgauss([0.5, 1.5], mean=1, dispersion=[0.2, 0.8]), dtype=float).reshape(\n                -1\n            ),\n            np.asarray(\n                dinvgauss(np.array([[0.8], [1.2]]), mean=1, dispersion=0.5), dtype=float\n            ).reshape(-1),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "elda",
+      "translated": true,
+      "python": "statmod.elda.elda",
+      "loads": [],
+      "uses": [
+        "eldaOneGroup"
+      ],
+      "done": "Multi-group limiting dilution analysis with confidence intervals and optional slope and group tests.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "One group with a unit-slope test, two groups of five assays, and one group with a zero at the lowest dose.",
+        "r_ms": 10.80179214477539,
+        "translated_ms": 11.391669499062118,
+        "speedup": 0.9482185333470838,
+        "matches": true,
+        "max_abs_diff": 1.1368683772161603e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(out) {\n  c(\n    as.numeric(out$CI),\n    if (!is.null(out$test.difference)) as.numeric(out$test.difference) else numeric(0),\n    if (!is.null(out$test.slope.wald)) {\n      c(\n        out$test.slope.wald,\n        out$test.slope.lr,\n        out$test.slope.score.logdose,\n        out$test.slope.score.dose\n      )\n    } else {\n      numeric(0)\n    }\n  )\n}\n\none <- function() {\n  dose <- c(50, 100, 200, 400, 800)\n  responses <- c(2, 6, 9, 15, 21)\n  tested <- c(24, 24, 24, 24, 24)\n  g1 <- collect(elda(responses, dose, tested, test.unit.slope = TRUE))\n  responses2 <- c(responses, c(1, 3, 5, 8, 12))\n  dose2 <- c(dose, dose)\n  tested2 <- c(tested, tested)\n  group2 <- c(rep(1, 5), rep(2, 5))\n  g2 <- collect(elda(responses2, dose2, tested2, group = group2, test.unit.slope = TRUE))\n  g3 <- collect(\n    elda(\n      c(0, 2, 6, 9, 15),\n      c(50, 100, 200, 400, 800),\n      c(24, 24, 24, 24, 24),\n      test.unit.slope = FALSE\n    )\n  )\n  c(g1, g2, g3)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.elda import elda\n\n\ndef collect(out):\n    parts = [np.asarray(out[\"CI\"], dtype=float).reshape(-1, order=\"F\")]\n    if \"test.difference\" in out:\n        parts.append(np.asarray(out[\"test.difference\"], dtype=float).reshape(-1))\n    if \"test.slope.wald\" in out:\n        parts.append(\n            np.concatenate(\n                [\n                    np.asarray(out[\"test.slope.wald\"], dtype=float).reshape(-1),\n                    np.asarray(out[\"test.slope.lr\"], dtype=float).reshape(-1),\n                    np.asarray(out[\"test.slope.score.logdose\"], dtype=float).reshape(-1),\n                    np.asarray(out[\"test.slope.score.dose\"], dtype=float).reshape(-1),\n                ]\n            )\n        )\n    return np.concatenate(parts)\n\n\ndef one():\n    dose = np.array([50, 100, 200, 400, 800], dtype=float)\n    responses = np.array([2, 6, 9, 15, 21], dtype=float)\n    tested = np.array([24, 24, 24, 24, 24], dtype=float)\n    g1 = collect(elda(responses, dose, tested, test_unit_slope=True))\n    responses2 = np.concatenate([responses, np.array([1, 3, 5, 8, 12], dtype=float)])\n    dose2 = np.concatenate([dose, dose])\n    tested2 = np.concatenate([tested, tested])\n    group2 = np.array([1, 1, 1, 1, 1, 2, 2, 2, 2, 2], dtype=float)\n    g2 = collect(\n        elda(\n            responses2,\n            dose2,\n            tested2,\n            group=group2,\n            test_unit_slope=True,\n        )\n    )\n    g3 = collect(\n        elda(\n            np.array([0, 2, 6, 9, 15], dtype=float),\n            dose,\n            tested,\n            test_unit_slope=False,\n        )\n    )\n    return np.concatenate([g1, g2, g3])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\nprint(\",\".join(f\"{x:.17g}\" for x in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "eldaOneGroup",
+      "translated": true,
+      "python": "statmod.elda_one_group.elda_one_group",
+      "loads": [],
+      "uses": [],
+      "done": "Single-group extreme limiting dilution by Newton iteration, with Wald intervals.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The help-page five-dose series, all-zero and all-positive four-dose edges, and observed=TRUE.",
+        "r_ms": 0.7330179214477539,
+        "translated_ms": 2.338901000257465,
+        "speedup": 0.3134027140811277,
+        "matches": true,
+        "max_abs_diff": 1.0800249583553523e-12,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(out) {\n  if (is.null(out$p)) {\n    return(\n      c(\n        out$CI.frequency,\n        out$deviance,\n        out$dloglik.logdose,\n        out$FisherInfo.logdose,\n        out$dloglik.dose,\n        out$FisherInfo.dose\n      )\n    )\n  }\n  c(\n    out$p,\n    out$lambda,\n    out$alpha,\n    out$CI.alpha,\n    out$CI.frequency,\n    out$deviance,\n    out$iter,\n    out$z.scoretest,\n    out$z.scoretest.dose,\n    out$dloglik.logdose,\n    out$FisherInfo.logdose,\n    out$dloglik.dose,\n    out$FisherInfo.dose\n  )\n}\n\none <- function() {\n  dose <- c(50, 100, 200, 400, 800)\n  responses <- c(2, 6, 9, 15, 21)\n  tested <- c(24, 24, 24, 24, 24)\n  c(\n    collect(eldaOneGroup(responses, dose, tested)),\n    collect(eldaOneGroup(c(0, 0, 0, 0), c(50, 100, 200, 400), c(10, 10, 10, 10))),\n    collect(eldaOneGroup(c(10, 10, 10, 10), c(50, 100, 200, 400), c(10, 10, 10, 10))),\n    collect(eldaOneGroup(responses, dose, tested, observed = TRUE))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.elda_one_group import elda_one_group\n\n\ndef collect(out):\n    if \"p\" not in out:\n        return np.concatenate(\n            [\n                np.asarray(out[\"CI.frequency\"], dtype=float).reshape(-1),\n                np.array(\n                    [\n                        out[\"deviance\"],\n                        out[\"dloglik.logdose\"],\n                        out[\"FisherInfo.logdose\"],\n                        out[\"dloglik.dose\"],\n                        out[\"FisherInfo.dose\"],\n                    ],\n                    dtype=float,\n                ),\n            ]\n        )\n    return np.concatenate(\n        [\n            np.asarray(out[\"p\"], dtype=float).reshape(-1),\n            np.array([out[\"lambda\"], out[\"alpha\"]], dtype=float),\n            np.asarray(out[\"CI.alpha\"], dtype=float).reshape(-1),\n            np.asarray(out[\"CI.frequency\"], dtype=float).reshape(-1),\n            np.array(\n                [\n                    out[\"deviance\"],\n                    float(out[\"iter\"]),\n                    out[\"z.scoretest\"],\n                    out[\"z.scoretest.dose\"],\n                    out[\"dloglik.logdose\"],\n                    out[\"FisherInfo.logdose\"],\n                    out[\"dloglik.dose\"],\n                    out[\"FisherInfo.dose\"],\n                ],\n                dtype=float,\n            ),\n        ]\n    )\n\n\ndef one():\n    dose = np.array([50, 100, 200, 400, 800], dtype=float)\n    responses = np.array([2, 6, 9, 15, 21], dtype=float)\n    tested = np.array([24, 24, 24, 24, 24], dtype=float)\n    return np.concatenate(\n        [\n            collect(elda_one_group(responses, dose, tested)),\n            collect(\n                elda_one_group(\n                    np.array([0, 0, 0, 0], dtype=float),\n                    np.array([50, 100, 200, 400], dtype=float),\n                    np.array([10, 10, 10, 10], dtype=float),\n                )\n            ),\n            collect(\n                elda_one_group(\n                    np.array([10, 10, 10, 10], dtype=float),\n                    np.array([50, 100, 200, 400], dtype=float),\n                    np.array([10, 10, 10, 10], dtype=float),\n                )\n            ),\n            collect(elda_one_group(responses, dose, tested, observed=True)),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "expectedDeviance",
+      "translated": true,
+      "python": "statmod.expected_deviance.expected_deviance",
+      "loads": [],
+      "uses": [
+        "d2cumulant.digamma"
+      ],
+      "done": "Ports the Chebyshev kernels for Poisson, binomial, and negative binomial expected deviance, and the digamma helper for Gamma.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page scalars for Poisson, binomial, Gamma, and negative binomial, plus Gaussian and inverse Gaussian vectors.",
+        "r_ms": 0.5818605422973633,
+        "translated_ms": 2.145853500223893,
+        "speedup": 0.27115576260758406,
+        "matches": true,
+        "max_abs_diff": 2.6733593117000964e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(ed) c(ed$mean, ed$variance)\n\none <- function() {\n  parts <- list(\n    collect(expectedDeviance(mu = 3, family = \"poisson\")),\n    collect(expectedDeviance(mu = 0.01, family = \"binomial\", binom.size = 10)),\n    collect(expectedDeviance(mu = 10, family = \"Gamma\", gamma.shape = 5)),\n    collect(expectedDeviance(mu = 10, family = \"negative.binomial\", nbinom.size = 5)),\n    collect(expectedDeviance(mu = c(0.5, 2, 7), family = \"gaussian\")),\n    collect(expectedDeviance(mu = c(0, 1.5, 4), family = \"inverse.gaussian\")),\n    collect(\n      expectedDeviance(\n        mu = exp(seq(log(0.01), log(50), length.out = 30)),\n        family = \"poisson\"\n      )\n    ),\n    collect(\n      expectedDeviance(\n        mu = seq(0.001, 0.11, length.out = 40),\n        family = \"binomial\",\n        binom.size = 10\n      )\n    ),\n    collect(\n      expectedDeviance(\n        mu = c(0.2, 1, 5, 20, 100),\n        family = \"negative.binomial\",\n        nbinom.size = c(0.1, 0.5, 2, 10, 50)\n      )\n    )\n  )\n  unlist(parts)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.expected_deviance import expected_deviance\n\n\ndef collect(ed):\n    return np.concatenate(\n        [np.asarray(ed[\"mean\"], dtype=float).reshape(-1), np.asarray(ed[\"variance\"], dtype=float).reshape(-1)]\n    )\n\n\ndef one():\n    parts = [\n        collect(expected_deviance(mu=3, family=\"poisson\")),\n        collect(expected_deviance(mu=0.01, family=\"binomial\", binom_size=10)),\n        collect(expected_deviance(mu=10, family=\"Gamma\", gamma_shape=5)),\n        collect(expected_deviance(mu=10, family=\"negative.binomial\", nbinom_size=5)),\n        collect(expected_deviance(mu=np.array([0.5, 2, 7], dtype=float), family=\"gaussian\")),\n        collect(expected_deviance(mu=np.array([0, 1.5, 4], dtype=float), family=\"inverse.gaussian\")),\n        collect(\n            expected_deviance(\n                mu=np.exp(np.linspace(np.log(0.01), np.log(50), 30)),\n                family=\"poisson\",\n            )\n        ),\n        collect(\n            expected_deviance(\n                mu=np.linspace(0.001, 0.11, 40),\n                family=\"binomial\",\n                binom_size=10,\n            )\n        ),\n        collect(\n            expected_deviance(\n                mu=np.array([0.2, 1, 5, 20, 100], dtype=float),\n                family=\"negative.binomial\",\n                nbinom_size=np.array([0.1, 0.5, 2, 10, 50], dtype=float),\n            )\n        ),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "fitNBP",
+      "translated": true,
+      "python": "statmod.fit_nbp.fit_nbp",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a negative-binomial model to SAGE counts by alternating Pearson updates.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Four count matrices covering two groups, one group, and three groups.",
+        "r_ms": 6.115078926086426,
+        "translated_ms": 6.113277499935066,
+        "speedup": 1.0002946743627095,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(fit) {\n  c(fit$dispersion, fit$coefficients, fit$fitted.values)\n}\n\none <- function() {\n  y_small <- matrix(c(3, 5, 2, 7, 4, 1, 6, 2), 2, 4)\n  y42 <- matrix(\n    c(\n      6, 6, 5, 5, 8, 5, 1, 7, 10, 4, 6, 7, 6, 3, 3, 7, 7, 1, 0, 0, 2, 1, 1, 0, 1, 2, 2, 3,\n      0, 5, 0, 1, 3, 1, 5, 6, 1, 3, 0, 10\n    ),\n    10,\n    4\n  )\n  y_one <- matrix(c(2, 5, 1, 4, 0, 3, 6, 2, 8), 3, 3)\n  y_three <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 3, 4)\n  c(\n    collect(fitNBP(y_small, group = c(1, 1, 2, 2), lib.size = rep(100, 4))),\n    collect(fitNBP(y42, group = c(1, 1, 2, 2), lib.size = rep(50000, 4))),\n    collect(fitNBP(y_one, lib.size = c(20, 25, 30))),\n    collect(fitNBP(y_three, group = c(1, 2, 3, 1), lib.size = rep(50, 4), maxit = 25L))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(0)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.fit_nbp import fit_nbp\n\n\ndef collect(fit):\n    return np.concatenate(\n        [\n            np.array([fit[\"dispersion\"]], dtype=float),\n            fit[\"coefficients\"].reshape(-1, order=\"F\"),\n            fit[\"fitted_values\"].reshape(-1, order=\"F\"),\n        ]\n    )\n\n\ndef one():\n    y_small = np.array([3, 5, 2, 7, 4, 1, 6, 2], dtype=float).reshape(2, 4, order=\"F\")\n    y42 = np.array(\n        [\n            6, 6, 5, 5, 8, 5, 1, 7, 10, 4, 6, 7, 6, 3, 3, 7, 7, 1, 0, 0, 2, 1, 1, 0, 1, 2, 2, 3,\n            0, 5, 0, 1, 3, 1, 5, 6, 1, 3, 0, 10,\n        ],\n        dtype=float,\n    ).reshape(10, 4, order=\"F\")\n    y_one = np.array([2, 5, 1, 4, 0, 3, 6, 2, 8], dtype=float).reshape(3, 3, order=\"F\")\n    y_three = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], dtype=float).reshape(3, 4, order=\"F\")\n    parts = [\n        collect(fit_nbp(y_small, group=[1, 1, 2, 2], lib_size=[100] * 4)),\n        collect(fit_nbp(y42, group=[1, 1, 2, 2], lib_size=[50000] * 4)),\n        collect(fit_nbp(y_one, lib_size=[20, 25, 30])),\n        collect(fit_nbp(y_three, group=[1, 2, 3, 1], lib_size=[50] * 4, maxit=25)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "forward",
+      "translated": true,
+      "python": "statmod.forward.forward",
+      "loads": [],
+      "uses": [],
+      "done": "Forward selection sweeps optional kept covariates with QR residuals, then standardizes and orthogonalizes candidate columns in R's order.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fixed 12 by 7 and 8 by 1 candidate matrices with optional two-column xkept, plus deterministic 5 by 3 checks including nvar = 0.",
+        "r_ms": 1.5697479248046875,
+        "translated_ms": 2.418523000415007,
+        "speedup": 0.649052303631318,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  y12 <- c(\n    -0.292346, 1.28909, -0.414994, -0.441552, 0.542544, -0.279449,\n    0.214359, 0.310769, -0.0893034, 0.437588, 0.325777, -0.39283\n  )\n  x12 <- matrix(\n    c(\n      1.181, -0.685, 0.737, -0.962, 0.276, -0.419, 0.508,\n      -0.138, 0.461, 0.882, 0.313, -0.164, 0.591, -0.733,\n      0.219, -0.446, 0.293, -0.375, 0.428, -0.227, 0.162,\n      -1.12, 0.229, -0.502, 0.576, -0.542, 0.334, -0.594,\n      -0.102, 0.359, 0.577, -0.617, 0.198, -0.481, 0.421,\n      0.685, 0.497, 0.368, -0.212, -0.371, 0.156, -0.268,\n      -0.219, -0.556, -0.062, -0.908, 0.655, -0.673, 0.637,\n      0.115, -0.229, 0.702, 0.117, -0.489, 0.409, -0.155,\n      -0.235, 0.447, 0.332, 0.813, 0.224, -0.298, 0.349,\n      0.878, 0.553, -0.428, -0.304, -0.318, 0.517, -0.476,\n      -0.267, -0.596, 0.286, 0.611, 0.502, -0.362, 0.283,\n      -1.026, -0.828, -0.789, 0.389, -0.147, 0.244, -0.521\n    ),\n    12,\n    7\n  )\n  xk12 <- matrix(\n    c(\n      0.314, -0.218, 0.618, -0.412, 0.205, -0.731, 0.489, -0.166, 0.352, -0.604, 0.278, -0.395,\n      -0.527, 0.643, -0.357, 0.471, -0.589, 0.326, -0.442, 0.517, -0.273, 0.608, -0.184, 0.439\n    ),\n    12,\n    2\n  )\n  y8 <- c(-0.31, 0.52, -0.18, 0.44, -0.67, 0.29, -0.05, 0.61)\n  x8 <- matrix(c(-0.2, 0.4, -0.6, 0.8, -0.1, 0.3, -0.5, 0.7), 8, 1)\n  xk8 <- matrix(\n    c(\n      0.11, -0.22, 0.33, -0.44, 0.55, -0.66, 0.77, -0.88,\n      0.19, -0.28, 0.37, -0.46, 0.59, -0.68, 0.79, -0.87\n    ),\n    8,\n    2\n  )\n  y5 <- 1:5\n  x5 <- matrix(1:15, 5, 3)\n  c(\n    forward(y12, x12),\n    forward(y12, x12, xkept = xk12, intercept = FALSE, nvar = 3L),\n    forward(y12, x12, xkept = xk12, intercept = TRUE, nvar = 4L),\n    forward(y8, x8),\n    forward(y8, x8, xkept = xk8, intercept = FALSE, nvar = 3L),\n    forward(y8, x8, xkept = xk8, intercept = TRUE, nvar = 4L),\n    forward(y5, x5, intercept = FALSE, nvar = 0L),\n    forward(y5, x5, intercept = TRUE, nvar = 1L),\n    forward(y5, x5, intercept = FALSE, nvar = 1L)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.forward import forward\n\n\ndef one():\n    y12 = np.array(\n        [\n            -0.292346,\n            1.28909,\n            -0.414994,\n            -0.441552,\n            0.542544,\n            -0.279449,\n            0.214359,\n            0.310769,\n            -0.0893034,\n            0.437588,\n            0.325777,\n            -0.39283,\n        ],\n        dtype=float,\n    )\n    x12 = np.array(\n        [\n            1.181,\n            -0.685,\n            0.737,\n            -0.962,\n            0.276,\n            -0.419,\n            0.508,\n            -0.138,\n            0.461,\n            0.882,\n            0.313,\n            -0.164,\n            0.591,\n            -0.733,\n            0.219,\n            -0.446,\n            0.293,\n            -0.375,\n            0.428,\n            -0.227,\n            0.162,\n            -1.12,\n            0.229,\n            -0.502,\n            0.576,\n            -0.542,\n            0.334,\n            -0.594,\n            -0.102,\n            0.359,\n            0.577,\n            -0.617,\n            0.198,\n            -0.481,\n            0.421,\n            0.685,\n            0.497,\n            0.368,\n            -0.212,\n            -0.371,\n            0.156,\n            -0.268,\n            -0.219,\n            -0.556,\n            -0.062,\n            -0.908,\n            0.655,\n            -0.673,\n            0.637,\n            0.115,\n            -0.229,\n            0.702,\n            0.117,\n            -0.489,\n            0.409,\n            -0.155,\n            -0.235,\n            0.447,\n            0.332,\n            0.813,\n            0.224,\n            -0.298,\n            0.349,\n            0.878,\n            0.553,\n            -0.428,\n            -0.304,\n            -0.318,\n            0.517,\n            -0.476,\n            -0.267,\n            -0.596,\n            0.286,\n            0.611,\n            0.502,\n            -0.362,\n            0.283,\n            -1.026,\n            -0.828,\n            -0.789,\n            0.389,\n            -0.147,\n            0.244,\n            -0.521,\n        ],\n        dtype=float,\n    ).reshape(12, 7, order=\"F\")\n    xk12 = np.array(\n        [\n            0.314,\n            -0.218,\n            0.618,\n            -0.412,\n            0.205,\n            -0.731,\n            0.489,\n            -0.166,\n            0.352,\n            -0.604,\n            0.278,\n            -0.395,\n            -0.527,\n            0.643,\n            -0.357,\n            0.471,\n            -0.589,\n            0.326,\n            -0.442,\n            0.517,\n            -0.273,\n            0.608,\n            -0.184,\n            0.439,\n        ],\n        dtype=float,\n    ).reshape(12, 2, order=\"F\")\n    y8 = np.array([-0.31, 0.52, -0.18, 0.44, -0.67, 0.29, -0.05, 0.61], dtype=float)\n    x8 = np.array([-0.2, 0.4, -0.6, 0.8, -0.1, 0.3, -0.5, 0.7], dtype=float).reshape(8, 1, order=\"F\")\n    xk8 = np.array(\n        [\n            0.11,\n            -0.22,\n            0.33,\n            -0.44,\n            0.55,\n            -0.66,\n            0.77,\n            -0.88,\n            0.19,\n            -0.28,\n            0.37,\n            -0.46,\n            0.59,\n            -0.68,\n            0.79,\n            -0.87,\n        ],\n        dtype=float,\n    ).reshape(8, 2, order=\"F\")\n    y5 = np.arange(1, 6, dtype=float)\n    x5 = np.arange(1, 16, dtype=float).reshape(5, 3, order=\"F\")\n    parts = [\n        forward(y12, x12),\n        forward(y12, x12, xkept=xk12, intercept=False, nvar=3),\n        forward(y12, x12, xkept=xk12, intercept=True, nvar=4),\n        forward(y8, x8),\n        forward(y8, x8, xkept=xk8, intercept=False, nvar=3),\n        forward(y8, x8, xkept=xk8, intercept=True, nvar=4),\n        forward(y5, x5, intercept=False, nvar=0),\n        forward(y5, x5, intercept=True, nvar=1),\n        forward(y5, x5, intercept=False, nvar=1),\n    ]\n    return np.concatenate([np.asarray(part, dtype=float) for part in parts])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "gauss.quad",
+      "translated": true,
+      "python": "statmod.gauss_quad.gauss_quad",
+      "loads": [],
+      "uses": [],
+      "done": "Gaussian quadrature nodes and weights follow the Golub-Welsch Jacobi matrix and the implicit QL method in gausq2.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Laguerre n=10, alpha=5 nodes, weights, and the gamma mean; the six kinds at n=5; an empty rule; the one-point rules; and n truncated from 2.9",
+        "r_ms": 0.27000904083251953,
+        "translated_ms": 1.246953499958181,
+        "speedup": 0.21653497170630243,
+        "matches": true,
+        "max_abs_diff": 1.1368683772161603e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\ncollect <- function(g) c(g$nodes, g$weights)\none <- function() {\n  example <- gauss.quad(10, \"laguerre\", alpha = 5)\n  c(\n    collect(example),\n    sum(example$weights * example$nodes) / gamma(6),\n    collect(gauss.quad(5, \"legendre\")),\n    collect(gauss.quad(5, \"chebyshev1\")),\n    collect(gauss.quad(5, \"chebyshev2\")),\n    collect(gauss.quad(5, \"hermite\")),\n    collect(gauss.quad(5, \"jacobi\", alpha = 5, beta = 1.1)),\n    collect(gauss.quad(5, \"lag\", alpha = 5)),\n    length(gauss.quad(0)$nodes),\n    collect(gauss.quad(1)),\n    collect(gauss.quad(1, \"laguerre\", alpha = 5)),\n    collect(gauss.quad(1, \"jacobi\", alpha = 5, beta = 1.1)),\n    collect(gauss.quad(2.9))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse=\",\"), \"\\n\", sep=\"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.gauss_quad import gauss_quad\n\n\ndef collect(result):\n    return np.concatenate([np.asarray(result[\"nodes\"], dtype=float), np.asarray(result[\"weights\"], dtype=float)])\n\n\ndef one():\n    example = gauss_quad(10, \"laguerre\", alpha=5)\n    mean = float(np.sum(example[\"weights\"] * example[\"nodes\"]) / math.gamma(6))\n    parts = [\n        collect(example),\n        np.array([mean], dtype=float),\n        collect(gauss_quad(5, \"legendre\")),\n        collect(gauss_quad(5, \"chebyshev1\")),\n        collect(gauss_quad(5, \"chebyshev2\")),\n        collect(gauss_quad(5, \"hermite\")),\n        collect(gauss_quad(5, \"jacobi\", alpha=5, beta=1.1)),\n        collect(gauss_quad(5, \"lag\", alpha=5)),\n        np.array([len(gauss_quad(0)[\"nodes\"])], dtype=float),\n        collect(gauss_quad(1)),\n        collect(gauss_quad(1, \"laguerre\", alpha=5)),\n        collect(gauss_quad(1, \"jacobi\", alpha=5, beta=1.1)),\n        collect(gauss_quad(2.9)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "gauss.quad.prob",
+      "translated": true,
+      "python": "statmod.gauss_quad_prob.gauss_quad_prob",
+      "loads": [],
+      "uses": [],
+      "done": "Nodes and weights for Gaussian quadrature on a probability distribution.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help examples for the normal and the gamma, all six kinds at n 5, and empty and one-point rules.",
+        "r_ms": 0.46575069427490234,
+        "translated_ms": 2.98911150002823,
+        "speedup": 0.15581576474163097,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(g) c(g$nodes, g$weights)\n\none <- function() {\n  normal <- gauss.quad.prob(10, \"normal\")\n  gamma_out <- gauss.quad.prob(32, \"gamma\", alpha = 5)\n  c(\n    sum(normal$weights * normal$nodes^4),\n    sum(gamma_out$weights * log(gamma_out$nodes)),\n    collect(gauss.quad.prob(5, \"uniform\", l = 0.2, u = 1.8)),\n    collect(gauss.quad.prob(5, \"beta1\")),\n    collect(gauss.quad.prob(5, \"beta2\")),\n    collect(gauss.quad.prob(5, \"beta\", alpha = 3, beta = 2)),\n    collect(gauss.quad.prob(5, \"beta\", alpha = 0.5, beta = 0.5)),\n    collect(gauss.quad.prob(5, \"beta\", alpha = 1.5, beta = 1.5)),\n    collect(gauss.quad.prob(5, \"normal\", mu = 2, sigma = 3)),\n    collect(gauss.quad.prob(5, \"gamma\", alpha = 2, beta = 0.5)),\n    length(gauss.quad.prob(0)$nodes),\n    collect(gauss.quad.prob(1, \"uniform\", l = 1, u = 5)),\n    collect(gauss.quad.prob(1, \"normal\", mu = 7)),\n    collect(gauss.quad.prob(1, \"gamma\", alpha = 3, beta = 2)),\n    collect(gauss.quad.prob(1, \"beta\", alpha = 2, beta = 3)),\n    collect(gauss.quad.prob(2.9))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.gauss_quad_prob import gauss_quad_prob\n\n\ndef collect(result):\n    return np.concatenate(\n        [np.asarray(result[\"nodes\"], dtype=float), np.asarray(result[\"weights\"], dtype=float)]\n    )\n\n\ndef one():\n    normal = gauss_quad_prob(10, \"normal\")\n    gamma_out = gauss_quad_prob(32, \"gamma\", alpha=5)\n    parts = [\n        np.array([float(np.sum(normal[\"weights\"] * normal[\"nodes\"] ** 4))], dtype=float),\n        np.array([float(np.sum(gamma_out[\"weights\"] * np.log(gamma_out[\"nodes\"])))], dtype=float),\n        collect(gauss_quad_prob(5, \"uniform\", l=0.2, u=1.8)),\n        collect(gauss_quad_prob(5, \"beta1\")),\n        collect(gauss_quad_prob(5, \"beta2\")),\n        collect(gauss_quad_prob(5, \"beta\", alpha=3, beta=2)),\n        collect(gauss_quad_prob(5, \"beta\", alpha=0.5, beta=0.5)),\n        collect(gauss_quad_prob(5, \"beta\", alpha=1.5, beta=1.5)),\n        collect(gauss_quad_prob(5, \"normal\", mu=2, sigma=3)),\n        collect(gauss_quad_prob(5, \"gamma\", alpha=2, beta=0.5)),\n        np.array([len(gauss_quad_prob(0)[\"nodes\"])], dtype=float),\n        collect(gauss_quad_prob(1, \"uniform\", l=1, u=5)),\n        collect(gauss_quad_prob(1, \"normal\", mu=7)),\n        collect(gauss_quad_prob(1, \"gamma\", alpha=3, beta=2)),\n        collect(gauss_quad_prob(1, \"beta\", alpha=2, beta=3)),\n        collect(gauss_quad_prob(2.9)),\n    ]\n    return np.concatenate(parts)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "glm.scoretest",
+      "translated": true,
+      "python": "statmod.glm_scoretest.glm_scoretest",
+      "loads": [],
+      "uses": [],
+      "done": "Score test for adding covariates to an existing glm fit.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Poisson interaction, binomial and Gamma score tests, a Gaussian fit with fixed dispersion, and a Poisson fit with one zero weight.",
+        "r_ms": 10.953307151794434,
+        "translated_ms": 0.6548815008500242,
+        "speedup": 16.72563225190701,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  y <- c(20, 40, 40, 30)\n  a <- gl(2, 1, 4)\n  b <- gl(2, 2, 4)\n  fit_p <- glm(y ~ a + b, family = poisson)\n  z_p <- glm.scoretest(fit_p, c(0, 0, 0, 1))\n  z_p2 <- glm.scoretest(fit_p, cbind(c(0, 0, 0, 1), c(1, 0, 0, 0)))\n\n  yb <- c(8, 12, 5, 15, 9, 11)\n  xb <- c(0, 1, 0, 1, 1, 0)\n  fit_b <- glm(cbind(yb, 20 - yb) ~ xb, family = binomial)\n  z_b <- glm.scoretest(fit_b, c(0.2, -0.1, 0.3, -0.2, 0.15, -0.05))\n\n  yg <- c(1.2, 2.1, 0.9, 1.8, 2.4, 1.5)\n  xg <- c(1, 2, 1, 3, 2, 4)\n  fit_g <- glm(yg ~ xg)\n  z_g <- glm.scoretest(fit_g, c(0, 1, 0, 1, 0, 1), dispersion = 0.25)\n\n  yga <- c(3.1, 4.2, 2.8, 5.0, 3.9)\n  xga <- c(1, 2, 1, 3, 2)\n  fit_ga <- glm(yga ~ xga, family = Gamma(link = \"log\"))\n  z_ga <- glm.scoretest(fit_ga, c(0.5, -0.5, 0.25, -0.25, 0.1))\n\n  yw <- c(10, 20, 30, 40, 50)\n  xw <- c(1, 2, 3, 4, 5)\n  fit_w <- glm(yw ~ xw, family = poisson, weights = c(1, 0, 1, 1, 1))\n  z_w <- glm.scoretest(fit_w, c(0.3, 0.7, -0.2, 0.4, 0.1))\n\n  c(z_p, z_p2, z_b, z_g, z_ga, z_w)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.glm_scoretest import glm_scoretest\n\n\ndef _fit(weights, residuals, df_residual, family, qr_x, nrow, ncol):\n    return {\n        \"weights\": np.array([float(x) for x in weights.split(\",\")], dtype=float),\n        \"residuals\": np.array([float(x) for x in residuals.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n        \"family\": family,\n        \"qr\": {\n            \"x\": np.array([float(x) for x in qr_x.split(\",\")], dtype=float).reshape(\n                nrow, ncol, order=\"F\"\n            )\n        },\n    }\n\n\nFIT_P = _fit(\n    \"27.692316046472818,32.307696847016359,32.307696847016359,37.692306913117832\",\n    \"-0.27777777777780577,0.23809523809521799,0.23809523809521743,-0.20408163265305673\",\n    1,\n    \"poisson\",\n    \"5.262348909609929,5.6839859998962314,5.6839859998962314,6.1394060716911243,9.1707878020290817e-16,5.6839859998962305,3.3523041462158367e-16,6.1394060716911234,-3.8102817647360847e-16,3.3654623465009099e-16,5.6839859998962314,6.1394060716911234\",\n    4,\n    3,\n)\nFIT_B = _fit(\n    \"4.800000000292731,4.800000000292731,4.800000000292731,4.800000000292731,4.800000000292731,4.800000000292731\",\n    \"0,0,-0.625,0.62500000000000011,-0.62499999999999989,0.625\",\n    4,\n    \"binomial\",\n    \"2.1908902300874713,2.1908902300874709,2.1908902300874709,2.1908902300874709,2.1908902300874709,2.1908902300874709,-5.9078725758208135e-16,2.1908902300874709,-1.3619575421333038e-16,2.1908902300874704,2.1908902300874704,-1.3619575421333038e-16\",\n    6,\n    2,\n)\nFIT_G = _fit(\n    \"1,1,1,1,1,1\",\n    \"-0.27073170731707386,0.47560975609756051,-0.57073170731707379,0.021951219512194919,0.77560975609756033,-0.43170731707317089\",\n    4,\n    \"gaussian\",\n    \"1.0000000000000002,1,1,1,1,1,1.0000000000000027,2.0000000000000004,1.0000000000000007,3.0000000000000009,2.0000000000000009,4.0000000000000009\",\n    6,\n    2,\n)\nFIT_GA = _fit(\n    \"1,1,1,1,1\",\n    \"0.034858410551585832,0.068595151282684827,-0.065289177566309656,-0.030431310574250019,-0.0077330738089355843\",\n    3,\n    \"Gamma\",\n    \"0.99999999999999989,1,1,1,1,1.0000000000000002,1.9999999999999998,1,2.9999999999999996,2\",\n    5,\n    2,\n)\nFIT_W = _fit(\n    \"12.604384485914052,0,26.057831877017499,37.466799421949716,53.87098456808689\",\n    \"-0.20662526991587421,0.10357039147114144,0.15128535364615586,0.067611878087385918,-0.07185657864095979\",\n    2,\n    \"poisson\",\n    \"3.5502654106297538,5.1046872457592833,6.1210129408415499,7.3396855905472469,3.5502654106297595,15.314061737277852,24.484051763366203,36.698427952736232\",\n    4,\n    2,\n)\n\n\ndef one():\n    parts = [\n        glm_scoretest(FIT_P, [0, 0, 0, 1]),\n        glm_scoretest(FIT_P, np.column_stack([[0, 0, 0, 1], [1, 0, 0, 0]])),\n        glm_scoretest(FIT_B, [0.2, -0.1, 0.3, -0.2, 0.15, -0.05]),\n        glm_scoretest(FIT_G, [0, 1, 0, 1, 0, 1], dispersion=0.25),\n        glm_scoretest(FIT_GA, [0.5, -0.5, 0.25, -0.25, 0.1]),\n        glm_scoretest(FIT_W, [0.3, 0.7, -0.2, 0.4, 0.1]),\n    ]\n    return np.concatenate([np.asarray(part, dtype=float).reshape(-1) for part in parts])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "glmgam.fit",
+      "translated": true,
+      "python": "statmod.glmgam_fit.glmgam_fit",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a gamma glm by Fisher scoring.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Two gamma designs, one with default starts and one with a supplied coefficient start.",
+        "r_ms": 2.024412155151367,
+        "translated_ms": 2.8494375001173466,
+        "speedup": 0.7104602768328826,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  y10 <- c(\n    3.2, 5.1, 4.8, 6.3, 2.9, 7.4, 5.5, 4.1, 6.8, 3.7\n  )\n  X10 <- cbind(\n    1,\n    c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),\n    c(0.5, 1.1, -0.2, 0.8, 1.4, -0.5, 0.3, 1.2, -0.1, 0.9)\n  )\n  y6 <- c(1.2, 0.8, 2.5, 3.1, 0.4, 1.9)\n  X6 <- cbind(1, c(2, -1, 3, 0.5, -2, 1.5), c(-0.3, 1.1, 0.7, -0.8, 0.2, 1.3))\n  start <- c(0.5, 0.05, 0.1)\n  f1 <- glmgam.fit(X10, y10)\n  f2 <- glmgam.fit(X6, y6, coef.start = start, tol = 1e-8, maxit = 80)\n  c(\n    f1$coefficients,\n    f1$fitted.values,\n    f1$deviance,\n    f1$iter,\n    f2$coefficients,\n    f2$fitted.values,\n    f2$deviance,\n    f2$iter\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.glmgam_fit import glmgam_fit\n\n\ndef one():\n    y10 = np.array([3.2, 5.1, 4.8, 6.3, 2.9, 7.4, 5.5, 4.1, 6.8, 3.7], dtype=float)\n    x10 = np.column_stack(\n        [\n            np.ones(10),\n            np.arange(1, 11, dtype=float),\n            np.array([0.5, 1.1, -0.2, 0.8, 1.4, -0.5, 0.3, 1.2, -0.1, 0.9], dtype=float),\n        ]\n    )\n    y6 = np.array([1.2, 0.8, 2.5, 3.1, 0.4, 1.9], dtype=float)\n    x6 = np.column_stack(\n        [\n            np.ones(6),\n            np.array([2, -1, 3, 0.5, -2, 1.5], dtype=float),\n            np.array([-0.3, 1.1, 0.7, -0.8, 0.2, 1.3], dtype=float),\n        ]\n    )\n    start = np.array([0.5, 0.05, 0.1], dtype=float)\n    f1 = glmgam_fit(x10, y10)\n    f2 = glmgam_fit(x6, y6, coef_start=start, tol=1e-8, maxit=80)\n    return np.concatenate(\n        [\n            f1[\"coefficients\"],\n            f1[\"fitted.values\"],\n            np.array([f1[\"deviance\"], f1[\"iter\"]], dtype=float),\n            f2[\"coefficients\"],\n            f2[\"fitted.values\"],\n            np.array([f2[\"deviance\"], f2[\"iter\"]], dtype=float),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "glmnb.fit",
+      "translated": true,
+      "python": "statmod.glmnb_fit.glmnb_fit",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a negative-binomial log-link GLM by damped Fisher scoring.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three designs: default starts, log(y) with weights and an offset, and supplied coefficients.",
+        "r_ms": 4.770994186401367,
+        "translated_ms": 8.533222500773263,
+        "speedup": 0.5591081430220564,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  X10 <- cbind(\n    1,\n    1:10,\n    c(0.5, 1.1, -0.2, 0.8, 1.4, -0.5, 0.3, 1.2, -0.1, 0.9)\n  )\n  y10 <- c(3, 5, 2, 7, 4, 1, 6, 2, 8, 9)\n  f1 <- glmnb.fit(X10, y10, dispersion = 0.2)\n  X8 <- cbind(1, seq(0.2, 1.5, length.out = 8))\n  y8 <- c(0, 2, 5, 1, 8, 3, 0, 4)\n  w8 <- c(1, 1, 2, 1, 1, 0.5, 1, 1)\n  off8 <- log(c(10, 12, 11, 9, 15, 13, 10, 14))\n  f2 <- glmnb.fit(\n    X8,\n    y8,\n    dispersion = rep(0.05, 8),\n    weights = w8,\n    offset = off8,\n    start.method = \"log(y)\",\n    tol = 1e-8\n  )\n  X6 <- cbind(1, 1:6)\n  y6 <- c(2, 4, 6, 3, 8, 5)\n  f3 <- glmnb.fit(X6, y6, dispersion = 0.1, coef.start = c(0.1, 0.05), maxit = 30)\n  c(\n    f1$coefficients,\n    f1$fitted.values,\n    f1$deviance,\n    f1$iter,\n    f2$coefficients,\n    f2$fitted.values,\n    f2$deviance,\n    f2$iter,\n    f3$coefficients,\n    f3$fitted.values,\n    f3$deviance,\n    f3$iter\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.glmnb_fit import glmnb_fit\n\n\ndef _collect(fit):\n    return np.concatenate(\n        [\n            fit[\"coefficients\"],\n            fit[\"fitted.values\"],\n            np.array([fit[\"deviance\"], fit[\"iter\"]], dtype=float),\n        ]\n    )\n\n\ndef one():\n    x10 = np.column_stack(\n        [\n            np.ones(10),\n            np.arange(1, 11, dtype=float),\n            np.array([0.5, 1.1, -0.2, 0.8, 1.4, -0.5, 0.3, 1.2, -0.1, 0.9], dtype=float),\n        ]\n    )\n    y10 = np.array([3, 5, 2, 7, 4, 1, 6, 2, 8, 9], dtype=float)\n    f1 = glmnb_fit(x10, y10, dispersion=0.2)\n    x8 = np.column_stack([np.ones(8), np.linspace(0.2, 1.5, 8)])\n    y8 = np.array([0, 2, 5, 1, 8, 3, 0, 4], dtype=float)\n    w8 = np.array([1, 1, 2, 1, 1, 0.5, 1, 1], dtype=float)\n    off8 = np.log(np.array([10, 12, 11, 9, 15, 13, 10, 14], dtype=float))\n    f2 = glmnb_fit(\n        x8,\n        y8,\n        dispersion=np.full(8, 0.05),\n        weights=w8,\n        offset=off8,\n        start_method=\"log(y)\",\n        tol=1e-8,\n    )\n    x6 = np.column_stack([np.ones(6), np.arange(1, 7, dtype=float)])\n    y6 = np.array([2, 4, 6, 3, 8, 5], dtype=float)\n    f3 = glmnb_fit(x6, y6, dispersion=0.1, coef_start=np.array([0.1, 0.05]), maxit=30)\n    return np.concatenate([_collect(f1), _collect(f2), _collect(f3)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "hommel.test",
+      "translated": true,
+      "python": "statmod.hommel_test.hommel_test",
+      "loads": [],
+      "uses": [],
+      "done": "Hommel's stagewise rule accepts or rejects each sorted p-value.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Ten ascending p-values, a length-6 vector at alpha 0.05, a 2 by 2 matrix at alpha 0.1, and four equal p-values.",
+        "r_ms": 0.4315376281738281,
+        "translated_ms": 0.23137099924497306,
+        "speedup": 1.8651327503535602,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  p1 <- c(\n    0.00023889658041298389, 0.0015705542173236609, 0.00394833879545331,\n    0.0073341468814760447, 0.0078847387339919806, 0.037431032862514257,\n    0.038936491124331951, 0.042988796019926667, 0.082437558099627495,\n    0.085612064925953746\n  )\n  r1 <- as.numeric(hommel.test(p1))\n  p2 <- c(0.001, 0.01, 0.04, 0.05, 0.06, 0.5)\n  r2 <- as.numeric(hommel.test(p2, alpha = 0.05))\n  p3 <- matrix(c(0.02, 0.9, 0.03, 0.8), nrow = 2)\n  r3 <- as.numeric(hommel.test(p3, alpha = 0.1))\n  r4 <- as.numeric(hommel.test(c(0.05, 0.05, 0.05, 0.05)))\n  c(r1, r2, r3, r4)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", value), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.hommel_test import hommel_test\n\n\ndef one():\n    p1 = np.array(\n        [\n            0.00023889658041298389,\n            0.0015705542173236609,\n            0.00394833879545331,\n            0.0073341468814760447,\n            0.0078847387339919806,\n            0.037431032862514257,\n            0.038936491124331951,\n            0.042988796019926667,\n            0.082437558099627495,\n            0.085612064925953746,\n        ]\n    )\n    r1 = hommel_test(p1).astype(float).reshape(-1)\n    p2 = np.array([0.001, 0.01, 0.04, 0.05, 0.06, 0.5])\n    r2 = hommel_test(p2, alpha=0.05).astype(float).reshape(-1)\n    p3 = np.array([[0.02, 0.9], [0.03, 0.8]])\n    r3 = hommel_test(p3, alpha=0.1).astype(float).reshape(-1)\n    r4 = hommel_test(np.array([0.05, 0.05, 0.05, 0.05])).astype(float).reshape(-1)\n    return np.concatenate([r1, r2, r3, r4])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "limdil",
+      "translated": true,
+      "python": "statmod.limdil.limdil",
+      "loads": [],
+      "uses": [],
+      "done": "Extreme limiting dilution analysis, sharing the statmod 1.5.2 implementation with elda.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three limiting-dilution analyses: one group with a unit-slope test, two groups with a unit-slope test, and one group without the test.",
+        "r_ms": 14.139413833618164,
+        "translated_ms": 10.58066699988558,
+        "speedup": 1.336332204386713,
+        "matches": true,
+        "max_abs_diff": 1.1368683772161603e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/statmod/proof/limdil-r.R",
+          "python": "packages/statmod/proof/limdil-py.py"
+        },
+        "origin": {
+          "output": "docs/output/limdil-r.txt"
+        },
+        "translation": {
+          "output": "docs/output/limdil-python.txt"
+        }
+      }
+    },
+    {
+      "name": "logmdigamma",
+      "translated": true,
+      "python": "statmod.logmdigamma.logmdigamma",
+      "loads": [],
+      "uses": [],
+      "done": "Computes log(x) minus digamma(x), with the small-argument recurrence and the asymptotic series.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Missing, zero, and negative inputs, forty log-spaced values below 5, then 5 through 1e15.",
+        "r_ms": 0.10967254638671875,
+        "translated_ms": 0.23385150052490644,
+        "speedup": 0.4689837189008673,
+        "matches": true,
+        "max_abs_diff": 3.552713678800501e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  x <- c(\n    NA,\n    0,\n    -1,\n    exp(seq(log(1e-3), log(4.999), length.out = 40)),\n    5,\n    5.001,\n    10,\n    100,\n    1e6,\n    1e15\n  )\n  logmdigamma(x)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\", category=RuntimeWarning)\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.logmdigamma import logmdigamma\n\n\ndef one():\n    x = np.concatenate(\n        [\n            np.array([np.nan, 0.0, -1.0], dtype=float),\n            np.exp(np.linspace(np.log(1e-3), np.log(4.999), 40)),\n            np.array([5.0, 5.001, 10.0, 100.0, 1e6, 1e15], dtype=float),\n        ]\n    )\n    return logmdigamma(x)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "matvec",
+      "translated": true,
+      "python": "statmod.matvec.matvec",
+      "loads": [],
+      "uses": [],
+      "done": "Scales each column of a matrix by the matching entry of a vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The 3 by 4 help example and a 100 by 50 matrix scaled by (1:50)/7",
+        "r_ms": 0.7092952728271484,
+        "translated_ms": 0.13659749947692035,
+        "speedup": 5.192593389654191,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  A <- matrix(1:12, 3, 4)\n  rows <- rep(1:100, each = 50)\n  cols <- rep(1:50, times = 100)\n  M <- matrix(rows + cols / 100, 100, 50)\n  v <- (1:50) / 7\n  c(as.vector(matvec(A, c(1, 2, 3, 4))), as.vector(matvec(M, v)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.matvec import matvec\n\n\ndef one():\n    a = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"F\")\n    rows = np.repeat(np.arange(1, 101, dtype=float), 50)\n    cols = np.tile(np.arange(1, 51, dtype=float), 100)\n    m = (rows + cols / 100.0).reshape(100, 50, order=\"F\")\n    v = np.arange(1, 51, dtype=float) / 7.0\n    return np.concatenate(\n        [\n            matvec(a, [1, 2, 3, 4]).reshape(-1, order=\"F\"),\n            matvec(m, v).reshape(-1, order=\"F\"),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(x) for x in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "meanT",
+      "translated": true,
+      "python": "statmod.mean_t.mean_t",
+      "loads": [],
+      "uses": [],
+      "done": "Pooled two-sample t at each time column, then a degrees-of-freedom weighted mean.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 50 by 30 sine matrix against a 40 by 30 cosine matrix, with every 7th entry missing.",
+        "r_ms": 3.9256811141967773,
+        "translated_ms": 0.5268340009934036,
+        "speedup": 7.451457397955471,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\nproof_matrices <- function() {\n  y1 <- outer(1:50, 1:30, function(i, j) sin(i * j / 100))\n  y2 <- outer(1:40, 1:30, function(i, j) cos(i * j / 100))\n  y1[seq(1, length(y1), by = 7)] <- NA\n  y2[seq(1, length(y2), by = 7)] <- NA\n  list(y1 = y1, y2 = y2)\n}\n\none <- function() {\n  mats <- proof_matrices()\n  meanT(mats$y1, mats$y2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", as.numeric(value)))\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.mean_t import mean_t\n\n\ndef proof_matrices():\n    rows = np.arange(1, 51, dtype=float).reshape(-1, 1)\n    cols = np.arange(1, 31, dtype=float).reshape(1, -1)\n    y1 = np.sin(rows * cols / 100)\n    rows2 = np.arange(1, 41, dtype=float).reshape(-1, 1)\n    y2 = np.cos(rows2 * cols / 100)\n    for matrix in (y1, y2):\n        flat = matrix.ravel(order=\"F\")\n        flat[np.arange(0, flat.size, 7)] = np.nan\n        matrix[:] = flat.reshape(matrix.shape, order=\"F\")\n    return y1, y2\n\n\ndef one():\n    y1, y2 = proof_matrices()\n    return mean_t(y1, y2)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % float(value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "meanval.digamma",
+      "translated": true,
+      "python": "statmod.meanval_digamma.meanval_digamma",
+      "loads": [],
+      "uses": [
+        "logmdigamma"
+      ],
+      "done": "Returns twice logmdigamma of the negated canonical parameter.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty log-spaced canonical parameters from about -0.001 through -500, plus six extra values.",
+        "r_ms": 0.08761882781982422,
+        "translated_ms": 0.4569015000015497,
+        "speedup": 0.19176743306714256,
+        "matches": true,
+        "max_abs_diff": 4.440892098500626e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  theta <- c(\n    -exp(seq(log(1e-3), log(500), length.out = 50)),\n    -1e-6,\n    -0.5,\n    -1,\n    -2,\n    -10,\n    -1000\n  )\n  meanval.digamma(theta)\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nwarnings.filterwarnings(\"ignore\", category=RuntimeWarning)\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.meanval_digamma import meanval_digamma\n\n\ndef one():\n    theta = np.concatenate(\n        [\n            -np.exp(np.linspace(np.log(1e-3), np.log(500), 50)),\n            np.array([-1e-6, -0.5, -1, -2, -10, -1000], dtype=float),\n        ]\n    )\n    return meanval_digamma(theta)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "mixedModel2",
+      "translated": true,
+      "python": "statmod.mixed_model2.mixed_model2",
+      "loads": [],
+      "uses": [
+        "glmgam.fit",
+        "vecmat"
+      ],
+      "done": "Fits a linear mixed model with two variance components from a formula and a random factor.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "MASS petrol, Y ~ SG + VP + V10 + EP with random No, with and without only.varcomp.",
+        "r_ms": 9.824752807617188,
+        "translated_ms": 5.430961498859688,
+        "speedup": 1.8090264145087462,
+        "matches": true,
+        "max_abs_diff": 8.970602038971265e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\nsuppressPackageStartupMessages(library(MASS))\n\ncollect <- function(out) {\n  if (is.null(out$se.varcomp)) {\n    return(out$varcomp)\n  }\n  c(out$varcomp, out$se.varcomp, out$coefficients, out$se.coefficients)\n}\n\none <- function() {\n  data(petrol)\n  out <- mixedModel2(Y ~ SG + VP + V10 + EP, random = No, data = petrol)\n  out2 <- mixedModel2(Y ~ SG + VP + V10 + EP, random = No, data = petrol, only.varcomp = TRUE)\n  c(collect(out), collect(out2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import csv\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nfrom statmod.mixed_model2 import mixed_model2\n\n\ndef _load_petrol() -> dict:\n    csv_path = Path(__file__).resolve().parent / \"mixedModel2-petrol.csv\"\n    with csv_path.open(newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        petrol = {name: [] for name in reader.fieldnames}\n        for row in reader:\n            for name, value in row.items():\n                if name == \"No\":\n                    petrol[name].append(value)\n                else:\n                    petrol[name].append(float(value))\n    return petrol\n\n\ndef collect(out: dict) -> np.ndarray:\n    if \"se.varcomp\" not in out:\n        return np.asarray(out[\"varcomp\"], dtype=float)\n    return np.concatenate(\n        [\n            out[\"varcomp\"],\n            out[\"se.varcomp\"],\n            out[\"coefficients\"],\n            out[\"se.coefficients\"],\n        ]\n    )\n\n\ndef one() -> np.ndarray:\n    petrol = _load_petrol()\n    out = mixed_model2(\"Y~SG+VP+V10+EP\", random=petrol[\"No\"], data=petrol)\n    out2 = mixed_model2(\n        \"Y~SG+VP+V10+EP\",\n        random=petrol[\"No\"],\n        data=petrol,\n        only_varcomp=True,\n    )\n    return np.concatenate([collect(out), collect(out2)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "mixedModel2Fit",
+      "translated": true,
+      "python": "statmod.mixed_model2_fit.mixed_model2_fit",
+      "loads": [],
+      "uses": [],
+      "done": "Fits the two-variance mixed model from matrices.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Petrol matrices, full fit and only.varcomp.",
+        "r_ms": 7.501006126403809,
+        "translated_ms": 5.213985500631679,
+        "speedup": 1.438631,
+        "matches": true,
+        "max_abs_diff": 8.970602038971265e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\nsuppressPackageStartupMessages(library(MASS))\n\ncollect <- function(out) {\n  if (is.null(out$se.varcomp)) {\n    return(out$varcomp)\n  }\n  c(out$varcomp, out$se.varcomp, out$coefficients, out$se.coefficients)\n}\n\npetrol_mats <- function() {\n  data(petrol)\n  mf <- model.frame(Y ~ SG + VP + V10 + EP, data = petrol)\n  mt <- attr(mf, \"terms\")\n  y <- model.response(mf, \"numeric\")\n  X <- model.matrix(mt, mf)\n  random <- petrol$No\n  lev <- unique.default(random)\n  Z <- 0 + (matrix(random, length(random), length(lev)) ==\n    t(matrix(lev, length(lev), length(random))))\n  list(y = y, X = X, Z = Z)\n}\n\none <- function() {\n  m <- petrol_mats()\n  out <- mixedModel2Fit(m$y, m$X, m$Z)\n  out2 <- mixedModel2Fit(m$y, m$X, m$Z, only.varcomp = TRUE)\n  c(collect(out), collect(out2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import csv\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\n_pkg_root = Path(__file__).resolve().parents[1]\n_repo_packages = _pkg_root.parent\nsys.path.insert(0, str(_repo_packages / \"extraDistr\"))\nsys.path.insert(0, str(_repo_packages / \"boot\"))\nsys.path.insert(0, str(_pkg_root))\nfrom statmod.mixed_model2 import (\n    _model_frame,\n    _model_matrix,\n    _model_response,\n    _random_design,\n)\nfrom statmod.mixed_model2_fit import mixed_model2_fit\n\n\ndef _load_petrol() -> dict:\n    csv_path = Path(__file__).resolve().parent / \"mixedModel2-petrol.csv\"\n    with csv_path.open(newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        petrol = {name: [] for name in reader.fieldnames}\n        for row in reader:\n            for name, value in row.items():\n                if name == \"No\":\n                    petrol[name].append(value)\n                else:\n                    petrol[name].append(float(value))\n    return petrol\n\n\ndef petrol_mats():\n    petrol = _load_petrol()\n    frame, intercept, terms = _model_frame(\n        \"Y~SG+VP+V10+EP\", petrol[\"No\"], petrol\n    )\n    y = _model_response(frame, \"Y~SG+VP+V10+EP\")\n    x = _model_matrix(frame, \"Y~SG+VP+V10+EP\", intercept, terms)\n    z = _random_design(np.asarray(frame[\"(random)\"]))\n    return y, x, z\n\n\ndef collect(out: dict) -> np.ndarray:\n    if \"se.varcomp\" not in out:\n        return np.asarray(out[\"varcomp\"], dtype=float)\n    return np.concatenate(\n        [\n            out[\"varcomp\"],\n            out[\"se.varcomp\"],\n            out[\"coefficients\"],\n            out[\"se.coefficients\"],\n        ]\n    )\n\n\ndef one() -> np.ndarray:\n    y, x, z = petrol_mats()\n    out = mixed_model2_fit(y, x, z)\n    out2 = mixed_model2_fit(y, x, z, only_varcomp=True)\n    return np.concatenate([collect(out), collect(out2)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      },
+      "origin": {
+        "output": "output/mixedModel2Fit-r.txt"
+      },
+      "translation": {
+        "output": "output/mixedModel2Fit-python.txt"
+      }
+    },
+    {
+      "name": "mscale",
+      "translated": true,
+      "python": "statmod.mscale.mscale",
+      "loads": [],
+      "uses": [],
+      "done": "Robust scale of residuals by iterative Hampel reweighting.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A 20-point residual vector with outliers, missing values, a vector that is at least half zeros, and an all-missing vector.",
+        "r_ms": 0.8255243301391602,
+        "translated_ms": 1.8322919995625853,
+        "speedup": 0.45054190616792184,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  u1 <- c(\n    -2.1, -1.4, -0.9, -0.3, 0.05, 0.2, 0.55, 0.9, 1.3, 1.8,\n    -0.7, 0.1, 0.4, 0.75, 12, -9, 0.25, -0.15, 0.6, 2.2\n  )\n  u2 <- c(-1.1, 0.3, NA, 0.8, -0.4, 1.5, -2.0, 0.0, 0.2, NA)\n  u3 <- c(0, 0, 0, 0, 0, 1.2, -0.5)\n  u4 <- c(NA, NA)\n  c(\n    mscale(u1),\n    mscale(u2),\n    mscale(u2, na.rm = TRUE),\n    mscale(u3),\n    mscale(u4),\n    mscale(u4, na.rm = TRUE)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.mscale import mscale\n\n\ndef one():\n    u1 = np.array(\n        [\n            -2.1,\n            -1.4,\n            -0.9,\n            -0.3,\n            0.05,\n            0.2,\n            0.55,\n            0.9,\n            1.3,\n            1.8,\n            -0.7,\n            0.1,\n            0.4,\n            0.75,\n            12,\n            -9,\n            0.25,\n            -0.15,\n            0.6,\n            2.2,\n        ],\n        dtype=float,\n    )\n    u2 = np.array([-1.1, 0.3, np.nan, 0.8, -0.4, 1.5, -2.0, 0.0, 0.2, np.nan], dtype=float)\n    u3 = np.array([0, 0, 0, 0, 0, 1.2, -0.5], dtype=float)\n    u4 = np.array([np.nan, np.nan], dtype=float)\n    return np.array(\n        [\n            mscale(u1),\n            mscale(u2),\n            mscale(u2, na_rm=True),\n            mscale(u3),\n            mscale(u4),\n            mscale(u4, na_rm=True),\n        ],\n        dtype=float,\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "permp",
+      "translated": true,
+      "python": "statmod.permp.permp",
+      "loads": [
+        "stats"
+      ],
+      "uses": [],
+      "done": "Exact permutation p-values, switching to quadrature when the permutation count is large.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "permp on 0:5 with nperm 99 and n1 = n2 = 6, then the same x with total.nperm 462",
+        "r_ms": 4.761815071105957,
+        "translated_ms": 31.73268049977196,
+        "speedup": 0.15006028473201868,
+        "matches": true,
+        "max_abs_diff": 6.938893903907228e-17,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  x <- 0:5\n  c(\n    permp(x = x, nperm = 99, n1 = 6, n2 = 6),\n    permp(x = x, nperm = 99, total.nperm = 462)\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.permp import permp\n\n\ndef one():\n    x = np.arange(6, dtype=float)\n    return np.concatenate(\n        [\n            permp(x=x, nperm=99, n1=6, n2=6),\n            permp(x=x, nperm=99, total_nperm=462),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "pinvgauss",
+      "translated": true,
+      "python": "statmod.pinvgauss.pinvgauss",
+      "loads": [],
+      "uses": [],
+      "done": "Cumulative distribution of the inverse Gaussian, with shape, dispersion, log, and tail options.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Vector inputs with missing values, log scale, the upper tail, a small coefficient of variation, and a matrix.",
+        "r_ms": 0.7559061050415039,
+        "translated_ms": 1.6973484998743515,
+        "speedup": 0.4453452576754042,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  qs <- c(0.2, 1, 2.5, 10, NA, -1, 0, Inf, NaN)\n  mus <- c(1, 1.5, 2, 0.5, 1, 1, 0, Inf, 1)\n  phis <- c(0.3, 0.7, 1, 2, 0.5, 1, 1, 1, 0)\n  c(\n    pinvgauss(qs, mean = mus, dispersion = phis),\n    pinvgauss(qs, mean = mus, dispersion = phis, log.p = TRUE),\n    pinvgauss(1.2, mean = 2, shape = 4),\n    pinvgauss(c(0.5, 1.5), mean = 1, dispersion = c(0.2, 0.8)),\n    pinvgauss(c(0.5, 1.5), mean = 1, dispersion = c(0.2, 0.8), lower.tail = FALSE),\n    pinvgauss(2e6, mean = 1, dispersion = 0.001, lower.tail = FALSE),\n    pinvgauss(0.5, mean = 1, dispersion = 1e-15),\n    as.numeric(pinvgauss(matrix(c(0.8, 1.2), nrow = 2), mean = 1, dispersion = 0.5))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.pinvgauss import pinvgauss\n\n\ndef one():\n    qs = np.array([0.2, 1, 2.5, 10, np.nan, -1, 0, np.inf, np.nan], dtype=float)\n    mus = np.array([1, 1.5, 2, 0.5, 1, 1, 0, np.inf, 1], dtype=float)\n    phis = np.array([0.3, 0.7, 1, 2, 0.5, 1, 1, 1, 0], dtype=float)\n    return np.concatenate(\n        [\n            np.asarray(pinvgauss(qs, mean=mus, dispersion=phis), dtype=float).reshape(-1),\n            np.asarray(\n                pinvgauss(qs, mean=mus, dispersion=phis, log_p=True), dtype=float\n            ).reshape(-1),\n            np.asarray([pinvgauss(1.2, mean=2, shape=4)], dtype=float),\n            np.asarray(\n                pinvgauss([0.5, 1.5], mean=1, dispersion=[0.2, 0.8]), dtype=float\n            ).reshape(-1),\n            np.asarray(\n                pinvgauss(\n                    [0.5, 1.5], mean=1, dispersion=[0.2, 0.8], lower_tail=False\n                ),\n                dtype=float,\n            ).reshape(-1),\n            np.asarray(\n                [pinvgauss(2e6, mean=1, dispersion=0.001, lower_tail=False)], dtype=float\n            ),\n            np.asarray([pinvgauss(0.5, mean=1, dispersion=1e-15)], dtype=float),\n            np.asarray(\n                pinvgauss(np.array([[0.8], [1.2]]), mean=1, dispersion=0.5), dtype=float\n            ).reshape(-1),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "plotGrowthCurves",
+      "translated": true,
+      "python": "statmod.plot_growth_curves.plotGrowthCurves",
+      "loads": [],
+      "uses": [],
+      "done": "Draws growth curves with Matplotlib.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Colored curves, a missing row, a log-y curve, and numeric groups.",
+        "r_ms": 16.41237735748291,
+        "translated_ms": 90.69882199946733,
+        "speedup": 0.18095469153479524,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\nargs <- commandArgs(trailingOnly = FALSE)\nfile_arg <- grep(\"^--file=\", args, value = TRUE)\nscript <- normalizePath(sub(\"^--file=\", \"\", file_arg[[1]]))\nroot <- normalizePath(file.path(dirname(script), \"..\"))\nout_dir <- file.path(root, \"docs\", \"output\")\ndir.create(out_dir, recursive = TRUE, showWarnings = FALSE)\n\npack <- function(group, y, ...) {\n  args <- list(group = group, y = y, ...)\n  pdf(NULL)\n  do.call(plotGrowthCurves, args)\n  usr <- par(\"usr\")\n  invisible(dev.off())\n  if (is.null(args$levels)) {\n    lev <- as.character(sort(unique(group)))\n  } else {\n    lev <- as.character(args$levels)\n  }\n  labels <- as.character(group)\n  yy <- as.matrix(y)\n  if (!is.null(args$times)) yy <- yy[, args$times, drop = FALSE]\n  col <- args$col\n  if (is.null(col)) col <- seq_along(lev)\n  spec <- col[match(labels, lev)]\n  rgb <- matrix(NA_real_, length(spec), 3)\n  ok <- !is.na(spec)\n  if (any(ok)) rgb[ok, ] <- t(col2rgb(spec[ok]))\n  legend_rgb <- t(col2rgb(rep_len(col, length(lev))))\n  yr <- range(yy, na.rm = TRUE)\n  c(usr, 1, yr[2] - diff(yr) / 40, as.numeric(yy), as.numeric(rgb), as.numeric(legend_rgb))\n}\n\ncurves <- function() {\n  matrix(\n    c(\n      1.0, 1.4, 1.2, 1.1,\n      2.0, 2.2, NA, 2.4,\n      1.2, 1.0, 1.5, 1.3,\n      2.4, 2.1, 2.6, 2.0,\n      3.0, 3.3, 2.8, 3.1,\n      2.2, 1.9, 2.3, 2.5,\n      0.2, 0.4, 0.3, 0.5\n    ),\n    nrow = 7,\n    byrow = TRUE\n  )\n}\n\ncurve_group <- function() c(\"B\", \"A\", \"B\", \"A\", \"C\", \"A\", NA)\n\none <- function() {\n  c(\n    pack(curve_group(), curves(), times = c(1, 2, 4), col = c(2, 4, \"darkgreen\")),\n    pack(c(\"A\", \"A\", \"B\", \"B\"), cbind(c(5, 5.5, 8, 9))),\n    pack(\n      c(\"A\", \"A\", \"B\", \"B\"),\n      matrix(c(1, 10, 2, 20, 30, 50, 25, 80), nrow = 4, byrow = TRUE),\n      log = \"y\"\n    ),\n    pack(\n      c(\"A\", \"A\", \"B\", \"B\"),\n      matrix(c(1, 2, 1.2, 2.2, 3, 4, 3.2, 3.8), nrow = 4, byrow = TRUE),\n      col = 2\n    ),\n    pack(\n      c(10, 2, 10, 2),\n      matrix(c(1, 2, 4, 5, 1.5, 2.5, 4.2, 5.1), nrow = 4, byrow = TRUE),\n      xlim = c(0, 4),\n      ylim = c(0, 6)\n    )\n  )\n}\n\nsvg(file.path(out_dir, \"plotGrowthCurves-r.svg\"), width = 7, height = 7)\nplotGrowthCurves(curve_group(), curves(), times = c(1, 2, 4), col = c(2, 4, \"darkgreen\"))\ninvisible(dev.off())\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\n\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nfrom statmod.plot_growth_curves import plotGrowthCurves\n\nROOT = Path(__file__).resolve().parents[1]\nOUT = ROOT / \"docs\" / \"output\"\nOUT.mkdir(parents=True, exist_ok=True)\n\n\ndef curves():\n    return np.array(\n        [\n            [1.0, 1.4, 1.2, 1.1],\n            [2.0, 2.2, np.nan, 2.4],\n            [1.2, 1.0, 1.5, 1.3],\n            [2.4, 2.1, 2.6, 2.0],\n            [3.0, 3.3, 2.8, 3.1],\n            [2.2, 1.9, 2.3, 2.5],\n            [0.2, 0.4, 0.3, 0.5],\n        ],\n        dtype=float,\n    )\n\n\ndef curve_group():\n    return np.array([\"B\", \"A\", \"B\", \"A\", \"C\", \"A\", None], dtype=object)\n\n\ndef _flat(drawn):\n    parts = [\n        np.asarray(drawn[\"usr\"], dtype=float).reshape(-1),\n        np.array([drawn[\"legend_x\"], drawn[\"legend_y\"]], dtype=float),\n        np.asarray(drawn[\"y\"], dtype=float).reshape(-1, order=\"F\"),\n        np.asarray(drawn[\"line_rgb\"], dtype=float).reshape(-1, order=\"F\"),\n        np.asarray(drawn[\"legend_rgb\"], dtype=float).reshape(-1, order=\"F\"),\n    ]\n    return np.concatenate(parts)\n\n\ndef _call(*args, **kwargs):\n    drawn = plotGrowthCurves(*args, **kwargs)\n    values = _flat(drawn)\n    plt.close(drawn[\"figure\"])\n    return values\n\n\ndef one():\n    return np.concatenate(\n        [\n            _call(curve_group(), curves(), times=[1, 2, 4], col=[2, 4, \"darkgreen\"]),\n            _call(\n                np.array([\"A\", \"A\", \"B\", \"B\"]),\n                np.array([[5.0], [5.5], [8.0], [9.0]], dtype=float),\n            ),\n            _call(\n                np.array([\"A\", \"A\", \"B\", \"B\"]),\n                np.array([[1.0, 10.0], [2.0, 20.0], [30.0, 50.0], [25.0, 80.0]], dtype=float),\n                log=\"y\",\n            ),\n            _call(\n                np.array([\"A\", \"A\", \"B\", \"B\"]),\n                np.array([[1.0, 2.0], [1.2, 2.2], [3.0, 4.0], [3.2, 3.8]], dtype=float),\n                col=2,\n            ),\n            _call(\n                np.array([10, 2, 10, 2], dtype=float),\n                np.array([[1.0, 2.0], [4.0, 5.0], [1.5, 2.5], [4.2, 5.1]], dtype=float),\n                xlim=[0, 4],\n                ylim=[0, 6],\n            ),\n        ]\n    )\n\n\ndef _fmt(values):\n    parts = []\n    for value in np.asarray(values, dtype=float).reshape(-1):\n        if not np.isfinite(value):\n            parts.append(\"NA\")\n        else:\n            parts.append(\"%.17g\" % float(value))\n    return \",\".join(parts)\n\n\ndrawn = plotGrowthCurves(curve_group(), curves(), times=[1, 2, 4], col=[2, 4, \"darkgreen\"])\ndrawn[\"figure\"].savefig(OUT / \"plotGrowthCurves-python.svg\", format=\"svg\", bbox_inches=\"tight\")\nplt.close(drawn[\"figure\"])\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000.0)\nprint(_fmt(value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      },
+      "origin": {
+        "output": "output/plotGrowthCurves-r.svg"
+      },
+      "translation": {
+        "output": "output/plotGrowthCurves-python.svg"
+      }
+    },
+    {
+      "name": "power.fisher.test",
+      "translated": true,
+      "python": "statmod.power_fisher_test.power_fisher_test",
+      "loads": [],
+      "uses": [],
+      "done": "Monte Carlo power of Fisher's exact test.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "After set.seed(42), four simulations cover two-sided power and one-sided greater and less at alpha 0.1.",
+        "r_ms": 278.49113941192627,
+        "translated_ms": 202.13834999958635,
+        "speedup": 1.3777254015009828,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  c(\n    power.fisher.test(0.5, 0.9, 20, 20, nsim = 100),\n    power.fisher.test(0.3, 0.5, 10, 10, nsim = 50),\n    power.fisher.test(0.2, 0.8, 15, 25, nsim = 80, alternative = \"greater\"),\n    power.fisher.test(0.2, 0.8, 15, 25, nsim = 80, alternative = \"less\", alpha = 0.1)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import power_fisher_test, set_seed\n\n\ndef one():\n    set_seed(42)\n    return np.array(\n        [\n            power_fisher_test(0.5, 0.9, 20, 20, nsim=100),\n            power_fisher_test(0.3, 0.5, 10, 10, nsim=50),\n            power_fisher_test(0.2, 0.8, 15, 25, nsim=80, alternative=\"greater\"),\n            power_fisher_test(0.2, 0.8, 15, 25, nsim=80, alternative=\"less\", alpha=0.1),\n        ],\n        dtype=float,\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "qinvgauss",
+      "translated": true,
+      "python": "statmod.qinvgauss.qinvgauss",
+      "loads": [],
+      "uses": [],
+      "done": "Inverse Gaussian quantiles by Newton iteration on the standardized dispersion.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Recycled probabilities, means, and dispersions, including NA, log.p, shape, the upper tail, and a matrix.",
+        "r_ms": 4.924416542053223,
+        "translated_ms": 7.079466000504908,
+        "speedup": 0.6955915236688774,
+        "matches": true,
+        "max_abs_diff": 6.217248937900877e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  ps <- c(0.001, 0.05, 0.5, 0.95, 0.999, NA, -0.1, 0, 1, 1.1)\n  mus <- c(1, 1.5, 2, 0.5, 1, 1, 1, 1, 1, 1)\n  phis <- c(0.3, 0.7, 1, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)\n  ps_ok <- c(0.001, 0.05, 0.5, 0.95, 0.999)\n  mus_ok <- c(1, 1.5, 2, 0.5, 1)\n  phis_ok <- c(0.3, 0.7, 1, 2, 0.5)\n  c(\n    qinvgauss(ps, mean = mus, dispersion = phis),\n    qinvgauss(log(ps_ok), mean = mus_ok, dispersion = phis_ok, log.p = TRUE),\n    qinvgauss(0.6, mean = 2, shape = 4),\n    qinvgauss(c(0.25, 0.75), mean = 1, dispersion = c(0.2, 0.8)),\n    qinvgauss(c(0.25, 0.75), mean = 1, dispersion = c(0.2, 0.8), lower.tail = FALSE),\n    qinvgauss(0.99, mean = 1, dispersion = 1e-10),\n    qinvgauss(0.5, mean = Inf, dispersion = 0.5),\n    as.numeric(qinvgauss(matrix(c(0.3, 0.7), nrow = 2), mean = 1, dispersion = 0.5))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.qinvgauss import qinvgauss\n\n\ndef one():\n    ps = np.array([0.001, 0.05, 0.5, 0.95, 0.999, np.nan, -0.1, 0, 1, 1.1], dtype=float)\n    mus = np.array([1, 1.5, 2, 0.5, 1, 1, 1, 1, 1, 1], dtype=float)\n    phis = np.array([0.3, 0.7, 1, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], dtype=float)\n    ps_ok = np.array([0.001, 0.05, 0.5, 0.95, 0.999], dtype=float)\n    mus_ok = np.array([1, 1.5, 2, 0.5, 1], dtype=float)\n    phis_ok = np.array([0.3, 0.7, 1, 2, 0.5], dtype=float)\n    return np.concatenate(\n        [\n            np.asarray(qinvgauss(ps, mean=mus, dispersion=phis), dtype=float).reshape(-1),\n            np.asarray(\n                qinvgauss(np.log(ps_ok), mean=mus_ok, dispersion=phis_ok, log_p=True),\n                dtype=float,\n            ).reshape(-1),\n            np.asarray([qinvgauss(0.6, mean=2, shape=4)], dtype=float),\n            np.asarray(\n                qinvgauss([0.25, 0.75], mean=1, dispersion=[0.2, 0.8]), dtype=float\n            ).reshape(-1),\n            np.asarray(\n                qinvgauss(\n                    [0.25, 0.75], mean=1, dispersion=[0.2, 0.8], lower_tail=False\n                ),\n                dtype=float,\n            ).reshape(-1),\n            np.asarray([qinvgauss(0.99, mean=1, dispersion=1e-10)], dtype=float),\n            np.asarray([qinvgauss(0.5, mean=np.inf, dispersion=0.5)], dtype=float),\n            np.asarray(\n                qinvgauss(np.array([[0.3], [0.7]]), mean=1, dispersion=0.5), dtype=float\n            ).reshape(-1),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "qres.binom",
+      "translated": true,
+      "python": "statmod.qres_binom.qres_binom",
+      "loads": [],
+      "uses": [],
+      "done": "Randomized quantile residuals for a binomial GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Seed 42, a cbind binomial GLM, a Bernoulli GLM, and the same model with weights.",
+        "r_ms": 7.854938507080078,
+        "translated_ms": 2.7533035008673323,
+        "speedup": 2.8529141464446814,
+        "matches": true,
+        "max_abs_diff": 2.220446049250313e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  yb <- c(8, 12, 5, 15, 9, 11)\n  xb <- c(0, 1, 0, 1, 1, 0)\n  fit_b <- glm(cbind(yb, 20 - yb) ~ xb, family = binomial)\n  set.seed(42)\n  r1 <- qres.binom(fit_b)\n\n  y2 <- c(0, 1, 1, 0, 1)\n  x2 <- 1:5\n  fit2 <- glm(y2 ~ x2, family = binomial)\n  set.seed(42)\n  r2 <- qres.binom(fit2)\n\n  fit_w <- glm(y2 ~ x2, family = binomial, weights = c(2, 3, 1, 4, 2))\n  set.seed(42)\n  r3 <- qres.binom(fit_w)\n\n  c(r1, r2, r3)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qres_binom import qres_binom\n\n\ndef _glm(fitted, y, prior_weights=None):\n    obj = {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n    }\n    if prior_weights is not None:\n        obj[\"prior_weights\"] = np.array(\n            [float(x) for x in prior_weights.split(\",\")], dtype=float\n        )\n    return obj\n\n\nFIT_B = _glm(\n    \"0.4,0.6,0.4,0.6,0.6,0.4\",\n    \"0.4,0.6,0.25,0.75,0.45,0.55\",\n    \"20,20,20,20,20,20\",\n)\nFIT2 = _glm(\n    \"0.392825542632621,0.501012152405756,0.60910407211275,0.707453228026552,0.789605004821599\",\n    \"0,1,1,0,1\",\n)\nFIT_W = _glm(\n    \"0.454575106466694,0.476328816984391,0.498172715328127,0.520023591190338,0.541798127993503\",\n    \"0,1,1,0,1\",\n    \"2,3,1,4,2\",\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qres_binom(FIT_B)\n    set_seed(42)\n    r2 = qres_binom(FIT2)\n    set_seed(42)\n    r3 = qres_binom(FIT_W)\n    return np.concatenate([np.asarray(r1, dtype=float), np.asarray(r2, dtype=float), np.asarray(r3, dtype=float)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "qres.default",
+      "translated": true,
+      "python": "statmod.qres_default.qres_default",
+      "loads": [],
+      "uses": [],
+      "done": "Deviance residuals scaled by dispersion for a default GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A default GLM with deviance residuals",
+        "r_ms": 4.9065351486206055,
+        "translated_ms": 0.032884501706575975,
+        "speedup": 149.20509340238647,
+        "matches": true,
+        "max_abs_diff": 9.43689570931383e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(2.1, 3.4, 2.8, 4.1, 3.0)\n  x <- 1:5\n  fit <- glm(y ~ x)\n  r1 <- qres.default(fit)\n\n  y2 <- c(1.5, 2.0, 2.5, 3.0)\n  fit2 <- glm(y2 ~ 1, weights = c(2, 1, 3, 1))\n  r2 <- qres.default(fit2, dispersion = 0.25)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.qres_default import qres_default\n\n\ndef _glm(deviance, working, weights, df_residual):\n    return {\n        \"deviance_residuals\": np.array([float(x) for x in deviance.split(\",\")], dtype=float),\n        \"working_residuals\": np.array([float(x) for x in working.split(\",\")], dtype=float),\n        \"weights\": np.array([float(x) for x in weights.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n    }\n\n\nFIT1 = _glm(\n    \"-0.48,0.57,-0.28,0.77,-0.58\",\n    \"-0.48,0.57,-0.28,0.77,-0.58\",\n    \"1,1,1,1,1\",\n    3,\n)\nFIT2 = _glm(\n    \"-1.01015254455221,-0.214285714285714,0.494871659305395,0.785714285714286\",\n    \"-0.714285714285714,-0.214285714285714,0.285714285714286,0.785714285714286\",\n    \"2,1,3,1\",\n    3,\n)\n\n\ndef one():\n    r1 = qres_default(FIT1)\n    r2 = qres_default(FIT2, dispersion=0.25)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qres.gamma",
+      "translated": true,
+      "python": "statmod.qres_gamma.qres_gamma",
+      "loads": [],
+      "uses": [],
+      "done": "Quantile residuals for a gamma glm.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three small gamma glms, including a fixed dispersion and weights",
+        "r_ms": 8.551478385925293,
+        "translated_ms": 3.3146084988402436,
+        "speedup": 2.579936179164867,
+        "matches": true,
+        "max_abs_diff": 3.774758283725532e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  yg <- c(1.2, 2.1, 0.9, 1.8, 2.4, 1.5)\n  xg <- c(1, 2, 1, 3, 2, 4)\n  fit_g <- glm(yg ~ xg, family = Gamma(link = \"log\"))\n  set.seed(42)\n  r1 <- qres.gamma(fit_g)\n\n  y2 <- c(3.1, 4.2, 2.8, 5.0, 3.9)\n  x2 <- c(1, 2, 1, 3, 2)\n  fit2 <- glm(y2 ~ x2, family = Gamma(link = \"log\"))\n  set.seed(42)\n  r2 <- qres.gamma(fit2, dispersion = 0.05)\n\n  y3 <- c(2.0, 3.5, 1.8, 4.1)\n  fit3 <- glm(y3 ~ 1, family = Gamma(link = \"log\"), weights = c(2, 1, 3, 1))\n  set.seed(42)\n  r3 <- qres.gamma(fit3)\n\n  c(r1, r2, r3)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qres_gamma import qres_gamma\n\n\ndef _glm(fitted, y, df_residual, prior_weights=None):\n    obj = {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n    }\n    if prior_weights is not None:\n        obj[\"prior_weights\"] = np.array(\n            [float(x) for x in prior_weights.split(\",\")], dtype=float\n        )\n    return obj\n\n\nFIT_G = _glm(\n    \"1.42929219017665,1.60794841449244,1.42929219017665,1.80893600443532,1.60794841449244,2.03504629790958\",\n    \"1.2,2.1,0.9,1.8,2.4,1.5\",\n    4,\n)\nFIT2 = _glm(\n    \"2.99557888150871,3.93039402710984,2.99557888150871,5.15693220555768,3.93039402710984\",\n    \"3.1,4.2,2.8,5.0,3.9\",\n    3,\n)\nFIT3 = _glm(\n    \"2.42857142857365,2.42857142857365,2.42857142857365,2.42857142857365\",\n    \"2.0,3.5,1.8,4.1\",\n    3,\n    \"2,1,3,1\",\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qres_gamma(FIT_G)\n    set_seed(42)\n    r2 = qres_gamma(FIT2, dispersion=0.05)\n    set_seed(42)\n    r3 = qres_gamma(FIT3)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1), np.asarray(r3).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qres.invgauss",
+      "translated": true,
+      "python": "statmod.qres_invgauss.qres_invgauss",
+      "loads": [],
+      "uses": [
+        "pinvgauss"
+      ],
+      "done": "Quantile residuals for an inverse-Gaussian GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "An inverse-Gaussian GLM",
+        "r_ms": 3.5867691040039062,
+        "translated_ms": 1.2904044997412711,
+        "speedup": 2.7795695882361393,
+        "matches": true,
+        "max_abs_diff": 1.3433698597964394e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(1.5, 2.2, 1.8, 3.1, 2.5)\n  x <- 1:5\n  fit <- glm(y ~ x, family = inverse.gaussian(link = \"1/mu^2\"))\n  set.seed(42)\n  r1 <- qres.invgauss(fit)\n\n  y2 <- c(2.0, 3.5, 1.6, 4.2, 2.8)\n  x2 <- c(1, 2, 1, 3, 2)\n  fit2 <- glm(y2 ~ x2, family = inverse.gaussian(link = \"1/mu^2\"))\n  set.seed(42)\n  r2 <- qres.invgauss(fit2, dispersion = 0.05)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.qres_invgauss import qres_invgauss\n\n\ndef _glm(fitted, y, df_residual):\n    return {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n    }\n\n\nFIT1 = _glm(\n    \"1.7383800544651,1.89872824879056,2.11360038871959,2.42309425832876,2.92619704969599\",\n    \"1.5,2.2,1.8,3.1,2.5\",\n    3,\n)\nFIT2 = _glm(\n    \"2.04774840442988,2.65450319607442,2.04774840442988,4.69549680549042,2.65450319607442\",\n    \"2.0,3.5,1.6,4.2,2.8\",\n    3,\n)\n\n\ndef one():\n    r1 = qres_invgauss(FIT1)\n    r2 = qres_invgauss(FIT2, dispersion=0.05)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qres.nbinom",
+      "translated": true,
+      "python": "statmod.qres_nbinom.qres_nbinom",
+      "loads": [],
+      "uses": [],
+      "done": "Quantile residuals for a negative-binomial GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A negative-binomial GLM",
+        "r_ms": 5.172491073608398,
+        "translated_ms": 2.1917795020272024,
+        "speedup": 2.359950473496217,
+        "matches": true,
+        "max_abs_diff": 4.496403249731884e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(MASS))\nsuppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(5, 12, 3, 8, 15, 7)\n  x <- c(0, 1, 0, 1, 1, 0)\n  fit <- glm(y ~ x, family = negative.binomial(theta = 3))\n  set.seed(42)\n  r1 <- qres.nbinom(fit)\n\n  y2 <- c(0, 2, 5, 1, 8)\n  x2 <- 1:5\n  fit2 <- glm(y2 ~ x2, family = negative.binomial(theta = 2))\n  set.seed(42)\n  r2 <- qres.nbinom(fit2)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qres_nbinom import qres_nbinom\n\n\ndef _glm(fitted, y, family_size, df_residual=999):\n    return {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"family_size\": float(family_size),\n        \"df_residual\": int(df_residual),\n    }\n\n\nFIT1 = _glm(\n    \"5,11.6666666666667,5,11.6666666666667,11.6666666666667,5\",\n    \"5,12,3,8,15,7\",\n    3,\n)\nFIT2 = _glm(\n    \"0.806799924309391,1.4054760714682,2.44839262864406,4.26519283087927,7.43012769755756\",\n    \"0,2,5,1,8\",\n    2,\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qres_nbinom(FIT1)\n    set_seed(42)\n    r2 = qres_nbinom(FIT2)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qres.pois",
+      "translated": true,
+      "python": "statmod.qres_pois.qres_pois",
+      "loads": [],
+      "uses": [],
+      "done": "Quantile residuals for a Poisson GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Three Poisson GLMs with seed 42",
+        "r_ms": 7.792472839355469,
+        "translated_ms": 4.212262501823716,
+        "speedup": 1.849949483438339,
+        "matches": true,
+        "max_abs_diff": 1.5543122344752192e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(3, 7, 2, 9, 5, 4)\n  x <- c(0, 1, 0, 1, 1, 0)\n  fit <- glm(y ~ x, family = poisson)\n  set.seed(42)\n  r1 <- qres.pois(fit)\n\n  y2 <- c(0, 1, 2, 0, 3)\n  x2 <- 1:5\n  fit2 <- glm(y2 ~ x2, family = poisson)\n  set.seed(42)\n  r2 <- qres.pois(fit2)\n\n  y3 <- c(10, 20, 15)\n  fit3 <- glm(y3 ~ 1, family = poisson)\n  set.seed(42)\n  r3 <- qres.pois(fit3)\n\n  c(r1, r2, r3)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qres_pois import qres_pois\n\n\ndef _glm(fitted, y):\n    return {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n    }\n\n\nFIT = _glm(\n    \"3.0000000000000617,7.0000000000000133,3.0000000000000617,7.0000000000000133,7.0000000000000133,3.0000000000000617\",\n    \"3,7,2,9,5,4\",\n)\nFIT2 = _glm(\n    \"0.39895020348162274,0.62722090299462296,0.98610317207548981,1.5503301330275963,2.4373955884500145\",\n    \"0,1,2,0,3\",\n)\nFIT3 = _glm(\n    \"15.000000000000412,15.000000000000412,15.000000000000412\",\n    \"10,20,15\",\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qres_pois(FIT)\n    set_seed(42)\n    r2 = qres_pois(FIT2)\n    set_seed(42)\n    r3 = qres_pois(FIT3)\n    return np.concatenate(\n        [np.asarray(r1, dtype=float), np.asarray(r2, dtype=float), np.asarray(r3, dtype=float)]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "qres.tweedie",
+      "translated": true,
+      "python": "statmod.qres_tweedie.qres_tweedie",
+      "loads": [
+        "tweedie"
+      ],
+      "uses": [
+        "pinvgauss"
+      ],
+      "done": "Quantile residuals for a Tweedie GLM. The cdf is inlined. Powers above 2, other than the inverse Gaussian, are not implemented.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "A Tweedie GLM with power between 1 and 2",
+        "r_ms": 22.40920066833496,
+        "translated_ms": 2.351481000005151,
+        "speedup": 9.52982425470836,
+        "matches": true,
+        "max_abs_diff": 1.3100631690576847e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(tweedie))\nsuppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(0, 1.2, 0, 2.1, 0.5, 3)\n  x <- c(1, 2, 1, 3, 2, 4)\n  fit <- glm(y ~ x, family = tweedie(var.power = 1.5))\n  set.seed(42)\n  r1 <- qres.tweedie(fit)\n\n  y2 <- c(1.2, 2.1, 0.9, 1.8, 2.4, 1.5)\n  x2 <- c(1, 2, 1, 3, 2, 4)\n  fit2 <- glm(y2 ~ x2, family = tweedie(var.power = 2))\n  set.seed(42)\n  r2 <- qres.tweedie(fit2, dispersion = 0.05)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qres_tweedie import qres_tweedie\n\n\ndef _glm(fitted, y, var_power, df_residual, prior_weights=None):\n    obj = {\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"var_power\": float(var_power),\n        \"df_residual\": int(df_residual),\n    }\n    if prior_weights is not None:\n        obj[\"prior_weights\"] = np.array(\n            [float(x) for x in prior_weights.split(\",\")], dtype=float\n        )\n    return obj\n\n\nFIT1 = _glm(\n    \"0.336328133922803,0.573289176453289,0.336328133922803,1.18887449230167,0.573289176453289,3.79189088772939\",\n    \"0,1.2,0,2.1,0.5,3\",\n    1.5,\n    4,\n)\nFIT2 = _glm(\n    \"1.48203805097292,1.61087919851054,1.48203805097292,1.76425490012034,1.61087919851054,1.94991060091274\",\n    \"1.2,2.1,0.9,1.8,2.4,1.5\",\n    2,\n    4,\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qres_tweedie(FIT1)\n    set_seed(42)\n    r2 = qres_tweedie(FIT2, dispersion=0.05)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "qresid",
+      "translated": true,
+      "python": "statmod.qresid.qresid",
+      "loads": [],
+      "uses": [],
+      "done": "Dispatches quantile residuals for a fitted GLM.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Poisson and Gaussian GLMs through qresid dispatch.",
+        "r_ms": 4.011273384094238,
+        "translated_ms": 2.3214155007735826,
+        "speedup": 1.728073456789,
+        "matches": true,
+        "max_abs_diff": 6.661338147750939e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  y <- c(3, 7, 2, 9, 5, 4)\n  x <- c(0, 1, 0, 1, 1, 0)\n  fit_p <- glm(y ~ x, family = poisson)\n  set.seed(42)\n  r1 <- qresid(fit_p)\n\n  y2 <- c(2.1, 3.4, 2.8, 4.1, 3.0)\n  x2 <- 1:5\n  fit_g <- glm(y2 ~ x2)\n  r2 <- qresid(fit_g)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qresid import qresid\n\n\ndef _poisson(fitted, y):\n    return {\n        \"family\": {\"family\": \"poisson\"},\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n    }\n\n\ndef _gaussian(deviance, working, weights, df_residual):\n    return {\n        \"family\": {\"family\": \"gaussian\"},\n        \"deviance_residuals\": np.array([float(x) for x in deviance.split(\",\")], dtype=float),\n        \"working_residuals\": np.array([float(x) for x in working.split(\",\")], dtype=float),\n        \"weights\": np.array([float(x) for x in weights.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n    }\n\n\nFIT_P = _poisson(\n    \"3.0000000000000617,7.0000000000000133,3.0000000000000617,7.0000000000000133,7.0000000000000133,3.0000000000000617\",\n    \"3,7,2,9,5,4\",\n)\nFIT_G = _gaussian(\n    \"-0.48,0.57,-0.28,0.77,-0.58\",\n    \"-0.48,0.57,-0.28,0.77,-0.58\",\n    \"1,1,1,1,1\",\n    3,\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qresid(FIT_P)\n    r2 = qresid(FIT_G)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/qresiduals-r.txt"
+      },
+      "translation": {
+        "output": "output/qresid-python.txt"
+      }
+    },
+    {
+      "name": "qresiduals",
+      "translated": true,
+      "python": "statmod.qresid.qresiduals",
+      "loads": [],
+      "uses": [],
+      "done": "Dispatches quantile residuals, including a fixed gamma dispersion.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Binomial and Gamma GLMs through qresiduals.",
+        "r_ms": 6.902813911437988,
+        "translated_ms": 1.8483675003153621,
+        "speedup": 3.734567890123,
+        "matches": true,
+        "max_abs_diff": 3.913536161803677e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(42)\n  yb <- c(8, 12, 5, 15, 9, 11)\n  xb <- c(0, 1, 0, 1, 1, 0)\n  fit_b <- glm(cbind(yb, 20 - yb) ~ xb, family = binomial)\n  set.seed(42)\n  r1 <- qresiduals(fit_b)\n\n  yg <- c(1.2, 2.1, 0.9, 1.8, 2.4, 1.5)\n  xg <- c(1, 2, 1, 3, 2, 4)\n  fit_ga <- glm(yg ~ xg, family = Gamma(link = \"log\"))\n  set.seed(42)\n  r2 <- qresiduals(fit_ga, dispersion = 0.05)\n\n  c(r1, r2)\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.power_fisher_test import set_seed\nfrom statmod.qresid import qresiduals\n\n\ndef _binom(fitted, y, prior_weights):\n    return {\n        \"family\": {\"family\": \"binomial\"},\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"prior_weights\": np.array([float(x) for x in prior_weights.split(\",\")], dtype=float),\n    }\n\n\ndef _gamma(fitted, y, df_residual):\n    return {\n        \"family\": {\"family\": \"Gamma\"},\n        \"fitted_values\": np.array([float(x) for x in fitted.split(\",\")], dtype=float),\n        \"y\": np.array([float(x) for x in y.split(\",\")], dtype=float),\n        \"df_residual\": int(df_residual),\n    }\n\n\nFIT_B = _binom(\n    \"0.4,0.6,0.4,0.6,0.6,0.4\",\n    \"0.4,0.6,0.25,0.75,0.45,0.55\",\n    \"20,20,20,20,20,20\",\n)\nFIT_G = _gamma(\n    \"1.42929219017665,1.60794841449244,1.42929219017665,1.80893600443532,1.60794841449244,2.03504629790958\",\n    \"1.2,2.1,0.9,1.8,2.4,1.5\",\n    4,\n)\n\n\ndef one():\n    set_seed(42)\n    r1 = qresiduals(FIT_B)\n    set_seed(42)\n    r2 = qresiduals(FIT_G, dispersion=0.05)\n    return np.concatenate([np.asarray(r1).reshape(-1), np.asarray(r2).reshape(-1)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    t0 = time.perf_counter()\n    one()\n    elapsed.append(time.perf_counter() - t0)\n\nprint(\",\".join(f\"{x:.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed) * 1000:.17g}\")\n"
+        }
+      },
+      "origin": {
+        "output": "output/qresiduals-r.txt"
+      },
+      "translation": {
+        "output": "output/qresiduals-python.txt"
+      }
+    },
+    {
+      "name": "randomizedBlock",
+      "translated": true,
+      "python": "statmod.randomized_block.randomized_block",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a randomized block from a formula.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Petrol formula fit and only.varcomp.",
+        "r_ms": 14.686942100524902,
+        "translated_ms": 5.398287500611332,
+        "speedup": 2.720611,
+        "matches": true,
+        "max_abs_diff": 8.970602038971265e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\nsuppressPackageStartupMessages(library(MASS))\n\ncollect <- function(out) {\n  if (is.null(out$se.varcomp)) {\n    return(out$varcomp)\n  }\n  c(out$varcomp, out$se.varcomp, out$coefficients, out$se.coefficients)\n}\n\none <- function() {\n  data(petrol)\n  out <- randomizedBlock(Y ~ SG + VP + V10 + EP, random = No, data = petrol)\n  out2 <- randomizedBlock(\n    Y ~ SG + VP + V10 + EP, random = No, data = petrol, only.varcomp = TRUE\n  )\n  c(collect(out), collect(out2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import csv\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\n_pkg_root = Path(__file__).resolve().parents[1]\n_repo_packages = _pkg_root.parent\nsys.path.insert(0, str(_repo_packages / \"extraDistr\"))\nsys.path.insert(0, str(_repo_packages / \"boot\"))\nsys.path.insert(0, str(_pkg_root))\nfrom statmod.randomized_block import randomized_block\n\n\ndef _load_petrol() -> dict:\n    csv_path = Path(__file__).resolve().parent / \"mixedModel2-petrol.csv\"\n    with csv_path.open(newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        petrol = {name: [] for name in reader.fieldnames}\n        for row in reader:\n            for name, value in row.items():\n                if name == \"No\":\n                    petrol[name].append(value)\n                else:\n                    petrol[name].append(float(value))\n    return petrol\n\n\ndef collect(out: dict) -> np.ndarray:\n    if \"se.varcomp\" not in out:\n        return np.asarray(out[\"varcomp\"], dtype=float)\n    return np.concatenate(\n        [\n            out[\"varcomp\"],\n            out[\"se.varcomp\"],\n            out[\"coefficients\"],\n            out[\"se.coefficients\"],\n        ]\n    )\n\n\ndef one() -> np.ndarray:\n    petrol = _load_petrol()\n    out = randomized_block(\"Y~SG+VP+V10+EP\", random=petrol[\"No\"], data=petrol)\n    out2 = randomized_block(\n        \"Y~SG+VP+V10+EP\",\n        random=petrol[\"No\"],\n        data=petrol,\n        only_varcomp=True,\n    )\n    return np.concatenate([collect(out), collect(out2)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      },
+      "origin": {
+        "output": "output/randomizedBlockFit-r.txt"
+      },
+      "translation": {
+        "output": "output/randomizedBlockFit-python.txt"
+      }
+    },
+    {
+      "name": "randomizedBlockFit",
+      "translated": true,
+      "python": "statmod.mixed_model2_fit.randomized_block_fit",
+      "loads": [],
+      "uses": [],
+      "done": "Fits a randomized block from matrices.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Petrol matrices through randomizedBlockFit.",
+        "r_ms": 5.083441734313965,
+        "translated_ms": 4.131570999561518,
+        "speedup": 1.230393,
+        "matches": true,
+        "max_abs_diff": 8.970602038971265e-14,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\nsuppressPackageStartupMessages(library(MASS))\n\ncollect <- function(out) {\n  if (is.null(out$se.varcomp)) {\n    return(out$varcomp)\n  }\n  c(out$varcomp, out$se.varcomp, out$coefficients, out$se.coefficients)\n}\n\npetrol_mats <- function() {\n  data(petrol)\n  mf <- model.frame(Y ~ SG + VP + V10 + EP, data = petrol)\n  mt <- attr(mf, \"terms\")\n  y <- model.response(mf, \"numeric\")\n  X <- model.matrix(mt, mf)\n  random <- petrol$No\n  lev <- unique.default(random)\n  Z <- 0 + (matrix(random, length(random), length(lev)) ==\n    t(matrix(lev, length(lev), length(random))))\n  list(y = y, X = X, Z = Z)\n}\n\none <- function() {\n  m <- petrol_mats()\n  out <- randomizedBlockFit(m$y, m$X, m$Z)\n  out2 <- randomizedBlockFit(m$y, m$X, m$Z, only.varcomp = TRUE)\n  c(collect(out), collect(out2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import csv\nimport statistics\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\n_pkg_root = Path(__file__).resolve().parents[1]\n_repo_packages = _pkg_root.parent\nsys.path.insert(0, str(_repo_packages / \"extraDistr\"))\nsys.path.insert(0, str(_repo_packages / \"boot\"))\nsys.path.insert(0, str(_pkg_root))\nfrom statmod.mixed_model2 import (\n    _model_frame,\n    _model_matrix,\n    _model_response,\n    _random_design,\n)\nfrom statmod.mixed_model2_fit import randomized_block_fit\n\n\ndef _load_petrol() -> dict:\n    csv_path = Path(__file__).resolve().parent / \"mixedModel2-petrol.csv\"\n    with csv_path.open(newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        petrol = {name: [] for name in reader.fieldnames}\n        for row in reader:\n            for name, value in row.items():\n                if name == \"No\":\n                    petrol[name].append(value)\n                else:\n                    petrol[name].append(float(value))\n    return petrol\n\n\ndef petrol_mats():\n    petrol = _load_petrol()\n    frame, intercept, terms = _model_frame(\n        \"Y~SG+VP+V10+EP\", petrol[\"No\"], petrol\n    )\n    y = _model_response(frame, \"Y~SG+VP+V10+EP\")\n    x = _model_matrix(frame, \"Y~SG+VP+V10+EP\", intercept, terms)\n    z = _random_design(np.asarray(frame[\"(random)\"]))\n    return y, x, z\n\n\ndef collect(out: dict) -> np.ndarray:\n    if \"se.varcomp\" not in out:\n        return np.asarray(out[\"varcomp\"], dtype=float)\n    return np.concatenate(\n        [\n            out[\"varcomp\"],\n            out[\"se.varcomp\"],\n            out[\"coefficients\"],\n            out[\"se.coefficients\"],\n        ]\n    )\n\n\ndef one() -> np.ndarray:\n    y, x, z = petrol_mats()\n    out = randomized_block_fit(y, x, z)\n    out2 = randomized_block_fit(y, x, z, only_varcomp=True)\n    return np.concatenate([collect(out), collect(out2)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in value))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      },
+      "origin": {
+        "output": "output/randomizedBlockFit-r.txt"
+      },
+      "translation": {
+        "output": "output/randomizedBlockFit-python.txt"
+      }
+    },
+    {
+      "name": "remlscore",
+      "translated": true,
+      "python": "statmod.remlscore.remlscore",
+      "loads": [],
+      "uses": [],
+      "done": "REML scoring for a heteroscedastic normal regression.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "The welding layout from Smyth 2002, plus an eight-point two-factor variance design.",
+        "r_ms": 6.496548652648926,
+        "translated_ms": 7.247498499054927,
+        "speedup": 0.8963849600653349,
+        "matches": true,
+        "max_abs_diff": 4.014566457044566e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(out) {\n  c(\n    out$beta,\n    out$se.beta,\n    out$gamma,\n    out$se.gam,\n    out$mu,\n    out$phi,\n    out$deviance,\n    out$h,\n    as.vector(out$cov.beta),\n    as.vector(out$cov.gam),\n    out$iter\n  )\n}\n\none <- function() {\n  data(welding)\n  y <- welding$Strength\n  X <- cbind(1, (welding$Drying + 1) / 2, (welding$Material + 1) / 2)\n  Z <- cbind(1, (welding$Material + 1) / 2, (welding$Method + 1) / 2, (welding$Preheating + 1) / 2)\n  out1 <- remlscore(y, X, Z)\n  y2 <- c(2.1, 3.4, 1.8, 4.2, 2.9, 3.1, 2.5, 3.8)\n  X2 <- cbind(1, c(0, 1, 0, 1, 0, 1, 0, 1))\n  Z2 <- cbind(1, c(1, 1, 0, 0, 1, 1, 0, 0))\n  out2 <- remlscore(y2, X2, Z2)\n  c(collect(out1), collect(out2))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.remlscore import remlscore\n\n\ndef _collect(out):\n    return np.concatenate(\n        [\n            out[\"beta\"],\n            out[\"se.beta\"],\n            out[\"gamma\"],\n            out[\"se.gam\"],\n            out[\"mu\"],\n            out[\"phi\"],\n            [out[\"deviance\"]],\n            out[\"h\"],\n            out[\"cov.beta\"].reshape(-1, order=\"F\"),\n            out[\"cov.gam\"].reshape(-1, order=\"F\"),\n            [out[\"iter\"]],\n        ]\n    )\n\n\ndef one():\n    y = np.array(\n        [\n            43.7,\n            40.2,\n            42.4,\n            44.7,\n            42.4,\n            45.9,\n            42.2,\n            40.6,\n            42.4,\n            45.5,\n            43.6,\n            40.6,\n            44,\n            40.2,\n            42.5,\n            46.5,\n        ]\n    )\n    x = np.column_stack(\n        [\n            np.ones(16),\n            np.array([0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1]),\n            np.array([0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0]),\n        ]\n    )\n    z = np.column_stack(\n        [\n            np.ones(16),\n            np.array([0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0]),\n            np.array([0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]),\n            np.array([0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1]),\n        ]\n    )\n    out1 = remlscore(y, x, z)\n    y2 = np.array([2.1, 3.4, 1.8, 4.2, 2.9, 3.1, 2.5, 3.8])\n    x2 = np.column_stack([np.ones(8), [0, 1, 0, 1, 0, 1, 0, 1]])\n    z2 = np.column_stack([np.ones(8), [1, 1, 0, 0, 1, 1, 0, 0]])\n    out2 = remlscore(y2, x2, z2)\n    return np.concatenate([_collect(out1), _collect(out2)])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "remlscoregamma",
+      "translated": true,
+      "python": "statmod.remlscoregamma.remlscoregamma",
+      "loads": [],
+      "uses": [
+        "canonic.digamma"
+      ],
+      "done": "Approximate REML for a gamma regression with link-linear mean and dispersion models.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Welding strength, mean model Drying and Material, dispersion model Material, Method, and Preheating.",
+        "r_ms": 11.413216590881348,
+        "translated_ms": 15.562197500912589,
+        "speedup": 0.7333936348135962,
+        "matches": true,
+        "max_abs_diff": 5.157829718882567e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\ncollect <- function(out) {\n  c(\n    out$beta,\n    out$se.beta,\n    out$gamma,\n    out$se.gam,\n    out$mu,\n    out$phi,\n    out$deviance,\n    out$h\n  )\n}\n\none <- function() {\n  data(welding)\n  y <- welding$Strength\n  X <- cbind(1, (welding$Drying + 1) / 2, (welding$Material + 1) / 2)\n  Z <- cbind(\n    1,\n    (welding$Material + 1) / 2,\n    (welding$Method + 1) / 2,\n    (welding$Preheating + 1) / 2\n  )\n  collect(remlscoregamma(y, X, Z))\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.remlscoregamma import remlscoregamma\n\n\ndef _collect(out):\n    return np.concatenate(\n        [\n            out[\"beta\"],\n            out[\"se.beta\"],\n            out[\"gamma\"],\n            out[\"se.gam\"],\n            out[\"mu\"],\n            out[\"phi\"],\n            [out[\"deviance\"]],\n            out[\"h\"],\n        ]\n    )\n\n\ndef one():\n    y = np.array(\n        [\n            43.7,\n            40.2,\n            42.4,\n            44.7,\n            42.4,\n            45.9,\n            42.2,\n            40.6,\n            42.4,\n            45.5,\n            43.6,\n            40.6,\n            44,\n            40.2,\n            42.5,\n            46.5,\n        ]\n    )\n    drying = np.array([-1, -1, 1, 1, 1, 1, -1, -1, 1, 1, -1, -1, -1, -1, 1, 1])\n    material = np.array([-1, 1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, 1, -1])\n    method = np.array([-1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, 1])\n    preheating = np.array([-1, 1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1])\n    x = np.column_stack([np.ones(16), (drying + 1) / 2, (material + 1) / 2])\n    z = np.column_stack(\n        [np.ones(16), (material + 1) / 2, (method + 1) / 2, (preheating + 1) / 2]\n    )\n    return _collect(remlscoregamma(y, x, z))\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "rinvgauss",
+      "translated": true,
+      "python": "statmod.rinvgauss.rinvgauss",
+      "loads": [
+        "boot",
+        "extraDistr"
+      ],
+      "uses": [],
+      "done": "Inverse Gaussian draws by Michael-Schucany-Whit rejection.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Five standard draws, vector mean and dispersion, infinite mean, infinite dispersion, invalid mean, shape 4, seed 424242",
+        "r_ms": 0.2378225326538086,
+        "translated_ms": 3.8502805000462104,
+        "speedup": 0.061767586192994064,
+        "matches": true,
+        "max_abs_diff": 1.7763568394002505e-15,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  set.seed(424242)\n  c(\n    rinvgauss(5, mean = 1, dispersion = 0.5),\n    rinvgauss(3, mean = c(1, 2, 3), dispersion = 0.3),\n    rinvgauss(2, mean = Inf, dispersion = 1),\n    rinvgauss(2, mean = 1, dispersion = Inf),\n    rinvgauss(2, mean = -1, dispersion = 1),\n    rinvgauss(2, mean = 1, shape = 4),\n    rinvgauss(c(1, 1, 1))\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/boot\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/extraDistr\")\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\n\nfrom boot.rng import set_seed\nfrom statmod.rinvgauss import rinvgauss\n\n\ndef one():\n    set_seed(424242)\n    return np.concatenate(\n        [\n            np.asarray(rinvgauss(5, mean=1, dispersion=0.5), dtype=float).reshape(-1),\n            np.asarray(rinvgauss(3, mean=[1, 2, 3], dispersion=0.3), dtype=float).reshape(\n                -1\n            ),\n            np.asarray(rinvgauss(2, mean=np.inf, dispersion=1), dtype=float).reshape(-1),\n            np.asarray(rinvgauss(2, mean=1, dispersion=np.inf), dtype=float).reshape(-1),\n            np.asarray(rinvgauss(2, mean=-1, dispersion=1), dtype=float).reshape(-1),\n            np.asarray(rinvgauss(2, mean=1, shape=4), dtype=float).reshape(-1),\n            np.asarray(rinvgauss([1, 1, 1]), dtype=float).reshape(-1),\n        ]\n    )\n\n\nvalue = np.ravel(np.asarray(one(), dtype=float), order=\"F\")\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(f\"{float(x):.17g}\" for x in value))\nprint(\"MS\")\nprint(f\"{statistics.median(elapsed):.17g}\")\n"
+        }
+      }
+    },
+    {
+      "name": "sage.test",
+      "translated": true,
+      "python": "statmod.sage_test.sage_test",
+      "loads": [],
+      "uses": [],
+      "done": "Two-sided test that tag counts share a rate across two libraries.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Help-page counts, equal library sizes, a large-count chi-square fallback, and unequal libraries.",
+        "r_ms": 1.3413429260253906,
+        "translated_ms": 1.0457560001668753,
+        "speedup": 1.2826538177274118,
+        "matches": true,
+        "max_abs_diff": 8.881784197001252e-16,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\n\none <- function() {\n  c(\n    sage.test(c(0, 5, 10), c(0, 30, 50), n1 = 10000, n2 = 15000),\n    sage.test(c(1, 5, 10), c(2, 4, 10), n1 = 100, n2 = 100),\n    sage.test(5000, 6000, n1 = 10000, n2 = 15000),\n    sage.test(c(3, 7), c(4, 3), n1 = 20, n2 = 20),\n    sage.test(c(0.4, 2.6), c(1.4, 3.6)),\n    sage.test(c(2, 8, 15), c(1, 12, 5), n1 = 50, n2 = 60)\n  )\n}\n\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.sage_test import sage_test\n\n\ndef one():\n    parts = [\n        sage_test([0, 5, 10], [0, 30, 50], n1=10000, n2=15000),\n        sage_test([1, 5, 10], [2, 4, 10], n1=100, n2=100),\n        sage_test(5000, 6000, n1=10000, n2=15000),\n        sage_test([3, 7], [4, 3], n1=20, n2=20),\n        sage_test([0.4, 2.6], [1.4, 3.6]),\n        sage_test([2, 8, 15], [1, 12, 5], n1=50, n2=60),\n    ]\n    return np.concatenate([np.asarray(part, dtype=float).reshape(-1) for part in parts])\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "tweedie",
+      "translated": true,
+      "python": "statmod.tweedie.tweedie",
+      "loads": [],
+      "uses": [],
+      "done": "Returns a Tweedie GLM family with power variance, a power or log link, and deviance residuals.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Gaussian, variance power 1.5, gamma, inverse Gaussian, and deviance residuals with five zeros.",
+        "r_ms": 0.5393028259277344,
+        "translated_ms": 0.2942849987448426,
+        "speedup": 1.832586874043595,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  mus <- exp(seq(log(0.05), log(20), length.out = 25))\n  y <- mus * c(rep(0, 5), rep(1.1, 20))\n  wt <- rep(1, length(y))\n  f0 <- tweedie()\n  f15 <- tweedie(var.power = 1.5, link.power = 0)\n  f2 <- tweedie(var.power = 2, link.power = -1)\n  f3 <- tweedie(var.power = 3, link.power = 0)\n  suppressMessages(fchr <- tweedie(var.power = \"gamma\", link.power = \"log\"))\n  eta0 <- f0$linkfun(mus)\n  eta15 <- f15$linkfun(mus)\n  c(\n    as.numeric(f0$linkinv(eta0)),\n    as.numeric(f0$mu.eta(eta0)),\n    as.numeric(f0$variance(mus)),\n    as.numeric(f0$dev.resids(y, mus, wt)),\n    as.integer(f0$validmu(mus)),\n    as.integer(f0$valideta(eta0)),\n    as.numeric(f15$linkinv(eta15)),\n    as.numeric(f15$mu.eta(eta15)),\n    as.numeric(f15$variance(mus)),\n    as.numeric(f15$dev.resids(y, mus, wt)),\n    as.integer(f15$validmu(mus)),\n    as.numeric(f2$linkfun(mus[1:3])),\n    as.numeric(f2$dev.resids(y, mus, wt)),\n    as.numeric(f3$linkfun(mus[1:3])),\n    as.numeric(fchr$variance(mus[1:5])),\n    as.numeric(fchr$dev.resids(y, mus, wt))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\nimport warnings\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.tweedie import tweedie\n\n\ndef one():\n    mus = np.exp(np.linspace(np.log(0.05), np.log(20), 25))\n    y = mus * np.concatenate([np.zeros(5), np.full(20, 1.1)])\n    wt = np.ones(y.shape)\n    f0 = tweedie()\n    f15 = tweedie(var_power=1.5, link_power=0)\n    f2 = tweedie(var_power=2, link_power=-1)\n    f3 = tweedie(var_power=3, link_power=0)\n    with warnings.catch_warnings():\n        warnings.simplefilter(\"ignore\")\n        fchr = tweedie(var_power=\"gamma\", link_power=\"log\")\n    eta0 = f0.linkfun(mus)\n    eta15 = f15.linkfun(mus)\n    return np.concatenate(\n        [\n            np.asarray(f0.linkinv(eta0), dtype=float),\n            np.asarray(f0.mu_eta(eta0), dtype=float),\n            np.asarray(f0.variance(mus), dtype=float),\n            np.asarray(f0.dev_resids(y, mus, wt), dtype=float),\n            np.array([int(f0.validmu(mus))], dtype=float),\n            np.array([int(f0.valideta(eta0))], dtype=float),\n            np.asarray(f15.linkinv(eta15), dtype=float),\n            np.asarray(f15.mu_eta(eta15), dtype=float),\n            np.asarray(f15.variance(mus), dtype=float),\n            np.asarray(f15.dev_resids(y, mus, wt), dtype=float),\n            np.array([int(f15.validmu(mus))], dtype=float),\n            np.asarray(f2.linkfun(mus[:3]), dtype=float),\n            np.asarray(f2.dev_resids(y, mus, wt), dtype=float),\n            np.asarray(f3.linkfun(mus[:3]), dtype=float),\n            np.asarray(fchr.variance(mus[:5]), dtype=float),\n            np.asarray(fchr.dev_resids(y, mus, wt), dtype=float),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "unitdeviance.digamma",
+      "translated": true,
+      "python": "statmod.unitdeviance_digamma.unitdeviance_digamma",
+      "loads": [],
+      "uses": [
+        "canonic.digamma",
+        "cumulant.digamma"
+      ],
+      "done": "Digamma unit deviance from the existing canonical and cumulant functions.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty log-spaced means with scaled responses, plus three fixed pairs.",
+        "r_ms": 1.2756586074829102,
+        "translated_ms": 29.980419500134303,
+        "speedup": 0.042549725078970146,
+        "matches": true,
+        "max_abs_diff": 4.547473508864641e-13,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  mus <- exp(seq(log(0.01), log(1000), length.out = 50))\n  ratios <- rep(c(0.5, 0.8, 1.0, 1.05, 1.1, 2.0), length.out = 50)\n  y <- mus * ratios\n  c(\n    unitdeviance.digamma(y, mus),\n    unitdeviance.digamma(c(0.25, 1.5, 7.5), c(0.3, 1.4, 8.0))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.unitdeviance_digamma import unitdeviance_digamma\n\n\ndef one():\n    mus = np.exp(np.linspace(np.log(0.01), np.log(1000), 50))\n    ratios = np.resize(np.array([0.5, 0.8, 1.0, 1.05, 1.1, 2.0], dtype=float), 50)\n    y = mus * ratios\n    return np.concatenate(\n        [\n            unitdeviance_digamma(y, mus),\n            unitdeviance_digamma(\n                np.array([0.25, 1.5, 7.5], dtype=float),\n                np.array([0.3, 1.4, 8.0], dtype=float),\n            ),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "varfun.digamma",
+      "translated": true,
+      "python": "statmod.varfun_digamma.varfun_digamma",
+      "loads": [],
+      "uses": [
+        "canonic.digamma"
+      ],
+      "done": "Variance function of the digamma family.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "Fifty log-spaced means from 0.01 to 1000, plus five extras",
+        "r_ms": 0.6039142608642578,
+        "translated_ms": 19.5307275007508,
+        "speedup": 0.030921237360003212,
+        "matches": true,
+        "max_abs_diff": 1.1641532182693481e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  mus <- exp(seq(log(0.01), log(1000), length.out = 50))\n  c(\n    varfun.digamma(mus),\n    varfun.digamma(c(0.25, 1.5, 7.5, 50, 200))\n  )\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.varfun_digamma import varfun_digamma\n\n\ndef one():\n    mus = np.exp(np.linspace(np.log(0.01), np.log(1000), 50))\n    return np.concatenate(\n        [\n            varfun_digamma(mus),\n            varfun_digamma(np.array([0.25, 1.5, 7.5, 50, 200], dtype=float)),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(v) for v in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "vecmat",
+      "translated": true,
+      "python": "statmod.vecmat.vecmat",
+      "loads": [],
+      "uses": [],
+      "done": "Scales each row of a matrix by the matching entry of a vector.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "vecmat(c(1, 2, 3), matrix(1:12, 3, 4)) and a 100 by 50 matrix.",
+        "r_ms": 0.4401206970214844,
+        "translated_ms": 0.12343799971858971,
+        "speedup": 3.5655203261950006,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "suppressPackageStartupMessages(library(statmod))\nif (as.character(packageVersion(\"statmod\")) != \"1.5.2\") stop(\"expected statmod 1.5.2\")\none <- function() {\n  A <- matrix(1:12, 3, 4)\n  rows <- rep(1:100, each = 50)\n  cols <- rep(1:50, times = 100)\n  M <- matrix(rows + cols / 100, 100, 50)\n  v <- (1:100) / 7\n  c(as.vector(vecmat(c(1, 2, 3), A)), as.vector(vecmat(v, M)))\n}\nvalue <- one()\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(paste(sprintf(\"%.17g\", as.numeric(value)), collapse = \",\"), \"\\n\", sep = \"\")\ncat(\"MS\\n\")\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport sys\nimport time\n\nimport numpy as np\n\nsys.path.insert(0, \"/home/ahmed/killr_projects/killr/packages/statmod\")\nfrom statmod.vecmat import vecmat\n\n\ndef one():\n    a = np.arange(1, 13, dtype=float).reshape(3, 4, order=\"F\")\n    rows = np.repeat(np.arange(1, 101, dtype=float), 50)\n    cols = np.tile(np.arange(1, 51, dtype=float), 100)\n    m = (rows + cols / 100.0).reshape(100, 50, order=\"F\")\n    v = np.arange(1, 101, dtype=float) / 7.0\n    return np.concatenate(\n        [\n            vecmat([1, 2, 3], a).reshape(-1, order=\"F\"),\n            vecmat(v, m).reshape(-1, order=\"F\"),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\",\".join(\"%.17g\" % float(x) for x in np.asarray(value, dtype=float)))\nprint(\"MS\")\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    }
+  ],
+  "strategy": "small-low"
+}

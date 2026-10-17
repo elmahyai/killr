@@ -1,0 +1,29 @@
+{
+  "name": "yates_setup",
+  "title": "Method for adding new models to the yates function",
+  "origin": {
+    "description": "A method which yates calls to set up the prediction for a model type. Methods for glm, coxph, and default are part of the survival package. The linear predictor returns NULL.",
+    "usage": "yates_setup(fit, ...)",
+    "arguments": [
+      "fit: a fitted model object",
+      "...: optional arguments for some methods"
+    ],
+    "details": "If the predicted value should be the linear predictor, the function should return NULL. Otherwise it should return a prediction function or a list of two elements containing the prediction function and a summary function. The prediction function is passed the linear predictor as a single argument and returns a vector of predicted values.",
+    "value": "NULL for the linear predictor, or a prediction function.",
+    "example": "suppressPackageStartupMessages(library(survival))\ncfit <- coxph(Surv(time, status) ~ age + sex, data = lung)\ngfit <- glm(I(status == 2) ~ age, family = binomial, data = lung)\neta <- c(-1, 0, 1)\nvalue <- c(\n  as.character(is.null(yates_setup(cfit))),\n  sprintf(\"%.17g\", yates_setup(cfit, predict = \"risk\")(eta, NULL)),\n  sprintf(\"%.17g\", yates_setup(gfit, predict = \"response\")(eta, NULL))\n)\ncat(paste(value, collapse = \"\\n\"), \"\\n\", sep = \"\")\n",
+    "output": "output/yates_setup-r-example.txt"
+  },
+  "translation": {
+    "description": "Python keeps the three methods as ordinary functions. yates_setup dispatches on the fit's class, as UseMethod does. The coxph predict = \"survival\" branch builds the default curve from coxsurv_fit and needs the fit's stored x (fit with x = TRUE).",
+    "usage": "yates_setup(fit, *args, **kwargs)",
+    "arguments": [
+      "fit: a fit with a class key or attribute, such as coxph or glm",
+      "predict: the type for coxph and glm, matched as R's match.arg",
+      "type: the type for the default method"
+    ],
+    "details": "A glm fit needs family.linkinv for predict = \"response\". The coxph survival branch raises NotImplementedError for weights, offsets, or a model with no covariates.",
+    "value": "None for the linear predictor, or a Python function taking eta and X.",
+    "example": "from survival.yates_setup import yates_setup\nimport numpy as np\nfrom scipy.special import expit\n\nfit = {\"class\": [\"coxph\"]}\ngfit = {\"class\": [\"glm\", \"lm\"], \"family\": {\"linkinv\": expit}}\neta = np.array([-1.0, 0.0, 1.0])\nprint(yates_setup(fit) is None)\nfor v in yates_setup(fit, predict=\"risk\")(eta, None):\n    print(f\"{v:.17g}\")\nfor v in yates_setup(gfit, predict=\"response\")(eta, None):\n    print(f\"{v:.17g}\")\n",
+    "output": "output/yates_setup-python-example.txt"
+  }
+}

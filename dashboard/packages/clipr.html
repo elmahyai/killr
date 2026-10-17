@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>clipr · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>clipr</h1>
+<p class="note">CRAN 0.8.1</p>
+<p>All seven exports are done. Clipboard access calls xclip, then xsel, then wl-copy. Tables follow write.table and read.table. write_last_clip takes the value as an argument because Python has no .Last.value. clipr has no compiled code, so there is no crate.</p>
+<p class="note">7 of 7 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#clear_clip">clear_clip</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Writes an empty string through write_clip.</td></tr>
+<tr><td><a href="#clipr_available">clipr_available</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Returns false in a non-interactive session unless CLIPR_ALLOW is true. Otherwise reads the clipboard and writes that value back.</td></tr>
+<tr><td><a href="#dr_clipr">dr_clipr</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Prints the access message, or the write error when the clipboard cannot be used.</td></tr>
+<tr><td><a href="#read_clip">read_clip</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Reads the clipboard and splits on newlines, including blank lines. Empty text returns None.</td></tr>
+<tr><td><a href="#read_clip_tbl">read_clip_tbl</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Parses lines with the clipr read.table defaults, including a leading tab as row names.</td></tr>
+<tr><td><a href="#write_clip">write_clip</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Renders text and tables the way write.table does, then writes them with xclip, xsel, or wl-copy.</td></tr>
+<tr><td><a href="#write_last_clip">write_last_clip</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Writes the caller-supplied value. Python has no .Last.value.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>clear_clip</td><td>clear_clip() after writing &quot;to-clear&quot;</td><td>21.3</td><td>12</td><td><button type="button" class="proof-toggle" data-name="clear_clip"><span class='yes'>+78%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:56.2%'></span></div></td></tr>
+<tr><td>clipr_available</td><td>CLIPR_ALLOW=TRUE with xclip owning the clipboard</td><td>43.7</td><td>20.7</td><td><button type="button" class="proof-toggle" data-name="clipr_available"><span class='yes'>+111%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:47.3%'></span></div></td></tr>
+<tr><td>dr_clipr</td><td>CLIPR_ALLOW=TRUE with xclip owning the clipboard</td><td>46.8</td><td>21.3</td><td><button type="button" class="proof-toggle" data-name="dr_clipr"><span class='yes'>+120%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:45.4%'></span></div></td></tr>
+<tr><td>read_clip</td><td>clipboard holds c(&quot;Write&quot;, &quot;to&quot;, &quot;clipboard&quot;)</td><td>21.5</td><td>9.88</td><td><button type="button" class="proof-toggle" data-name="read_clip"><span class='yes'>+117%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:46.0%'></span></div></td></tr>
+<tr><td>read_clip_tbl</td><td>c(&quot;Name&#x27;s\tAge&quot;, &quot;Alice\t30&quot;, &quot;Bob\t25&quot;)</td><td>0.614</td><td>0.0273</td><td><button type="button" class="proof-toggle" data-name="read_clip_tbl"><span class='yes'>+2148%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.4%'></span></div></td></tr>
+<tr><td>write_clip</td><td>data.frame(a = c(1, 2, 3), b = c(4, 5, 6)), return_new = TRUE</td><td>22</td><td>11.5</td><td><button type="button" class="proof-toggle" data-name="write_clip"><span class='yes'>+91%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:52.3%'></span></div></td></tr>
+<tr><td>write_last_clip</td><td>.Last.value is &quot;Write to clipboard&quot;; Python passes that string</td><td>21.1</td><td>11.1</td><td><button type="button" class="proof-toggle" data-name="write_last_clip"><span class='yes'>+90%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:52.6%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "clear_clip", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\nwrite_clip(\"to-clear\")\n\none \u003c- function() clear_clip()\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nemptied \u003c- read_clip()\ncat(sprintf(\n  \"{\\\"value\\\":\\\"\\\",\\\"empty\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  if (is.null(emptied)) \"true\" else \"false\",\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\nimport warnings\n\nfrom clipr import clear_clip, read_clip, write_clip\n\nwrite_clip(\"to-clear\")\n\n\ndef one():\n    return clear_clip()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nwith warnings.catch_warnings():\n    warnings.simplefilter(\"ignore\")\n    emptied = read_clip()\n\nprint(json.dumps({\n    \"value\": value,\n    \"empty\": emptied is None,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"}, {"name": "clipr_available", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\none \u003c- function() clipr_available()\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  if (isTRUE(value)) \"true\" else \"false\",\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import clipr_available\n\n\ndef one():\n    return clipr_available()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "dr_clipr", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape \u003c- function(x) {\n  x \u003c- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none \u003c- function() dr_clipr()\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import dr_clipr\n\n\ndef one():\n    return dr_clipr()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "read_clip", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\nwrite_clip(c(\"Write\", \"to\", \"clipboard\"))\n\njson_escape \u003c- function(x) {\n  x \u003c- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\t\", \"\\\\t\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none \u003c- function() read_clip()\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":[%s],\\\"median_ms\\\":%.17g}\\n\",\n  paste(vapply(value, json_escape, \"\"), collapse = \",\"),\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import read_clip, write_clip\n\nwrite_clip([\"Write\", \"to\", \"clipboard\"])\n\n\ndef one():\n    return read_clip()\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "read_clip_tbl", "r": "suppressPackageStartupMessages(library(clipr))\n\njson_escape \u003c- function(x) {\n  x \u003c- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\nx \u003c- c(\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\")\none \u003c- function() read_clip_tbl(x)\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncolumns \u003c- lapply(value, function(column) {\n  if (is.character(column)) {\n    paste0(\"[\", paste(vapply(column, json_escape, \"\"), collapse = \",\"), \"]\")\n  } else {\n    paste0(\"[\", paste(format(column, trim = TRUE, scientific = FALSE), collapse = \",\"), \"]\")\n  }\n})\ncat(sprintf(\n  \"{\\\"columns\\\":{%s},\\\"row_names\\\":null,\\\"median_ms\\\":%.17g}\\n\",\n  paste(paste0(json_escape(names(value)), \":\", columns), collapse = \",\"),\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import read_clip_tbl\n\nrows = [\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\"]\n\n\ndef one():\n    return read_clip_tbl(rows)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\n    \"columns\": value.columns,\n    \"row_names\": value.row_names,\n    \"median_ms\": statistics.median(elapsed),\n}))\n"}, {"name": "write_clip", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape \u003c- function(x) {\n  x \u003c- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\r\", \"\\\\r\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\t\", \"\\\\t\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none \u003c- function() {\n  write_clip(data.frame(a = c(1, 2, 3), b = c(4, 5, 6)), return_new = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import write_clip\n\n\ndef one():\n    return write_clip(\n        {\"a\": [1, 2, 3], \"b\": [4, 5, 6]},\n        return_new=True,\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}, {"name": "write_last_clip", "r": "suppressPackageStartupMessages(library(clipr))\nsystem2(\"xclip\", c(\"-selection\", \"clipboard\"), input = \"seed\")\n\njson_escape \u003c- function(x) {\n  x \u003c- gsub(\"\\\\\", \"\\\\\\\\\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\\"\", \"\\\\\\\"\", x, fixed = TRUE)\n  x \u003c- gsub(\"\\n\", \"\\\\n\", x, fixed = TRUE)\n  paste0(\"\\\"\", x, \"\\\"\")\n}\n\none \u003c- function() write_last_clip(return_new = TRUE)\nelapsed \u003c- numeric(20)\ninvisible(\"Write to clipboard\")\nvalue \u003c- one()\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\n  \"{\\\"value\\\":%s,\\\"median_ms\\\":%.17g}\\n\",\n  json_escape(value),\n  median(elapsed) * 1000\n))\n", "python": "import json\nimport statistics\nimport time\n\nfrom clipr import write_last_clip\n\n\ndef one():\n    return write_last_clip(\"Write to clipboard\", return_new=True)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\n\nprint(json.dumps({\"value\": value, \"median_ms\": statistics.median(elapsed)}))\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="utils.html">utils</a></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "clear_clip", "translated": true, "not_done": "", "title": "Clear the clipboard", "origin": {"description": "Clear the system clipboard.", "usage": "clear_clip(...)", "arguments": [{"name": "...", "text": "Passed to write_clip."}], "details": "This calls write_clip with an empty string.", "value": "The empty string, invisibly.", "example": "write_clip(\"to-clear\")\nprint(clear_clip())\nprint(read_clip())", "output": "output/clear_clip-r.txt", "output_blocks": [{"text": "[1] \"\"\nNULL\nWarning message:\nIn read_clip() :\n  System clipboard contained no readable text. Returning NULL."}]}, "translation": {"description": "Clear the system clipboard.", "usage": "clear_clip(**options)", "arguments": [{"name": "options", "text": "Passed to write_clip, including allow_non_interactive."}], "details": "This calls write_clip with an empty string.", "value": "The empty string.", "example": "from clipr import clear_clip, read_clip, write_clip\nwrite_clip(\"to-clear\")\nprint(clear_clip())\nprint(read_clip())", "output": "output/clear_clip-python.txt", "output_blocks": [{"text": "\nNone\n\u003cstring>:5: UserWarning: System clipboard contained no readable text. Returning NULL."}]}}, {"name": "clipr_available", "translated": true, "not_done": "", "title": "Is the clipboard available?", "origin": {"description": "Check whether the system clipboard can be read and written.", "usage": "clipr_available(...)", "arguments": [{"name": "...", "text": "Passed to read_clip and write_clip."}], "details": "In a non-interactive session this returns FALSE without touching the clipboard unless CLIPR_ALLOW is true. When the check runs, it reads the clipboard and writes that same value back.", "value": "TRUE or FALSE.", "example": "print(clipr_available())", "output": "output/clipr_available-r.txt", "output_blocks": [{"text": "[1] TRUE"}]}, "translation": {"description": "Check whether the system clipboard can be read and written.", "usage": "clipr_available(**options)", "arguments": [{"name": "options", "text": "Passed to read_clip and write_clip."}], "details": "In a non-interactive session this returns False without touching the clipboard unless CLIPR_ALLOW is true. When the check runs, it reads the clipboard and writes that same value back.", "value": "True or False.", "example": "from clipr import clipr_available\nprint(clipr_available())", "output": "output/clipr_available-python.txt", "output_blocks": [{"text": "True"}]}}, {"name": "dr_clipr", "translated": true, "not_done": "", "title": "Clipboard status message", "origin": {"description": "Print whether clipr can use the system clipboard.", "usage": "dr_clipr(...)", "arguments": [{"name": "...", "text": "Passed to the same check as clipr_available."}], "details": "When the clipboard is usable, the message says clipr has read/write access. Otherwise the message is the error from the failed write, including the CLIPR_ALLOW refusal and missing clipboard tools.", "value": "The message, invisibly.", "example": "dr_clipr()", "output": "output/dr_clipr-r.txt", "output_blocks": [{"text": "clipr has read/write access to the system clipboard!"}]}, "translation": {"description": "Print whether clipr can use the system clipboard.", "usage": "dr_clipr(**options)", "arguments": [{"name": "options", "text": "Passed to the same check as clipr_available."}], "details": "When the clipboard is usable, the message says clipr has read/write access. Otherwise the message is the error from the failed write. The text is printed to standard error.", "value": "The message.", "example": "from clipr import dr_clipr\ndr_clipr()", "output": "output/dr_clipr-python.txt", "output_blocks": [{"text": "clipr has read/write access to the system clipboard!"}]}}, {"name": "read_clip", "translated": true, "not_done": "", "title": "Read the clipboard", "origin": {"description": "Read the system clipboard into a character vector.", "usage": "read_clip(allow_non_interactive = Sys.getenv(\"CLIPR_ALLOW\", interactive()))", "arguments": [{"name": "allow_non_interactive", "text": "A non-interactive session is refused unless this is TRUE or CLIPR_ALLOW is TRUE."}], "details": "The text is split on newlines and is not parsed as a table. Blank lines are kept. Use read_clip_tbl for tabular text.", "value": "A character vector. NULL when the clipboard has no readable text, with a warning.", "example": "write_clip(\"Write to clipboard\")\nprint(read_clip())", "output": "output/read_clip-r.txt", "output_blocks": [{"text": "[1] \"Write to clipboard\""}]}, "translation": {"description": "Read the system clipboard into a list of strings.", "usage": "read_clip(allow_non_interactive=None)", "arguments": [{"name": "allow_non_interactive", "text": "A non-interactive session is refused unless this is True or CLIPR_ALLOW is the string TRUE."}], "details": "The text is split on newlines the way scan splits, including a trailing empty line and blank lines. It is not parsed as a table.", "value": "A list of strings. None when the clipboard has no readable text, with a warning.", "example": "from clipr import read_clip, write_clip\nwrite_clip(\"Write to clipboard\")\nprint(read_clip())", "output": "output/read_clip-python.txt", "output_blocks": [{"text": "['Write to clipboard']"}]}}, {"name": "read_clip_tbl", "translated": true, "not_done": "", "title": "Read the clipboard as a table", "origin": {"description": "Turn clipboard text into a data frame with read.table.", "usage": "read_clip_tbl(x = read_clip(), ...)", "arguments": [{"name": "x", "text": "Character vector to parse. The default reads the clipboard."}, {"name": "...", "text": "Arguments passed to read.table. Defaults are header TRUE, sep tab, stringsAsFactors FALSE, na.strings c(\"NA\", \"\"), strip.white TRUE, and quote empty. A leading tab on the first line sets row.names to 1."}], "details": "Column names are made into syntactic names. An empty clipboard returns NULL.", "value": "A data frame, or NULL when the clipboard is empty.", "example": "x \u003c- c(\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\")\nprint(read_clip_tbl(x))", "output": "output/read_clip_tbl-r.txt", "output_blocks": [{"text": "  Name.s Age\n1  Alice  30\n2    Bob  25"}]}, "translation": {"description": "Turn clipboard text into a Frame using the same defaults as read.table.", "usage": "read_clip_tbl(x, **options)", "arguments": [{"name": "x", "text": "List of lines to parse. Omit it to read the clipboard. None means the clipboard was empty."}, {"name": "options", "text": "read.table options: header, sep, na.strings, strip.white, and row.names. allow_non_interactive is not accepted; set CLIPR_ALLOW to read the live clipboard."}], "details": "Defaults match clipr: a header row, tab separator, blank and NA as missing, stripped whitespace, and no quotes. A leading tab makes the first column the row names. Headers pass through make.names. Whole-number columns that fit in a 32-bit integer stay integers.", "value": "A Frame, or None when the clipboard is empty.", "example": "from clipr import read_clip_tbl\nx = [\"Name's\\tAge\", \"Alice\\t30\", \"Bob\\t25\"]\nprint(read_clip_tbl(x))", "output": "output/read_clip_tbl-python.txt", "output_blocks": [{"text": "Frame(columns={'Name.s': ['Alice', 'Bob'], 'Age': [30, 25]}, row_names=None)"}]}}, {"name": "write_clip", "translated": true, "not_done": "", "title": "Write to the clipboard", "origin": {"description": "Write an object to the system clipboard.", "usage": "write_clip(content, object_type = c(\"auto\", \"character\", \"table\"), breaks = NULL, eos = NULL, return_new = FALSE, allow_non_interactive = Sys.getenv(\"CLIPR_ALLOW\", interactive()), ...)", "arguments": [{"name": "content", "text": "Object to place on the clipboard."}, {"name": "object_type", "text": "auto treats a data frame or matrix as a table and anything else as text. character and table force that choice."}, {"name": "breaks", "text": "Separator between elements or table rows. NULL uses the system line break."}, {"name": "eos", "text": "Optional terminator written after the text, followed by a nul. NULL writes no terminator."}, {"name": "return_new", "text": "If true, return the rendered text. If false, return the original object."}, {"name": "allow_non_interactive", "text": "A non-interactive session is refused unless this is TRUE or CLIPR_ALLOW is TRUE."}, {"name": "...", "text": "Further arguments to write.table when the object is a table. The default separator is a tab."}], "details": "Tables are formatted with write.table. Other objects are coerced to text and joined with breaks. On X11, xclip is preferred, then xsel, then wl-copy. Those programs can keep running until the next paste.", "value": "The original object, invisibly, or the rendered text when return_new is true.", "example": "text \u003c- \"Write to clipboard\"\nprint(write_clip(text, return_new = TRUE))\nmultiline \u003c- c(\"Write\", \"to\", \"clipboard\")\nprint(write_clip(multiline, return_new = TRUE))\nprint(write_clip(multiline, breaks = \",\", return_new = TRUE))\ntbl \u003c- data.frame(a = c(1, 2, 3), b = c(4, 5, 6))\nprint(write_clip(tbl, return_new = TRUE))", "output": "output/write_clip-r.txt", "output_blocks": [{"text": "[1] \"Write to clipboard\"\n[1] \"Write\\nto\\nclipboard\"\n[1] \"Write,to,clipboard\"\n[1] \"a\\tb\\n1\\t4\\n2\\t5\\n3\\t6\""}]}, "translation": {"description": "Write an object to the system clipboard.", "usage": "write_clip(content, object_type=\"auto\", breaks=None, eos=None, return_new=False, allow_non_interactive=None, **options)", "arguments": [{"name": "content", "text": "String, list of strings, dict of columns, Frame, Matrix, or a rectangular list of rows."}, {"name": "object_type", "text": "auto treats a dict, Frame, Matrix, or rectangular list as a table. character and table force that choice."}, {"name": "breaks", "text": "Separator between elements or table rows. None uses a newline, or a carriage return and newline on Windows."}, {"name": "eos", "text": "Optional terminator written after the text, followed by a nul. None writes no terminator."}, {"name": "return_new", "text": "If true, return the rendered text. If false, return the original object."}, {"name": "allow_non_interactive", "text": "A non-interactive session is refused unless this is True or CLIPR_ALLOW is the string TRUE."}, {"name": "options", "text": "write.table options such as sep, na, row.names, and col.names. The default separator is a tab."}], "details": "A dict of equal-length columns is a data frame. A list of rows is a matrix. Tables follow write.table, including the extra leading separator when both row names and column names are written. Numbers follow R's as.character. On Linux the writer calls xclip, then xsel, then wl-copy.", "value": "The original object, or the rendered text when return_new is true.", "example": "from clipr import write_clip\ntext = \"Write to clipboard\"\nprint(write_clip(text, return_new=True))\nmultiline = [\"Write\", \"to\", \"clipboard\"]\nprint(write_clip(multiline, return_new=True))\nprint(write_clip(multiline, breaks=\",\", return_new=True))\ntbl = {\"a\": [1, 2, 3], \"b\": [4, 5, 6]}\nprint(write_clip(tbl, return_new=True))", "output": "output/write_clip-python.txt", "output_blocks": [{"text": "Write to clipboard\nWrite\nto\nclipboard\nWrite,to,clipboard\na\tb\n1\t4\n2\t5\n3\t6"}]}}, {"name": "write_last_clip", "translated": true, "not_done": "", "title": "Write the last value", "origin": {"description": "Write the value of the previous top-level expression to the clipboard.", "usage": "write_last_clip(...)", "arguments": [{"name": "...", "text": "Passed to write_clip."}], "details": "This calls write_clip on .Last.value.", "value": "The previous value, invisibly.", "example": "invisible(\"Write to clipboard\")\nprint(write_last_clip(return_new = TRUE))", "output": "output/write_last_clip-r.txt", "output_blocks": [{"text": "[1] \"Write to clipboard\""}]}, "translation": {"description": "Write one value to the clipboard.", "usage": "write_last_clip(value, **options)", "arguments": [{"name": "value", "text": "The object to write. Python has no .Last.value, so the caller passes the value R would have stored."}, {"name": "options", "text": "Passed to write_clip."}], "details": "This calls write_clip(value). The argument replaces .Last.value.", "value": "The same value write_clip returns.", "example": "from clipr import write_last_clip\nprint(write_last_clip(\"Write to clipboard\", return_new=True))", "output": "output/write_last_clip-python.txt", "output_blocks": [{"text": "Write to clipboard"}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

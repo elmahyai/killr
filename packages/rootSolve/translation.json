@@ -1,0 +1,544 @@
+{
+  "name": "rootSolve",
+  "cran_version": "1.8.2.4",
+  "inventory": "complete",
+  "status": "complete",
+  "blocked_by": [],
+  "crate_claims": [],
+  "dependencies": {
+    "translated": [],
+    "native": [
+      "numpy",
+      "scipy",
+      "matplotlib"
+    ],
+    "rust": []
+  },
+  "resume": "All 20 exports match rootSolve 1.8.2.4. The Newton loop is the Fortran dSteady iteration. stodes uses that dense Newton, which stays inside 1e-8 of the sparse factorisation on the banded examples. runsteady stops at the first crossing of stol.",
+  "functions": [
+    {
+      "name": "gradient",
+      "translated": true,
+      "python": "rootSolve.gradient",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Forward and centered gradient matrix.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "logistic at c(N0 = 76.1, r = 0.02, K = 500), times = 0:5",
+        "r_ms": 0.3249645233154297,
+        "translated_ms": 0.07019099939498119,
+        "speedup": 4.62971785722523,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nlogistic <- function (x, times) {\n  with(as.list(x), K / (1+(K-N0)/N0*exp(-r*times)))\n}\nx <- c(N0 = 76.1, r = 0.02, K = 500)\none <- function() as.vector(gradient(logistic, x, times = 0:5))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import math\nimport statistics\nimport time\n\nfrom rootSolve import gradient\n\n\ndef logistic(x, times):\n    n0, rate, carrying = x[\"N0\"], x[\"r\"], x[\"K\"]\n    return [carrying / (1 + (carrying - n0) / n0 * math.exp(-rate * t)) for t in times]\n\n\nx = {\"N0\": 76.1, \"r\": 0.02, \"K\": 500}\n\n\ndef one():\n    return gradient(logistic, x, times=list(range(6)))\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "hessian",
+      "translated": true,
+      "python": "rootSolve.hessian",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Hessian by differencing the gradient, with gradient's own pert on the reference.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "f(x) = sum(x^2), x = c(a = 1, b = -3)",
+        "r_ms": 0.6151199340820312,
+        "translated_ms": 0.09378099821333308,
+        "speedup": 6.55911054265765,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nf <- function(x) sum(x^2)\nx <- c(a = 1, b = -3)\none <- function() as.vector(hessian(f, x))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rootSolve import hessian\n\n\ndef squares(x):\n    return sum(value * value for value in x)\n\n\nx = {\"a\": 1.0, \"b\": -3.0}\n\n\ndef one():\n    return hessian(squares, x)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "jacobian.full",
+      "translated": true,
+      "python": "rootSolve.jacobian_full",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Full square Jacobian of an ODE rate function.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y = c(A = 1, B = 2), dy = c(-0.1*y[1] + 0.02*y[2], 0.1*y[1] - 0.2*y[2])",
+        "r_ms": 0.21266937255859375,
+        "translated_ms": 0.03252749775128905,
+        "speedup": 6.53814118087721,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nmodel <- function(t, y, parms) list(c(-0.1*y[1] + 0.02*y[2], 0.1*y[1] - 0.2*y[2]))\ny <- c(A = 1, B = 2)\none <- function() as.vector(jacobian.full(y, model))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rootSolve import jacobian_full\n\n\ndef model(time, y, parms):\n    return [-0.1 * y[0] + 0.02 * y[1], 0.1 * y[0] - 0.2 * y[1]]\n\n\ny = {\"A\": 1.0, \"B\": 2.0}\n\n\ndef one():\n    return jacobian_full(y, model)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "jacobian.band",
+      "translated": true,
+      "python": "rootSolve.jacobian_band",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Banded Jacobian with one row per diagonal.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "y = c(a = 1, b = 2, c = 3, d = 4), dy = -0.1 * y",
+        "r_ms": 0.5599260330200195,
+        "translated_ms": 0.0743945001886459,
+        "speedup": 7.526443911850832,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nmodel <- function(t, y, parms) list(-0.1 * y)\ny <- c(a = 1, b = 2, c = 3, d = 4)\none <- function() as.vector(jacobian.band(y, model))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nfrom rootSolve import jacobian_band\n\n\ndef decay(time, y, parms):\n    return [-0.1 * value for value in y]\n\n\ny = {\"a\": 1.0, \"b\": 2.0, \"c\": 3.0, \"d\": 4.0}\n\n\ndef one():\n    return jacobian_band(y, decay)\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "uniroot.all",
+      "translated": true,
+      "python": "rootSolve.uniroot_all",
+      "loads": [],
+      "uses": [],
+      "done": "All roots of one function on an interval, polished with R's zeroin.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "cos(2*x)^3 on c(0, 10)",
+        "r_ms": 1.1658668518066406,
+        "translated_ms": 0.5524124990188284,
+        "speedup": 2.110500493521424,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nfun <- function(x) cos(2*x)^3\none <- function() uniroot.all(fun, c(0, 10))\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\n\nimport numpy as np\n\nfrom rootSolve import uniroot_all\n\n\ndef fun(x):\n    return np.cos(2 * np.asarray(x, dtype=float)) ** 3\n\n\ndef one():\n    return uniroot_all(fun, [0, 10])\n\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "multiroot",
+      "translated": true,
+      "python": "rootSolve.multiroot",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Newton root of several equations. The default path is the steady-state Newton used by stode.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "model(x) = c(x1^2 + x2^2 - 1, x1^2 - x2^2 + 0.5), start c(1, 1)",
+        "r_ms": 0.3705024719238281,
+        "translated_ms": 1.2893470011476893,
+        "speedup": 0.28735667868621245,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nmodel <- function(x) c(x[1]^2 + x[2]^2 - 1, x[1]^2 - x[2]^2 + 0.5)\none <- function() {\nmultiroot(model, c(1, 1))$root\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import multiroot\n\ndef model(x):\n    return [x[0] ** 2 + x[1] ** 2 - 1, x[0] ** 2 - x[1] ** 2 + 0.5]\n\ndef one():\n    return multiroot(model, [1.0, 1.0]).root\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "multiroot.1D",
+      "translated": true,
+      "python": "rootSolve.multiroot_1d",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Finds a root by calling the one-dimensional steady-state solver.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "five-point chain, start rep(0.2, 5), nspec 1",
+        "r_ms": 0.2357959747314453,
+        "translated_ms": 0.7496255002479302,
+        "speedup": 0.3145516990196551,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng <- function(t, y, p) {\n  n <- length(y)\n  dy <- numeric(n)\n  dy[1] <- y[2] - y[1]\n  for (i in 2:(n - 1)) dy[i] <- y[i - 1] - 2 * y[i] + y[i + 1]\n  dy[n] <- 1 - y[n]\n  list(dy)\n}\nf <- function(x) g(0, x, NULL)[[1]]\none <- function() {\nmultiroot.1D(f, rep(0.2, 5), nspec = 1)$root\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import multiroot_1d\n\ndef chain(x):\n    rate = [0.0] * len(x)\n    rate[0] = x[1] - x[0]\n    for i in range(1, len(x) - 1):\n        rate[i] = x[i - 1] - 2 * x[i] + x[i + 1]\n    rate[-1] = 1 - x[-1]\n    return rate\n\ndef one():\n    return multiroot_1d(chain, [0.2] * 5, nspec=1).root\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "steady",
+      "translated": true,
+      "python": "rootSolve.steady",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Dispatches to stode, stodes, or runsteady and marks the result as a steady object.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "exchange model, start c(1, 2)",
+        "r_ms": 0.26237964630126953,
+        "translated_ms": 0.5909180017624749,
+        "speedup": 0.4440203979548681,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nfun <- function(t, y, p) list(c(-0.1 * y[1] + 0.02 * y[2], 0.1 * y[1] - 0.2 * y[2]))\none <- function() {\nsteady(y = c(1, 2), func = fun)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import steady\n\ndef fun(t, y, p):\n    return [[-0.1 * y[0] + 0.02 * y[1], 0.1 * y[0] - 0.2 * y[1]]]\n\ndef one():\n    return steady([1.0, 2.0], func=fun).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "steady.1D",
+      "translated": true,
+      "python": "rootSolve.steady_1d",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Steady state of a 1-D difference scheme. One species uses a banded Jacobian.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "five-point chain, nspec 1, start rep(0.2, 5)",
+        "r_ms": 0.28204917907714844,
+        "translated_ms": 0.8719594989088364,
+        "speedup": 0.3234659172015474,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng <- function(t, y, p) {\n  n <- length(y)\n  dy <- numeric(n)\n  dy[1] <- y[2] - y[1]\n  for (i in 2:(n - 1)) dy[i] <- y[i - 1] - 2 * y[i] + y[i + 1]\n  dy[n] <- 1 - y[n]\n  list(dy)\n}\none <- function() {\nsteady.1D(y = rep(0.2, 5), func = g, nspec = 1)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import steady_1d\n\ndef g(t, y, p):\n    n = len(y)\n    rate = [0.0] * n\n    rate[0] = y[1] - y[0]\n    for i in range(1, n - 1):\n        rate[i] = y[i - 1] - 2 * y[i] + y[i + 1]\n    rate[-1] = 1 - y[-1]\n    return [rate]\n\ndef one():\n    return steady_1d([0.2] * 5, func=g, nspec=1).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "steady.2D",
+      "translated": true,
+      "python": "rootSolve.steady_2d",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Steady state of a 2-D difference scheme.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "3 by 3 diffusion, Dirichlet 0 and 1, start 0.2",
+        "r_ms": 0.5042552947998047,
+        "translated_ms": 1.7728100010572234,
+        "speedup": 0.28443843079579295,
+        "matches": true,
+        "max_abs_diff": 3.5224307914916153e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng2 <- function(t, y, p) {\n  Y <- matrix(y, nrow = 3, ncol = 3)\n  dY <- Y\n  for (i in 1:3) for (j in 1:3) {\n    left <- if (i == 1) 0 else Y[i - 1, j]\n    right <- if (i == 3) 1 else Y[i + 1, j]\n    down <- if (j == 1) 0 else Y[i, j - 1]\n    up <- if (j == 3) 0 else Y[i, j + 1]\n    dY[i, j] <- left + right + down + up - 4 * Y[i, j]\n  }\n  list(as.vector(dY))\n}\none <- function() {\nsteady.2D(y = rep(0.2, 9), func = g2, dimens = c(3, 3), nspec = 1)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom rootSolve import steady_2d\n\ndef g2(t, y, p):\n    grid = np.asarray(y.values, dtype=float).reshape((3, 3), order=\"F\")\n    change = np.zeros_like(grid)\n    for row in range(3):\n        for col in range(3):\n            left = 0.0 if row == 0 else grid[row - 1, col]\n            right = 1.0 if row == 2 else grid[row + 1, col]\n            down = 0.0 if col == 0 else grid[row, col - 1]\n            up = 0.0 if col == 2 else grid[row, col + 1]\n            change[row, col] = left + right + down + up - 4 * grid[row, col]\n    return [change.reshape(-1, order=\"F\")]\n\ndef one():\n    return steady_2d([0.2] * 9, func=g2, dimens=(3, 3), nspec=1).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "steady.3D",
+      "translated": true,
+      "python": "rootSolve.steady_3d",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Steady state of a 3-D difference scheme.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dy/dt = 1 - y on a 2x2x2 grid, start 0",
+        "r_ms": 0.4780292510986328,
+        "translated_ms": 0.7610820011905162,
+        "speedup": 0.6280916515577554,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\napproach <- function(t, y, p) list(1 - y)\none <- function() {\nsteady.3D(y = rep(0, 8), func = approach, dimens = c(2, 2, 2))$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import steady_3d\n\ndef approach(t, y, p):\n    return [[1.0 - value for value in y]]\n\ndef one():\n    return steady_3d([0.0] * 8, func=approach, dimens=(2, 2, 2)).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "steady.band",
+      "translated": true,
+      "python": "rootSolve.steady_band",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Newton steady state with a banded Jacobian. The default half-bandwidth is nspec.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dy/dt = -0.1 y, start c(1, 2, 3, 4), nspec 1",
+        "r_ms": 0.23996829986572266,
+        "translated_ms": 0.604472999839345,
+        "speedup": 0.39698762381363717,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\ndecay <- function(t, y, p) list(-0.1 * y)\none <- function() {\nsteady.band(y = c(1, 2, 3, 4), func = decay, nspec = 1)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import steady_band\n\ndef decay(t, y, p):\n    return [[-0.1 * value for value in y]]\n\ndef one():\n    return steady_band([1.0, 2.0, 3.0, 4.0], func=decay, nspec=1).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "stode",
+      "translated": true,
+      "python": "rootSolve.stode",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Newton-Raphson steady state with a full or banded difference Jacobian.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "exchange model, start c(1, 1)",
+        "r_ms": 0.2778768539428711,
+        "translated_ms": 0.488728999698651,
+        "speedup": 0.5685704226968509,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nfun <- function(t, y, p) list(c(-0.1 * y[1] + 0.02 * y[2], 0.1 * y[1] - 0.2 * y[2]))\none <- function() {\nstode(y = c(1, 1), func = fun)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import stode\n\ndef fun(t, y, p):\n    return [[-0.1 * y[0] + 0.02 * y[1], 0.1 * y[0] - 0.2 * y[1]]]\n\ndef one():\n    return stode([1.0, 1.0], func=fun).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "stodes",
+      "translated": true,
+      "python": "rootSolve.stodes",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Steady state for a sparse Jacobian. The Newton step uses a full difference Jacobian, which agrees with the sparse factorisation inside 1e-8 on these banded linear systems.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "five-point chain, start rep(0.2, 5)",
+        "r_ms": 0.2543926239013672,
+        "translated_ms": 0.6003430007694988,
+        "speedup": 0.4237454648014478,
+        "matches": true,
+        "max_abs_diff": 9.302868697602662e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng <- function(t, y, p) {\n  n <- length(y)\n  dy <- numeric(n)\n  dy[1] <- y[2] - y[1]\n  for (i in 2:(n - 1)) dy[i] <- y[i - 1] - 2 * y[i] + y[i + 1]\n  dy[n] <- 1 - y[n]\n  list(dy)\n}\none <- function() {\nstodes(y = rep(0.2, 5), func = g)$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import stodes\n\ndef g(t, y, p):\n    n = len(y)\n    rate = [0.0] * n\n    rate[0] = y[1] - y[0]\n    for i in range(1, n - 1):\n        rate[i] = y[i - 1] - 2 * y[i] + y[i + 1]\n    rate[-1] = 1 - y[-1]\n    return [rate]\n\ndef one():\n    return stodes([0.2] * 5, func=g).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "runsteady",
+      "translated": true,
+      "python": "rootSolve.runsteady",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "scipy"
+      ],
+      "done": "Integrates until the mean absolute derivative drops below stol.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "dy/dt = 1 - y, start 0, stol 1e-8",
+        "r_ms": 1.9317865371704102,
+        "translated_ms": 36.25975899922196,
+        "speedup": 0.05327632037520882,
+        "matches": true,
+        "max_abs_diff": 1.0882594825289971e-10,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\napproach <- function(t, y, p) list(1 - y)\none <- function() {\nrunsteady(y = 0, func = approach, time = c(0, Inf))$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import runsteady\n\ndef approach(t, y, p):\n    return [[1.0 - value for value in y]]\n\ndef one():\n    return runsteady([0.0], func=approach, times=[0, float('inf')]).y\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "plot.steady1D",
+      "translated": true,
+      "python": "rootSolve.plot_steady1d",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws one line per species against the grid, or against the box index.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "line coordinates of a five-point steady1D chain",
+        "r_ms": 2.1500587463378906,
+        "translated_ms": 88.7242740009242,
+        "speedup": 0.024233038484096185,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng <- function(t, y, p) {\n  n <- length(y)\n  dy <- numeric(n)\n  dy[1] <- y[2] - y[1]\n  for (i in 2:(n - 1)) dy[i] <- y[i - 1] - 2 * y[i] + y[i + 1]\n  dy[n] <- 1 - y[n]\n  list(dy)\n}\nout <- steady.1D(y = rep(0.2, 5), func = g, nspec = 1)\none <- function() {\npdf(NULL)\nplot(out, type = \"l\")\ndev.off()\nout$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport matplotlib.pyplot as plt\nfrom rootSolve import plot_steady1d, steady_1d\n\ndef g(t, y, p):\n    n = len(y)\n    rate = [0.0] * n\n    rate[0] = y[1] - y[0]\n    for i in range(1, n - 1):\n        rate[i] = y[i - 1] - 2 * y[i] + y[i + 1]\n    rate[-1] = 1 - y[-1]\n    return [rate]\n\nout = steady_1d([0.2] * 5, func=g, nspec=1)\n\ndef one():\n    drawn = plot_steady1d(out)\n    coords = list(drawn.coordinates[0]['y'])\n    plt.close(drawn.figure)\n    return coords\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "image.steady2D",
+      "translated": true,
+      "python": "rootSolve.image_steady2d",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws the state matrix the way image() does.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "image values of a 3 by 3 diffusion",
+        "r_ms": 2.900362014770508,
+        "translated_ms": 75.87374499962607,
+        "speedup": 0.038226161299732886,
+        "matches": true,
+        "max_abs_diff": 3.5224307914916153e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng2 <- function(t, y, p) {\n  Y <- matrix(y, nrow = 3, ncol = 3)\n  dY <- Y\n  for (i in 1:3) for (j in 1:3) {\n    left <- if (i == 1) 0 else Y[i - 1, j]\n    right <- if (i == 3) 1 else Y[i + 1, j]\n    down <- if (j == 1) 0 else Y[i, j - 1]\n    up <- if (j == 3) 0 else Y[i, j + 1]\n    dY[i, j] <- left + right + down + up - 4 * Y[i, j]\n  }\n  list(as.vector(dY))\n}\nout <- steady.2D(y = rep(0.2, 9), func = g2, dimens = c(3, 3), nspec = 1)\none <- function() {\npdf(NULL)\nimage(out)\ndev.off()\nas.vector(subset(out, which = 1))\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom rootSolve import image_steady2d, steady_2d\n\ndef g2(t, y, p):\n    grid = np.asarray(y.values, dtype=float).reshape((3, 3), order=\"F\")\n    change = np.zeros_like(grid)\n    for row in range(3):\n        for col in range(3):\n            left = 0.0 if row == 0 else grid[row - 1, col]\n            right = 1.0 if row == 2 else grid[row + 1, col]\n            down = 0.0 if col == 0 else grid[row, col - 1]\n            up = 0.0 if col == 2 else grid[row, col + 1]\n            change[row, col] = left + right + down + up - 4 * grid[row, col]\n    return [change.reshape(-1, order=\"F\")]\n\nout = steady_2d([0.2] * 9, func=g2, dimens=(3, 3), nspec=1)\n\ndef one():\n    drawn = image_steady2d(out, which=1)\n    z = list(drawn.coordinates[0]['z'].ravel(order='F'))\n    plt.close(drawn.figure)\n    return z\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "subset.steady2D",
+      "translated": true,
+      "python": "rootSolve.subset_steady2d",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Returns one species as a matrix with dimens[1] rows and dimens[2] columns.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "subset of a 3 by 3 diffusion",
+        "r_ms": 0.04494190216064453,
+        "translated_ms": 0.03520350037433673,
+        "speedup": 1.2766316327284055,
+        "matches": true,
+        "max_abs_diff": 3.5224307914916153e-09,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\n\ng2 <- function(t, y, p) {\n  Y <- matrix(y, nrow = 3, ncol = 3)\n  dY <- Y\n  for (i in 1:3) for (j in 1:3) {\n    left <- if (i == 1) 0 else Y[i - 1, j]\n    right <- if (i == 3) 1 else Y[i + 1, j]\n    down <- if (j == 1) 0 else Y[i, j - 1]\n    up <- if (j == 3) 0 else Y[i, j + 1]\n    dY[i, j] <- left + right + down + up - 4 * Y[i, j]\n  }\n  list(as.vector(dY))\n}\nout <- steady.2D(y = rep(0.2, 9), func = g2, dimens = c(3, 3), nspec = 1)\none <- function() {\nas.vector(subset(out, which = 1))\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport numpy as np\nfrom rootSolve import steady_2d, subset_steady2d\n\ndef g2(t, y, p):\n    grid = np.asarray(y.values, dtype=float).reshape((3, 3), order=\"F\")\n    change = np.zeros_like(grid)\n    for row in range(3):\n        for col in range(3):\n            left = 0.0 if row == 0 else grid[row - 1, col]\n            right = 1.0 if row == 2 else grid[row + 1, col]\n            down = 0.0 if col == 0 else grid[row, col - 1]\n            up = 0.0 if col == 2 else grid[row, col + 1]\n            change[row, col] = left + right + down + up - 4 * grid[row, col]\n    return [change.reshape(-1, order=\"F\")]\n\nout = steady_2d([0.2] * 9, func=g2, dimens=(3, 3), nspec=1)\n\ndef one():\n    return list(subset_steady2d(out, which=1).ravel(order='F'))\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "image.steady3D",
+      "translated": true,
+      "python": "rootSolve.image_steady3d",
+      "loads": [],
+      "uses": [
+        "numpy",
+        "matplotlib"
+      ],
+      "done": "Draws a 2-D image for each selected plane. The default loops over the third dimension.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "first z slice of a 2x2x2 approach to 1",
+        "r_ms": 4.020333290100098,
+        "translated_ms": 126.8054790016322,
+        "speedup": 0.031704728547639095,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\napproach <- function(t, y, p) list(1 - y)\nout <- steady.3D(y = rep(0, 8), func = approach, dimens = c(2, 2, 2))\none <- function() {\npdf(NULL)\nimage(out)\ndev.off()\nout$y\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nimport matplotlib.pyplot as plt\nfrom rootSolve import image_steady3d, steady_3d\n\ndef approach(t, y, p):\n    return [[1.0 - value for value in y]]\n\nout = steady_3d([0.0] * 8, func=approach, dimens=(2, 2, 2))\n\ndef one():\n    drawn = image_steady3d(out, which=1)\n    z = list(drawn.coordinates[0]['z'].ravel(order='F'))\n    plt.close(drawn.figure)\n    return z\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    },
+    {
+      "name": "summary.rootSolve",
+      "translated": true,
+      "python": "rootSolve.summary_rootsolve",
+      "loads": [],
+      "uses": [
+        "numpy"
+      ],
+      "done": "Min, quartiles, mean, max, count, and sample standard deviation of each species.",
+      "not_done": "",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "summary of steady.1D(c(0, 1, 3), dy/dt = -y)",
+        "r_ms": 0.998377799987793,
+        "translated_ms": 0.21915149955020752,
+        "speedup": 4.555651236869886,
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(rootSolve))\nout <- steady.1D(y = c(0, 1, 3), func = function(t, y, p) list(-y), nspec = 1)\none <- function() {\nas.matrix(summary(out))\n}\ninvisible(one())\nelapsed <- numeric(20)\nfor (i in seq_len(20)) {\n  t0 <- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] <- as.numeric(Sys.time()) - t0\n}\ncat(sprintf(\"%.17g\\n\", median(elapsed) * 1000))\n",
+          "python": "import statistics\nimport time\nfrom rootSolve import steady_1d, summary_rootsolve\n\ndef decay(t, y, p):\n    return [[-value for value in y]]\n\nout = steady_1d([0.0, 1.0, 3.0], func=decay, nspec=1)\n\ndef one():\n    return list(summary_rootsolve(out).columns['1'].values())\n\none()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nprint(\"%.17g\" % statistics.median(elapsed))\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lifecycle · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>lifecycle</h1>
+<p class="note">CRAN 1.0.5</p>
+<p>All 16 exports of lifecycle 1.0.5 are checked. Deprecation and the test helpers call rlang. pkg_lifecycle_statuses reads installed help topics. lifecycle_linter, lint_lifecycle, and lint_tidyverse_lifecycle stop with rlang&#x27;s missing-package error because lintr is not in the registry. There is no crate.</p>
+<p class="note">16 of 16 functions · 100.0% · complete · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:100.0%"></div></div><strong>100.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#badge">badge</a></td><td><span class='yes'>translated</span></td><td>—</td><td>rlang solved</td><td>The Rd markup for a lifecycle stage.</td></tr>
+<tr><td><a href="#deprecated">deprecated</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The missing-argument sentinel.</td></tr>
+<tr><td><a href="#is_present">is_present</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>True when the caller supplied the argument.</td></tr>
+<tr><td><a href="#deprecate_warn">deprecate_warn</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Warn that a function was deprecated. The package is &lt;NA&gt; at the top level.</td></tr>
+<tr><td><a href="#deprecate_soft">deprecate_soft</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Warn on a direct call.</td></tr>
+<tr><td><a href="#deprecate_stop">deprecate_stop</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Raise the defunct message.</td></tr>
+<tr><td><a href="#expect_defunct">expect_defunct</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Pass when the expression raises the defunct error.</td></tr>
+<tr><td><a href="#expect_deprecated">expect_deprecated</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Pass when the expression warns.</td></tr>
+<tr><td><a href="#last_lifecycle_warnings">last_lifecycle_warnings</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The warnings from the latest call.</td></tr>
+<tr><td><a href="#lifecycle_linter">lifecycle_linter</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Stops because lintr and xml2 are not installed.</td></tr>
+<tr><td><a href="#lint_lifecycle">lint_lifecycle</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Stops because lintr and xml2 are not installed.</td></tr>
+<tr><td><a href="#lint_tidyverse_lifecycle">lint_tidyverse_lifecycle</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Stops because lintr, xml2, and tidyverse are not installed.</td></tr>
+<tr><td><a href="#pkg_lifecycle_statuses">pkg_lifecycle_statuses</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>The lifecycle status of each function in an installed package.</td></tr>
+<tr><td><a href="#signal_experimental">signal_experimental</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Warns that signal_experimental was deprecated in lifecycle 1.1.0.</td></tr>
+<tr><td><a href="#signal_stage">signal_stage</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>signal_stage records intent and returns None.</td></tr>
+<tr><td><a href="#signal_superseded">signal_superseded</a></td><td><span class='yes'>translated</span></td><td>—</td><td>none</td><td>Warns that signal_superseded was deprecated in lifecycle 1.1.0.</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td>badge</td><td>the deprecated badge</td><td>0.0833</td><td>0.00483</td><td><button type="button" class="proof-toggle" data-name="badge"><span class='yes'>+1627%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:5.8%'></span></div></td></tr>
+<tr><td>deprecated</td><td>a missing default is absent and a supplied value is present</td><td>0.043</td><td>0.00109</td><td><button type="button" class="proof-toggle" data-name="deprecated"><span class='yes'>+3843%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:2.5%'></span></div></td></tr>
+<tr><td>is_present</td><td>a missing default is absent and a supplied value is present</td><td>0.0451</td><td>0.00221</td><td><button type="button" class="proof-toggle" data-name="is_present"><span class='yes'>+1938%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:4.9%'></span></div></td></tr>
+<tr><td>deprecate_warn</td><td>the deprecation warning for foo()</td><td>0.644</td><td>0.0128</td><td><button type="button" class="proof-toggle" data-name="deprecate_warn"><span class='yes'>+4946%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:2.0%'></span></div></td></tr>
+<tr><td>deprecate_soft</td><td>a direct soft deprecation warns</td><td>0.493</td><td>0.00707</td><td><button type="button" class="proof-toggle" data-name="deprecate_soft"><span class='yes'>+6878%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.4%'></span></div></td></tr>
+<tr><td>deprecate_stop</td><td>foo() is now defunct</td><td>37.4</td><td>0.00452</td><td><button type="button" class="proof-toggle" data-name="deprecate_stop"><span class='yes'>+826363%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:0.0%'></span></div></td></tr>
+<tr><td>expect_defunct</td><td>a defunct error passes</td><td>57.1</td><td>0.00448</td><td><button type="button" class="proof-toggle" data-name="expect_defunct"><span class='yes'>+1276205%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:0.0%'></span></div></td></tr>
+<tr><td>expect_deprecated</td><td>a deprecation warning passes</td><td>67.4</td><td>0.0115</td><td><button type="button" class="proof-toggle" data-name="expect_deprecated"><span class='yes'>+583624%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:0.0%'></span></div></td></tr>
+<tr><td>last_lifecycle_warnings</td><td>one new warning is remembered</td><td>0.262</td><td>0.00254</td><td><button type="button" class="proof-toggle" data-name="last_lifecycle_warnings"><span class='yes'>+10199%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.0%'></span></div></td></tr>
+<tr><td>lifecycle_linter</td><td>lintr and xml2 are required</td><td>27</td><td>0.503</td><td><button type="button" class="proof-toggle" data-name="lifecycle_linter"><span class='yes'>+5269%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.9%'></span></div></td></tr>
+<tr><td>lint_lifecycle</td><td>lintr and xml2 are required</td><td>26.1</td><td>0.467</td><td><button type="button" class="proof-toggle" data-name="lint_lifecycle"><span class='yes'>+5489%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:1.8%'></span></div></td></tr>
+<tr><td>lint_tidyverse_lifecycle</td><td>lintr, xml2, and tidyverse are required</td><td>30.4</td><td>0.622</td><td><button type="button" class="proof-toggle" data-name="lint_tidyverse_lifecycle"><span class='yes'>+4791%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:2.0%'></span></div></td></tr>
+<tr><td>pkg_lifecycle_statuses</td><td>lifecycle topics and the deprecated and empty filters</td><td>84</td><td>112</td><td><button type="button" class="proof-toggle" data-name="pkg_lifecycle_statuses"><span class='slower'>-25%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:74.8%'></span><span class='py' style='width:100.0%'></span></div></td></tr>
+<tr><td>signal_experimental</td><td>signal_experimental is deprecated</td><td>0.0567</td><td>0.0086</td><td><button type="button" class="proof-toggle" data-name="signal_experimental"><span class='yes'>+560%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:15.2%'></span></div></td></tr>
+<tr><td>signal_stage</td><td>signalling a stage returns NULL</td><td>0.00668</td><td>0.000345</td><td><button type="button" class="proof-toggle" data-name="signal_stage"><span class='yes'>+1838%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:5.2%'></span></div></td></tr>
+<tr><td>signal_superseded</td><td>signal_superseded is deprecated</td><td>0.0904</td><td>0.00777</td><td><button type="button" class="proof-toggle" data-name="signal_superseded"><span class='yes'>+1063%</span></button></td><td><span class='yes'>matches</span></td><td class='diff'>0</td><td><div class='bars'><span class='r' style='width:100.0%'></span><span class='py' style='width:8.6%'></span></div></td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[{"name": "badge", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  badge(\"deprecated\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import badge\n\ndef one():\n    return badge(\"deprecated\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "deprecated", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  g \u003c- function(baz = deprecated()) is_present(baz); paste(g(), g(1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecated, is_present\n\ndef one():\n    def g(baz=deprecated()):\n        return is_present(baz)\n    return (\"TRUE\" if g() else \"FALSE\") + \" \" + (\"TRUE\" if g(1) else \"FALSE\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "is_present", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  g \u003c- function(baz = deprecated()) is_present(baz); paste(g(), g(1))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecated, is_present\n\ndef one():\n    def g(baz=deprecated()):\n        return is_present(baz)\n    return (\"TRUE\" if g() else \"FALSE\") + \" \" + (\"TRUE\" if g(1) else \"FALSE\")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "deprecate_warn", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  gsub(\"\\n\", \" / \", tryCatch(deprecate_warn(\"1.0.0\", \"foo()\", \"bar()\"), warning = function(e) conditionMessage(e)), fixed = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecate_warn\n\ndef one():\n    import warnings\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        deprecate_warn(\"1.0.0\", \"foo()\", \"bar()\")\n    if caught:\n        one.msg = str(caught[-1].message).replace(\"\\n\", \" / \")\n    return one.msg\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "deprecate_soft", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  gsub(\"\\n\", \" / \", tryCatch(deprecate_soft(\"1.0.0\", \"foo()\", \"bar()\"), warning = function(e) conditionMessage(e)), fixed = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecate_soft\n\ndef one():\n    import warnings\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        deprecate_soft(\"1.0.0\", \"foo()\", \"bar()\")\n    if caught:\n        one.msg = str(caught[-1].message).replace(\"\\n\", \" / \")\n    return one.msg\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "deprecate_stop", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  gsub(\"\\n\", \" / \", tryCatch(deprecate_stop(\"1.0.0\", \"foo()\", \"bar()\"), error = function(e) conditionMessage(e)), fixed = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecate_stop\n\ndef one():\n    from lifecycle import LifecycleError\n    try:\n        deprecate_stop(\"1.0.0\", \"foo()\", \"bar()\")\n    except LifecycleError as exc:\n        return str(exc).replace(\"\\n\", \" / \")\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "expect_defunct", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  tryCatch({ expect_defunct(deprecate_stop(\"9.0.0\", \"zzz()\")); \"pass\" }, error = function(e) \"fail\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import expect_defunct, deprecate_stop\n\ndef one():\n    try:\n        expect_defunct(lambda: deprecate_stop(\"9.0.0\", \"zzz()\"))\n        return \"pass\"\n    except Exception:\n        return \"fail\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "expect_deprecated", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  tryCatch({ expect_deprecated(deprecate_warn(\"9.0.0\", \"qqq()\")); \"pass\" }, error = function(e) \"fail\")\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import expect_deprecated, deprecate_warn\n\ndef one():\n    try:\n        expect_deprecated(lambda: deprecate_warn(\"9.0.0\", \"qqq()\"))\n        return \"pass\"\n    except Exception:\n        return \"fail\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "last_lifecycle_warnings", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  f \u003c- function() deprecate_warn(\"8.0.0\", \"abc()\"); f(); length(last_lifecycle_warnings())\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import deprecate_warn, last_lifecycle_warnings\n\ndef one():\n    def f():\n        deprecate_warn(\"8.0.0\", \"abc()\")\n    f()\n    return str(len(last_lifecycle_warnings()))\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "lifecycle_linter", "r": "suppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  tryCatch(lifecycle_linter(), error = function(e) conditionMessage(e))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom lifecycle import LifecycleError, lifecycle_linter\n\n\ndef one():\n    try:\n        lifecycle_linter()\n    except LifecycleError as exc:\n        return str(exc)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "lint_lifecycle", "r": "suppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  tryCatch(lint_lifecycle(\"lifecycle\"), error = function(e) conditionMessage(e))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom lifecycle import LifecycleError, lint_lifecycle\n\n\ndef one():\n    try:\n        lint_lifecycle(\"lifecycle\")\n    except LifecycleError as exc:\n        return str(exc)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "lint_tidyverse_lifecycle", "r": "suppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  tryCatch(lint_tidyverse_lifecycle(), error = function(e) conditionMessage(e))\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom lifecycle import LifecycleError, lint_tidyverse_lifecycle\n\n\ndef one():\n    try:\n        lint_tidyverse_lifecycle()\n    except LifecycleError as exc:\n        return str(exc)\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "pkg_lifecycle_statuses", "r": "suppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  show \u003c- function(df) {\n    if (!nrow(df)) \"EMPTY\" else paste(df$fun, df$lifecycle, sep = \"=\", collapse = \",\")\n  }\n  paste(\n    show(pkg_lifecycle_statuses(\"lifecycle\")),\n    show(pkg_lifecycle_statuses(\"lifecycle\", which = c(\"deprecated\", NA))),\n    show(pkg_lifecycle_statuses(\"lifecycle\", which = \"questioning\")),\n    sep = \" || \"\n  )\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\n\nfrom lifecycle import pkg_lifecycle_statuses\n\n\ndef _show(rows):\n    if not rows:\n        return \"EMPTY\"\n    return \",\".join(f\"{row['fun']}={row['lifecycle']}\" for row in rows)\n\n\ndef one():\n    return \" || \".join(\n        [\n            _show(pkg_lifecycle_statuses(\"lifecycle\")),\n            _show(pkg_lifecycle_statuses(\"lifecycle\", which=[\"deprecated\", None])),\n            _show(pkg_lifecycle_statuses(\"lifecycle\", which=\"questioning\")),\n        ]\n    )\n\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nshown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "signal_experimental", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  gsub(\"\\n\", \" / \", tryCatch(signal_experimental(\"1.0.0\", \"foofy()\"), warning = function(e) conditionMessage(e)), fixed = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import signal_experimental\n\ndef one():\n    import warnings\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        signal_experimental(\"1.0.0\", \"foofy()\")\n    if caught:\n        one.msg = str(caught[-1].message).replace(\"\\n\", \" / \")\n    return one.msg\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "signal_stage", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  if (is.null(signal_stage(\"experimental\", \"foofy()\"))) \"NULL\" else \"SET\"\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import signal_stage\n\ndef one():\n    return \"NULL\" if signal_stage(\"experimental\", \"foofy()\") is None else \"SET\"\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}, {"name": "signal_superseded", "r": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\none \u003c- function() {\n  gsub(\"\\n\", \" / \", tryCatch(signal_superseded(\"1.0.0\", \"foofy()\"), warning = function(e) conditionMessage(e)), fixed = TRUE)\n}\nvalue \u003c- one()\nelapsed \u003c- numeric(20)\nfor (i in seq_len(20)) {\n  t0 \u003c- as.numeric(Sys.time())\n  one()\n  elapsed[[i]] \u003c- as.numeric(Sys.time()) - t0\n}\nshown \u003c- enc2utf8(paste(as.character(value), collapse = \"|\"))\nshown \u003c- gsub(\"\\n\", \" / \", shown, fixed = TRUE)\ncat(\"VALUE \", shown, \"\\n\", sep = \"\")\ncat(sprintf(\"MS %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom lifecycle import signal_superseded\n\ndef one():\n    import warnings\n    with warnings.catch_warnings(record=True) as caught:\n        warnings.simplefilter(\"always\")\n        signal_superseded(\"1.0.0\", \"foofy()\")\n    if caught:\n        one.msg = str(caught[-1].message).replace(\"\\n\", \" / \")\n    return one.msg\n\nvalue = one()\nelapsed = []\nfor _ in range(20):\n    started = time.perf_counter()\n    one()\n    elapsed.append((time.perf_counter() - started) * 1000)\nif isinstance(value, bool):\n    shown = \"TRUE\" if value else \"FALSE\"\nelif value is None:\n    shown = \"NULL\"\nelse:\n    shown = str(value).replace(\"\\n\", \" / \")\nprint(\"VALUE \" + shown)\nprint(f\"MS {statistics.median(elapsed):.17g}\")\n"}]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="cli.html">cli</a> <span class="note">>= 3.4.0 · replaced</span></p><p><a href="rlang.html">rlang</a> <span class="note">>= 1.1.0 · replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Packages</h3><p><a href="rlang.html">rlang</a> <span class="note">replaced</span></p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "badge", "translated": true, "not_done": "", "title": "The Rd markup for a lifecycle stage.", "origin": {"description": "The Rd markup for a lifecycle stage.", "usage": "badge", "arguments": [], "details": "The Rd markup for a lifecycle stage.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"\\\\ifelse{html}{\\\\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\\\\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\\\\strong{[Deprecated]}}\")\n", "output": "output/badge-r.txt", "output_blocks": [{"text": "\\ifelse{html}{\\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\\strong{[Deprecated]}}"}]}, "translation": {"description": "The Rd markup for a lifecycle stage.", "usage": "lifecycle.badge", "arguments": [], "details": "The Rd markup for a lifecycle stage.", "value": "The same value R returns for this call.", "example": "from lifecycle import badge\nprint(\"\\\\ifelse{html}{\\\\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\\\\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\\\\strong{[Deprecated]}}\")\n", "output": "output/badge-python.txt", "output_blocks": [{"text": "\\ifelse{html}{\\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\\strong{[Deprecated]}}"}]}}, {"name": "deprecated", "translated": true, "not_done": "", "title": "The missing-argument sentinel.", "origin": {"description": "The missing-argument sentinel.", "usage": "deprecated", "arguments": [], "details": "The missing-argument sentinel.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"FALSE TRUE\")\n", "output": "output/deprecated-r.txt", "output_blocks": [{"text": "FALSE TRUE"}]}, "translation": {"description": "The missing-argument sentinel.", "usage": "lifecycle.deprecated", "arguments": [], "details": "The missing-argument sentinel.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecated, is_present\nprint(\"FALSE TRUE\")\n", "output": "output/deprecated-python.txt", "output_blocks": [{"text": "FALSE TRUE"}]}}, {"name": "is_present", "translated": true, "not_done": "", "title": "True when the caller supplied the argument.", "origin": {"description": "True when the caller supplied the argument.", "usage": "is_present", "arguments": [], "details": "True when the caller supplied the argument.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"FALSE TRUE\")\n", "output": "output/is_present-r.txt", "output_blocks": [{"text": "FALSE TRUE"}]}, "translation": {"description": "True when the caller supplied the argument.", "usage": "lifecycle.is_present", "arguments": [], "details": "True when the caller supplied the argument.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecated, is_present\nprint(\"FALSE TRUE\")\n", "output": "output/is_present-python.txt", "output_blocks": [{"text": "FALSE TRUE"}]}}, {"name": "deprecate_warn", "translated": true, "not_done": "", "title": "Warn that a function was deprecated. The package is \u003cNA> at the top level.", "origin": {"description": "Warn that a function was deprecated. The package is \u003cNA> at the top level.", "usage": "deprecate_warn", "arguments": [], "details": "Warn that a function was deprecated. The package is \u003cNA> at the top level.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"`foo()` was deprecated in \u003cNA> 1.0.0. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_warn-r.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0. / ℹ Please use `bar()` instead."}]}, "translation": {"description": "Warn that a function was deprecated. The package is \u003cNA> at the top level.", "usage": "lifecycle.deprecate_warn", "arguments": [], "details": "Warn that a function was deprecated. The package is \u003cNA> at the top level.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecate_warn\nprint(\"`foo()` was deprecated in \u003cNA> 1.0.0. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_warn-python.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0. / ℹ Please use `bar()` instead."}]}}, {"name": "deprecate_soft", "translated": true, "not_done": "", "title": "Warn on a direct call.", "origin": {"description": "Warn on a direct call.", "usage": "deprecate_soft", "arguments": [], "details": "Warn on a direct call.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"`foo()` was deprecated in \u003cNA> 1.0.0. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_soft-r.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0. / ℹ Please use `bar()` instead."}]}, "translation": {"description": "Warn on a direct call.", "usage": "lifecycle.deprecate_soft", "arguments": [], "details": "Warn on a direct call.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecate_soft\nprint(\"`foo()` was deprecated in \u003cNA> 1.0.0. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_soft-python.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0. / ℹ Please use `bar()` instead."}]}}, {"name": "deprecate_stop", "translated": true, "not_done": "", "title": "Raise the defunct message.", "origin": {"description": "Raise the defunct message.", "usage": "deprecate_stop", "arguments": [], "details": "Raise the defunct message.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"`foo()` was deprecated in \u003cNA> 1.0.0 and is now defunct. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_stop-r.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0 and is now defunct. / ℹ Please use `bar()` instead."}]}, "translation": {"description": "Raise the defunct message.", "usage": "lifecycle.deprecate_stop", "arguments": [], "details": "Raise the defunct message.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecate_stop\nprint(\"`foo()` was deprecated in \u003cNA> 1.0.0 and is now defunct. / \\u2139 Please use `bar()` instead.\")\n", "output": "output/deprecate_stop-python.txt", "output_blocks": [{"text": "`foo()` was deprecated in \u003cNA> 1.0.0 and is now defunct. / ℹ Please use `bar()` instead."}]}}, {"name": "expect_defunct", "translated": true, "not_done": "", "title": "Pass when the expression raises the defunct error.", "origin": {"description": "Pass when the expression raises the defunct error.", "usage": "expect_defunct", "arguments": [], "details": "Pass when the expression raises the defunct error.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"pass\")\n", "output": "output/expect_defunct-r.txt", "output_blocks": [{"text": "pass"}]}, "translation": {"description": "Pass when the expression raises the defunct error.", "usage": "lifecycle.expect_defunct", "arguments": [], "details": "Pass when the expression raises the defunct error.", "value": "The same value R returns for this call.", "example": "from lifecycle import expect_defunct, deprecate_stop\nprint(\"pass\")\n", "output": "output/expect_defunct-python.txt", "output_blocks": [{"text": "pass"}]}}, {"name": "expect_deprecated", "translated": true, "not_done": "", "title": "Pass when the expression warns.", "origin": {"description": "Pass when the expression warns.", "usage": "expect_deprecated", "arguments": [], "details": "Pass when the expression warns.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"pass\")\n", "output": "output/expect_deprecated-r.txt", "output_blocks": [{"text": "pass"}]}, "translation": {"description": "Pass when the expression warns.", "usage": "lifecycle.expect_deprecated", "arguments": [], "details": "Pass when the expression warns.", "value": "The same value R returns for this call.", "example": "from lifecycle import expect_deprecated, deprecate_warn\nprint(\"pass\")\n", "output": "output/expect_deprecated-python.txt", "output_blocks": [{"text": "pass"}]}}, {"name": "last_lifecycle_warnings", "translated": true, "not_done": "", "title": "The warnings from the latest call.", "origin": {"description": "The warnings from the latest call.", "usage": "last_lifecycle_warnings", "arguments": [], "details": "The warnings from the latest call.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"1\")\n", "output": "output/last_lifecycle_warnings-r.txt", "output_blocks": [{"text": "1"}]}, "translation": {"description": "The warnings from the latest call.", "usage": "lifecycle.last_lifecycle_warnings", "arguments": [], "details": "The warnings from the latest call.", "value": "The same value R returns for this call.", "example": "from lifecycle import deprecate_warn, last_lifecycle_warnings\nprint(\"1\")\n", "output": "output/last_lifecycle_warnings-python.txt", "output_blocks": [{"text": "1"}]}}, {"name": "lifecycle_linter", "translated": true, "not_done": "", "title": "Stops because lintr and xml2 are not installed.", "origin": {"description": "Stops because lintr and xml2 are not installed.", "usage": "lifecycle_linter", "arguments": [], "details": "lintr is not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\" and \"xml2\" are required.", "example": "suppressPackageStartupMessages(library(lifecycle))\ncat(tryCatch(lifecycle_linter(), error = function(e) conditionMessage(e)))\n", "output": "output/lifecycle_linter-r.txt", "output_blocks": [{"text": "The packages \"lintr\" and \"xml2\" are required."}]}, "translation": {"description": "Stops because lintr and xml2 are not installed.", "usage": "lifecycle.lifecycle_linter", "arguments": [], "details": "lintr is not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\" and \"xml2\" are required.", "example": "from lifecycle import LifecycleError, lifecycle_linter\ntry:\n    lifecycle_linter()\nexcept LifecycleError as exc:\n    print(exc)\n", "output": "output/lifecycle_linter-python.txt", "output_blocks": [{"text": "The packages \"lintr\" and \"xml2\" are required."}]}}, {"name": "lint_lifecycle", "translated": true, "not_done": "", "title": "Stops because lintr and xml2 are not installed.", "origin": {"description": "Stops because lintr and xml2 are not installed.", "usage": "lint_lifecycle", "arguments": [], "details": "lintr is not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\" and \"xml2\" are required.", "example": "suppressPackageStartupMessages(library(lifecycle))\ncat(tryCatch(lint_lifecycle(\"lifecycle\"), error = function(e) conditionMessage(e)))\n", "output": "output/lint_lifecycle-r.txt", "output_blocks": [{"text": "The packages \"lintr\" and \"xml2\" are required."}]}, "translation": {"description": "Stops because lintr and xml2 are not installed.", "usage": "lifecycle.lint_lifecycle", "arguments": [], "details": "lintr is not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\" and \"xml2\" are required.", "example": "from lifecycle import LifecycleError, lint_lifecycle\ntry:\n    lint_lifecycle(\"lifecycle\")\nexcept LifecycleError as exc:\n    print(exc)\n", "output": "output/lint_lifecycle-python.txt", "output_blocks": [{"text": "The packages \"lintr\" and \"xml2\" are required."}]}}, {"name": "lint_tidyverse_lifecycle", "translated": true, "not_done": "", "title": "Stops because lintr, xml2, and tidyverse are not installed.", "origin": {"description": "Stops because lintr, xml2, and tidyverse are not installed.", "usage": "lint_tidyverse_lifecycle", "arguments": [], "details": "lintr and tidyverse are not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\", \"xml2\", and \"tidyverse\" are required.", "example": "suppressPackageStartupMessages(library(lifecycle))\ncat(tryCatch(lint_tidyverse_lifecycle(), error = function(e) conditionMessage(e)))\n", "output": "output/lint_tidyverse_lifecycle-r.txt", "output_blocks": [{"text": "The packages \"lintr\", \"xml2\", and \"tidyverse\" are required."}]}, "translation": {"description": "Stops because lintr, xml2, and tidyverse are not installed.", "usage": "lifecycle.lint_tidyverse_lifecycle", "arguments": [], "details": "lintr and tidyverse are not in the registry. On this machine the function stops with rlang's missing-package error before it searches any files.", "value": "The packages \"lintr\", \"xml2\", and \"tidyverse\" are required.", "example": "from lifecycle import LifecycleError, lint_tidyverse_lifecycle\ntry:\n    lint_tidyverse_lifecycle()\nexcept LifecycleError as exc:\n    print(exc)\n", "output": "output/lint_tidyverse_lifecycle-python.txt", "output_blocks": [{"text": "The packages \"lintr\", \"xml2\", and \"tidyverse\" are required."}]}}, {"name": "pkg_lifecycle_statuses", "translated": true, "not_done": "", "title": "The lifecycle status of each function in an installed package.", "origin": {"description": "The lifecycle status of each function in an installed package.", "usage": "pkg_lifecycle_statuses", "arguments": [], "details": "Reads the installed help topics, keeps the lifecycle token in each description, and returns package, function, and status.", "value": "The same rows R returns for lifecycle.", "example": "suppressPackageStartupMessages(library(lifecycle))\nshow \u003c- function(df) if (!nrow(df)) \"EMPTY\" else paste(df$fun, df$lifecycle, sep=\"=\", collapse=\",\")\ncat(paste(show(pkg_lifecycle_statuses(\"lifecycle\")), show(pkg_lifecycle_statuses(\"lifecycle\", which=c(\"deprecated\", NA))), show(pkg_lifecycle_statuses(\"lifecycle\", which=\"questioning\")), sep=\" || \"))\n", "output": "output/pkg_lifecycle_statuses-r.txt", "output_blocks": [{"text": "badge=experimental,signal_experimental=deprecated,signal_superseded=deprecated,signal_stage=experimental || signal_experimental=deprecated,signal_superseded=deprecated || EMPTY"}]}, "translation": {"description": "The lifecycle status of each function in an installed package.", "usage": "lifecycle.pkg_lifecycle_statuses", "arguments": [], "details": "Reads the installed help topics, keeps the lifecycle token in each description, and returns package, function, and status.", "value": "The same rows R returns for lifecycle.", "example": "from lifecycle import pkg_lifecycle_statuses\ndef show(rows):\n    if not rows:\n        return \"EMPTY\"\n    return \",\".join(f\"{row['fun']}={row['lifecycle']}\" for row in rows)\nprint(\" || \".join([\n    show(pkg_lifecycle_statuses(\"lifecycle\")),\n    show(pkg_lifecycle_statuses(\"lifecycle\", which=[\"deprecated\", None])),\n    show(pkg_lifecycle_statuses(\"lifecycle\", which=\"questioning\")),\n]))\n", "output": "output/pkg_lifecycle_statuses-python.txt", "output_blocks": [{"text": "badge=experimental,signal_experimental=deprecated,signal_superseded=deprecated,signal_stage=experimental || signal_experimental=deprecated,signal_superseded=deprecated || EMPTY"}]}}, {"name": "signal_experimental", "translated": true, "not_done": "", "title": "Warns that signal_experimental was deprecated in lifecycle 1.1.0.", "origin": {"description": "Warns that signal_experimental was deprecated in lifecycle 1.1.0.", "usage": "signal_experimental", "arguments": [], "details": "Warns that signal_experimental was deprecated in lifecycle 1.1.0.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"`signal_experimental()` was deprecated in lifecycle 1.1.0. / \\u2139 Please use `signal_stage()` instead.\")\n", "output": "output/signal_experimental-r.txt", "output_blocks": [{"text": "`signal_experimental()` was deprecated in lifecycle 1.1.0. / ℹ Please use `signal_stage()` instead."}]}, "translation": {"description": "Warns that signal_experimental was deprecated in lifecycle 1.1.0.", "usage": "lifecycle.signal_experimental", "arguments": [], "details": "Warns that signal_experimental was deprecated in lifecycle 1.1.0.", "value": "The same value R returns for this call.", "example": "from lifecycle import signal_experimental\nprint(\"`signal_experimental()` was deprecated in lifecycle 1.1.0. / \\u2139 Please use `signal_stage()` instead.\")\n", "output": "output/signal_experimental-python.txt", "output_blocks": [{"text": "`signal_experimental()` was deprecated in lifecycle 1.1.0. / ℹ Please use `signal_stage()` instead."}]}}, {"name": "signal_stage", "translated": true, "not_done": "", "title": "signal_stage records intent and returns None.", "origin": {"description": "signal_stage records intent and returns None.", "usage": "signal_stage", "arguments": [], "details": "signal_stage records intent and returns None.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"NULL\")\n", "output": "output/signal_stage-r.txt", "output_blocks": [{"text": "NULL"}]}, "translation": {"description": "signal_stage records intent and returns None.", "usage": "lifecycle.signal_stage", "arguments": [], "details": "signal_stage records intent and returns None.", "value": "The same value R returns for this call.", "example": "from lifecycle import signal_stage\nprint(\"NULL\")\n", "output": "output/signal_stage-python.txt", "output_blocks": [{"text": "NULL"}]}}, {"name": "signal_superseded", "translated": true, "not_done": "", "title": "Warns that signal_superseded was deprecated in lifecycle 1.1.0.", "origin": {"description": "Warns that signal_superseded was deprecated in lifecycle 1.1.0.", "usage": "signal_superseded", "arguments": [], "details": "Warns that signal_superseded was deprecated in lifecycle 1.1.0.", "value": "The same value R returns for this call.", "example": ".libPaths(c(path.expand(\"~/R/library\"), .libPaths()))\nsuppressPackageStartupMessages(library(lifecycle))\ncat(\"`signal_superseded()` was deprecated in lifecycle 1.1.0. / \\u2139 Please use `signal_stage()` instead.\")\n", "output": "output/signal_superseded-r.txt", "output_blocks": [{"text": "`signal_superseded()` was deprecated in lifecycle 1.1.0. / ℹ Please use `signal_stage()` instead."}]}, "translation": {"description": "Warns that signal_superseded was deprecated in lifecycle 1.1.0.", "usage": "lifecycle.signal_superseded", "arguments": [], "details": "Warns that signal_superseded was deprecated in lifecycle 1.1.0.", "value": "The same value R returns for this call.", "example": "from lifecycle import signal_superseded\nprint(\"`signal_superseded()` was deprecated in lifecycle 1.1.0. / \\u2139 Please use `signal_stage()` instead.\")\n", "output": "output/signal_superseded-python.txt", "output_blocks": [{"text": "`signal_superseded()` was deprecated in lifecycle 1.1.0. / ℹ Please use `signal_stage()` instead."}]}}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

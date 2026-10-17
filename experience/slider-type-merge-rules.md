@@ -1,0 +1,1 @@
+Simplifying size-1 results follows `list_unchop`: logical with integer gives integer, and a missing window carries no type. `TRUE` cast to integer is `1`. The shared `_simplify` in `slider/engine.py` gives double for logical with integer, so `slide_vec([1,2,3], ...)` differs from R there.

@@ -1,0 +1,30 @@
+"""Timing case for weightedMean: the sample written by weightedMean-r.R.
+
+One untimed call, then the median of 20. Prints the value, then milliseconds.
+"""
+
+import pathlib
+import statistics
+import time
+
+import numpy as np
+from matrixstats.weightedmean import weightedMean
+
+raw = np.fromfile(pathlib.Path(__file__).with_name("weightedMean-data.bin"), dtype="<f8")
+x = raw[:100_000]
+w = raw[100_000:]
+
+
+def one():
+    return weightedMean(x, w, na_rm=False, refine=False)
+
+
+one()
+elapsed = []
+for _ in range(20):
+    started = time.perf_counter()
+    one()
+    elapsed.append((time.perf_counter() - started) * 1000)
+
+print(f"{one():.17g}")
+print(f"{statistics.median(elapsed):.17g}")
