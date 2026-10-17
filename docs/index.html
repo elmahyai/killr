@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>killr: Kill CRAN</title>
-<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R.">
+<title>killr: Kill CRAN, live dashboard</title>
+<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R. Live exam-style progress dashboard.">
 <link rel="icon" href="assets/mark.jpg" type="image/jpeg">
 <style>
   :root {
@@ -20,225 +20,186 @@
     --c: #ff5c8a;
     --ok: #3ddc97;
     --wait: #ffb85c;
-    --radius: 20px;
+    --grey: #7d86ab;
+    --radius: 18px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
   body {
     margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden;
+    background: var(--bg); color: var(--text); line-height: 1.55; overflow-x: hidden;
   }
   a { color: var(--b); text-decoration: none; }
   a:hover { text-decoration: underline; }
+  button, input, select { font: inherit; color: inherit; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .muted { color: var(--muted); }
 
-  /* ---------- Navigation ---------- */
+  /* ---------- Nav ---------- */
   nav.top {
     position: sticky; top: 0; z-index: 50;
-    backdrop-filter: saturate(160%) blur(14px);
-    -webkit-backdrop-filter: saturate(160%) blur(14px);
-    background: rgba(8,10,20,0.72); border-bottom: 1px solid var(--line);
+    backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px);
+    background: rgba(8,10,20,0.75); border-bottom: 1px solid var(--line);
   }
-  nav.top .wrap { display: flex; align-items: center; gap: 28px; height: 68px; }
-  .brand { display: flex; align-items: center; gap: 12px; color: var(--text); font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  nav.top .wrap { display: flex; align-items: center; gap: 26px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--text); }
   .brand:hover { text-decoration: none; }
-  .brand img { height: 40px; width: auto; display: block; border-radius: 10px; background: #fff; padding: 3px; }
-  nav.top ul { display: flex; gap: 22px; list-style: none; margin: 0 0 0 auto; padding: 0; }
+  .brand img { height: 36px; width: auto; border-radius: 9px; background: #fff; padding: 3px; }
+  nav.top ul { display: flex; gap: 20px; list-style: none; margin: 0 0 0 auto; padding: 0; }
   nav.top ul a { color: var(--muted); font-size: 15px; }
   nav.top ul a:hover { color: var(--text); text-decoration: none; }
-  .nav-cta {
-    padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; color: #05070f;
-    background: linear-gradient(90deg, var(--a), var(--b));
-  }
-  .nav-cta:hover { text-decoration: none; filter: brightness(1.08); }
+  .live-dot { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .live-dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(61,220,151,.6); animation: ping 2s infinite; }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(61,220,151,.6);} 70% { box-shadow: 0 0 0 10px rgba(61,220,151,0);} 100% { box-shadow: 0 0 0 0 rgba(61,220,151,0);} }
 
   /* ---------- Hero ---------- */
   header.hero {
-    position: relative; overflow: hidden; padding: 84px 0 96px;
+    position: relative; overflow: hidden; padding: 72px 0 60px;
     background:
-      radial-gradient(900px 560px at 12% -8%, rgba(124,92,255,0.34), transparent 60%),
-      radial-gradient(820px 520px at 96% 4%, rgba(0,212,255,0.22), transparent 60%),
-      radial-gradient(700px 420px at 50% 118%, rgba(255,92,138,0.16), transparent 60%),
+      radial-gradient(900px 500px at 10% -10%, rgba(124,92,255,.32), transparent 60%),
+      radial-gradient(800px 500px at 98% 0%, rgba(0,212,255,.2), transparent 60%),
       var(--bg);
   }
-  header.hero::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
-  }
-  .hero-grid { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--line);
-    border-radius: 999px; color: var(--muted); font-size: 14px; background: var(--panel);
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(61,220,151,0.6); animation: ping 2s infinite; }
-  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(61,220,151,0.6);} 70% { box-shadow: 0 0 0 10px rgba(61,220,151,0);} 100% { box-shadow: 0 0 0 0 rgba(61,220,151,0);} }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 44px; align-items: center; }
+  .eyebrow { display: inline-block; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 14px; background: var(--panel); }
   h1 {
-    font-size: clamp(60px, 9.5vw, 124px); line-height: 0.95; margin: 22px 0 14px; letter-spacing: -0.045em; font-weight: 850;
-    background: linear-gradient(90deg, #ffffff 0%, var(--b) 42%, var(--a) 78%, var(--c) 100%);
+    font-size: clamp(56px, 8.5vw, 112px); line-height: .95; margin: 20px 0 14px; letter-spacing: -.045em; font-weight: 850;
+    background: linear-gradient(90deg, #fff 0%, var(--b) 42%, var(--a) 78%, var(--c) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .lead { font-size: clamp(18px, 2.1vw, 22px); max-width: 620px; color: #cdd3ef; margin: 0 0 30px; }
-  .cta { display: flex; gap: 14px; flex-wrap: wrap; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 12px; font-weight: 650;
-    border: 1px solid var(--line); color: var(--text); background: var(--panel);
-    transition: transform .15s ease, background .15s ease;
-  }
+  .lead { font-size: clamp(17px, 2vw, 20px); color: #cdd3ef; max-width: 620px; margin: 0 0 26px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 12px; font-weight: 650; border: 1px solid var(--line); background: var(--panel); transition: transform .15s, background .15s; cursor: pointer; }
   .btn:hover { transform: translateY(-2px); background: var(--panel-hi); text-decoration: none; }
-  .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; box-shadow: 0 10px 30px -10px rgba(0,212,255,0.55); }
-  .btn.primary:hover { background: linear-gradient(90deg, var(--a), var(--b)); filter: brightness(1.07); }
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
-  .chip { padding: 8px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: #cdd3ef; font-size: 14px; }
-  .chip b { color: var(--text); }
-
-  /* Hero logo */
-  .hero-logo { position: relative; width: min(560px, 100%); margin: 0 auto; }
-  .hero-logo .halo {
-    position: absolute; inset: -8%; border-radius: 40px;
-    background: radial-gradient(circle, rgba(124,92,255,0.5), rgba(0,212,255,0.14) 55%, transparent 72%);
-    filter: blur(22px);
-  }
-  .hero-logo img {
-    position: relative; width: 100%; height: auto; display: block; border-radius: 28px;
-    box-shadow: 0 30px 80px -20px rgba(124,92,255,0.6), 0 0 0 1px rgba(255,255,255,0.08);
-    animation: float 6s ease-in-out infinite;
-  }
-  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; box-shadow: 0 10px 30px -10px rgba(0,212,255,.55); }
+  .hero-logo { width: 100%; max-width: 480px; margin: 0 auto; }
+  .hero-logo img { width: 100%; height: auto; display: block; border-radius: 26px; box-shadow: 0 30px 80px -20px rgba(124,92,255,.55), 0 0 0 1px rgba(255,255,255,.08); animation: float 6s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
 
   /* ---------- Sections ---------- */
-  section { padding: 96px 0; border-top: 1px solid var(--line); position: relative; }
-  .kicker { color: var(--b); font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
-  h2 { font-size: clamp(30px, 4.2vw, 46px); margin: 10px 0 12px; letter-spacing: -0.03em; line-height: 1.1; }
-  .sub { color: var(--muted); margin: 0 0 40px; max-width: 760px; font-size: 17px; }
+  section { padding: 84px 0; border-top: 1px solid var(--line); }
+  .kicker { color: var(--b); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  h2 { font-size: clamp(28px, 3.8vw, 42px); margin: 10px 0 10px; letter-spacing: -.03em; line-height: 1.1; }
+  .sub { color: var(--muted); margin: 0 0 30px; max-width: 760px; font-size: 16.5px; }
 
-  /* ---------- Stats ---------- */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-  .stat {
-    padding: 26px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
-    position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease;
-  }
-  .stat:hover { transform: translateY(-3px); border-color: rgba(0,212,255,0.35); }
-  .stat::before {
-    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
-    background: linear-gradient(90deg, var(--a), var(--b));
-  }
-  .num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .label { color: var(--text); font-size: 15px; margin-top: 4px; font-weight: 600; }
-  .note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  /* ---------- Score cards ---------- */
+  .scores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .score { padding: 22px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .score::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--a), var(--b)); }
+  .score .big { font-size: 40px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .score .big small { font-size: 18px; color: var(--muted); font-weight: 600; }
+  .score .lbl { font-weight: 600; margin-top: 2px; }
+  .score .note { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .meter { height: 8px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; margin-top: 14px; }
+  .meter > span { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--a), var(--b)); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
 
-  /* Progress donut */
-  .progress { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; margin-top: 40px; }
-  .donut {
-    width: 260px; height: 260px; border-radius: 50%; position: relative; margin: 0 auto;
-    /* 133 complete = 258.9deg, 14 in progress = 27.2deg, 38 replaced = 73.9deg (of 185) */
-    background: conic-gradient(var(--ok) 0deg 258.9deg, var(--wait) 258.9deg 286.1deg, var(--c) 286.1deg 360deg);
-    box-shadow: 0 0 60px -10px rgba(0,212,255,0.35);
-  }
-  .donut::after {
-    content: ""; position: absolute; inset: 26px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--line);
-  }
-  .donut .mid { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; text-align: center; }
-  .donut .mid b { font-size: 48px; letter-spacing: -0.03em; }
-  .donut .mid span { color: var(--muted); font-size: 14px; }
-  .legend { display: grid; gap: 14px; }
-  .legend .row { display: grid; grid-template-columns: 18px 1fr auto; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
-  .swatch { width: 14px; height: 14px; border-radius: 4px; }
-  .legend .row strong { font-size: 17px; }
-  .legend .row small { display: block; color: var(--muted); font-size: 13px; }
-  .legend .row em { font-style: normal; font-size: 22px; font-weight: 800; }
+  .grades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 16px; }
+  .gcell { padding: 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); text-align: center; cursor: pointer; transition: transform .15s, border-color .15s; }
+  .gcell:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.25); }
+  .gcell .g { font-size: 30px; font-weight: 850; }
+  .gcell .c { color: var(--muted); font-size: 13px; }
+  .g-A { color: var(--ok); } .g-B { color: #7ee0b8; } .g-C { color: var(--wait); } .g-D { color: #ff9a6b; } .g-F { color: var(--c); } .g-EX { color: var(--grey); }
 
-  /* ---------- Dashboard ---------- */
-  #dashboard { background: radial-gradient(900px 400px at 50% 0%, rgba(124,92,255,0.14), transparent 70%), var(--bg); }
-  .dash-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 28px; }
-  .dash-head .sub { margin: 0; }
-  .frame {
-    border-radius: 22px; overflow: hidden; border: 1px solid var(--line); background: #f7f4ee;
-    box-shadow: 0 30px 80px -30px rgba(124,92,255,0.45);
+  /* ---------- Exam sheet ---------- */
+  .sheet {
+    border-radius: 22px; background: linear-gradient(180deg, #f7f4ee, #efeae0); color: #1c1915;
+    box-shadow: 0 40px 90px -40px rgba(124,92,255,.5); overflow: hidden; border: 1px solid #e4ddd2;
   }
-  .frame-bar {
-    display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #14172b; border-bottom: 1px solid var(--line);
-    color: var(--muted); font-size: 13px;
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 26px; border-bottom: 2px solid #1c1915; background: #fffdf9; }
+  .sheet-head h3 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+  .sheet-head .meta { color: #5c564e; font-size: 14px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 26px; border-bottom: 1px solid #e4ddd2; background: #fbf8f2; }
+  .toolbar input[type="search"], .toolbar select {
+    padding: 9px 12px; border-radius: 10px; border: 1px solid #cfc6b8; background: #fff; color: #1c1915; min-width: 200px;
   }
-  .frame-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-  .frame-bar .url { margin-left: 12px; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); flex: 1; max-width: 460px; }
-  .frame-bar a { margin-left: auto; color: var(--b); font-weight: 600; }
-  iframe { width: 100%; height: 1000px; border: 0; display: block; background: #f7f4ee; }
+  .chip { padding: 7px 13px; border-radius: 999px; border: 1px solid #cfc6b8; background: #fff; color: #1c1915; font-size: 14px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: #1c1915; color: #fff; border-color: #1c1915; }
+  .count { margin-left: auto; color: #5c564e; font-size: 14px; }
+  .table-wrap { max-height: 640px; overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid #e9e2d6; vertical-align: middle; white-space: nowrap; }
+  th { position: sticky; top: 0; background: #1c1915; color: #fff; font-weight: 650; font-size: 13px; letter-spacing: .02em; cursor: pointer; user-select: none; z-index: 1; }
+  th .arr { opacity: .6; margin-left: 4px; }
+  tbody tr { cursor: pointer; transition: background .12s; }
+  tbody tr:hover { background: #fff7e6; }
+  td.name { font-weight: 650; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 650; }
+  .pill.complete { background: #daf5e8; color: #17603f; }
+  .pill.in_progress { background: #ffecc9; color: #7a4a00; }
+  .pill.replaced { background: #e5e7ef; color: #3e4560; }
+  .gbadge { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-weight: 800; background: #1c1915; }
+  .gbadge.g-A, .gbadge.g-B, .gbadge.g-C, .gbadge.g-D, .gbadge.g-F, .gbadge.g-EX { color: #fff; }
+  .gbadge.g-A { background: #17603f; } .gbadge.g-B { background: #2f7f5b; } .gbadge.g-C { background: #a86b00; }
+  .gbadge.g-D { background: #b9552b; } .gbadge.g-F { background: #a4234c; } .gbadge.g-EX { background: #6b7394; }
+  .bar { display: inline-block; width: 120px; height: 9px; border-radius: 999px; background: #e3dccf; vertical-align: middle; overflow: hidden; margin-right: 8px; }
+  .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #7c5cff, #00a7c9); }
+  .empty { padding: 40px; text-align: center; color: #5c564e; }
+  .sheet-foot { padding: 14px 26px; color: #5c564e; font-size: 13px; border-top: 1px solid #e4ddd2; background: #fffdf9; }
 
-  /* ---------- Cards and steps ---------- */
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
-  .card {
-    padding: 28px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
-    transition: transform .2s ease, border-color .2s ease, background .2s ease;
-  }
-  .card:hover { transform: translateY(-4px); border-color: rgba(124,92,255,0.45); background: var(--panel-hi); }
-  .card .ico {
-    width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 18px;
-    background: linear-gradient(135deg, rgba(124,92,255,0.35), rgba(0,212,255,0.25)); border: 1px solid var(--line);
-    font-weight: 800; font-size: 18px;
-  }
-  .card h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -0.01em; }
-  .card p { margin: 0; color: var(--muted); }
-
-  .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin: 8px 0 44px; }
-  .flow .node { position: relative; text-align: center; padding: 0 8px; }
-  .flow .node .bubble {
-    width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--panel); border: 1px solid rgba(0,212,255,0.4); font-weight: 800; color: var(--b);
-    box-shadow: 0 0 24px -6px rgba(0,212,255,0.5);
-  }
-  .flow .node b { display: block; font-size: 15px; }
-  .flow .node span { color: var(--muted); font-size: 13px; }
-  .flow .node:not(:last-child)::after {
-    content: ""; position: absolute; top: 32px; left: calc(50% + 40px); right: calc(-50% + 40px); height: 2px;
-    background: linear-gradient(90deg, var(--a), var(--b)); opacity: 0.6;
-  }
+  /* ---------- Dialog ---------- */
+  dialog { border: 0; padding: 0; width: min(880px, 94vw); max-height: 88vh; border-radius: 20px; background: #fffdf9; color: #1c1915; box-shadow: 0 40px 100px -20px rgba(0,0,0,.6); }
+  dialog::backdrop { background: rgba(5,6,12,.7); backdrop-filter: blur(4px); }
+  .dlg-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 24px 28px; border-bottom: 2px solid #1c1915; }
+  .dlg-head h3 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
+  .dlg-head .meta { color: #5c564e; font-size: 14px; margin-top: 4px; }
+  .dlg-x { border: 1px solid #cfc6b8; background: #fff; border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+  .dlg-body { padding: 22px 28px 28px; overflow: auto; max-height: calc(88vh - 110px); }
+  .dlg-body h4 { margin: 22px 0 8px; font-size: 15px; letter-spacing: .02em; text-transform: uppercase; color: #5c564e; }
+  .dlg-body p { margin: 0 0 6px; }
+  .fnlist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; list-style: none; padding: 0; margin: 0; }
+  .fnlist li { padding: 6px 10px; border-radius: 8px; background: #fff; border: 1px solid #e9e2d6; font-size: 14px; }
+  .fnlist li.done::before { content: "✓ "; color: #17603f; font-weight: 800; }
+  .fnlist li.todo::before { content: "○ "; color: #a86b00; font-weight: 800; }
+  .fnlist li small { display: block; color: #5c564e; }
+  .ok { color: #17603f; font-weight: 700; } .bad { color: #a4234c; font-weight: 700; }
+  .resume { background: #fff; border: 1px solid #e9e2d6; border-radius: 12px; padding: 14px 16px; font-size: 14.5px; }
+  .dlg-links a { display: inline-block; margin-right: 14px; font-weight: 650; }
 
   /* ---------- Rust ---------- */
-  .rust-band { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-  .rust-band p { color: var(--muted); font-size: 17px; }
-  .bars { display: grid; gap: 18px; }
-  .bar .top { display: flex; justify-content: space-between; font-size: 14px; color: #cdd3ef; margin-bottom: 8px; }
-  .bar .track { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; border: 1px solid var(--line); }
-  .bar .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--a), var(--b)); width: 0; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+  .rust-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: start; }
+  .rust-card { padding: 24px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
+  .rust-card p { color: var(--muted); }
+  .rust-list { max-height: 460px; overflow: auto; border-radius: 14px; border: 1px solid var(--line); }
+  .rust-list table { font-size: 14px; }
+  .rust-list th { background: #1a1f38; }
+  .rust-list td, .rust-list th { border-bottom: 1px solid var(--line); color: var(--text); }
+  .rust-list tr:hover td { background: rgba(255,255,255,.04); }
+  .rust-list td.origin { white-space: normal; color: var(--muted); font-size: 13px; }
+  .pill.assigned { background: rgba(255,184,92,.16); color: var(--wait); }
+  .pill.done { background: rgba(61,220,151,.14); color: var(--ok); }
 
-  /* ---------- Roadmap ---------- */
-  .todo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
-  .todo .card h3 { display: flex; align-items: center; justify-content: space-between; }
-  .tag { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,92,138,0.14); color: var(--c); border: 1px solid rgba(255,92,138,0.35); }
-  ul.tick { list-style: none; padding: 0; margin: 14px 0 0; }
-  ul.tick li { padding: 7px 0 7px 28px; position: relative; color: #cdd3ef; }
-  ul.tick li::before {
-    content: ""; position: absolute; left: 2px; top: 13px; width: 12px; height: 12px; border-radius: 4px;
-    border: 1.5px solid var(--b);
-  }
-  .more { margin-top: 32px; }
+  /* ---------- Cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .card { padding: 24px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .step-no { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--b)); color: #05070f; font-weight: 800; margin-bottom: 12px; }
+  .more { margin-top: 26px; }
+  ul.tick { list-style: none; padding: 0; margin: 12px 0 0; }
+  ul.tick li { padding: 6px 0 6px 26px; position: relative; color: #cdd3ef; }
+  ul.tick li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid var(--b); }
 
-  /* ---------- Footer ---------- */
-  footer { padding: 56px 0 64px; border-top: 1px solid var(--line); background: var(--bg2); }
-  .foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .foot img { height: 44px; width: auto; border-radius: 10px; background: #fff; padding: 3px; }
+  footer { padding: 46px 0 56px; border-top: 1px solid var(--line); background: var(--bg2); }
+  .foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .foot img { height: 40px; width: auto; border-radius: 9px; background: #fff; padding: 3px; }
   .foot p { margin: 0; color: var(--muted); }
-  .foot nav a { color: var(--muted); margin-left: 18px; font-size: 15px; }
+  .foot nav a { color: var(--muted); margin-left: 16px; font-size: 15px; }
   .foot .sp { margin-left: auto; }
 
-  /* ---------- Responsive ---------- */
-  @media (max-width: 980px) {
-    .hero-grid, .progress, .rust-band { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    .hero-logo { max-width: 520px; margin-top: 12px; }
-    .flow { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
-    .flow .node::after { display: none !important; }
+  @media (max-width: 1000px) {
+    .hero-grid, .rust-grid { grid-template-columns: 1fr; }
+    .hero-logo { max-width: 360px; order: -1; }
+    .scores { grid-template-columns: repeat(2, 1fr); }
+    .grades { grid-template-columns: repeat(3, 1fr); }
+    .cards { grid-template-columns: repeat(2, 1fr); }
     nav.top ul { display: none; }
-    iframe { height: 760px; }
   }
-  @media (max-width: 560px) {
-    .stats { grid-template-columns: 1fr; }
-    iframe { height: 620px; }
+  @media (max-width: 620px) {
+    .scores, .cards { grid-template-columns: 1fr; }
+    .fnlist { grid-template-columns: 1fr; }
+    .toolbar input[type="search"] { min-width: 0; width: 100%; }
+    th, td { padding: 9px 10px; font-size: 13.5px; }
+    .bar { width: 70px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -252,86 +213,152 @@
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/mark.jpg" alt="">killr</a>
     <ul>
-      <li><a href="#dashboard">Dashboard</a></li>
-      <li><a href="#progress">Progress</a></li>
+      <li><a href="#exam">Exam results</a></li>
+      <li><a href="#rust">Rust crates</a></li>
       <li><a href="#how">How it works</a></li>
-      <li><a href="#rust">Rust</a></li>
       <li><a href="#next">What is next</a></li>
     </ul>
-    <a class="nav-cta" href="#dashboard">Open dashboard</a>
+    <span class="live-dot"><i></i><span id="updated">loading data</span></span>
   </div>
 </nav>
 
 <header class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><span class="dot"></span> Proof of concept &middot; live</span>
+      <span class="eyebrow">An agent system: R to Python and Rust</span>
       <h1>Kill CRAN.</h1>
       <p class="lead">
         R holds some of the best statistics code in the world, and it is trapped in R.
-        killr is an agent system that translates the CRAN catalog into Python and Rust,
-        and proves every translated function against the original R output.
+        killr translates the CRAN catalog into Python and Rust, and every translated function
+        is checked against the original R output. This page is the live progress exam.
       </p>
       <div class="cta">
-        <a class="btn primary" href="#dashboard">See the live dashboard</a>
+        <a class="btn primary" href="#exam">Read the exam results</a>
         <a class="btn" href="strategy.md">How the agents work</a>
       </div>
-      <div class="chips">
-        <span class="chip"><b>6,097</b> functions translated</span>
-        <span class="chip"><b>5,999</b> of 6,006 checks match R</span>
-        <span class="chip"><b>1.96x</b> median speedup</span>
-      </div>
     </div>
-    <div class="hero-logo">
-      <div class="halo"></div>
-      <img src="assets/logo.jpg" alt="killr: Rust and Python, the AI-powered R replacement">
-    </div>
+    <div class="hero-logo"><img src="assets/logo.jpg" alt="killr: Rust and Python, the AI-powered R replacement"></div>
   </div>
 </header>
 
-<section id="progress">
+<section id="summary">
   <div class="wrap">
-    <div class="kicker">Where we are</div>
-    <h2>Progress across the catalog</h2>
-    <p class="sub">Numbers from the translation registry, as of this snapshot. They refresh each time the dashboard is built.</p>
-    <div class="stats">
-      <div class="stat"><div class="num" data-count="185">185</div><div class="label">CRAN packages in scope</div><div class="note">133 complete, 14 in progress</div></div>
-      <div class="stat"><div class="num" data-count="133">133</div><div class="label">packages fully translated</div><div class="note">38 more are replaced by a mature library</div></div>
-      <div class="stat"><div class="num" data-count="6097">6,097</div><div class="label">functions translated</div><div class="note">Python first, Rust where it computes</div></div>
-      <div class="stat"><div class="num" data-count="5999">5,999</div><div class="label">proof checks match R</div><div class="note">of 6,006 recorded checks</div></div>
-      <div class="stat"><div class="num">1.96x</div><div class="label">median speedup over R</div><div class="note">63% of checks run faster than R</div></div>
-      <div class="stat"><div class="num" data-count="132">132</div><div class="label">Rust kernel crates</div><div class="note">about 96,000 lines of Rust</div></div>
+    <div class="kicker">Scoreboard</div>
+    <h2>Where the translation stands</h2>
+    <p class="sub">Every number on this page is read from the registry when the site is built. Replaced packages are exempt from grading, because a mature library covers them.</p>
+    <div class="scores">
+      <div class="score">
+        <div class="big"><span id="s-pkg">-</span> <small id="s-pkg-of"></small></div>
+        <div class="lbl">Packages finished</div>
+        <div class="note" id="s-pkg-note"></div>
+        <div class="meter"><span id="m-pkg"></span></div>
+      </div>
+      <div class="score">
+        <div class="big"><span id="s-fn">-</span> <small id="s-fn-of"></small></div>
+        <div class="lbl">Functions translated</div>
+        <div class="note" id="s-fn-note"></div>
+        <div class="meter"><span id="m-fn"></span></div>
+      </div>
+      <div class="score">
+        <div class="big"><span id="s-chk">-</span> <small id="s-chk-of"></small></div>
+        <div class="lbl">Proof checks passing</div>
+        <div class="note">Each check compares R and Python output</div>
+        <div class="meter"><span id="m-chk"></span></div>
+      </div>
+      <div class="score">
+        <div class="big"><span id="s-spd">-</span></div>
+        <div class="lbl">Median speedup over R</div>
+        <div class="note" id="s-spd-note"></div>
+      </div>
     </div>
+    <div class="grades" id="grades" aria-label="Grade distribution"></div>
+  </div>
+</section>
 
-    <div class="progress">
-      <div class="donut" aria-label="133 complete, 14 in progress, 38 replaced, of 185 packages">
-        <div class="mid"><b>185</b><span>packages in scope</span></div>
+<section id="exam">
+  <div class="wrap">
+    <div class="kicker">Exam results</div>
+    <h2>Translation exam, one row per package</h2>
+    <p class="sub">Score is the share of functions translated. Grade A means every function is translated and every proof check matches R. Click a row for the functions, the checks and the open work.</p>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>CRAN to Python and Rust</h3>
+        <div class="meta" id="sheet-meta"></div>
       </div>
-      <div class="legend">
-        <div class="row"><span class="swatch" style="background:var(--ok)"></span><div><strong>Complete</strong><small>Translated and proven against R</small></div><em>133</em></div>
-        <div class="row"><span class="swatch" style="background:var(--wait)"></span><div><strong>In progress</strong><small>Agents are working on these now</small></div><em>14</em></div>
-        <div class="row"><span class="swatch" style="background:var(--c)"></span><div><strong>Replaced</strong><small>Covered by a mature library instead of a port</small></div><em>38</em></div>
+      <div class="toolbar" role="toolbar" aria-label="Filter results">
+        <input type="search" id="q" placeholder="Search a package name" aria-label="Search packages">
+        <button class="chip" data-filter="all" aria-pressed="true">All</button>
+        <button class="chip" data-filter="complete" aria-pressed="false">Complete</button>
+        <button class="chip" data-filter="in_progress" aria-pressed="false">In progress</button>
+        <button class="chip" data-filter="replaced" aria-pressed="false">Replaced</button>
+        <button class="chip" data-filter="attention" aria-pressed="false">Needs work (C, D, F)</button>
+        <button class="chip" data-filter="rust" aria-pressed="false">Uses Rust</button>
+        <select id="sort" aria-label="Sort">
+          <option value="name">Sort: name</option>
+          <option value="score">Sort: score</option>
+          <option value="functions">Sort: functions</option>
+          <option value="checks">Sort: proof checks</option>
+          <option value="speed">Sort: speedup</option>
+          <option value="grade">Sort: grade</option>
+        </select>
+        <span class="count" id="count"></span>
       </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="name">Package<span class="arr"></span></th>
+              <th data-sort="status">Status<span class="arr"></span></th>
+              <th data-sort="grade">Grade<span class="arr"></span></th>
+              <th data-sort="score">Score<span class="arr"></span></th>
+              <th data-sort="functions">Functions<span class="arr"></span></th>
+              <th data-sort="checks">Proof checks<span class="arr"></span></th>
+              <th data-sort="speed">Speedup<span class="arr"></span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="empty" hidden>No package matches this filter.</div>
+      </div>
+      <div class="sheet-foot">Grades: A all translated and matching, B at least 75%, C at least 50%, D below 50%, F nothing translated, EX replaced by a stand-in.</div>
     </div>
   </div>
 </section>
 
-<section id="dashboard">
-  <div class="wrap">
-    <div class="dash-head">
-      <div>
-        <div class="kicker">Live</div>
-        <h2>The dashboard</h2>
-      </div>
-      <p class="sub">Every package, crate, and proof, built from the registry. Browse it right here, or open it full screen.</p>
+<dialog id="detail" aria-labelledby="d-title">
+  <div class="dlg-head">
+    <div>
+      <h3 id="d-title"></h3>
+      <div class="meta" id="d-meta"></div>
     </div>
-    <div class="frame">
-      <div class="frame-bar">
-        <i style="background:#ff5c8a"></i><i style="background:#ffb85c"></i><i style="background:#3ddc97"></i>
-        <span class="url">dashboard/index.html</span>
-        <a href="dashboard/index.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
+    <button class="dlg-x" id="d-close" aria-label="Close">Close</button>
+  </div>
+  <div class="dlg-body" id="d-body"></div>
+</dialog>
+
+<section id="rust">
+  <div class="wrap rust-grid">
+    <div class="rust-card">
+      <div class="kicker">Rust crates</div>
+      <h2 style="margin-top:8px">Compiled kernels in Rust</h2>
+      <p>Each crate holds one Fortran or C routine that does the heavy computing, ported to Rust. A crate is "assigned" while an agent is working on it, and "done" once it is finished.</p>
+      <div class="cards" style="grid-template-columns: 1fr 1fr; margin-top:18px">
+        <div class="card" style="padding:18px"><div class="big" id="c-total" style="font-size:34px;font-weight:800">-</div><div class="muted">crates in total</div></div>
+        <div class="card" style="padding:18px"><div class="big" id="c-assigned" style="font-size:34px;font-weight:800">-</div><div class="muted">being worked on now</div></div>
       </div>
-      <iframe src="dashboard/index.html" title="killr dashboard" loading="lazy"></iframe>
+      <div class="toolbar" style="margin-top:18px; background: transparent; border: 0; padding: 0; gap: 8px">
+        <input type="search" id="cq" placeholder="Search a crate" aria-label="Search crates" style="padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);min-width:0;flex:1">
+        <button class="chip" data-cfilter="all" aria-pressed="true" style="background:transparent;color:var(--text);border-color:var(--line)">All</button>
+        <button class="chip" data-cfilter="assigned" aria-pressed="false" style="background:transparent;color:var(--text);border-color:var(--line)">Assigned</button>
+        <button class="chip" data-cfilter="done" aria-pressed="false" style="background:transparent;color:var(--text);border-color:var(--line)">Done</button>
+      </div>
+    </div>
+    <div class="rust-list">
+      <table>
+        <thead><tr><th>Crate</th><th>State</th><th>Loaded by</th></tr></thead>
+        <tbody id="crates"></tbody>
+      </table>
     </div>
   </div>
 </section>
@@ -341,41 +368,13 @@
     <div class="kicker">How it works</div>
     <h2>One pipeline, from R to Python and Rust</h2>
     <p class="sub">An orchestrator hands each package to translation agents. Each agent follows a written constitution and a plan sized to the package. Nothing counts as done until it matches R.</p>
-    <div class="flow">
-      <div class="node"><div class="bubble">1</div><b>CRAN catalog</b><span>The source of truth</span></div>
-      <div class="node"><div class="bubble">2</div><b>Orchestrator</b><span>Picks what runs next</span></div>
-      <div class="node"><div class="bubble">3</div><b>Agents</b><span>Translate under the rules</span></div>
-      <div class="node"><div class="bubble">4</div><b>Proof vs R</b><span>Match within 1e-8</span></div>
-      <div class="node"><div class="bubble">5</div><b>Registry</b><span>One generated record</span></div>
-      <div class="node"><div class="bubble">6</div><b>Dashboard</b><span>What you saw above</span></div>
-    </div>
     <div class="cards">
-      <div class="card"><div class="ico">O</div><h3>Orchestrator</h3><p>Orders packages by dependencies and download rank, and caps how many run at once.</p></div>
-      <div class="card"><div class="ico">C</div><h3>Constitution</h3><p>One set of rules: the order of work, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
-      <div class="card"><div class="ico">S</div><h3>Strategies</h3><p>Small, medium, large, and huge packages each get a plan that fits. Compiled code gets a -low variant.</p></div>
-      <div class="card"><div class="ico">E</div><h3>Experience</h3><p>Every pitfall becomes a lesson that later agents read before they start, so it is made once.</p></div>
+      <div class="card"><div class="step-no">1</div><h3>Orchestrator</h3><p>Orders packages by dependencies and download rank, and caps how many run at once.</p></div>
+      <div class="card"><div class="step-no">2</div><h3>Constitution</h3><p>One set of rules: the order of work, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
+      <div class="card"><div class="step-no">3</div><h3>Strategies</h3><p>Small, medium, large and huge packages each get a plan that fits. Compiled code gets a -low variant.</p></div>
+      <div class="card"><div class="step-no">4</div><h3>Proof vs R</h3><p>Each function is run in R and in Python on the same input. The outputs must match within 1e-8.</p></div>
     </div>
-    <p class="sub more">The full flow with the graph is in <a href="strategy.md">the strategy document</a>.</p>
-  </div>
-</section>
-
-<section id="rust">
-  <div class="wrap rust-band">
-    <div>
-      <div class="kicker">Rust coverage</div>
-      <h2>Compiled code moves into Rust</h2>
-      <p>Python carries the translation. Rust takes the Fortran and C kernels that do the heavy computing, and it is the next area to grow.</p>
-      <div class="stats" style="margin-top:28px; grid-template-columns: repeat(3, 1fr)">
-        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="132">132</div><div class="label" style="font-size:13px">Rust crates</div></div>
-        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="32">32</div><div class="label" style="font-size:13px">packages use Rust</div></div>
-        <div class="stat" style="padding:20px"><div class="num" style="font-size:34px" data-count="63">63</div><div class="label" style="font-size:13px">native libraries</div></div>
-      </div>
-    </div>
-    <div class="bars">
-      <div class="bar"><div class="top"><span>Packages fully translated</span><span>133 of 185</span></div><div class="track"><div class="fill" data-w="72"></div></div></div>
-      <div class="bar"><div class="top"><span>Packages with a Rust layer</span><span>32 of 185</span></div><div class="track"><div class="fill" data-w="17"></div></div></div>
-      <div class="bar"><div class="top"><span>Proof checks matching R</span><span>5,999 of 6,006</span></div><div class="track"><div class="fill" data-w="99.9"></div></div></div>
-    </div>
+    <p class="muted more">The full flow with the graph is in <a href="strategy.md">the strategy document</a>.</p>
   </div>
 </section>
 
@@ -383,73 +382,293 @@
   <div class="wrap">
     <div class="kicker">What is next</div>
     <h2>Still early, and getting better</h2>
-    <p class="sub">The agents are fast, but a first translation is not the last word. The work ahead is review, coverage, and quality.</p>
-    <div class="todo">
-      <div class="card">
-        <h3>More review rounds <span class="tag">open</span></h3>
-        <p>Every complete package gets another review pass, so the first translation is not the final one.</p>
-        <ul class="tick">
-          <li>Review the 133 complete packages again</li>
-          <li>Resolve the 7 proof checks that do not match yet</li>
-          <li>Finish the 14 packages in progress</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>Raise Rust coverage <span class="tag">open</span></h3>
-        <p>More of the compiled numerics move into Rust, so they run without a C or Fortran toolchain.</p>
-        <ul class="tick">
-          <li>Turn more Fortran and C kernels into crates</li>
-          <li>Show Rust coverage on the dashboard</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>Decisions still open <span class="tag">open</span></h3>
-        <p>Some choices need agreement before the work can go on.</p>
-        <ul class="tick">
-          <li>Which big libraries stand in for R frameworks</li>
-          <li>Whether the 38 replaced packages need a second look</li>
-        </ul>
-      </div>
+    <p class="sub">The agents are fast, but a first translation is not the last word. The work ahead is review, coverage and quality.</p>
+    <div class="cards">
+      <div class="card"><h3>More review rounds</h3><p>Every complete package gets another review pass, so the first translation is not the final one.</p>
+        <ul class="tick"><li>Review the complete packages again</li><li>Resolve the proof checks that do not match yet</li></ul></div>
+      <div class="card"><h3>Raise Rust coverage</h3><p>More of the compiled numerics move into Rust, so they run without a C or Fortran toolchain.</p>
+        <ul class="tick"><li>Turn more Fortran and C kernels into crates</li></ul></div>
+      <div class="card"><h3>Finish in progress work</h3><p>The packages still being translated, and the functions blocked on a decision.</p>
+        <ul class="tick"><li>Clear the blocked functions</li><li>Finish the in-progress packages</li></ul></div>
+      <div class="card"><h3>Decisions still open</h3><p>Some choices need agreement before the work can go on.</p>
+        <ul class="tick"><li>Which big libraries stand in for R frameworks</li><li>Whether replaced packages need a second look</li></ul></div>
     </div>
-    <p class="sub more">The full list is in <a href="roadmap.md">the roadmap</a>.</p>
+    <p class="muted more">The full list is in <a href="roadmap.md">the roadmap</a>. The per-package pages with every detail are in <a href="dashboard/index.html">the detailed dashboard</a>.</p>
   </div>
 </section>
 
 <footer>
   <div class="wrap foot">
     <img src="assets/mark.jpg" alt="killr logo">
-    <p>killr &middot; Kill CRAN &middot; built on the translation registry in this repository.</p>
+    <p>killr, Kill CRAN. Data generated from the registry in this repository.</p>
     <nav class="sp">
-      <a href="#dashboard">Dashboard</a>
+      <a href="#exam">Exam</a>
       <a href="strategy.md">Strategy</a>
       <a href="roadmap.md">Roadmap</a>
+      <a href="https://github.com/elmahyai/killr">GitHub</a>
     </nav>
   </div>
 </footer>
 
+<script src="data/progress.js"></script>
 <script>
-  // Count the big numbers up when they scroll into view.
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      const el = e.target;
-      if (el.dataset.count) {
-        const target = Number(el.dataset.count);
-        el.textContent = '0';
-        const start = performance.now();
-        const tick = (now) => {
-          const t = Math.min(1, (now - start) / 1200);
-          el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3))).toLocaleString('en-US');
-          if (t < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      } else if (el.dataset.w) {
-        el.style.width = el.dataset.w + '%';
-      }
-      io.unobserve(el);
+(function () {
+  const D = window.KILLR_DATA;
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  };
+  const pct = (x) => Math.round(x * 100);
+  const fmt = (n) => Number(n).toLocaleString('en-US');
+  const LABEL = { complete: 'Complete', in_progress: 'In progress', replaced: 'Replaced' };
+
+  if (!D) {
+    $('#updated').textContent = 'data missing';
+    return;
+  }
+  const T = D.totals;
+  const graded = T.graded;
+
+  // ---------- Scoreboard ----------
+  $('#updated').textContent = 'Updated ' + D.generated;
+  $('#sheet-meta').textContent = 'Snapshot ' + D.generated + ' · ' + fmt(T.packages) + ' packages';
+  $('#s-pkg').textContent = fmt(T.complete);
+  $('#s-pkg-of').textContent = 'of ' + fmt(graded);
+  $('#s-pkg-note').textContent = T.in_progress + ' in progress · ' + T.replaced + ' replaced by a stand-in';
+  const pkgShare = graded ? T.complete / graded : 0;
+  $('#s-fn').textContent = fmt(T.functions_done);
+  $('#s-fn-of').textContent = 'of ' + fmt(T.functions_total);
+  $('#s-fn-note').textContent = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '% of functions in the graded packages';
+  $('#s-chk').textContent = fmt(T.checks_passed);
+  $('#s-chk-of').textContent = 'of ' + fmt(T.checks_total);
+  $('#s-spd').textContent = T.median_speedup ? T.median_speedup + 'x' : '-';
+  $('#s-spd-note').textContent = 'Across every passing proof check';
+  requestAnimationFrame(() => {
+    $('#m-pkg').style.width = pct(pkgShare) + '%';
+    $('#m-fn').style.width = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '%';
+    $('#m-chk').style.width = pct(T.checks_total ? T.checks_passed / T.checks_total : 0) + '%';
+  });
+
+  // Grade cells double as filters.
+  const gradeOrder = ['A', 'B', 'C', 'D', 'F', 'EX'];
+  const gradeCounts = Object.assign({}, T.grades);
+  gradeCounts.EX = T.replaced;
+  const gradeWrap = $('#grades');
+  gradeOrder.forEach((g) => {
+    const cell = el('div', 'gcell');
+    cell.tabIndex = 0;
+    cell.setAttribute('role', 'button');
+    cell.setAttribute('aria-label', 'Show grade ' + g);
+    cell.appendChild(el('div', 'g g-' + g, g));
+    const n = gradeCounts[g] || 0;
+    cell.appendChild(el('div', 'c', n + (n === 1 ? ' package' : ' packages')));
+    const go = () => { state.grade = g; state.filter = 'grade'; syncChips(); render(); $('#exam').scrollIntoView(); };
+    cell.addEventListener('click', go);
+    cell.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    gradeWrap.appendChild(cell);
+  });
+
+  // ---------- Exam table ----------
+  const state = { filter: 'all', grade: null, q: '', sort: 'name', dir: 1 };
+  const score = (p) => (p.total ? p.translated / p.total : 0);
+  const speed = (p) => (p.checks.median_speedup || 0);
+  const GRADE_RANK = { A: 6, B: 5, C: 4, D: 3, F: 2, EX: 1 };
+
+  const predicates = {
+    all: () => true,
+    complete: (p) => p.status === 'complete',
+    in_progress: (p) => p.status === 'in_progress',
+    replaced: (p) => p.status === 'replaced',
+    attention: (p) => p.status !== 'replaced' && ['C', 'D', 'F'].includes(p.grade),
+    rust: (p) => p.rust,
+    grade: (p) => p.grade === state.grade,
+  };
+
+  const sorters = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    status: (a, b) => a.status.localeCompare(b.status),
+    grade: (a, b) => GRADE_RANK[a.grade] - GRADE_RANK[b.grade],
+    score: (a, b) => score(a) - score(b),
+    functions: (a, b) => a.translated - b.translated,
+    checks: (a, b) => a.checks.passed - b.checks.passed,
+    speed: (a, b) => speed(a) - speed(b),
+  };
+
+  function visible() {
+    const q = state.q.trim().toLowerCase();
+    const pred = predicates[state.filter] || predicates.all;
+    let rows = D.packages.filter((p) => pred(p) && (!q || p.name.toLowerCase().includes(q)));
+    const cmp = sorters[state.sort] || sorters.name;
+    rows = rows.slice().sort((a, b) => cmp(a, b) * state.dir || a.name.localeCompare(b.name));
+    return rows;
+  }
+
+  function cell(text, cls) { return el('td', cls, text); }
+
+  function render() {
+    const rows = visible();
+    const body = $('#rows');
+    body.textContent = '';
+    rows.forEach((p) => {
+      const tr = el('tr');
+      tr.tabIndex = 0;
+      tr.dataset.name = p.name;
+      tr.appendChild(cell(p.name, 'name'));
+      const st = el('td');
+      st.appendChild(el('span', 'pill ' + p.status, LABEL[p.status] || p.status));
+      tr.appendChild(st);
+      const gd = el('td');
+      gd.appendChild(el('span', 'gbadge g-' + p.grade, p.grade));
+      tr.appendChild(gd);
+      const sc = el('td');
+      const bar = el('span', 'bar');
+      const fill = el('span');
+      fill.style.width = pct(score(p)) + '%';
+      bar.appendChild(fill);
+      sc.appendChild(bar);
+      sc.appendChild(el('span', '', pct(score(p)) + '%'));
+      tr.appendChild(sc);
+      tr.appendChild(cell(p.translated + ' / ' + p.total));
+      tr.appendChild(cell(p.checks.total ? p.checks.passed + ' / ' + p.checks.total : '-'));
+      tr.appendChild(cell(p.checks.median_speedup ? p.checks.median_speedup + 'x' : '-'));
+      tr.addEventListener('click', () => openDetail(p.name));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') openDetail(p.name); });
+      body.appendChild(tr);
     });
-  }, { threshold: 0.4 });
-  document.querySelectorAll('[data-count], [data-w]').forEach((el) => io.observe(el));
+    $('#count').textContent = rows.length + ' of ' + D.packages.length + ' shown';
+    $('#empty').hidden = rows.length > 0;
+    document.querySelectorAll('th[data-sort]').forEach((th) => {
+      const arr = th.querySelector('.arr');
+      const key = th.dataset.sort === 'score' ? 'score' : th.dataset.sort;
+      arr.textContent = state.sort === key ? (state.dir > 0 ? ' ▲' : ' ▼') : '';
+    });
+  }
+
+  function syncChips() {
+    document.querySelectorAll('[data-filter]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.filter === state.filter));
+    });
+  }
+
+  document.querySelectorAll('[data-filter]').forEach((b) => {
+    b.addEventListener('click', () => { state.filter = b.dataset.filter; state.grade = null; syncChips(); render(); });
+  });
+  $('#q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
+  $('#sort').addEventListener('change', (e) => { state.sort = e.target.value; state.dir = 1; render(); });
+  document.querySelectorAll('th[data-sort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (state.sort === key) state.dir = -state.dir; else { state.sort = key; state.dir = 1; }
+      if (['name', 'grade', 'score', 'functions', 'checks', 'speed'].includes(key)) $('#sort').value = key;
+      render();
+    });
+  });
+
+  // ---------- Detail dialog ----------
+  const dlg = $('#detail');
+  function openDetail(name) {
+    const p = D.packages.find((x) => x.name === name);
+    if (!p) return;
+    $('#d-title').textContent = p.name + (p.version ? '  ' + p.version : '');
+    const meta = LABEL[p.status] || p.status;
+    $('#d-meta').textContent = meta + ' · grade ' + p.grade + ' · ' + p.translated + ' of ' + p.total + ' functions · ' + p.checks.passed + ' of ' + p.checks.total + ' proof checks';
+    const body = $('#d-body');
+    body.textContent = '';
+
+    if (p.resume) {
+      body.appendChild(el('h4', '', 'Status'));
+      body.appendChild(el('div', 'resume', p.resume));
+    }
+    if (p.blocked_by && p.blocked_by.length) {
+      body.appendChild(el('h4', '', 'Blocked by'));
+      body.appendChild(el('p', '', p.blocked_by.join(', ')));
+    }
+    if (p.functions.length) {
+      body.appendChild(el('h4', '', 'Functions'));
+      const ul = el('ul', 'fnlist');
+      p.functions.forEach((f) => {
+        const li = el('li', f.t ? 'done' : 'todo');
+        li.appendChild(document.createTextNode(f.n));
+        if (!f.t && f.nd) li.appendChild(el('small', '', f.nd));
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
+    }
+    if (p.checks_detail.length) {
+      body.appendChild(el('h4', '', 'Proof checks against R'));
+      const t = el('table');
+      const head = el('tr');
+      ['Check', 'Result', 'Speedup'].forEach((h) => head.appendChild(el('th', '', h)));
+      const thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
+      const tb = el('tbody');
+      p.checks_detail.forEach((c) => {
+        const tr = el('tr');
+        tr.appendChild(el('td', '', c.n));
+        tr.appendChild(el('td', c.ok ? 'ok' : 'bad', c.ok ? 'matches R' : 'differs'));
+        tr.appendChild(el('td', '', c.s ? c.s + 'x' : '-'));
+        tb.appendChild(tr);
+      });
+      t.appendChild(tb);
+      const wrap = el('div', '');
+      wrap.style.overflow = 'auto';
+      wrap.appendChild(t);
+      body.appendChild(wrap);
+    }
+    const links = el('div', 'dlg-links');
+    links.style.marginTop = '20px';
+    const a1 = el('a', '', 'Full package page');
+    a1.href = 'dashboard/packages/' + encodeURIComponent(p.name) + '.html';
+    a1.target = '_blank'; a1.rel = 'noopener';
+    const a2 = el('a', '', 'Source on GitHub');
+    a2.href = 'https://github.com/elmahyai/killr/tree/main/packages/' + encodeURIComponent(p.name);
+    a2.target = '_blank'; a2.rel = 'noopener';
+    links.appendChild(a1); links.appendChild(a2);
+    body.appendChild(links);
+    dlg.showModal();
+  }
+  $('#d-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
+  // ---------- Rust crates ----------
+  const crates = D.crates;
+  $('#c-total').textContent = fmt(T.crates);
+  $('#c-assigned').textContent = fmt(T.crates_assigned);
+  const cstate = { filter: 'all', q: '' };
+  function renderCrates() {
+    const q = cstate.q.trim().toLowerCase();
+    const body = $('#crates');
+    body.textContent = '';
+    const rows = crates.filter((c) =>
+      (cstate.filter === 'all' || c.state === cstate.filter) &&
+      (!q || c.name.toLowerCase().includes(q)));
+    rows.forEach((c) => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'name', c.name));
+      const st = el('td');
+      st.appendChild(el('span', 'pill ' + c.state, c.state === 'assigned' ? 'Assigned' : 'Done'));
+      tr.appendChild(st);
+      tr.appendChild(el('td', 'origin', (c.loaded_by || []).join(', ') || '-'));
+      body.appendChild(tr);
+    });
+    if (!rows.length) {
+      const tr = el('tr'); const td = el('td', 'origin', 'No crate matches.'); td.colSpan = 3; tr.appendChild(td); body.appendChild(tr);
+    }
+  }
+  $('#cq').addEventListener('input', (e) => { cstate.q = e.target.value; renderCrates(); });
+  document.querySelectorAll('[data-cfilter]').forEach((b) => {
+    b.addEventListener('click', () => {
+      cstate.filter = b.dataset.cfilter;
+      document.querySelectorAll('[data-cfilter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderCrates();
+    });
+  });
+
+  render();
+  renderCrates();
+})();
 </script>
 </body>
 </html>
