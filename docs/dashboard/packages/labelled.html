@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>labelled · KillCRAN</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564e;
+  --line: #e4ddd2;
+  --paper: #f7f4ee;
+  --card: #fffdf9;
+  --done: #2f6f4e;
+  --wait: #8a5a12;
+  --r: #8d5a3c;
+  --py: #2c5f8a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 16px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+h1 { font-size: 2rem; font-weight: 600; margin: 0.2rem 0; }
+h2 { font-size: 1.35rem; margin: 0 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.1rem 0 0.3rem; }
+a { color: inherit; }
+.crumb { margin: 0; color: var(--muted); }
+.crumb a:hover { color: var(--done); }
+.note { color: var(--muted); }
+.yes { color: var(--done); font-weight: 600; }
+.no { color: var(--wait); font-weight: 600; }
+.slower { color: #9b2c2c; font-weight: 600; }
+.coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
+.track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--done); }
+.views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
+.views button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.views button.active { background: var(--ink); color: var(--paper); }
+.view { display: none; }
+.view.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.diff { white-space: nowrap; }
+.bars { display: grid; gap: 0.25rem; min-width: 8rem; }
+.bars span { display: block; height: 8px; border-radius: 99px; }
+.bars .r { background: var(--r); }
+.bars .py { background: var(--py); }
+.legend { color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.2rem; }
+.legend .r { background: var(--r); }
+.legend .py { background: var(--py); }
+#function-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+#function-list button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 999px; padding: 0.15rem 0.7rem;
+}
+#function-list button.yes { color: var(--done); }
+#function-list button.no { color: var(--wait); }
+#function-list button.active { background: var(--ink); color: var(--paper); }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.controls button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 0.25rem 0.7rem;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.pair.hide-origin, .pair.hide-translation { grid-template-columns: 1fr; }
+.pair.hide-origin .origin, .pair.hide-translation .translation { display: none; }
+.pane { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1.2rem; }
+.kicker { margin: 0; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
+pre {
+  white-space: pre-wrap; background: #f3eee6; padding: 0.7rem 0.8rem;
+  border-radius: 8px; margin: 0.2rem 0 0;
+}
+.output { margin-top: 0.4rem; border: 1px solid var(--line); border-radius: 8px; overflow: auto; background: #fffdf9; }
+.output + .output { margin-top: 0.75rem; }
+.output svg { width: 100%; height: auto; display: block; }
+.output pre { margin: 0; background: transparent; }
+dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: 0.55rem; }
+dd { margin: 0.1rem 0 0; }
+#both-hidden { display: none; }
+#both-hidden.visible { display: block; }
+button.proof-toggle {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+button.proof-toggle.active { text-decoration: underline; text-underline-offset: 0.15em; }
+.proof { margin-top: 1rem; }
+.proof[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="../index.html">KillCRAN</a></p>
+<h1>labelled</h1>
+<p class="note">CRAN 2.16.1</p>
+<p>Opened on the importance order (cran/importance.json) after the user raised the medium cap to 8. Labelled vectors and data frames (value labels, variable labels) on vctrs-style classes: NumPy for vectors and Polars for data frames (Routing). Batches share an R file (strategy medium). 54 exported functions.</p>
+<p class="note">0 of 54 functions · 0.0% · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<div class="views" id="views">
+  <button type="button" data-view="index">Index</button>
+  <button type="button" data-view="comparison">Comparison</button>
+  <button type="button" data-view="functions">Functions</button>
+  <button type="button" data-view="dependencies">Dependencies</button>
+</div>
+<section class="view" id="view-index"><div class="pane"><table>
+<thead><tr><th>Function</th><th>Status</th><th>Working</th><th>Depends</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="#copy_labels">copy_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#copy_labels_from">copy_labels_from</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#dictionary_to_value_labels">dictionary_to_value_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#dictionary_to_variable_labels">dictionary_to_variable_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#drop_unused_value_labels">drop_unused_value_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#is_prefixed">is_prefixed</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#convert_list_columns_to_character">convert_list_columns_to_character</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#look_for">look_for</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#look_for_and_select">look_for_and_select</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#lookfor_to_long_format">lookfor_to_long_format</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#to_gt">to_gt</a></td><td><span class='note'>left</span></td><td>—</td><td>gt not yet</td><td>Left: needs the gt package, not in registry.json.</td></tr>
+<tr><td><a href="#is_regular_na">is_regular_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#is_user_na">is_user_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#na_range">na_range</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#na_values">na_values</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#set_na_range">set_na_range</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#set_na_values">set_na_values</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#user_na_to_na">user_na_to_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#user_na_to_tagged_na">user_na_to_tagged_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#recode_if">recode_if</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_attributes">remove_attributes</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_labels">remove_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_user_na">remove_user_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_val_labels">remove_val_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_var_label">remove_var_label</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#update_labelled">update_labelled</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#duplicated_tagged_na">duplicated_tagged_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#order_tagged_na">order_tagged_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#sort_tagged_na">sort_tagged_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#tagged_na_to_regular_na">tagged_na_to_regular_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#tagged_na_to_user_na">tagged_na_to_user_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#unique_tagged_na">unique_tagged_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#to_character">to_character</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#to_factor">to_factor</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#unlabelled">unlabelled</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#foreign_to_labelled">foreign_to_labelled</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#memisc_to_labelled">memisc_to_labelled</a></td><td><span class='note'>left</span></td><td>—</td><td>memisc not yet</td><td>Left: needs memisc, which is not in registry.json.</td></tr>
+<tr><td><a href="#to_labelled">to_labelled</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#nolabel_to_na">nolabel_to_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#val_labels_to_na">val_labels_to_na</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#update_value_labels_with">update_value_labels_with</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#update_variable_labels_with">update_variable_labels_with</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#add_value_labels">add_value_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#names_prefixed_by_values">names_prefixed_by_values</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#remove_value_labels">remove_value_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#set_value_labels">set_value_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#sort_val_labels">sort_val_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#val_label">val_label</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#val_labels">val_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#get_label_attribute">get_label_attribute</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#label_attribute">label_attribute</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#set_label_attribute">set_label_attribute</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#set_variable_labels">set_variable_labels</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+<tr><td><a href="#var_label">var_label</a></td><td><span class='yes'>ready</span></td><td>—</td><td>none</td><td>Waiting: implemented, not verified against R (proof not run).</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top:1.4rem">Crates</h2>
+<p class="note">This package loads no Rust crates.</p></div></section>
+<section class="view" id="view-comparison"><div class="pane"><p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
+<table>
+<thead><tr><th>Function</th><th>Case</th><th>R ms</th><th>Translated ms</th><th>Speedup</th><th>Result</th><th>Max abs diff</th><th></th></tr></thead>
+<tbody>
+<tr><td colspan='8'>None have been compared yet.</td></tr>
+</tbody>
+</table>
+<div id="proof" class="proof" hidden>
+<p class="note">One untimed call, then the median of 20 timings, in milliseconds. R uses Sys.time(). Python uses time.perf_counter().</p>
+<div class="pair">
+<article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
+<article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
+</div>
+</div>
+<script type="application/json" id="proof-data">[]</script></div></section>
+<section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Imports</h3><p><a href="haven.html">haven</a> <span class="note">>= 2.4.1 · finished</span></p><p><a href="cli.html">cli</a> <span class="note">replaced</span></p><p><a href="dplyr.html">dplyr</a> <span class="note">>= 1.1.0 · replaced</span></p><p><a href="lifecycle.html">lifecycle</a> <span class="note">replaced</span></p><p><a href="rlang.html">rlang</a> <span class="note">>= 1.1.0 · replaced</span></p><p><a href="vctrs.html">vctrs</a> <span class="note">replaced</span></p><p><a href="stringr.html">stringr</a> <span class="note">finished</span></p><p><a href="tidyr.html">tidyr</a> <span class="note">>= 1.3.0 · replaced</span></p><p><a href="tidyselect.html">tidyselect</a> <span class="note">replaced</span></p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
+<section class="view" id="view-functions">
+<div id="function-list"></div>
+<div class="controls">
+  <button type="button" id="hide-r">Hide R</button>
+  <button type="button" id="hide-py">Hide translation</button>
+</div>
+<p id="both-hidden" class="note">Both sides are hidden.</p>
+<div class="pair" id="pair">
+  <article class="pane origin" id="origin"></article>
+  <article class="pane translation" id="translation"></article>
+</div>
+</section>
+</main>
+<script>
+const functions = [{"name": "copy_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "copy_labels", "origin": null, "translation": null}, {"name": "copy_labels_from", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "copy_labels_from", "origin": null, "translation": null}, {"name": "dictionary_to_value_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "dictionary_to_value_labels", "origin": null, "translation": null}, {"name": "dictionary_to_variable_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "dictionary_to_variable_labels", "origin": null, "translation": null}, {"name": "drop_unused_value_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "drop_unused_value_labels", "origin": null, "translation": null}, {"name": "is_prefixed", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "is_prefixed", "origin": null, "translation": null}, {"name": "convert_list_columns_to_character", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "convert_list_columns_to_character", "origin": null, "translation": null}, {"name": "look_for", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "look_for", "origin": null, "translation": null}, {"name": "look_for_and_select", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "look_for_and_select", "origin": null, "translation": null}, {"name": "lookfor_to_long_format", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "lookfor_to_long_format", "origin": null, "translation": null}, {"name": "to_gt", "translated": false, "not_done": "Left: needs the gt package, not in registry.json.", "title": "to_gt", "origin": null, "translation": null}, {"name": "is_regular_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "is_regular_na", "origin": null, "translation": null}, {"name": "is_user_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "is_user_na", "origin": null, "translation": null}, {"name": "na_range", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "na_range", "origin": null, "translation": null}, {"name": "na_values", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "na_values", "origin": null, "translation": null}, {"name": "set_na_range", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "set_na_range", "origin": null, "translation": null}, {"name": "set_na_values", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "set_na_values", "origin": null, "translation": null}, {"name": "user_na_to_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "user_na_to_na", "origin": null, "translation": null}, {"name": "user_na_to_tagged_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "user_na_to_tagged_na", "origin": null, "translation": null}, {"name": "recode_if", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "recode_if", "origin": null, "translation": null}, {"name": "remove_attributes", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_attributes", "origin": null, "translation": null}, {"name": "remove_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_labels", "origin": null, "translation": null}, {"name": "remove_user_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_user_na", "origin": null, "translation": null}, {"name": "remove_val_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_val_labels", "origin": null, "translation": null}, {"name": "remove_var_label", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_var_label", "origin": null, "translation": null}, {"name": "update_labelled", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "update_labelled", "origin": null, "translation": null}, {"name": "duplicated_tagged_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "duplicated_tagged_na", "origin": null, "translation": null}, {"name": "order_tagged_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "order_tagged_na", "origin": null, "translation": null}, {"name": "sort_tagged_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "sort_tagged_na", "origin": null, "translation": null}, {"name": "tagged_na_to_regular_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "tagged_na_to_regular_na", "origin": null, "translation": null}, {"name": "tagged_na_to_user_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "tagged_na_to_user_na", "origin": null, "translation": null}, {"name": "unique_tagged_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "unique_tagged_na", "origin": null, "translation": null}, {"name": "to_character", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "to_character", "origin": null, "translation": null}, {"name": "to_factor", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "to_factor", "origin": null, "translation": null}, {"name": "unlabelled", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "unlabelled", "origin": null, "translation": null}, {"name": "foreign_to_labelled", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "foreign_to_labelled", "origin": null, "translation": null}, {"name": "memisc_to_labelled", "translated": false, "not_done": "Left: needs memisc, which is not in registry.json.", "title": "memisc_to_labelled", "origin": null, "translation": null}, {"name": "to_labelled", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "to_labelled", "origin": null, "translation": null}, {"name": "nolabel_to_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "nolabel_to_na", "origin": null, "translation": null}, {"name": "val_labels_to_na", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "val_labels_to_na", "origin": null, "translation": null}, {"name": "update_value_labels_with", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "update_value_labels_with", "origin": null, "translation": null}, {"name": "update_variable_labels_with", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "update_variable_labels_with", "origin": null, "translation": null}, {"name": "add_value_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "add_value_labels", "origin": null, "translation": null}, {"name": "names_prefixed_by_values", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "names_prefixed_by_values", "origin": null, "translation": null}, {"name": "remove_value_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "remove_value_labels", "origin": null, "translation": null}, {"name": "set_value_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "set_value_labels", "origin": null, "translation": null}, {"name": "sort_val_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "sort_val_labels", "origin": null, "translation": null}, {"name": "val_label", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "val_label", "origin": null, "translation": null}, {"name": "val_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "val_labels", "origin": null, "translation": null}, {"name": "get_label_attribute", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "get_label_attribute", "origin": null, "translation": null}, {"name": "label_attribute", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "label_attribute", "origin": null, "translation": null}, {"name": "set_label_attribute", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "set_label_attribute", "origin": null, "translation": null}, {"name": "set_variable_labels", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "set_variable_labels", "origin": null, "translation": null}, {"name": "var_label", "translated": false, "not_done": "Waiting: implemented, not verified against R (proof not run).", "title": "var_label", "origin": null, "translation": null}];
+const index = document.getElementById("function-list");
+const pair = document.getElementById("pair");
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[ch]));
+}
+
+function block(title, text) {
+  if (!text) return "";
+  return `<h3>${title}</h3><p>${esc(text)}</p>`;
+}
+
+function renderSide(side) {
+  const args = (side.arguments || []).map((item) =>
+    `<dt>${esc(item.name)}</dt><dd>${esc(item.text)}</dd>`
+  ).join("");
+  return [
+    block("Description", side.description),
+    `<h3>Usage</h3><pre>${esc(side.usage || "")}</pre>`,
+    `<h3>Arguments</h3><dl>${args}</dl>`,
+    block("Details", side.details),
+    block("Value", side.value),
+    `<h3>Example</h3><pre>${esc(side.example || "")}</pre>`,
+    outputBlock(side),
+  ].join("");
+}
+
+function outputBlock(side) {
+  const blocks = side.output_blocks || [];
+  if (!blocks.length) {
+    return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
+  }
+  const html = blocks.map((block) => {
+    if (block.svg) return `<div class="output">${block.svg}</div>`;
+    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  }).join("");
+  return `<h3>Output</h3>${html}`;
+}
+
+function show(name) {
+  const fn = functions.find((item) => item.name === name) || functions[0];
+  if (!fn) return;
+  for (const button of index.querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.name === fn.name);
+  }
+  document.getElementById("origin").innerHTML =
+    `<p class="kicker">R</p><h2>${esc(fn.title)}</h2>` +
+    (fn.origin ? renderSide(fn.origin) : "<p>No original help recorded.</p>");
+  const right = document.getElementById("translation");
+  if (fn.translation) {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` + renderSide(fn.translation);
+  } else {
+    right.innerHTML = `<p class="kicker">Python</p><h2>${esc(fn.title)}</h2>` +
+      `<p class="no">Not translated yet.</p><p>${esc(fn.not_done)}</p>`;
+  }
+}
+
+for (const fn of functions) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.name = fn.name;
+  button.textContent = fn.name;
+  button.className = fn.translated ? "yes" : "no";
+  button.addEventListener("click", () => {
+    const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (current === fn.name) show(fn.name);
+    else location.hash = encodeURIComponent(fn.name);
+  });
+  index.appendChild(button);
+}
+
+function toggle(className, button, hiddenLabel, shownLabel) {
+  pair.classList.toggle(className);
+  const hidden = pair.classList.contains(className);
+  button.textContent = hidden ? shownLabel : hiddenLabel;
+  const both = pair.classList.contains("hide-origin") && pair.classList.contains("hide-translation");
+  document.getElementById("both-hidden").classList.toggle("visible", both);
+}
+
+document.getElementById("hide-r").addEventListener("click", (event) => {
+  toggle("hide-origin", event.currentTarget, "Hide R", "Show R");
+});
+document.getElementById("hide-py").addEventListener("click", (event) => {
+  toggle("hide-translation", event.currentTarget, "Hide translation", "Show translation");
+});
+
+function selectView(view) {
+  for (const button of document.querySelectorAll("#views button")) {
+    button.classList.toggle("active", button.dataset.view === view);
+  }
+  document.getElementById("view-index").classList.toggle("active", view === "index");
+  document.getElementById("view-comparison").classList.toggle("active", view === "comparison");
+  document.getElementById("view-functions").classList.toggle("active", view === "functions");
+  document.getElementById("view-dependencies").classList.toggle("active", view === "dependencies");
+}
+
+for (const button of document.querySelectorAll("#views button")) {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    if (view === "functions") {
+      const current = decodeURIComponent(location.hash.replace(/^#/, ""));
+      const known = functions.some((item) => item.name === current);
+      const next = known ? current : (functions[0] ? functions[0].name : "");
+      if (current === next) selectView("functions");
+      else location.hash = encodeURIComponent(next);
+      return;
+    }
+    if (location.hash === "#" + view) selectView(view);
+    else location.hash = view;
+  });
+}
+
+const proofNode = document.getElementById("proof");
+const proofData = JSON.parse(document.getElementById("proof-data")?.textContent || "[]");
+let openProof = "";
+
+function markProof(name) {
+  for (const button of document.querySelectorAll(".proof-toggle")) {
+    button.classList.toggle("active", button.dataset.name === name);
+  }
+}
+
+function showProof(name) {
+  if (!proofNode) return;
+  if (openProof === name) {
+    proofNode.hidden = true;
+    openProof = "";
+    markProof("");
+    return;
+  }
+  const item = proofData.find((entry) => entry.name === name);
+  if (!item) return;
+  document.getElementById("proof-r").textContent = item.r;
+  document.getElementById("proof-py").textContent = item.python;
+  proofNode.hidden = false;
+  openProof = name;
+  markProof(name);
+}
+
+document.getElementById("view-comparison").addEventListener("click", (event) => {
+  const button = event.target.closest(".proof-toggle");
+  if (!button) return;
+  showProof(button.dataset.name);
+});
+
+function fromHash() {
+  const name = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (!name || name === "index") {
+    selectView("index");
+    return;
+  }
+  if (name === "comparison") {
+    selectView("comparison");
+    return;
+  }
+  if (name === "dependencies") {
+    selectView("dependencies");
+    return;
+  }
+  selectView("functions");
+  show(name);
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

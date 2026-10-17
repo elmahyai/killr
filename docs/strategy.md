@@ -47,7 +47,7 @@ flowchart TD
 
 **Registry** ([registry.json](../registry.json)). The one record of every package, crate, and native library: status, functions translated, proof checks, and dependencies. It is generated, not edited by hand.
 
-**Dashboard** ([dashboard/](../dashboard/)). Built from the registry by `python3 dashboard/build.py --home`. It shows progress, proof results, and cost, and it is what the pitch page embeds.
+**Dashboard** ([dashboard/](../dashboard/)). Built from the registry by `python3 dashboard/build.py --home`. It shows progress, proof results, and cost, and it is what the front page embeds.
 
 ## Where things live
 

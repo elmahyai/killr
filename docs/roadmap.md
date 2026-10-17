@@ -19,4 +19,4 @@ killr is a proof of concept. The agents produce translations fast, but a first t
 
 - Which big libraries stand in for R frameworks. A library that replaces a whole system needs an agreed choice before it is used.
 - Which of the 38 replaced packages need a second look, because their stand-in covers only part of the original.
-- How the dashboard numbers are shared with outside readers, and how often the pitch page is refreshed.
+- How the dashboard numbers are shared with outside readers, and how often the front page is refreshed.
