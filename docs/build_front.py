@@ -12,9 +12,12 @@ Run after dashboard/build.py --home:
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import os
 import shutil
 import statistics
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -243,6 +246,14 @@ def _copy_dashboard() -> None:
 
 
 def main() -> None:
+    if os.environ.get("KILLR_SITE_INNER") != "1":
+        tools = ROOT / "orchestrator"
+        sys.path.insert(0, str(tools))
+        spec = importlib.util.spec_from_file_location("orch_site", tools / "site.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.site(home_only=True)
+        return
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
     packages = _package_rows(registry)
     crates = _crate_rows(registry)
