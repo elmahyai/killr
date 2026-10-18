@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>killr: Kill CRAN, live dashboard</title>
-<meta name="description" content="killr is an agent system that translates the R package catalog into Python and Rust, proven function by function against R. Live progress dashboard.">
+<title>killr: Kill R</title>
+<meta name="description" content="killr translates the CRAN catalog into Python and Rust, proven function by function against R.">
 <link rel="icon" href="assets/mark.jpg" type="image/jpeg">
 <style>
   :root {
@@ -24,7 +24,7 @@
     --radius: 18px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  html { scroll-padding-top: 0; }
   body {
     margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
     background: var(--bg); color: var(--text); line-height: 1.55; overflow-x: hidden;
@@ -35,55 +35,60 @@
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
   .muted { color: var(--muted); }
 
-  /* ---------- Nav ---------- */
-  nav.top {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px);
-    background: rgba(8,10,20,0.75); border-bottom: 1px solid var(--line);
-  }
-  nav.top .wrap { display: flex; align-items: center; gap: 26px; height: 64px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--text); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--text); }
   .brand:hover { text-decoration: none; }
   .brand img { height: 36px; width: auto; border-radius: 9px; background: #fff; padding: 3px; }
-  nav.top ul { display: flex; gap: 20px; list-style: none; margin: 0 0 0 auto; padding: 0; }
-  nav.top ul a { color: var(--muted); font-size: 15px; }
-  nav.top ul a:hover { color: var(--text); text-decoration: none; }
-  .live-dot { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); white-space: nowrap; }
-  .live-dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(61,220,151,.6); animation: ping 2s infinite; }
-  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(61,220,151,.6);} 70% { box-shadow: 0 0 0 10px rgba(61,220,151,0);} 100% { box-shadow: 0 0 0 0 rgba(61,220,151,0);} }
+  .catalog { margin: 0 0 28px; }
+  .catalog-track {
+    height: 10px; border-radius: 999px; background: rgba(255,255,255,.08);
+    overflow: hidden; display: flex;
+  }
+  .catalog-track .done { height: 100%; background: linear-gradient(90deg, var(--a), var(--b)); }
+  .catalog-track .prog { height: 100%; background: var(--wait); }
+  .catalog-label { margin-top: 8px; font-size: 14px; color: var(--muted); }
 
   /* ---------- Hero ---------- */
   header.hero {
-    position: relative; overflow: hidden; padding: 72px 0 60px;
+    position: relative; overflow: hidden; padding: 88px 0 96px;
     background:
       radial-gradient(900px 500px at 10% -10%, rgba(124,92,255,.32), transparent 60%),
       radial-gradient(800px 500px at 98% 0%, rgba(0,212,255,.2), transparent 60%),
       var(--bg);
   }
   .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 44px; align-items: center; }
-  .eyebrow { display: inline-block; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 14px; background: var(--panel); }
+  header.hero .brand { margin-bottom: 18px; }
   h1 {
-    font-size: clamp(56px, 8.5vw, 112px); line-height: .95; margin: 20px 0 14px; letter-spacing: -.045em; font-weight: 850;
+    font-size: clamp(56px, 8.5vw, 112px); line-height: .95; margin: 8px 0 14px; letter-spacing: -.045em; font-weight: 850;
     background: linear-gradient(90deg, #fff 0%, var(--b) 42%, var(--a) 78%, var(--c) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .lead { font-size: clamp(17px, 2vw, 20px); color: #cdd3ef; max-width: 620px; margin: 0 0 26px; }
+  .lead { font-size: clamp(17px, 2vw, 20px); color: #cdd3ef; max-width: 620px; margin: 0 0 28px; }
   .cta { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 12px; font-weight: 650; border: 1px solid var(--line); background: var(--panel); transition: transform .15s, background .15s; cursor: pointer; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 18px; border-radius: 12px; font-weight: 650; text-align: center;
+    border: 1px solid var(--line); background: var(--panel);
+    transition: transform .15s, background .15s; cursor: pointer; white-space: nowrap;
+  }
   .btn:hover { transform: translateY(-2px); background: var(--panel-hi); text-decoration: none; }
   .btn.primary { background: linear-gradient(90deg, var(--a), var(--b)); border-color: transparent; color: #05070f; box-shadow: 0 10px 30px -10px rgba(0,212,255,.55); }
+  .btn.primary:hover { background: linear-gradient(90deg, var(--a), var(--b)); }
   .hero-logo { width: 100%; max-width: 480px; margin: 0 auto; }
   .hero-logo img { width: 100%; height: auto; display: block; border-radius: 26px; box-shadow: 0 30px 80px -20px rgba(124,92,255,.55), 0 0 0 1px rgba(255,255,255,.08); animation: float 6s ease-in-out infinite; }
   @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
 
   /* ---------- Sections ---------- */
   section { padding: 84px 0; border-top: 1px solid var(--line); }
+  section[hidden] { display: none !important; }
   .kicker { color: var(--b); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
   h2 { font-size: clamp(28px, 3.8vw, 42px); margin: 10px 0 10px; letter-spacing: -.03em; line-height: 1.1; }
   .sub { color: var(--muted); margin: 0 0 30px; max-width: 760px; font-size: 16.5px; }
+  .tickets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0 0 28px; }
 
   /* ---------- Score cards ---------- */
   .scores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .scores.low { grid-template-columns: repeat(3, 1fr); }
+  .scores.high { grid-template-columns: repeat(3, 1fr); }
   .score { padding: 22px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
   .score::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--a), var(--b)); }
   .score .big { font-size: 40px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
@@ -109,7 +114,13 @@
   .chip { padding: 7px 13px; border-radius: 999px; border: 1px solid #cfc6b8; background: #fff; color: #1c1915; font-size: 14px; cursor: pointer; }
   .chip[aria-pressed="true"] { background: #1c1915; color: #fff; border-color: #1c1915; }
   .count { margin-left: auto; color: #5c564e; font-size: 14px; }
-  .table-wrap { max-height: 640px; overflow: auto; }
+  .table-wrap { max-height: 560px; overflow: auto; }
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .pager button {
+    padding: 7px 12px; border-radius: 10px; border: 1px solid #cfc6b8;
+    background: #fff; color: #1c1915; cursor: pointer;
+  }
+  .pager button:disabled { opacity: .45; cursor: default; }
   table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
   th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid #e9e2d6; vertical-align: middle; white-space: nowrap; }
   th { position: sticky; top: 0; background: #1c1915; color: #fff; font-weight: 650; font-size: 13px; letter-spacing: .02em; cursor: pointer; user-select: none; z-index: 1; }
@@ -127,8 +138,28 @@
   .sheet-foot { padding: 14px 26px; color: #5c564e; font-size: 13px; border-top: 1px solid #e4ddd2; background: #fffdf9; }
 
   /* ---------- Dialog ---------- */
+  dialog:not([open]) { display: none; }
   dialog { border: 0; padding: 0; width: min(880px, 94vw); max-height: 88vh; border-radius: 20px; background: #fffdf9; color: #1c1915; box-shadow: 0 40px 100px -20px rgba(0,0,0,.6); }
+  dialog.wide { width: min(1120px, 96vw); }
   dialog::backdrop { background: rgba(5,6,12,.7); backdrop-filter: blur(4px); }
+  .trail { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; font-size: 13px; color: #5c564e; }
+  .trail button { border: 0; background: none; color: #0b6e99; padding: 0; cursor: pointer; font-weight: 650; }
+  .trail button:hover { text-decoration: underline; }
+  .docs-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .docs-side { min-width: 0; }
+  .docs-side .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #5c564e; margin: 0 0 4px; }
+  .docs-side h2 { margin: 0 0 12px; font-size: 22px; letter-spacing: -.02em; }
+  .docs-side h3 { margin: 16px 0 6px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #5c564e; }
+  .docs-side p, .docs-side dd { margin: 0 0 8px; white-space: normal; }
+  .docs-side pre { white-space: pre-wrap; overflow: auto; background: #fff; border: 1px solid #e9e2d6; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  .docs-side dt { font-weight: 700; }
+  .docs-side dl { margin: 0; }
+  .proof-btn { margin: 0 0 14px; padding: 8px 14px; border-radius: 10px; border: 1px solid #cfc6b8; background: #fff; cursor: pointer; font-weight: 650; }
+  .proof-btn.active { background: #1c1915; color: #fff; border-color: #1c1915; }
+  .proof-box { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .proof-box pre { white-space: pre-wrap; overflow: auto; max-height: 360px; background: #1c1915; color: #f4efe6; border-radius: 10px; padding: 12px 14px; font-size: 12.5px; }
+  .proof-box .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #5c564e; margin: 0 0 6px; }
+  @media (max-width: 800px) { .docs-pair, .proof-box { grid-template-columns: 1fr; } }
   .dlg-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 24px 28px; border-bottom: 2px solid #1c1915; }
   .dlg-head h3 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
   .dlg-head .meta { color: #5c564e; font-size: 14px; margin-top: 4px; }
@@ -143,6 +174,9 @@
   .fnlist li small { display: block; color: #5c564e; }
   .ok { color: #17603f; font-weight: 700; } .bad { color: #a4234c; font-weight: 700; }
   .resume { background: #fff; border: 1px solid #e9e2d6; border-radius: 12px; padding: 14px 16px; font-size: 14.5px; }
+  .crate-card { background: #fff; border: 1px solid #e9e2d6; border-radius: 12px; padding: 14px 16px; margin: 0 0 12px; }
+  .crate-card h4 { margin: 0 0 8px; text-transform: none; letter-spacing: 0; font-size: 18px; color: #1c1915; }
+  .crate-card p { white-space: normal; }
   .dlg-links a { display: inline-block; margin-right: 14px; font-weight: 650; }
 
   /* ---------- Rust ---------- */
@@ -157,9 +191,27 @@
   .rust-list td.origin { white-space: normal; color: var(--muted); font-size: 13px; }
   .pill.assigned { background: rgba(255,184,92,.16); color: var(--wait); }
   .pill.done { background: rgba(61,220,151,.14); color: var(--ok); }
+  .pill.underway { background: #ffecc9; color: #7a4a00; }
+  .pill.pending { background: #e5e7ef; color: #3e4560; }
+  td.lang, td.name, td.notes { white-space: normal; line-height: 1.25; }
+  td.notes .u { display: block; color: #5c564e; font-size: 12.5px; font-weight: 400; }
+  td.lang .n { font-weight: 650; font-variant-numeric: tabular-nums; }
+  td.lang .u, td.name .u { display: block; color: #5c564e; font-size: 12.5px; font-weight: 400; }
+  td.deps { white-space: normal; max-width: 420px; }
+  .prog { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+  .prog-row { display: flex; align-items: center; gap: 8px; }
+  .prog-row .lbl { font-size: 12px; color: #5c564e; min-width: 68px; font-weight: 650; }
+  .prog-row .bar { width: 92px; margin-right: 0; }
+  .prog-row .n { font-size: 12px; font-variant-numeric: tabular-nums; color: #3e4560; }
+  .pill.none { background: #e5e7ef; color: #3e4560; }
+  .pill.free { background: #daf5e8; color: #17603f; }
+  .pill.wait { background: #ffecc9; color: #7a4a00; }
+  .pill.progress { background: #d7e8ff; color: #1a4f8a; }
+  .pill.locked { background: #f3d0da; color: #a4234c; }
 
   /* ---------- Cards ---------- */
   .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  #about .cards { grid-template-columns: repeat(2, 1fr); }
   .card { padding: 24px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
   .card h3 { margin: 0 0 8px; font-size: 18px; }
   .card p { margin: 0; color: var(--muted); font-size: 15px; }
@@ -168,6 +220,37 @@
   ul.tick { list-style: none; padding: 0; margin: 12px 0 0; }
   ul.tick li { padding: 6px 0 6px 26px; position: relative; color: #cdd3ef; }
   ul.tick li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid var(--b); }
+
+  /* ---------- About ---------- */
+  .how-block {
+    padding: 26px 26px 24px; margin: 0 0 18px;
+    border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
+  }
+  .how-block:last-of-type { margin-bottom: 0; }
+  .how-block > .step-no { margin-bottom: 10px; }
+  .how-block > h3 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.02em; }
+  #about .card { background: rgba(0,0,0,.22); }
+  .how-block > p { color: #cdd3ef; margin: 0 0 18px; max-width: 820px; }
+  .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .how-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .how-item { padding: 18px 18px 16px; border-radius: 14px; background: rgba(0,0,0,.22); border: 1px solid var(--line); }
+  .how-item.wide { grid-column: 1 / -1; }
+  .how-item h4 { margin: 0 0 6px; font-size: 16px; }
+  .how-item p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .how-item ul { margin: 8px 0 0; padding: 0 0 0 18px; color: #cdd3ef; font-size: 14.5px; }
+  .how-item li { margin: 4px 0; }
+  .how-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
+  .how-chips span { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: #cdd3ef; font-size: 13px; }
+  .how-table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin-top: 4px; }
+  .how-table th, .how-table td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); color: #cdd3ef; white-space: normal; vertical-align: top; }
+  .how-table th {
+    position: static; background: transparent; color: var(--muted);
+    font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase;
+    font-weight: 650; cursor: default;
+  }
+  .how-table tbody tr { cursor: default; }
+  .how-table tbody tr:hover { background: rgba(255,255,255,.03); }
+  .how-block code, .how-item code, .how-table code { font-size: 13px; color: var(--b); }
 
   footer { padding: 46px 0 56px; border-top: 1px solid var(--line); background: var(--bg2); }
   .foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -180,11 +263,12 @@
     .hero-grid, .rust-grid { grid-template-columns: 1fr; }
     .hero-logo { max-width: 360px; order: -1; }
     .scores { grid-template-columns: repeat(2, 1fr); }
-      .cards { grid-template-columns: repeat(2, 1fr); }
-    nav.top ul { display: none; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .how-grid, .how-grid.three, #about .cards, .tickets { grid-template-columns: 1fr; }
   }
   @media (max-width: 620px) {
-    .scores, .cards { grid-template-columns: 1fr; }
+    .scores, .cards, .how-grid, .how-grid.three, #about .cards, .tickets { grid-template-columns: 1fr; }
+    .cta .btn { white-space: normal; }
     .fnlist { grid-template-columns: 1fr; }
     .toolbar input[type="search"] { min-width: 0; width: 100%; }
     th, td { padding: 9px 10px; font-size: 13.5px; }
@@ -198,120 +282,27 @@
 </head>
 <body>
 
-<nav class="top">
-  <div class="wrap">
-    <a class="brand" href="#top"><img src="assets/mark.jpg" alt="">killr</a>
-    <ul>
-      <li><a href="#progress">Progress</a></li>
-      <li><a href="#rust">Rust crates</a></li>
-      <li><a href="#how">How it works</a></li>
-      <li><a href="#next">What is next</a></li>
-    </ul>
-    <span class="live-dot"><i></i><span id="updated">loading data</span></span>
-  </div>
-</nav>
-
 <header class="hero" id="top">
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow">An agent system: R to Python and Rust</span>
-      <h1>Kill CRAN.</h1>
-      <p class="lead">
-        R holds some of the best statistics code in the world, and it is trapped in R.
-        killr translates the CRAN catalog into Python and Rust, and every translated function
-        is checked against the original R output. This page shows the live progress.
-      </p>
-      <div class="cta">
-        <a class="btn primary" href="#progress">See progress by package</a>
-        <a class="btn" href="strategy.md">How the agents work</a>
+  <div class="wrap">
+    <a class="brand" href="#about" data-view="about">killr</a>
+    <div class="hero-grid">
+      <div>
+        <h1>Kill R</h1>
+        <p class="lead">
+          R holds some of the best statistics code in the world, and it is trapped in R.
+          killr translates the CRAN catalog into Python and Rust, and every translated function
+          is checked against the original R output. This page shows the live progress.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#about" data-view="about">About</a>
+          <a class="btn" href="#high-level" data-view="high-level">Progress by package</a>
+          <a class="btn" href="#low-level" data-view="low-level">How we handle low-level code</a>
+        </div>
       </div>
+      <div class="hero-logo"><img src="assets/logo.jpg" alt="killr: Rust and Python, the AI-powered R replacement"></div>
     </div>
-    <div class="hero-logo"><img src="assets/logo.jpg" alt="killr: Rust and Python, the AI-powered R replacement"></div>
   </div>
 </header>
-
-<section id="summary">
-  <div class="wrap">
-    <div class="kicker">Scoreboard</div>
-    <h2>Where the translation stands</h2>
-    <p class="sub">Every number on this page is read from the registry when the site is built. Replaced packages are exempt from grading, because a mature library covers them.</p>
-    <div class="scores">
-      <div class="score">
-        <div class="big"><span id="s-pkg">-</span> <small id="s-pkg-of"></small></div>
-        <div class="lbl">Packages finished</div>
-        <div class="note" id="s-pkg-note"></div>
-        <div class="meter"><span id="m-pkg"></span></div>
-      </div>
-      <div class="score">
-        <div class="big"><span id="s-fn">-</span> <small id="s-fn-of"></small></div>
-        <div class="lbl">Functions translated</div>
-        <div class="note" id="s-fn-note"></div>
-        <div class="meter"><span id="m-fn"></span></div>
-      </div>
-      <div class="score">
-        <div class="big"><span id="s-chk">-</span> <small id="s-chk-of"></small></div>
-        <div class="lbl">Proof checks passing</div>
-        <div class="note">Each check compares R and Python output</div>
-        <div class="meter"><span id="m-chk"></span></div>
-      </div>
-      <div class="score">
-        <div class="big"><span id="s-spd">-</span></div>
-        <div class="lbl">Median speedup over R</div>
-        <div class="note" id="s-spd-note"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="progress">
-  <div class="wrap">
-    <div class="kicker">Progress by package</div>
-    <h2>Every package, one row each</h2>
-    <p class="sub">Score is the share of functions translated. A package is complete when every function is translated and every proof check matches R. Click a row for the functions, the checks and the open work.</p>
-
-    <div class="sheet">
-      <div class="sheet-head">
-        <h3>CRAN to Python and Rust</h3>
-        <div class="meta" id="sheet-meta"></div>
-      </div>
-      <div class="toolbar" role="toolbar" aria-label="Filter results">
-        <input type="search" id="q" placeholder="Search a package name" aria-label="Search packages">
-        <button class="chip" data-filter="all" aria-pressed="true">All</button>
-        <button class="chip" data-filter="complete" aria-pressed="false">Complete</button>
-        <button class="chip" data-filter="in_progress" aria-pressed="false">In progress</button>
-        <button class="chip" data-filter="replaced" aria-pressed="false">Replaced</button>
-        <button class="chip" data-filter="failing" aria-pressed="false">Failing checks</button>
-        <button class="chip" data-filter="rust" aria-pressed="false">Uses Rust</button>
-        <select id="sort" aria-label="Sort">
-          <option value="name">Sort: name</option>
-          <option value="status">Sort: status</option>
-          <option value="score">Sort: score</option>
-          <option value="functions">Sort: functions</option>
-          <option value="checks">Sort: proof checks</option>
-          <option value="speed">Sort: speedup</option>
-        </select>
-        <span class="count" id="count"></span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th data-sort="name">Package<span class="arr"></span></th>
-              <th data-sort="status">Status<span class="arr"></span></th>
-              <th data-sort="score">Score<span class="arr"></span></th>
-              <th data-sort="functions">Functions<span class="arr"></span></th>
-              <th data-sort="checks">Proof checks<span class="arr"></span></th>
-              <th data-sort="speed">Speedup<span class="arr"></span></th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-        <div class="empty" id="empty" hidden>No package matches this filter.</div>
-      </div>
-      <div class="sheet-foot">A package with a stand-in library is marked Replaced and is not counted in the scoreboard totals for functions and packages.</div>
-    </div>
-  </div>
-</section>
 
 <dialog id="detail" aria-labelledby="d-title">
   <div class="dlg-head">
@@ -324,72 +315,309 @@
   <div class="dlg-body" id="d-body"></div>
 </dialog>
 
-<section id="rust">
-  <div class="wrap rust-grid">
-    <div class="rust-card">
-      <div class="kicker">Rust crates</div>
-      <h2 style="margin-top:8px">Compiled kernels in Rust</h2>
-      <p>Each crate holds one Fortran or C routine that does the heavy computing, ported to Rust. A crate is "assigned" while an agent is working on it, and "done" once it is finished.</p>
-      <div class="cards" style="grid-template-columns: 1fr 1fr; margin-top:18px">
-        <div class="card" style="padding:18px"><div class="big" id="c-total" style="font-size:34px;font-weight:800">-</div><div class="muted">crates in total</div></div>
-        <div class="card" style="padding:18px"><div class="big" id="c-assigned" style="font-size:34px;font-weight:800">-</div><div class="muted">being worked on now</div></div>
+<section id="about">
+  <div class="wrap">
+    <div class="kicker">About</div>
+    <h2>How do you tackle a catalog this hard?</h2>
+    <p class="sub">Twenty-five thousand packages, compiled kernels, and a proof for every function. The hard part is not one clever prompt. It is knowing which work is judgment, which work should become a program, and how a mistake is written down so it is not made twice.</p>
+
+    <article class="how-block" id="how-prepare">
+      <div class="step-no">1</div>
+      <h3>How do you reduce repeated tasks?</h3>
+      <p>When a step is deterministic, we do not keep paying a model to do it. We have the model write a program, then we run the program. Screening tarballs used to be an AI job: open a package, list the Fortran, count the R files, read Depends. That is mechanical. So the model wrote a prepare program. The program opens each tarball once under <code>rcran/contrib</code> and writes one SQLite database. Agents do not invent the inventory, and they do not write this page. Progress by package and How we handle low-level code are that inventory.</p>
+      <div class="how-grid three">
+        <div class="how-item">
+          <h4>Progress by package</h4>
+          <p>R files, exported functions, and the packages in Depends and Imports. A package is free when those dependencies are already finished or replaced. Suggests and Enhances do not block. Base R is not opened as a package.</p>
+        </div>
+        <div class="how-item">
+          <h4>Low-level code</h4>
+          <p>Fortran, C, and C++ files and line counts, plus whether a Rust crate already covers the kernel. A package whose compiled code computes is later given a <code>-low</code> plan. A thin wrap around an existing C++ system is routed, not rewritten.</p>
+        </div>
+        <div class="how-item">
+          <h4>Priority</h4>
+          <p>When several packages are free, the next one is the highest last-month download rank from the RStudio CRAN mirror. A dependency of a listed package is opened before that package. A package already on the replaced list is a stand-in, not a translation.</p>
+        </div>
       </div>
-      <div class="toolbar" style="margin-top:18px; background: transparent; border: 0; padding: 0; gap: 8px">
-        <input type="search" id="cq" placeholder="Search a crate" aria-label="Search crates" style="padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);min-width:0;flex:1">
-        <button class="chip" data-cfilter="all" aria-pressed="true" style="background:transparent;color:var(--text);border-color:var(--line)">All</button>
-        <button class="chip" data-cfilter="assigned" aria-pressed="false" style="background:transparent;color:var(--text);border-color:var(--line)">Assigned</button>
-        <button class="chip" data-cfilter="done" aria-pressed="false" style="background:transparent;color:var(--text);border-color:var(--line)">Done</button>
+    </article>
+
+    <article class="how-block" id="how-translate">
+      <div class="step-no">2</div>
+      <h3>What is still a job for the model?</h3>
+      <p>Judgment that is not a lookup: remaking an algorithm, choosing wrap versus remake, writing the Python or the crate. Each free package goes to translation agents. They read the constitution and the plan stored on that package. They write Python under <code>packages/&lt;Name&gt;</code>, and they write Rust under <code>crates/&lt;name&gt;</code> when the work is a compiled kernel. The source is the tarball on disk, not GitHub.</p>
+      <div class="how-grid">
+        <div class="how-item">
+          <h4>Constitution</h4>
+          <p>One set of rules for every agent: what counts as translated, the order of work, routing to stand-ins, wrapping versus remaking, and the Rust kernel rule. S3, S4, R6, and S7 are not copied as object systems. The translation is a Python class or a Rust struct, and the method body is an ordinary function.</p>
+        </div>
+        <div class="how-item">
+          <h4>Wrapping or remaking</h4>
+          <p>When R only wraps a C++ system, Python or Rust wraps that same system. The R glue is not translated. When the algorithm is original to R, including a kernel written in C++ or Fortran, the algorithm is remade. That kernel lives in its own crate and is loaded, not ported again.</p>
+        </div>
+        <div class="how-item wide">
+          <h4>A plan by size</h4>
+          <p>The plan is chosen from how many functions are still to translate.</p>
+          <table class="how-table">
+            <thead><tr><th>Plan</th><th>When it applies</th></tr></thead>
+            <tbody>
+              <tr><td><code>small</code></td><td>20 functions or fewer still open</td></tr>
+              <tr><td><code>medium</code></td><td>21 to 80 functions</td></tr>
+              <tr><td><code>large</code></td><td>More than 80; related functions are grouped into a task force</td></tr>
+              <tr><td><code>huge</code></td><td>More than 200 exports; a stand-in is checked before the package is opened</td></tr>
+              <tr><td><code>small-low</code>, <code>medium-low</code>, <code>large-low</code></td><td>The same sizes, when the tarball has Fortran or C that computes</td></tr>
+              <tr><td><code>hard-function</code></td><td>One function that already failed; retried once with a stronger model</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="how-item wide">
+          <h4>Routing, not rewriting</h4>
+          <p>Some R packages are a thin wrap around a system that already exists. Those are recorded as replaced and are not translated. A new big library is named and agreed before it is used.</p>
+          <div class="how-chips">
+            <span>Data frames → Polars</span>
+            <span>Charts → Matplotlib / killplot</span>
+            <span>Interactive charts → Plotly</span>
+            <span>Dashboards → Dash</span>
+            <span>HTTP → requests</span>
+            <span>XML / HTML → libxml2</span>
+            <span>Vectors → NumPy</span>
+            <span>Reports → Quarto</span>
+            <span>Databases → SQLAlchemy</span>
+            <span>Parallel loops → Rayon</span>
+          </div>
+        </div>
+        <div class="how-item wide">
+          <h4>How a batch runs</h4>
+          <p>Easier first-pass Python uses a faster model. Work that already has a matching lesson, a new crate, or a failed proof uses a stronger thinking model. A batch returns three things: the proof, any packages it is waiting on, and at most one new lesson. If a function calls another package that is not yet translated, it is marked waiting and the next package opened is one of those names.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-block" id="how-experience">
+      <div class="step-no">3</div>
+      <h3>How do you improve over time?</h3>
+      <p>A mistake is written down once. Each pitfall becomes one short lesson file, named after the fact — not after the package, and not after the day it was found. Later agents open at most three matching files before they start. A new fact goes in the file whose name already describes it, so the same lesson is not written twice under two titles.</p>
+      <div class="how-grid three">
+        <div class="how-item">
+          <h4>One file per fact</h4>
+          <p>The file name is the fact. Fortran pair loops, timezone names, a stub that must stay a stub. The next agent that hits that fact opens that file. It does not invent a second explanation.</p>
+        </div>
+        <div class="how-item">
+          <h4>At most three lessons</h4>
+          <p>An agent does not read the whole experience folder. It picks at most three files whose names match the work in front of it. That keeps the start of a batch short, and it keeps the lessons from turning into a second constitution.</p>
+        </div>
+        <div class="how-item">
+          <h4>One new lesson per batch</h4>
+          <p>A batch may add at most one new lesson. Review rounds feed new pitfalls back the same way. The system gets sharper without growing a pile of overlapping notes.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-block" id="how-proof">
+      <div class="step-no">4</div>
+      <h3>How do you know it is not a guess?</h3>
+      <p>The model does not grade itself. A proof is another program: an R script and a Python script on the same input. The outputs must match. That is how we catch a silent mistake. The printed or drawn pair is saved, and the dashboard shows it next to the function. Nothing counts as done until that check passes.</p>
+      <div class="how-grid three">
+        <div class="how-item">
+          <h4>Match</h4>
+          <p>The outputs must agree within <code>1e-8</code>. The proof compares values, not object-system dispatch. A function whose note begins with Left is reserved, not claimed.</p>
+        </div>
+        <div class="how-item">
+          <h4>Speed</h4>
+          <p>One untimed call, then the median of 20. R uses <code>Sys.time()</code>. Python uses <code>time.perf_counter()</code>. Speedup is the R time divided by the Python time.</p>
+        </div>
+        <div class="how-item">
+          <h4>What is saved</h4>
+          <p>The two scripts live under <code>packages/&lt;Name&gt;/proof</code>. What they print or draw is saved under <code>packages/&lt;Name&gt;/docs/output/</code>. A <code>.txt</code> file is shown as text. An <code>.svg</code> file is shown as the figure.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-block" id="how-next">
+      <div class="step-no">5</div>
+      <h3>How do we get the best out of this?</h3>
+      <p>The same answers, again. Repeated work becomes a program. A new pitfall becomes a lesson. A function is finished only when the proof matches. The first translations already exist. The work ahead is finish the first round, review again, raise Rust, and integrate into the frameworks that already exist.</p>
+      <div class="cards">
+        <div class="card">
+          <h3>Finish the first round</h3>
+          <p>A first translation for every package that is not replaced. The database already splits compiled kernels from the R side. Free packages go to agents. A package waiting on Depends is opened after that dependency. A function is finished only when it matches R. Coverage first; the later rounds make it better.</p>
+          <ul class="tick">
+            <li>Screen and prioritize the rest of the catalog</li>
+            <li>Translate every free package</li>
+            <li>Prove each function against R</li>
+            <li>Clear the packages still in progress</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>More review rounds</h3>
+          <p>A first pass can pass its proofs and still miss an edge. Later rounds add more proofs, cover the cases the first example did not, and write the new pitfalls down so the next agents do not repeat them.</p>
+          <ul class="tick">
+            <li>Review every complete package again</li>
+            <li>Add more proofs, not only the first example</li>
+            <li>Resolve the checks that do not match yet</li>
+            <li>Feed what we find back into experience</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Raise Rust coverage</h3>
+          <p>More compiled kernels become Rust crates, so they run without a C or Fortran toolchain. We also decide, function by function, what should live in Rust instead of Python: the heavy numerics, the tight loops, anything that is better as a crate.</p>
+          <ul class="tick">
+            <li>Turn more Fortran and C kernels into crates</li>
+            <li>Move more Python numerics into Rust where that is the better home</li>
+            <li>Show Rust coverage next to the function counts</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Integrate into existing frameworks</h3>
+          <p>A third level after translation and review. If a translated piece already fits a mature Rust or Python library — a grid, a data frame, a chart — we integrate with that library and use it here, instead of keeping a parallel copy. The proof still compares against R.</p>
+          <ul class="tick">
+            <li>Look for a mature home for each translated system</li>
+            <li>Wrap or extend that library when the fit is real</li>
+            <li>Keep the R proof after the integration</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted more">The same rules, with the graph, are in <a href="strategy.md">the strategy document</a>. The full list is in <a href="roadmap.md">the roadmap</a>. The per-package pages with every detail are in <a href="dashboard/index.html">the detailed dashboard</a>.</p>
+    </article>
+  </div>
+</section>
+
+<section id="high-level" hidden>
+  <div class="wrap">
+    <div class="kicker">Progress</div>
+    <h2>Progress by package</h2>
+    <p class="sub">Each row is a CRAN package: its R files, its Depends, and whether it is free to translate. Compiled Fortran, C, and C++ live in How we handle low-level code.</p>
+    <div class="tickets">
+      <div class="card">
+        <h3>What this list is</h3>
+        <p>The prepare program already opened every tarball. This table is that inventory: R files, exported functions, and the packages in Depends and Imports.</p>
+      </div>
+      <div class="card">
+        <h3>How a package moves</h3>
+        <p>Free means the Depends are done or replaced. Locked means a dependency is still open. In progress means agents are on it. Done means every function matched R.</p>
+      </div>
+      <div class="card">
+        <h3>Compiled code</h3>
+        <p>A package that ships Fortran, C, or C++ is marked here, but the line counts and crates are in How we handle low-level code. A thin wrap around an existing system is routed, not rewritten.</p>
       </div>
     </div>
-    <div class="rust-list">
-      <table>
-        <thead><tr><th>Crate</th><th>State</th><th>Loaded by</th></tr></thead>
-        <tbody id="crates"></tbody>
-      </table>
+    <div class="catalog">
+      <div class="catalog-track" aria-hidden="true">
+        <span class="done" id="cat-done"></span>
+        <span class="prog" id="cat-prog"></span>
+      </div>
+      <div class="catalog-label" id="cat-label"></div>
+    </div>
+    <div class="scores high" id="high-scores" style="margin-bottom:22px"></div>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>R files</h3>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Filter packages">
+        <input type="search" id="hq" placeholder="Search a package" aria-label="Search packages">
+        <button class="chip" data-hfilter="free" aria-pressed="true">Free</button>
+        <button class="chip" data-hfilter="wait" aria-pressed="false">Free, waiting for low-level</button>
+        <button class="chip" data-hfilter="progress" aria-pressed="false">In progress</button>
+        <button class="chip" data-hfilter="locked" aria-pressed="false">Locked</button>
+        <button class="chip" data-hfilter="replaced" aria-pressed="false">Replaced</button>
+        <button class="chip" data-hfilter="done" aria-pressed="false">Done</button>
+        <span class="count" id="high-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-hsort="package">Package<span class="arr"></span></th>
+              <th data-hsort="files">Files<span class="arr"></span></th>
+              <th data-hsort="low">Compiled<span class="arr"></span></th>
+              <th data-hsort="depends">Depends<span class="arr"></span></th>
+              <th data-hsort="checks">Proof checks<span class="arr"></span></th>
+              <th data-hsort="speed">Speedup<span class="arr"></span></th>
+            </tr>
+          </thead>
+          <tbody id="high-rows"></tbody>
+        </table>
+        <div class="empty" id="high-empty" hidden>No match.</div>
+      </div>
+      <div class="sheet-foot pager">
+        <button type="button" id="high-prev">Prev</button>
+        <span id="high-page"></span>
+        <button type="button" id="high-next">Next</button>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="how">
+<section id="low-level" hidden>
   <div class="wrap">
-    <div class="kicker">How it works</div>
-    <h2>One pipeline, from R to Python and Rust</h2>
-    <p class="sub">An orchestrator hands each package to translation agents. Each agent follows a written constitution and a plan sized to the package. Nothing counts as done until it matches R.</p>
-    <div class="cards">
-      <div class="card"><div class="step-no">1</div><h3>Orchestrator</h3><p>Orders packages by dependencies and download rank, and caps how many run at once.</p></div>
-      <div class="card"><div class="step-no">2</div><h3>Constitution</h3><p>One set of rules: the order of work, the routing to stand-ins, the proof, and the Rust kernel rule.</p></div>
-      <div class="card"><div class="step-no">3</div><h3>Strategies</h3><p>Small, medium, large and huge packages each get a plan that fits. Compiled code gets a -low variant.</p></div>
-      <div class="card"><div class="step-no">4</div><h3>Proof vs R</h3><p>Each function is run in R and in Python on the same input. The outputs must match within 1e-8.</p></div>
+    <div class="kicker">Low-level code</div>
+    <h2>How we handle low-level code</h2>
+    <p class="sub">Fortran, C, and C++ that compute become Rust crates. A thin wrap around a system that already exists is routed, not rewritten. Progress by package is the other view.</p>
+    <div class="tickets">
+      <div class="card">
+        <h3>What this list is</h3>
+        <p>The same prepare program counted compiled files and lines. This table is that inventory: Fortran, C, C++, and whether a crate already covers the kernel.</p>
+      </div>
+      <div class="card">
+        <h3>Wrap or remake</h3>
+        <p>When R only wraps an existing C++ system, we wrap that same system. When the algorithm is original to R, including a kernel in C++ or Fortran, we remake it as a crate and load it once.</p>
+      </div>
+      <div class="card">
+        <h3>Status</h3>
+        <p>Pending means the kernel is still to port. Underway means a crate is assigned. Done means the crate is loaded. Replaced means we use the existing system instead of a new crate.</p>
+      </div>
     </div>
-    <p class="muted more">The full flow with the graph is in <a href="strategy.md">the strategy document</a>.</p>
+    <div class="scores low" id="low-scores" style="margin-bottom:22px"></div>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>Compiled source</h3>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Filter packages with low-level code">
+        <input type="search" id="lq" placeholder="Search a package, crate, or note" aria-label="Search packages with low-level code">
+        <button class="chip" data-lfilter="all" aria-pressed="true">All</button>
+        <button class="chip" data-lfilter="fortran" aria-pressed="false">Fortran</button>
+        <button class="chip" data-lfilter="c" aria-pressed="false">C</button>
+        <button class="chip" data-lfilter="cpp" aria-pressed="false">C++</button>
+        <button class="chip" data-lfilter="done" aria-pressed="false">Done</button>
+        <button class="chip" data-lfilter="underway" aria-pressed="false">Underway</button>
+        <button class="chip" data-lfilter="pending" aria-pressed="false">Pending</button>
+        <button class="chip" data-lfilter="replaced" aria-pressed="false">Replaced</button>
+        <span class="count" id="low-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-lsort="package">Package<span class="arr"></span></th>
+              <th data-lsort="status">Status<span class="arr"></span></th>
+              <th data-lsort="fortran">Fortran<span class="arr"></span></th>
+              <th data-lsort="c">C<span class="arr"></span></th>
+              <th data-lsort="cpp">C++<span class="arr"></span></th>
+              <th data-lsort="lines">Total<span class="arr"></span></th>
+              <th data-lsort="crate">Crate / notes<span class="arr"></span></th>
+            </tr>
+          </thead>
+          <tbody id="low-rows"></tbody>
+        </table>
+        <div class="empty" id="low-empty" hidden>No match.</div>
+      </div>
+      <div class="sheet-foot pager">
+        <button type="button" id="low-prev">Prev</button>
+        <span id="low-page"></span>
+        <button type="button" id="low-next">Next</button>
+      </div>
+    </div>
   </div>
 </section>
 
-<section id="next">
-  <div class="wrap">
-    <div class="kicker">What is next</div>
-    <h2>Still early, and getting better</h2>
-    <p class="sub">The agents are fast, but a first translation is not the last word. The work ahead is review, coverage and quality.</p>
-    <div class="cards">
-      <div class="card"><h3>More review rounds</h3><p>Every complete package gets another review pass, so the first translation is not the final one.</p>
-        <ul class="tick"><li>Review the complete packages again</li><li>Resolve the proof checks that do not match yet</li></ul></div>
-      <div class="card"><h3>Raise Rust coverage</h3><p>More of the compiled numerics move into Rust, so they run without a C or Fortran toolchain.</p>
-        <ul class="tick"><li>Turn more Fortran and C kernels into crates</li></ul></div>
-      <div class="card"><h3>Finish in progress work</h3><p>The packages still being translated, and the functions blocked on a decision.</p>
-        <ul class="tick"><li>Clear the blocked functions</li><li>Finish the in-progress packages</li></ul></div>
-      <div class="card"><h3>Decisions still open</h3><p>Some choices need agreement before the work can go on.</p>
-        <ul class="tick"><li>Which big libraries stand in for R frameworks</li><li>Whether replaced packages need a second look</li></ul></div>
-    </div>
-    <p class="muted more">The full list is in <a href="roadmap.md">the roadmap</a>. The per-package pages with every detail are in <a href="dashboard/index.html">the detailed dashboard</a>.</p>
-  </div>
-</section>
 
 <footer>
   <div class="wrap foot">
     <img src="assets/mark.jpg" alt="killr logo">
-    <p>killr, Kill CRAN. Data generated from the registry in this repository.</p>
+    <p>killr, Kill R. Data generated from the registry in this repository.</p>
     <nav class="sp">
-      <a href="#progress">Progress</a>
+      <a href="#about" data-view="about">About</a>
+      <a href="#high-level" data-view="high-level">Progress by package</a>
+      <a href="#low-level" data-view="low-level">How we handle low-level code</a>
       <a href="strategy.md">Strategy</a>
       <a href="roadmap.md">Roadmap</a>
       <a href="https://github.com/elmahyai/killr">GitHub</a>
@@ -412,31 +640,58 @@
   const fmt = (n) => Number(n).toLocaleString('en-US');
   const LABEL = { complete: 'Complete', in_progress: 'In progress', replaced: 'Replaced' };
 
-  if (!D) {
-    $('#updated').textContent = 'data missing';
-    return;
-  }
-  const T = D.totals;
-  const graded = T.graded;
+  (function bindViews() {
+    const ids = ['about', 'high-level', 'low-level'];
+    function current() {
+      const h = (location.hash || '#about').replace(/^#/, '');
+      if (ids.includes(h)) return h;
+      if (h === 'how' || h === 'next' || h === 'top' || h.indexOf('how-') === 0) return 'about';
+      return 'about';
+    }
+    function show(name) {
+      ids.forEach((id) => {
+        const sec = document.getElementById(id);
+        if (sec) sec.hidden = id !== name;
+      });
+      document.querySelectorAll('[data-view]').forEach((a) => {
+        const on = a.dataset.view === name;
+        if (a.classList.contains('btn')) a.classList.toggle('primary', on);
+        if (on) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      });
+      if ((location.hash || '') !== '#' + name) history.replaceState(null, '', '#' + name);
+    }
+    document.querySelectorAll('[data-view]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        show(a.dataset.view);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      });
+    });
+    window.addEventListener('hashchange', () => show(current()));
+    show(current());
+  })();
 
-  // ---------- Scoreboard ----------
-  $('#updated').textContent = 'Updated ' + D.generated;
-  $('#sheet-meta').textContent = 'Snapshot ' + D.generated + ' · ' + fmt(T.packages) + ' packages';
-  $('#s-pkg').textContent = fmt(T.complete);
-  $('#s-pkg-of').textContent = 'of ' + fmt(graded);
-  $('#s-pkg-note').textContent = T.in_progress + ' in progress · ' + T.replaced + ' replaced by a stand-in';
-  const pkgShare = graded ? T.complete / graded : 0;
-  $('#s-fn').textContent = fmt(T.functions_done);
-  $('#s-fn-of').textContent = 'of ' + fmt(T.functions_total);
-  $('#s-fn-note').textContent = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '% of functions in packages that are not replaced';
-  $('#s-chk').textContent = fmt(T.checks_passed);
-  $('#s-chk-of').textContent = 'of ' + fmt(T.checks_total);
-  $('#s-spd').textContent = T.median_speedup ? T.median_speedup + 'x' : '-';
-  $('#s-spd-note').textContent = 'Across every passing proof check';
+  if (!D) return;
+  const T = D.totals;
+
+  const sheetMeta = $('#sheet-meta');
+  if (sheetMeta) sheetMeta.textContent = 'Snapshot ' + D.generated + ' · ' + fmt(T.packages) + ' packages';
+  const catalog = (T.low_done || 0) + (T.low_underway || 0) + (T.low_pending || 0) + (T.low_replaced || 0) || T.packages || 1;
+  const done = T.complete || 0;
+  const underway = T.in_progress || 0;
+  const catLabel = $('#cat-label');
+  if (catLabel) {
+    catLabel.textContent = fmt(done) + ' finished · ' + fmt(underway) + ' in progress · of ' + fmt(catalog) + ' CRAN packages';
+  }
   requestAnimationFrame(() => {
-    $('#m-pkg').style.width = pct(pkgShare) + '%';
-    $('#m-fn').style.width = pct(T.functions_total ? T.functions_done / T.functions_total : 0) + '%';
-    $('#m-chk').style.width = pct(T.checks_total ? T.checks_passed / T.checks_total : 0) + '%';
+    const doneEl = $('#cat-done');
+    const progEl = $('#cat-prog');
+    if (!doneEl || !progEl) return;
+    const donePct = catalog ? (done / catalog) * 100 : 0;
+    const progPct = catalog ? (underway / catalog) * 100 : 0;
+    doneEl.style.width = (done ? Math.max(donePct, 0.4) : 0) + '%';
+    progEl.style.width = (underway ? Math.max(progPct, 0.25) : 0) + '%';
   });
 
   // ---------- Results table ----------
@@ -474,8 +729,9 @@
   function cell(text, cls) { return el('td', cls, text); }
 
   function render() {
-    const rows = visible();
     const body = $('#rows');
+    if (!body) return;
+    const rows = visible();
     body.textContent = '';
     rows.forEach((p) => {
       const tr = el('tr');
@@ -518,8 +774,10 @@
   document.querySelectorAll('[data-filter]').forEach((b) => {
     b.addEventListener('click', () => { state.filter = b.dataset.filter; syncChips(); render(); });
   });
-  $('#q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
-  $('#sort').addEventListener('change', (e) => { state.sort = e.target.value; state.dir = 1; render(); });
+  const qEl = $('#q');
+  if (qEl) qEl.addEventListener('input', (e) => { state.q = e.target.value; render(); });
+  const sortEl = $('#sort');
+  if (sortEl) sortEl.addEventListener('change', (e) => { state.sort = e.target.value; state.dir = 1; render(); });
   document.querySelectorAll('th[data-sort]').forEach((th) => {
     th.addEventListener('click', () => {
       const key = th.dataset.sort;
@@ -543,6 +801,10 @@
     if (p.resume) {
       body.appendChild(el('h4', '', 'Status'));
       body.appendChild(el('div', 'resume', p.resume));
+    }
+    if (p.screen) {
+      body.appendChild(el('h4', '', 'Screen'));
+      body.appendChild(el('p', '', 'R ' + p.screen.n_r + ' · C ' + p.screen.n_c + ' · Fortran ' + p.screen.n_fortran + ' · C++ ' + p.screen.n_cpp + ' · ' + (p.screen.strategy_hint || '')));
     }
     if (p.blocked_by && p.blocked_by.length) {
       body.appendChild(el('h4', '', 'Blocked by'));
@@ -594,42 +856,576 @@
   $('#d-close').addEventListener('click', () => dlg.close());
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
 
-  // ---------- Rust crates ----------
-  const crates = D.crates;
-  $('#c-total').textContent = fmt(T.crates);
-  $('#c-assigned').textContent = fmt(T.crates_assigned);
-  const cstate = { filter: 'all', q: '' };
-  function renderCrates() {
-    const q = cstate.q.trim().toLowerCase();
-    const body = $('#crates');
+  function cratesForPackage(name, crateField) {
+    const all = D.crates || [];
+    const loaded = all.filter((c) => (c.loaded_by || []).includes(name));
+    if (loaded.length) return loaded;
+    const names = String(crateField || '')
+      .split(/[,\s]+/)
+      .map((s) => s.replace(/^crates\//, ''))
+      .filter(Boolean);
+    return all.filter((c) => names.includes(c.name));
+  }
+
+  function openLow(r) {
+    dlg.classList.remove('wide');
+    $('#d-title').textContent = r.package + (r.version ? '  ' + r.version : '');
+    const tot = lowTotal(r);
+    const bits = [LOW_LABEL[r.status] || r.status];
+    if (tot.lines) bits.push(fmt(tot.lines) + ' compiled lines');
+    $('#d-meta').textContent = bits.join(' · ');
+    const body = $('#d-body');
     body.textContent = '';
-    const rows = crates.filter((c) =>
-      (cstate.filter === 'all' || c.state === cstate.filter) &&
-      (!q || c.name.toLowerCase().includes(q)));
-    rows.forEach((c) => {
+    const found = cratesForPackage(r.package, r.crate);
+    if (found.length) {
+      found.forEach((c) => {
+        const card = el('div', 'crate-card');
+        const head = el('h4', '', c.name);
+        head.appendChild(document.createTextNode(' '));
+        head.appendChild(el('span', 'pill ' + c.state, c.state === 'assigned' ? 'Assigned' : 'Done'));
+        card.appendChild(head);
+        if (c.origin) card.appendChild(el('p', '', c.origin));
+        const others = (c.loaded_by || []).filter((n) => n !== r.package);
+        if (others.length) card.appendChild(el('p', '', 'Also loaded by ' + others.join(', ')));
+        body.appendChild(card);
+      });
+    } else if (r.crate || r.notes) {
+      const card = el('div', 'crate-card');
+      if (r.crate) card.appendChild(el('h4', '', r.crate));
+      if (r.notes) card.appendChild(el('p', '', r.notes));
+      body.appendChild(card);
+    } else {
+      body.appendChild(el('p', '', 'No crate yet.'));
+    }
+    dlg.showModal();
+  }
+
+  function lowTotal(r) {
+    return {
+      files: (r.fortran_files || 0) + (r.c_files || 0) + (r.cpp_files || 0),
+      lines: (r.fortran_lines || 0) + (r.c_lines || 0) + (r.cpp_lines || 0),
+    };
+  }
+
+  function langCell(files, lines) {
+    const td = el('td', 'lang');
+    if (!files && !lines) {
+      td.textContent = '—';
+      return td;
+    }
+    const n = el('span', 'n', fmt(lines) + ' line' + (lines === 1 ? '' : 's'));
+    const u = el('span', 'u', fmt(files) + ' file' + (files === 1 ? '' : 's'));
+    td.appendChild(n);
+    td.appendChild(u);
+    return td;
+  }
+
+  const LOW_LABEL = { done: 'Done', underway: 'Underway', pending: 'Pending', replaced: 'Replaced' };
+  const LOW_PAGE = 50;
+  const lstate = { filter: 'all', q: '', sort: 'lines', dir: -1, page: 0 };
+  const lpreds = {
+    all: () => true,
+    fortran: (r) => (r.fortran_lines || 0) > 0,
+    c: (r) => (r.c_lines || 0) > 0,
+    cpp: (r) => (r.cpp_lines || 0) > 0,
+    done: (r) => r.status === 'done',
+    underway: (r) => r.status === 'underway',
+    pending: (r) => r.status === 'pending',
+    replaced: (r) => r.status === 'replaced',
+  };
+  const lsorters = {
+    package: (a, b) => a.package.localeCompare(b.package),
+    status: (a, b) => a.status.localeCompare(b.status),
+    fortran: (a, b) => (a.fortran_lines || 0) - (b.fortran_lines || 0),
+    c: (a, b) => (a.c_lines || 0) - (b.c_lines || 0),
+    cpp: (a, b) => (a.cpp_lines || 0) - (b.cpp_lines || 0),
+    other: (a, b) => (a.other_lines || 0) - (b.other_lines || 0),
+    lines: (a, b) => lowTotal(a).lines - lowTotal(b).lines,
+    crate: (a, b) => ((a.crate || '') + (a.notes || '')).localeCompare((b.crate || '') + (b.notes || '')),
+  };
+
+  function renderLow() {
+    const rowsSrc = D.low_level || [];
+    const scores = document.getElementById('low-scores');
+    const body = document.getElementById('low-rows');
+    const empty = document.getElementById('low-empty');
+    const count = document.getElementById('low-count');
+    const meta = document.getElementById('low-meta');
+    if (!scores || !body) return;
+    const compiled = rowsSrc.filter((r) => lowTotal(r).lines > 0);
+    const nStatus = (status) => compiled.filter((r) => r.status === status).length;
+    scores.innerHTML = '';
+    [
+      [compiled.length, 'Packages'],
+      [nStatus('done'), 'Done'],
+      [nStatus('replaced'), 'Replaced'],
+      [nStatus('underway'), 'Underway'],
+      [nStatus('pending'), 'Pending'],
+      [T.crates || 0, 'Crates'],
+    ].forEach((row) => {
+      const card = el('div', 'score');
+      card.appendChild(el('div', 'big', fmt(row[0])));
+      card.appendChild(el('div', 'lbl', row[1]));
+      scores.appendChild(card);
+    });
+    if (meta) {
+      meta.textContent = D.generated;
+    }
+    const q = lstate.q.trim().toLowerCase();
+    const pred = lpreds[lstate.filter] || lpreds.all;
+    let rows = compiled.filter((r) => pred(r) && (!q || r.package.toLowerCase().includes(q) || (r.crate || '').toLowerCase().includes(q) || (r.notes || '').toLowerCase().includes(q)));
+    const cmp = lsorters[lstate.sort] || lsorters.lines;
+    rows = rows.slice().sort((a, b) => cmp(a, b) * lstate.dir || a.package.localeCompare(b.package));
+    const pages = Math.max(1, Math.ceil(rows.length / LOW_PAGE));
+    if (lstate.page >= pages) lstate.page = pages - 1;
+    if (lstate.page < 0) lstate.page = 0;
+    const start = lstate.page * LOW_PAGE;
+    const pageRows = rows.slice(start, start + LOW_PAGE);
+    body.textContent = '';
+    pageRows.forEach((r) => {
       const tr = el('tr');
-      tr.appendChild(el('td', 'name', c.name));
+      const name = el('td', 'name');
+      name.appendChild(document.createTextNode(r.package));
+      if (r.size) name.appendChild(el('span', 'u', r.size));
+      tr.appendChild(name);
       const st = el('td');
-      st.appendChild(el('span', 'pill ' + c.state, c.state === 'assigned' ? 'Assigned' : 'Done'));
+      st.appendChild(el('span', 'pill ' + r.status, LOW_LABEL[r.status] || r.status));
       tr.appendChild(st);
-      tr.appendChild(el('td', 'origin', (c.loaded_by || []).join(', ') || '-'));
+      tr.appendChild(langCell(r.fortran_files, r.fortran_lines));
+      tr.appendChild(langCell(r.c_files, r.c_lines));
+      tr.appendChild(langCell(r.cpp_files, r.cpp_lines));
+      const tot = lowTotal(r);
+      tr.appendChild(langCell(tot.files, tot.lines));
+      const note = el('td', 'notes');
+      if (r.crate) note.appendChild(el('div', '', r.crate));
+      if (r.notes) note.appendChild(el('span', 'u', r.notes));
+      if (!r.crate && !r.notes) note.textContent = '—';
+      tr.appendChild(note);
+      tr.addEventListener('click', () => openLow(r));
       body.appendChild(tr);
     });
-    if (!rows.length) {
-      const tr = el('tr'); const td = el('td', 'origin', 'No crate matches.'); td.colSpan = 3; tr.appendChild(td); body.appendChild(tr);
-    }
+    if (count) count.textContent = rows.length + ' of ' + compiled.length + ' shown';
+    const pageEl = document.getElementById('low-page');
+    if (pageEl) pageEl.textContent = (lstate.page + 1) + ' / ' + pages;
+    const prev = document.getElementById('low-prev');
+    const next = document.getElementById('low-next');
+    if (prev) prev.disabled = lstate.page <= 0;
+    if (next) next.disabled = lstate.page >= pages - 1;
+    if (empty) empty.hidden = rows.length > 0;
+    document.querySelectorAll('th[data-lsort]').forEach((th) => {
+      const arr = th.querySelector('.arr');
+      if (!arr) return;
+      arr.textContent = lstate.sort === th.dataset.lsort ? (lstate.dir > 0 ? ' ▲' : ' ▼') : '';
+    });
   }
-  $('#cq').addEventListener('input', (e) => { cstate.q = e.target.value; renderCrates(); });
-  document.querySelectorAll('[data-cfilter]').forEach((b) => {
+
+  const lq = document.getElementById('lq');
+  if (lq) lq.addEventListener('input', (e) => { lstate.q = e.target.value; lstate.page = 0; renderLow(); });
+  document.querySelectorAll('[data-lfilter]').forEach((b) => {
     b.addEventListener('click', () => {
-      cstate.filter = b.dataset.cfilter;
-      document.querySelectorAll('[data-cfilter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      renderCrates();
+      lstate.filter = b.dataset.lfilter;
+      lstate.page = 0;
+      document.querySelectorAll('[data-lfilter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderLow();
     });
   });
+  document.querySelectorAll('th[data-lsort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.lsort;
+      if (lstate.sort === key) lstate.dir = -lstate.dir;
+      else {
+        lstate.sort = key;
+        lstate.dir = (key === 'package' || key === 'status' || key === 'crate') ? 1 : -1;
+      }
+      lstate.page = 0;
+      renderLow();
+    });
+  });
+  const prev = document.getElementById('low-prev');
+  const next = document.getElementById('low-next');
+  if (prev) prev.addEventListener('click', () => { lstate.page -= 1; renderLow(); });
+  if (next) next.addEventListener('click', () => { lstate.page += 1; renderLow(); });
+
+  const HIGH_LOW = { done: 'Done', underway: 'Underway', pending: 'Pending', replaced: 'Replaced', none: 'None' };
+  const HIGH_PAGE = 50;
+  const hstate = { filter: 'free', q: '', sort: 'files', dir: -1, page: 0 };
+  const pkgStatus = {};
+  const pkgByName = {};
+  (D.packages || []).forEach((p) => {
+    pkgStatus[p.name] = p.status;
+    pkgByName[p.name] = p;
+  });
+  function progressParts(r) {
+    const status = pkgStatus[r.package] || '';
+    const parts = [];
+    if (status === 'in_progress') parts.push('package');
+    if (r.low_status === 'underway') parts.push('low-level');
+    return parts;
+  }
+  function highShare(r) {
+    const p = pkgByName[r.package];
+    if (p && p.total) return p.translated / p.total;
+    const fns = [];
+    (r.rfiles || []).forEach((f) => (f.fns || []).forEach((fn) => fns.push(fn)));
+    (r.fns || []).forEach((fn) => fns.push(fn));
+    if (!fns.length) return null;
+    return fns.filter((fn) => fn.t).length / fns.length;
+  }
+  function lowShare(r) {
+    if (!r.low_status || r.low_status === 'none') return null;
+    const crates = (D.crates || []).filter((c) => (c.loaded_by || []).includes(r.package));
+    if (crates.length) return crates.filter((c) => c.state === 'done').length / crates.length;
+    if (r.low_status === 'done' || r.low_status === 'replaced') return 1;
+    if (r.low_status === 'pending') return 0;
+    return null;
+  }
+  function addProgRow(wrap, label, share) {
+    const row = el('div', 'prog-row');
+    row.appendChild(el('span', 'lbl', label));
+    const bar = el('span', 'bar');
+    const fill = el('span');
+    fill.style.width = share == null ? '40%' : Math.round(share * 100) + '%';
+    if (share == null) fill.style.opacity = '0.65';
+    bar.appendChild(fill);
+    row.appendChild(bar);
+    if (share != null) row.appendChild(el('span', 'n', Math.round(share * 100) + '%'));
+    wrap.appendChild(row);
+  }
+  function layerBars(r) {
+    const wrap = el('div', 'prog');
+    const status = pkgStatus[r.package] || '';
+    const high = highShare(r);
+    const low = lowShare(r);
+    const showHigh = status === 'in_progress' && high != null;
+    const showLow = r.low_status === 'underway';
+    if (showHigh) addProgRow(wrap, 'package', high);
+    if (showLow) addProgRow(wrap, 'low-level', (low != null && low > 0 && low < 1) ? low : null);
+    return wrap.childNodes.length ? wrap : null;
+  }
+  function highLane(r) {
+    const status = pkgStatus[r.package] || '';
+    if (status === 'replaced') return 'replaced';
+    if (status === 'complete') return 'done';
+    if (progressParts(r).length) return 'progress';
+    if (!r.free) return 'locked';
+    if (r.low_status === 'pending') return 'wait';
+    return 'free';
+  }
+  const hpreds = {
+    free: (r) => highLane(r) === 'free',
+    wait: (r) => highLane(r) === 'wait',
+    progress: (r) => highLane(r) === 'progress',
+    locked: (r) => highLane(r) === 'locked',
+    replaced: (r) => highLane(r) === 'replaced',
+    done: (r) => highLane(r) === 'done',
+  };
+  const hsorters = {
+    package: (a, b) => a.package.localeCompare(b.package),
+    files: (a, b) => (a.lines || 0) - (b.lines || 0),
+    low: (a, b) => (a.low_status || '').localeCompare(b.low_status || ''),
+    depends: (a, b) => (a.depends || []).length - (b.depends || []).length,
+    checks: (a, b) => ((a.checks || {}).passed || 0) - ((b.checks || {}).passed || 0),
+    speed: (a, b) => (a.speed || 0) - (b.speed || 0),
+  };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[ch]));
+  }
+  function checksText(c) {
+    if (!c || !c.total) return '—';
+    return c.passed + ' / ' + c.total;
+  }
+  function speedText(s) {
+    return s ? s + 'x' : '—';
+  }
+  function fileFns(r, f) {
+    if (f && f.fns && f.fns.length) return f.fns;
+    return (r && r.fns) || [];
+  }
+  function trail(parts) {
+    const nav = el('div', 'trail');
+    parts.forEach((part, i) => {
+      if (i) nav.appendChild(document.createTextNode(' / '));
+      if (part.go) {
+        const b = el('button', '', part.label);
+        b.addEventListener('click', part.go);
+        nav.appendChild(b);
+      } else {
+        nav.appendChild(el('span', '', part.label));
+      }
+    });
+    return nav;
+  }
+  function docBlock(title, text) {
+    if (!text) return '';
+    return '<h3>' + esc(title) + '</h3><p>' + esc(text) + '</p>';
+  }
+  function renderSide(side) {
+    if (!side) return '<p>No help recorded.</p>';
+    const args = (side.arguments || []).map((item) =>
+      '<dt>' + esc(item.name) + '</dt><dd>' + esc(item.text) + '</dd>'
+    ).join('');
+    return [
+      docBlock('Description', side.description),
+      '<h3>Usage</h3><pre>' + esc(side.usage || '') + '</pre>',
+      '<h3>Arguments</h3><dl>' + args + '</dl>',
+      docBlock('Details', side.details),
+      docBlock('Value', side.value),
+      '<h3>Example</h3><pre>' + esc(side.example || '') + '</pre>',
+    ].join('');
+  }
+  function openDlg() {
+    if (!dlg.open) dlg.showModal();
+  }
+
+  function openHigh(r) {
+    dlg.classList.remove('wide');
+    $('#d-title').textContent = r.package + (r.version ? '  ' + r.version : '');
+    const bits = [(r.files || 0) + ' files', fmt(r.lines || 0) + ' lines'];
+    if (r.checks && r.checks.total) bits.push(checksText(r.checks) + ' proof checks');
+    if (r.speed) bits.push('median ' + speedText(r.speed));
+    $('#d-meta').textContent = bits.join(' · ');
+    const body = $('#d-body');
+    body.textContent = '';
+    body.appendChild(trail([{ label: r.package }]));
+    const t = el('table');
+    const head = el('tr');
+    ['File', 'Internal files', 'Packages', 'Proof checks', 'Speedup'].forEach((h) => head.appendChild(el('th', '', h)));
+    const thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
+    const tb = el('tbody');
+    (r.rfiles || []).forEach((f) => {
+      const tr = el('tr');
+      const name = el('td', 'name', f.file);
+      if (f.lines) name.appendChild(el('span', 'u', ' ' + fmt(f.lines) + ' lines'));
+      tr.appendChild(name);
+      const internal = (f.internal || []).slice();
+      if (f.needs_low) internal.push('+ low-level');
+      tr.appendChild(el('td', 'deps', internal.join(', ') || '—'));
+      tr.appendChild(el('td', 'deps', (f.packages || []).join(', ') || '—'));
+      tr.appendChild(el('td', '', checksText(f.checks)));
+      tr.appendChild(el('td', '', speedText(f.speed)));
+      tr.addEventListener('click', () => openFile(r, f));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    body.appendChild(t);
+    openDlg();
+  }
+
+  function openFile(r, f) {
+    dlg.classList.remove('wide');
+    $('#d-title').textContent = f.file;
+    const fns = fileFns(r, f);
+    const mapped = f.fns && f.fns.length;
+    const checks = mapped ? f.checks : r.checks;
+    const speed = mapped ? f.speed : r.speed;
+    const bits = [];
+    if (f.lines) bits.push(fmt(f.lines) + ' lines');
+    bits.push(fns.length + ' functions');
+    if (checks && checks.total) bits.push(checksText(checks) + ' proof checks');
+    if (speed) bits.push('median ' + speedText(speed));
+    $('#d-meta').textContent = bits.join(' · ');
+    const body = $('#d-body');
+    body.textContent = '';
+    body.appendChild(trail([
+      { label: r.package, go: () => openHigh(r) },
+      { label: f.file },
+    ]));
+    const t = el('table');
+    const head = el('tr');
+    ['Function', 'Proof', 'Speedup'].forEach((h) => head.appendChild(el('th', '', h)));
+    const thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
+    const tb = el('tbody');
+    if (!fns.length) {
+      const tr = el('tr');
+      const td = el('td', '', 'No functions recorded for this file.');
+      td.colSpan = 3;
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    }
+    fns.forEach((fn) => {
+      const tr = el('tr');
+      const name = el('td', 'name', fn.n);
+      if (!fn.t && fn.nd) name.appendChild(el('span', 'u', ' ' + fn.nd));
+      tr.appendChild(name);
+      let proof = '—';
+      let cls = '';
+      if (fn.ok === true) { proof = 'matches R'; cls = 'ok'; }
+      else if (fn.ok === false) { proof = 'differs'; cls = 'bad'; }
+      tr.appendChild(el('td', cls, proof));
+      tr.appendChild(el('td', '', speedText(fn.s)));
+      tr.addEventListener('click', () => openFn(r, f, fn));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    body.appendChild(t);
+    openDlg();
+  }
+
+  function openFn(r, f, fn) {
+    dlg.classList.add('wide');
+    $('#d-title').textContent = fn.n;
+    const bits = [fn.t ? 'translated' : 'not translated'];
+    if (fn.ok === true) bits.push('matches R');
+    if (fn.ok === false) bits.push('differs from R');
+    if (fn.s) bits.push(speedText(fn.s));
+    $('#d-meta').textContent = bits.join(' · ');
+    const body = $('#d-body');
+    body.textContent = '';
+    body.appendChild(trail([
+      { label: r.package, go: () => openHigh(r) },
+      { label: f.file, go: () => openFile(r, f) },
+      { label: fn.n },
+    ]));
+    if (fn.proof && (fn.proof.r || fn.proof.python)) {
+      const btn = el('button', 'proof-btn', 'Show the proof');
+      const box = el('div', 'proof-box');
+      box.hidden = true;
+      const left = el('div');
+      left.appendChild(el('p', 'kicker', 'R proof'));
+      const preR = el('pre', '', fn.proof.r || '');
+      left.appendChild(preR);
+      const right = el('div');
+      right.appendChild(el('p', 'kicker', 'Python proof'));
+      const prePy = el('pre', '', fn.proof.python || '');
+      right.appendChild(prePy);
+      box.appendChild(left);
+      box.appendChild(right);
+      btn.addEventListener('click', () => {
+        const open = box.hidden;
+        box.hidden = !open;
+        btn.classList.toggle('active', open);
+        btn.textContent = open ? 'Hide the proof' : 'Show the proof';
+      });
+      body.appendChild(btn);
+      body.appendChild(box);
+    }
+    const pair = el('div', 'docs-pair');
+    const origin = el('div', 'docs-side');
+    origin.innerHTML = '<p class="kicker">R</p><h2>' + esc(fn.title || fn.n) + '</h2>' +
+      (fn.origin ? renderSide(fn.origin) : '<p>No original help recorded.</p>');
+    const translation = el('div', 'docs-side');
+    translation.innerHTML = '<p class="kicker">Python</p><h2>' + esc(fn.title || fn.n) + '</h2>' +
+      (fn.translation ? renderSide(fn.translation) : ('<p>Not translated yet.</p>' + (fn.nd ? '<p>' + esc(fn.nd) + '</p>' : '')));
+    pair.appendChild(origin);
+    pair.appendChild(translation);
+    body.appendChild(pair);
+    openDlg();
+  }
+
+  function renderHigh() {
+    const rowsSrc = (D.high_level || []).filter((r) => (r.files || 0) > 0);
+    const scores = document.getElementById('high-scores');
+    const body = document.getElementById('high-rows');
+    const empty = document.getElementById('high-empty');
+    const count = document.getElementById('high-count');
+    const meta = document.getElementById('high-meta');
+    if (!scores || !body) return;
+    scores.innerHTML = '';
+    [
+      [rowsSrc.filter((r) => highLane(r) === 'free').length, 'Free'],
+      [rowsSrc.filter((r) => highLane(r) === 'wait').length, 'Free, waiting for low-level'],
+      [rowsSrc.filter((r) => highLane(r) === 'progress').length, 'In progress'],
+      [rowsSrc.filter((r) => highLane(r) === 'locked').length, 'Locked'],
+      [rowsSrc.filter((r) => highLane(r) === 'replaced').length, 'Replaced'],
+      [rowsSrc.filter((r) => highLane(r) === 'done').length, 'Done'],
+    ].forEach((row) => {
+      const card = el('div', 'score');
+      card.appendChild(el('div', 'big', fmt(row[0])));
+      card.appendChild(el('div', 'lbl', row[1]));
+      scores.appendChild(card);
+    });
+    if (meta) meta.textContent = D.generated;
+    const q = hstate.q.trim().toLowerCase();
+    const pred = hpreds[hstate.filter] || hpreds.free;
+    let rows = rowsSrc.filter((r) => pred(r) && (!q || r.package.toLowerCase().includes(q) || (r.depends || []).some((d) => d.toLowerCase().includes(q))));
+    const cmp = hsorters[hstate.sort] || hsorters.files;
+    rows = rows.slice().sort((a, b) => cmp(a, b) * hstate.dir || a.package.localeCompare(b.package));
+    const pages = Math.max(1, Math.ceil(rows.length / HIGH_PAGE));
+    if (hstate.page >= pages) hstate.page = pages - 1;
+    if (hstate.page < 0) hstate.page = 0;
+    const start = hstate.page * HIGH_PAGE;
+    body.textContent = '';
+    rows.slice(start, start + HIGH_PAGE).forEach((r) => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'name', r.package));
+      tr.appendChild(langCell(r.files, r.lines));
+      const st = el('td');
+      if (r.low_status && r.low_status !== 'none') {
+        st.appendChild(el('span', 'pill ' + r.low_status, HIGH_LOW[r.low_status] || r.low_status));
+      } else {
+        st.textContent = '—';
+      }
+      tr.appendChild(st);
+      const dep = el('td', 'deps');
+      const lane = highLane(r);
+      if (lane === 'free') dep.appendChild(el('span', 'pill free', 'Free'));
+      else if (lane === 'wait') {
+        dep.appendChild(el('span', 'pill free', 'Free'));
+        dep.appendChild(document.createTextNode(' '));
+        dep.appendChild(el('span', 'pill wait', 'waiting for low-level'));
+      }
+      else if (lane === 'progress') {
+        dep.appendChild(el('span', 'pill free', 'Free'));
+        const bars = layerBars(r);
+        if (bars) dep.appendChild(bars);
+      }
+      else if (lane === 'replaced') dep.appendChild(el('span', 'pill replaced', 'Replaced'));
+      else if (lane === 'done') dep.appendChild(el('span', 'pill complete', 'Done'));
+      else dep.textContent = (r.depends || []).join(', ') || 'Locked';
+      tr.appendChild(dep);
+      tr.appendChild(el('td', '', checksText(r.checks)));
+      tr.appendChild(el('td', '', speedText(r.speed)));
+      tr.addEventListener('click', () => openHigh(r));
+      body.appendChild(tr);
+    });
+    if (count) count.textContent = rows.length + ' of ' + rowsSrc.length + ' shown';
+    const pageEl = document.getElementById('high-page');
+    if (pageEl) pageEl.textContent = (hstate.page + 1) + ' / ' + pages;
+    const hprev = document.getElementById('high-prev');
+    const hnext = document.getElementById('high-next');
+    if (hprev) hprev.disabled = hstate.page <= 0;
+    if (hnext) hnext.disabled = hstate.page >= pages - 1;
+    if (empty) empty.hidden = rows.length > 0;
+    document.querySelectorAll('th[data-hsort]').forEach((th) => {
+      const arr = th.querySelector('.arr');
+      if (!arr) return;
+      arr.textContent = hstate.sort === th.dataset.hsort ? (hstate.dir > 0 ? ' ▲' : ' ▼') : '';
+    });
+  }
+
+  const hq = document.getElementById('hq');
+  if (hq) hq.addEventListener('input', (e) => { hstate.q = e.target.value; hstate.page = 0; renderHigh(); });
+  document.querySelectorAll('[data-hfilter]').forEach((b) => {
+    b.addEventListener('click', () => {
+      hstate.filter = b.dataset.hfilter;
+      hstate.page = 0;
+      document.querySelectorAll('[data-hfilter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderHigh();
+    });
+  });
+  document.querySelectorAll('th[data-hsort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.hsort;
+      if (hstate.sort === key) hstate.dir = -hstate.dir;
+      else {
+        hstate.sort = key;
+        hstate.dir = key === 'package' ? 1 : -1;
+      }
+      hstate.page = 0;
+      renderHigh();
+    });
+  });
+  const hprev = document.getElementById('high-prev');
+  const hnext = document.getElementById('high-next');
+  if (hprev) hprev.addEventListener('click', () => { hstate.page -= 1; renderHigh(); });
+  if (hnext) hnext.addEventListener('click', () => { hstate.page += 1; renderHigh(); });
 
   render();
-  renderCrates();
+  renderLow();
+  renderHigh();
 })();
 </script>
 </body>

@@ -1,62 +1,88 @@
 # How killr works
 
-killr turns an R package into a Python package, and a compiled kernel into a Rust crate, and proves each function against R. This page explains the moving parts and how they connect.
+killr turns an R package into a Python package, and a compiled kernel into a Rust crate, and proves each function against R. The work has three steps: prepare the catalog, translate with AI, and prove every function.
 
 ## The flow
 
 ```mermaid
 flowchart TD
-    Cat["CRAN catalog and download rank"] --> Orch["Orchestrator"]
-    Orch --> Pick["Pick next package and its strategy"]
-    Pick --> Const["CONSTITUTION.md: the law"]
-    Pick --> Strat["strategies/*.md: plan by size"]
-    Exp["experience/ lessons"] --> Sub
-    Const --> Sub["Translation sub-agents"]
-    Strat --> Sub
-    Sub --> Kern["crates/: Rust kernels for Fortran and C"]
-    Sub --> Py["packages/: Python translation"]
+    Cat["CRAN tarballs on disk"] --> Prep["Prepare: screen into one database"]
+    Prep --> Low["Low-level: Fortran, C, C++"]
+    Prep --> High["High-level: R files and Depends"]
+    High --> Rank["Priority: free packages by download rank"]
+    Low --> Rank
+    Rank --> AI["Translate with AI"]
+    AI --> Const["Constitution and plan by size"]
+    AI --> Exp["Experience lessons"]
+    Const --> Py["packages/: Python"]
+    Const --> Kern["crates/: Rust kernels"]
+    Exp --> Py
+    Exp --> Kern
     Py --> Proof["Proof: R vs Python, within 1e-8"]
     Kern --> Proof
-    Proof --> Reg["registry.json"]
-    Reg --> Dash["Dashboard"]
-    Dash --> Orch
+    Proof --> Dash["Dashboard High-level and Low-level tables"]
+    Dash --> Rank
 ```
 
-## The parts
+## 1. Prepare and prioritize
 
-**Orchestrator** ([strategies/orchestrator.md](../strategies/orchestrator.md)). It decides what runs next. It orders packages by their dependencies and by the CRAN download ranking, and it caps how many run at once. A small package can run beside other work. A large package does not share the session with another large one. It also chooses the model for each batch and records every finished batch on the dashboard.
+A prepare program reads the catalog already on disk under `rcran/contrib` and writes one SQLite database. That database is what the dashboard reads. Agents do not invent the inventory.
 
-**Constitution** ([CONSTITUTION.md](../CONSTITUTION.md)). The rules every agent follows: what counts as translated, the order of work, the routing to stand-ins (for example Polars for data frames, Matplotlib for charts, NumPy for vectors), the proof, and the rule that Fortran and C kernels go into Rust crates.
+**Low-level.** Fortran, C, and C++ files and line counts, plus whether a Rust crate already covers the kernel. A package whose compiled code computes later gets a `*-low` plan. A thin wrap around an existing C++ system is routed, not rewritten.
 
-**Strategies** ([strategies/](../strategies/)). One plan per package size:
+**High-level.** R files, exported functions, and the packages in Depends and Imports. A package is free when those dependencies are already finished or replaced. Suggests and Enhances do not block. Base R is not opened as a package.
 
-| Strategy | When it applies |
+**Priority.** When several packages are free, the next one is the highest last-month download rank from the RStudio CRAN mirror. A dependency of a listed package is opened before that package. A package on the replaced list is a stand-in, not a translation.
+
+The High-level and Low-level tables on the [front page](index.html) are this inventory.
+
+## 2. Translate with AI
+
+Each free package is handed to translation agents. They follow one constitution and the plan stored on that package. They write Python under `packages/<Name>/`, and they write Rust under `crates/<name>/` when the work is a compiled kernel. The source is the tarball on disk, not GitHub.
+
+**Constitution** ([CONSTITUTION.md](../ai-handbook/CONSTITUTION.md)). The rules every agent follows: what counts as translated, the order of work, routing to stand-ins, wrapping versus remaking, and the Rust kernel rule. S3, S4, R6, and S7 are not copied as object systems. The translation is a Python class or a Rust struct, and the method body is an ordinary function.
+
+**A plan by size** ([strategies/](../ai-handbook/strategies/)):
+
+| Plan | When it applies |
 | --- | --- |
 | `small` | 20 functions or fewer still to translate |
 | `medium` | 21 to 80 functions |
-| `large` | more than 80 functions; functions are grouped into task forces |
-| `huge` | more than 200 exports; a stand-in is checked before it is opened |
-| `small-low`, `medium-low`, `large-low` | the same sizes, for packages with Fortran or C that computes |
-| `hard-function` | one function that failed before; retried with a stronger model |
+| `large` | more than 80 functions; related functions are grouped into a task force |
+| `huge` | more than 200 exports; a stand-in is checked before the package is opened |
+| `small-low`, `medium-low`, `large-low` | the same sizes, when the tarball has Fortran or C that computes |
+| `hard-function` | one function that already failed; retried once with a stronger model |
 
-**Sub-agents.** Each translation runs as a sub-agent. It reads the constitution and its strategy, opens at most three lesson files from `experience/`, writes the Python translation, and writes the R and Python proof scripts.
+**Routing.** Some R packages are a thin wrap around a system that already exists. Those are recorded as replaced and are not translated. Data frames go to Polars, charts to Matplotlib or one killplot function, HTTP to requests, XML and HTML to libxml2, vectors to NumPy. A new big library is named and agreed before it is used.
 
-**Experience** ([experience/](../experience/)). Each pitfall an agent hits becomes one short lesson, named after the pitfall. Later agents read the matching lessons before they start, so a mistake is made once.
+**Wrapping or remaking.** When R only wraps a C++ system, Python or Rust wraps that same system. The R glue is not translated. When the algorithm is original to R, including a kernel written in C++ or Fortran, the algorithm is remade. That kernel lives in its own crate and is loaded, not ported again.
 
-**Proof.** The proof is the test that decides whether a function is done. The R and Python versions run on the same input, and the outputs must match within 1e-8. Each function also records its R and Python timing, so the speedup is measured, not assumed.
+**Experience** ([experience/](../ai-handbook/experience/)). Each pitfall becomes one short lesson file, named after the fact. Later agents open at most three matching files before they start, so a mistake is written down once.
 
-**Registry** ([registry.json](../registry.json)). The one record of every package, crate, and native library: status, functions translated, proof checks, and dependencies. It is generated, not edited by hand.
+**How a batch runs.** Easier first-pass Python uses a faster model. Work that already has a matching lesson, a new crate, or a failed proof uses a stronger thinking model. A batch returns three things: the proof, any packages it is waiting on, and at most one new lesson. If a function calls another package that is not yet translated, it is marked waiting and the next package opened is one of those names.
 
-**Dashboard** ([dashboard/](../dashboard/)). Built from the registry by `python3 dashboard/build.py --home`. It shows progress, proof results, and cost, and it is what the front page embeds.
+How many packages may be open at once, and which model a batch uses, is [strategies/orchestrator.md](../ai-handbook/strategies/orchestrator.md).
+
+## 3. Proof against R
+
+A function is finished only when the proof matches.
+
+- The R and Python versions run on the same input.
+- The outputs must agree within `1e-8`. The proof compares values, not object-system dispatch.
+- One untimed call, then the median of 20. R uses `Sys.time()`. Python uses `time.perf_counter()`. Speedup is the R time divided by the Python time.
+- The two scripts live under `packages/<Name>/proof`. What they print or draw is saved under `packages/<Name>/docs/output/`. A `.txt` file is shown as text. An `.svg` file is shown as the figure.
+- A function whose note begins with `Left` is reserved, not claimed.
 
 ## Where things live
 
 | Path | Holds |
 | --- | --- |
-| `CONSTITUTION.md`, `NATIVE.md` | The rules |
-| `strategies/` | The plans, one per size, and the orchestrator |
-| `experience/` | The lessons |
+| `orchestrator/` | Prepare, screen, ingest, batch, and the dashboard rebuild |
+| `orchestrator/orchestrator.sqlite` | The one database the dashboard reads |
+| `ai-handbook/CONSTITUTION.md`, `NATIVE.md` | The rules |
+| `ai-handbook/strategies/` | The plans, one per size |
+| `ai-handbook/experience/` | The lessons |
 | `packages/<Name>/` | One translated package: Python code, proofs, outputs |
 | `crates/<name>/` | One Rust kernel |
-| `registry.json` | The generated record |
-| `dashboard/` | The build script and pages |
+| `rcran/` | Tarballs, catalog, download rank, replaced list |
+| `docs/` | The one public dashboard |
