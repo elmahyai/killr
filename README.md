@@ -6,11 +6,15 @@
 
 # killr
 
-**Kill CRAN.** killr is an agent system that translates the R package catalog (CRAN) into Python and Rust, and proves every translated function against R.
+**Kill R.** R holds some of the best statistics code in the world, and it is trapped in R. killr translates the CRAN catalog into Python and Rust, and every translated function is checked against the original R output.
 
-- Front page with the live dashboard: [docs/index.html](docs/index.html) (published on GitHub Pages once enabled)
-- How the system works, with a graph: [docs/strategy.md](docs/strategy.md)
-- What is still open: [docs/roadmap.md](docs/roadmap.md)
+The live page is [elmahyai.github.io/killr](https://elmahyai.github.io/killr/). It has three views:
+
+- **About.** How a catalog this large is tackled: repeated work becomes a program, judgment stays with the model, mistakes are written down once, and a function is finished only when a proof matches R.
+- **Progress by package.** Each opened package: its R files, its Depends, and whether it is free, locked, in progress, replaced, or done. A bar shows finished and in-progress packages against the whole CRAN catalog.
+- **How we handle low-level code.** Fortran, C, and C++ that compute become Rust crates. A thin wrap around a system that already exists is routed, not rewritten.
+
+The same account, with the graph, is in [docs/strategy.md](docs/strategy.md). The next rounds are in [docs/roadmap.md](docs/roadmap.md): finish the first pass, review again, raise Rust coverage, and integrate into frameworks that already exist.
 
 ## Layout
 
@@ -24,7 +28,7 @@
 | `crates/<name>/` | Rust kernels for Fortran and C that compute |
 | `registry.json` | The generated record of every package, crate, and native library |
 | `dashboard/` | The build script and the per-package pages |
-| `docs/` | The one dashboard, logo, strategy and roadmap documents |
+| `docs/` | The public page, logo, strategy, and roadmap |
 
 ## Rebuild the registry and dashboard
 
