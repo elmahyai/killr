@@ -1,6 +1,6 @@
 pkg <- tempfile("labeling")
 dir.create(pkg)
-untar("cran/contrib/labeling_0.4.3.tar.gz", files="labeling/R/labeling.R",
+untar("rcran/contrib/labeling_0.4.3.tar.gz", files="labeling/R/labeling.R",
       exdir=pkg)
 source(file.path(pkg, "labeling/R/labeling.R"))
 cases <- list(

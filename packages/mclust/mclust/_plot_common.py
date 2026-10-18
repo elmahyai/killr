@@ -403,7 +403,7 @@ def _killplot_pairs_grid() -> Any:
         import sys
         from pathlib import Path
 
-        root = Path(__file__).resolve().parents[3] / "killplot"
+        root = Path(__file__).resolve().parents[3] / "packages" / "killplot"
         if str(root) not in sys.path:
             sys.path.insert(0, str(root))
         from killplot import pairs_grid

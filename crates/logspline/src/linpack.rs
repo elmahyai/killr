@@ -4,8 +4,8 @@
 //! file header states is public domain. The routines are `XDSIFA` (symmetric
 //! indefinite factorization), `XDSISL` (solve), `XDSIDI` (determinant, inverse,
 //! inertia), and `XSSORT` (Singleton's quicksort). The BLAS calls they make
-//! (`DAXPY`, `DDOT`, `DCOPY`, `DSWAP`, `IDAMAX`) are written inline with the
-//! reference BLAS order of operations, so no external BLAS is linked.
+//! (`DAXPY`, `DDOT`, `DCOPY`, `DSWAP`, `IDAMAX`) are written inline, in the
+//! loop order of the Fortran, so no external BLAS is linked.
 //!
 //! Matrices are column-major with leading dimension `lda`, exactly as in the
 //! Fortran. Subscripts passed to the helpers are 1-based, as in the Fortran.

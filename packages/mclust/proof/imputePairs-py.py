@@ -11,7 +11,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "packages" / "mclust"))
-sys.path.insert(0, str(ROOT / "killplot"))
+sys.path.insert(0, str(ROOT / "packages" / "killplot"))
 
 from mclust.impute_pairs import _points, _text_label, impute_pairs  # noqa: E402
 

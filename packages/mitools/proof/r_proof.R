@@ -2,7 +2,7 @@
 ## package's optional DBI runtime dependency.
 src <- tempfile("mitools-")
 dir.create(src)
-untar("cran/contrib/mitools_2.7.tar.gz", exdir=src)
+untar("rcran/contrib/mitools_2.7.tar.gz", exdir=src)
 source(file.path(src, "mitools", "R", "MI.R"))
 source(file.path(src, "mitools", "R", "PV.R"))
 

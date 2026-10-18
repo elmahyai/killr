@@ -4,7 +4,7 @@
 # Run from the repository root:
 #   GOWER_R_LIB=/tmp/gower_rlib Rscript packages/gower/proof/wrapper_proof_r.R
 # where /tmp/gower_rlib holds gower 1.0.2
-# (R CMD INSTALL -l /tmp/gower_rlib cran/contrib/gower_1.0.2.tar.gz).
+# (R CMD INSTALL -l /tmp/gower_rlib rcran/contrib/gower_1.0.2.tar.gz).
 #
 # Writes the values to packages/gower/proof/data/wrapper_r_*.txt. The Python
 # side (wrapper_proof_py.py) reads them and compares.

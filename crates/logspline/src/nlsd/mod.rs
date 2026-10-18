@@ -174,6 +174,8 @@ pub fn nlogcensor(
     let rv = nlsd(&mut g, &mut spc, &mut data, alpha, ndmax, mind, strt, silent, logs, ad);
     intpars[0] = rv;
     dpars[0] = alpha;
+    // the C source works on the caller's array in place
+    data0.copy_from_slice(&data.data);
     // output
     if intpars[0] > 0 && intpars[0] < 100 {
         return;

@@ -2,8 +2,9 @@
 //! `src/lsdall.c` in logspline 2.1.22.
 //!
 //! Copyright [1993-2018] Charles Kooperberg. Licensed under the Apache License,
-//! Version 2.0, as stated in the header of the original file. The file header
-//! also names the Free Software Foundation address for the GPL notice.
+//! Version 2.0, as stated in the header of the original file. That header also
+//! keeps a leftover line with the Free Software Foundation address from an
+//! earlier GPL notice; the licence it grants is Apache-2.0.
 //!
 //! The C file keeps its working state in file-scope statics (`knots`, `coef`,
 //! `zheta`, `czheta`, `xg`, `dfunpar`, `nknots`, `ng3`, `ng4`). Those are the

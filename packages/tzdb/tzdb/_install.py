@@ -23,7 +23,7 @@ def _chr_reencode(path: str) -> str:
 def _tarball() -> Path | None:
     here = Path(__file__).resolve()
     for parent in (here, *here.parents):
-        candidate = parent / "cran" / "contrib" / _TARBALL
+        candidate = parent / "rcran" / "contrib" / _TARBALL
         if candidate.is_file():
             return candidate
     return None

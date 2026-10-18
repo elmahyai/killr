@@ -2,7 +2,7 @@
 # locfit.matrix, locfit.quasi, locfit.raw, locfit.robust, lp, lscv, lscv.exact.
 #
 # Reference: locfit 1.5-9.12 installed at /tmp/locfit-rlib. Install it once with
-#   R CMD INSTALL --library=/tmp/locfit-rlib cran/contrib/locfit_1.5-9.12.tar.gz
+#   R CMD INSTALL --library=/tmp/locfit-rlib rcran/contrib/locfit_1.5-9.12.tar.gz
 # Run from the repository root:
 #   Rscript packages/locfit/proof/locfit10_r.R
 #

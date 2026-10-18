@@ -1,4 +1,4 @@
-pkg <- "../../../cran/contrib/DEoptimR_1.2-2.tar.gz"
+pkg <- "../../../rcran/contrib/DEoptimR_1.2-2.tar.gz"
 td <- tempfile(); dir.create(td)
 untar(pkg, exdir=td)
 source(file.path(td, "DEoptimR/R/JDEoptim.R"))

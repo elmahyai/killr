@@ -725,12 +725,25 @@ impl Mesh {
         Ok(())
     }
 
+    /// Data neighbours j of i with 1 <= j < i, in increasing order. These are
+    /// the only j for which the Fortran pair loop `do j = 1,i-1; adjchk(i,j)`
+    /// can report adjacency, so the loop visits them directly.
+    fn lower_neighbours(&self, i: i64) -> Vec<i64> {
+        let mut js: Vec<i64> = self.adj[pos(i)]
+            .iter()
+            .copied()
+            .filter(|&j| j >= 1 && j < i)
+            .collect();
+        js.sort_unstable();
+        js
+    }
+
     /// Fortran `delseg`: endpoints of the Delaunay edges. Each row is
     /// `(x_i, y_i, x_j, y_j, i, j)` with `j < i`.
     fn delseg(&self, nn: usize) -> Res<Vec<[f64; 6]>> {
         let mut out = Vec::new();
         for i in 2..=nn as i64 {
-            for j in 1..i {
+            for j in self.lower_neighbours(i) {
                 if self.adjchk(i, j)? {
                     out.push([
                         self.xv(i),
@@ -815,7 +828,7 @@ impl Mesh {
 
         let mut out = Vec::new();
         for i in 2..=nn_i {
-            for j in 1..i {
+            for j in self.lower_neighbours(i) {
                 if !self.adjchk(i, j)? {
                     continue;
                 }
@@ -1116,15 +1129,16 @@ pub fn intri(x: [f64; 3], y: [f64; 3], u: &[f64], v: &[f64]) -> Res<i32> {
     if cp < 0.0 {
         s = -s;
     }
+    // Edge vectors (x[jp] - x[j], y[jp] - y[j]) do not depend on the point,
+    // so they are computed once here. The per-point arithmetic is unchanged.
+    let ea = [x[1] - x[0], x[2] - x[1], x[0] - x[2]];
+    let eb = [y[1] - y[0], y[2] - y[1], y[0] - y[2]];
     for i in 0..u.len() {
         let mut inside = true;
         for j in 0..3 {
-            let jp = if j == 2 { 0 } else { j + 1 };
-            let a = x[jp] - x[j];
-            let b = y[jp] - y[j];
             let c = u[i] - x[j];
             let d = v[i] - y[j];
-            let cp = s * (a * d - b * c);
+            let cp = s * (ea[j] * d - eb[j] * c);
             if cp <= 0.0 {
                 inside = false;
                 break;

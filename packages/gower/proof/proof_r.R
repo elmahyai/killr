@@ -4,7 +4,7 @@
 # Run from the repository root:
 #   GOWER_R_LIB=/tmp/gower_rlib Rscript packages/gower/proof/proof_r.R
 # where /tmp/gower_rlib holds gower 1.0.2
-# (R CMD INSTALL -l /tmp/gower_rlib cran/contrib/gower_1.0.2.tar.gz).
+# (R CMD INSTALL -l /tmp/gower_rlib rcran/contrib/gower_1.0.2.tar.gz).
 
 lib_loc <- Sys.getenv("GOWER_R_LIB", unset = "")
 if (nzchar(lib_loc)) {

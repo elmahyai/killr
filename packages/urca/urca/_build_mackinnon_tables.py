@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-_TARBALL = Path(__file__).resolve().parents[3] / "cran" / "contrib" / "urca_1.3-4.tar.gz"
+_TARBALL = Path(__file__).resolve().parents[3] / "rcran" / "contrib" / "urca_1.3-4.tar.gz"
 _OUT = Path(__file__).resolve().parent / "mackinnon_tables.npz"
 
 

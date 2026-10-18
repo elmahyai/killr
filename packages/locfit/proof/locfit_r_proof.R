@@ -1,7 +1,7 @@
 # Proof (R side): reference fits from the R function locfit.raw in locfit 1.5-9.12.
 #
-# Source: cran/contrib/locfit_1.5-9.12.tar.gz. Install it once into a library:
-#   R CMD INSTALL --library=/tmp/locfit-rlib cran/contrib/locfit_1.5-9.12.tar.gz
+# Source: rcran/contrib/locfit_1.5-9.12.tar.gz. Install it once into a library:
+#   R CMD INSTALL --library=/tmp/locfit-rlib rcran/contrib/locfit_1.5-9.12.tar.gz
 # Then run from the repository root:
 #   LOCFIT_RLIB=/tmp/locfit-rlib Rscript packages/locfit/proof/locfit_r_proof.R
 #

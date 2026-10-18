@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import html
+import importlib.util
 import json
+import os
 import re
 import sys
 import tarfile
@@ -15,13 +17,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = ROOT / "packages"
 CRATES = ROOT / "crates"
-NATIVE = ROOT / "native.json"
-PLOTTING = ROOT / "killplot" / "library.json"
+NATIVE = ROOT / "ai-handbook" / "native.json"
+PLOTTING = ROOT / "packages" / "killplot" / "library.json"
 REGISTRY = ROOT / "registry.json"
 PAGE = Path(__file__).resolve().parent / "index.html"
-CRAN_CATALOG = ROOT / "cran" / "catalog.json"
-CRAN_IMPORTANCE = ROOT / "cran" / "importance.json"
-CRAN_REPLACED = ROOT / "cran" / "replaced.json"
+CRAN_CATALOG = ROOT / "rcran" / "catalog.json"
+CRAN_IMPORTANCE = ROOT / "rcran" / "importance.json"
+CRAN_REPLACED = ROOT / "rcran" / "replaced.json"
 HUGE_EXPORTS = 200
 RUST_STAND_INS = {"Rayon", "Polars and calamine", "cryptography"}
 CRAN_NEXT = 20
@@ -124,6 +126,14 @@ def _cost_advice() -> dict:
 def main() -> None:
     if "--cost-advice" in sys.argv[1:]:
         print(json.dumps(_cost_advice(), indent=2))
+        return
+    if os.environ.get("KILLR_SITE_INNER") != "1":
+        tools = ROOT / "orchestrator"
+        sys.path.insert(0, str(tools))
+        spec = importlib.util.spec_from_file_location("orch_site", tools / "site.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.site(home_only="--all-pages" not in sys.argv[1:])
         return
     home_only = "--home" in sys.argv[1:]
     native = json.loads(NATIVE.read_text())["native"]
@@ -376,7 +386,7 @@ def _queue_band(ready: list, waiting: list) -> str:
     return (
         "<h2>Next</h2>\n"
         '<p class="note">The first 20 that are ready. Order is last-month downloads on the '
-        "RStudio CRAN mirror, saved in cran/importance.json. A dependency is opened before "
+        "RStudio CRAN mirror, saved in rcran/importance.json. A dependency is opened before "
         "the package that needs it. A package with more than 200 exports is huge.</p>\n"
         f"{_queue_list(ready, None)}\n"
         "<h2>Waiting</h2>\n"
@@ -725,7 +735,7 @@ def _tarball_dependencies(name: str, version: str):
 def _tarball_text(name: str, version: str, filename: str):
     if not name or not version:
         return None
-    path = ROOT / "cran" / "contrib" / f"{name}_{version}.tar.gz"
+    path = ROOT / "rcran" / "contrib" / f"{name}_{version}.tar.gz"
     if not path.is_file() or path.stat().st_size == 0:
         return None
     try:
@@ -748,7 +758,7 @@ def _tarball_text(name: str, version: str, filename: str):
 def _tarball_description(name: str, version: str):
     if not name or not version:
         return None
-    path = ROOT / "cran" / "contrib" / f"{name}_{version}.tar.gz"
+    path = ROOT / "rcran" / "contrib" / f"{name}_{version}.tar.gz"
     if not path.is_file() or path.stat().st_size == 0:
         return None
     try:
@@ -1158,7 +1168,7 @@ def count_r_lines(name: str, version: str, function: str) -> int:
     """Line count of one function body in the package tarball. Zero when it is not found."""
     if not name or not version or not function:
         return 0
-    path = ROOT / "cran" / "contrib" / f"{name}_{version}.tar.gz"
+    path = ROOT / "rcran" / "contrib" / f"{name}_{version}.tar.gz"
     if not path.is_file() or path.stat().st_size == 0:
         return 0
     try:

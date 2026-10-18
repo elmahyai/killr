@@ -20,7 +20,7 @@ from statistics import NormalDist
 
 import numpy as np
 
-_KILLPLOT_DIR = Path(__file__).resolve().parents[3] / "killplot"
+_KILLPLOT_DIR = Path(__file__).resolve().parents[3] / "packages" / "killplot"
 if str(_KILLPLOT_DIR) not in sys.path:
     sys.path.insert(0, str(_KILLPLOT_DIR))
 

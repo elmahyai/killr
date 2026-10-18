@@ -16,49 +16,64 @@
 
 | Path | What it holds |
 | --- | --- |
-| `CONSTITUTION.md` | The rules for translating a package |
-| `strategies/` | One strategy per package size, plus the orchestrator |
-| `experience/` | Lessons learned by the agents, one file per pitfall |
+| `orchestrator/` | Screen, ingest, batch, prepare, and the dashboard rebuild |
+| `ai-handbook/` | Constitution, strategies, experience, and native libraries |
+| `rcran/` | Original CRAN tarballs, catalog, and replaced list |
 | `packages/<Name>/` | One translated R package: Python code, proofs, outputs |
+| `packages/killplot/` | Shared plotting helpers (a first-party package) |
 | `crates/<name>/` | Rust kernels for Fortran and C that compute |
-| `killplot/` | The shared plotting helpers |
 | `registry.json` | The generated record of every package, crate, and native library |
-| `dashboard/` | The build script and the dashboard pages |
-| `docs/` | The front page, logo, strategy and roadmap documents |
+| `dashboard/` | The build script and the per-package pages |
+| `docs/` | The one dashboard, logo, strategy and roadmap documents |
 
 ## Rebuild the registry and dashboard
 
 ```bash
-python3 dashboard/build.py --home
+python3 orchestrator/killr.py site
 ```
 
-The `cran/` folder is excluded from git. It holds the CRAN catalog, the download ranking, the replaced-package list, and the downloaded R tarballs (`cran/contrib/`). A clone without it still builds, but the CRAN ranking and the replaced-package list come out empty until that folder is restored.
+The `rcran/` folder is excluded from git. It holds the CRAN catalog, the download ranking, the replaced-package list, and the downloaded R tarballs (`rcran/contrib/`). A clone without it still builds, but the CRAN ranking and the replaced-package list come out empty until that folder is restored.
 
 <!-- progress:start -->
 
 ## Progress
 
-Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
+Snapshot from the orchestrator, 2026-10-18 17:03 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
 
-![complete](https://img.shields.io/badge/complete-133-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-17-yellow) ![replaced](https://img.shields.io/badge/replaced-38-lightgrey) ![functions](https://img.shields.io/badge/functions-6099%20of%206608-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6544%20of%206590-blue) ![rust crates](https://img.shields.io/badge/rust%20crates-132-orange)
+![complete](https://img.shields.io/badge/complete-133-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-16-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6099%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6547%20of%206600-blue) ![rust crates](https://img.shields.io/badge/rust%20crates-132-orange)
 
 | Status | Packages |
 | --- | ---: |
 | Complete | 133 |
-| In progress | 17 |
-| Replaced by a stand-in | 38 |
+| In progress | 16 |
+| Replaced by a stand-in | 39 |
 
 <details>
 <summary>All 188 packages</summary>
 
 | Package | Status | Functions | Proof checks | Median speedup |
 | --- | --- | ---: | ---: | ---: |
+| BB | complete | 7 / 7 | 7 / 7 | 1.84x |
+| DEoptimR | complete | 3 / 3 | 3 / 3 | 3.33x |
+| FNN | complete | 17 / 17 | 17 / 17 | 0.25x |
+| Formula | complete | 4 / 4 | 4 / 4 | 18.19x |
+| GPArotation | complete | 42 / 42 | 42 / 42 | 1.05x |
+| KernSmooth | complete | 7 / 7 | 7 / 7 | 1.02x |
+| MASS | complete | 164 / 164 | 163 / 163 | 2.35x |
+| Matrix | replaced | 0 / 1 | 0 / 0 | - |
+| Metrics | complete | 32 / 32 | 32 / 32 | 1.31x |
+| R6 | replaced | 0 / 3 | 0 / 0 | - |
+| RColorBrewer | complete | 4 / 4 | 4 / 4 | 5.52x |
+| RJSONIO | complete | 24 / 24 | 24 / 24 | 20.49x |
+| Rdpack | replaced | 0 / 110 | 0 / 0 | - |
+| SQUAREM | complete | 2 / 2 | 2 / 2 | 0.66x |
+| TTR | complete | 68 / 68 | 67 / 67 | 0.47x |
+| XML | replaced | 71 / 173 | 71 / 71 | 10.34x |
 | abind | complete | 5 / 5 | 5 / 5 | 1.4x |
 | askpass | complete | 2 / 2 | 2 / 2 | 111.63x |
 | assertthat | complete | 26 / 26 | 26 / 26 | 2.75x |
 | backports | complete | 47 / 47 | 47 / 47 | 10.92x |
 | base64enc | complete | 4 / 4 | 4 / 4 | 0.36x |
-| BB | complete | 7 / 7 | 7 / 7 | 1.84x |
 | blob | complete | 8 / 8 | 8 / 8 | 69.19x |
 | boot | complete | 93 / 93 | 42 / 43 | 2.39x |
 | brio | complete | 9 / 9 | 9 / 9 | 1.64x |
@@ -77,9 +92,8 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | crayon | complete | 46 / 46 | 46 / 46 | 25.23x |
 | curl | replaced | 37 / 44 | 26 / 37 | 0.66x |
 | data.table | replaced | 54 / 141 | 54 / 54 | 0.79x |
-| deldir | in progress | 0 / 2 | 0 / 0 | - |
-| DEoptimR | complete | 3 / 3 | 3 / 3 | 3.33x |
 | deSolve | complete | 37 / 37 | 37 / 37 | 1.22x |
+| deldir | in progress | 0 / 2 | 0 / 0 | - |
 | diffobj | complete | 60 / 60 | 60 / 60 | 8.52x |
 | digest | complete | 9 / 9 | 9 / 9 | 1.5x |
 | doParallel | replaced | 0 / 2 | 0 / 0 | - |
@@ -96,10 +110,8 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | fastmatch | complete | 6 / 6 | 6 / 6 | 1.31x |
 | filelock | complete | 2 / 2 | 2 / 2 | 4.33x |
 | fitdistrplus | in progress | 1 / 27 | 1 / 1 | 17.55x |
-| FNN | complete | 17 / 17 | 17 / 17 | 0.25x |
-| fontawesome | complete | 4 / 5 | 4 / 4 | 30.18x |
+| fontawesome | complete | 4 / 5 | 4 / 5 | 30.18x |
 | foreach | replaced | 0 / 23 | 0 / 0 | - |
-| Formula | complete | 4 / 4 | 4 / 4 | 18.19x |
 | fracdiff | complete | 7 / 7 | 7 / 7 | 0.35x |
 | fs | complete | 69 / 69 | 69 / 69 | 4.91x |
 | generics | replaced | 23 / 39 | 23 / 23 | 0.99x |
@@ -107,7 +119,6 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | glue | complete | 16 / 16 | 16 / 16 | 7.64x |
 | goftest | complete | 7 / 7 | 7 / 7 | 3.01x |
 | gower | complete | 2 / 2 | 2 / 2 | 2.04x |
-| GPArotation | complete | 42 / 42 | 42 / 42 | 1.05x |
 | gridExtra | replaced | 0 / 16 | 0 / 0 | - |
 | gtools | in progress | 35 / 47 | 35 / 35 | 2.05x |
 | haven | complete | 28 / 28 | 28 / 28 | 6.96x |
@@ -124,7 +135,6 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | janitor | in progress | 0 / 39 | 0 / 0 | - |
 | jquerylib | complete | 1 / 1 | 1 / 1 | 70.56x |
 | jsonlite | complete | 23 / 23 | 23 / 23 | 10.72x |
-| KernSmooth | complete | 7 / 7 | 7 / 7 | 1.02x |
 | knitr | replaced | 6 / 133 | 6 / 6 | 4.55x |
 | labeling | complete | 10 / 10 | 10 / 10 | 0.06x |
 | labelled | in progress | 0 / 54 | 0 / 0 | - |
@@ -134,18 +144,15 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | listenv | complete | 8 / 8 | 8 / 8 | 11.41x |
 | lmom | complete | 67 / 67 | 67 / 67 | 1.3x |
 | lmtest | complete | 23 / 23 | 23 / 23 | 4.21x |
-| locfit | complete | 43 / 53 | 43 / 43 | 1.34x |
+| locfit | complete | 43 / 53 | 43 / 45 | 1.27x |
 | logspline | in progress | 0 / 22 | 0 / 0 | - |
 | lubridate | complete | 159 / 159 | 159 / 159 | 7.63x |
 | magrittr | complete | 42 / 42 | 42 / 42 | 1.53x |
-| MASS | complete | 164 / 164 | 163 / 163 | 2.35x |
 | mathjaxr | complete | 1 / 1 | 1 / 1 | 50.52x |
-| Matrix | in progress | 0 / 1 | 0 / 0 | - |
-| matrixcalc | complete | 60 / 60 | 60 / 60 | 1.95x |
 | matrixStats | complete | 102 / 102 | 102 / 102 | 1.37x |
-| mclust | complete | 281 / 285 | 280 / 281 | 1.65x |
+| matrixcalc | complete | 60 / 60 | 60 / 60 | 1.95x |
+| mclust | complete | 281 / 285 | 280 / 282 | 1.65x |
 | memoise | complete | 12 / 12 | 12 / 12 | 3.84x |
-| Metrics | complete | 32 / 32 | 32 / 32 | 1.31x |
 | mime | complete | 3 / 3 | 3 / 3 | 18.75x |
 | minpack.lm | complete | 4 / 4 | 4 / 4 | 1.7x |
 | minqa | complete | 3 / 3 | 3 / 3 | 1.34x |
@@ -155,13 +162,13 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | modeltools | complete | 19 / 19 | 19 / 19 | 146.9x |
 | moments | complete | 12 / 12 | 12 / 12 | 0.94x |
 | mvtnorm | complete | 61 / 61 | 61 / 61 | 1.69x |
-| nlme | in progress | 106 / 109 | 105 / 105 | 4.84x |
+| nlme | in progress | 106 / 109 | 108 / 108 | 4.74x |
 | nloptr | complete | 26 / 26 | 26 / 26 | 1.79x |
 | nnet | complete | 7 / 7 | 7 / 7 | 0.24x |
 | nortest | complete | 5 / 5 | 5 / 5 | 2.61x |
 | numDeriv | complete | 4 / 4 | 4 / 4 | 0.74x |
 | openssl | replaced | 46 / 79 | 40 / 46 | 16.53x |
-| ordinal | in progress | 23 / 28 | 23 / 23 | 1.93x |
+| ordinal | in progress | 23 / 28 | 23 / 24 | 1.82x |
 | otel | complete | 39 / 39 | 39 / 39 | - |
 | pan | complete | 5 / 5 | 5 / 5 | 0.79x |
 | pbapply | replaced | 17 / 26 | 17 / 17 | 12.78x |
@@ -180,19 +187,15 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | pwr | complete | 15 / 15 | 15 / 15 | 0.67x |
 | quadprog | complete | 2 / 2 | 2 / 2 | 0.18x |
 | quantmod | in progress | 0 / 1 | 0 / 0 | - |
-| quantreg | in progress | 129 / 154 | 113 / 113 | 1.1x |
-| R6 | replaced | 0 / 3 | 0 / 0 | - |
+| quantreg | in progress | 129 / 154 | 113 / 115 | 1.06x |
 | randomForest | complete | 18 / 18 | 18 / 18 | 0.62x |
 | rappdirs | complete | 7 / 7 | 7 / 7 | 21.96x |
-| RColorBrewer | complete | 4 / 4 | 4 / 4 | 5.52x |
-| Rdpack | replaced | 0 / 110 | 0 / 0 | - |
 | readr | complete | 103 / 103 | 103 / 103 | 18.0x |
 | readxl | replaced | 9 / 13 | 9 / 9 | 29.83x |
 | reformulas | in progress | 0 / 32 | 0 / 0 | - |
 | rematch2 | complete | 8 / 8 | 8 / 8 | 18.23x |
 | remotes | complete | 38 / 38 | 38 / 38 | 15.88x |
 | reshape2 | replaced | 3 / 6 | 3 / 3 | 0.08x |
-| RJSONIO | complete | 24 / 24 | 24 / 24 | 20.49x |
 | rlang | replaced | 59 / 447 | 43 / 59 | 9.29x |
 | rootSolve | complete | 20 / 20 | 20 / 20 | 0.43x |
 | rpart | complete | 14 / 14 | 14 / 14 | 1.03x |
@@ -208,7 +211,6 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | slam | complete | 33 / 33 | 33 / 33 | 0.42x |
 | slider | in progress | 83 / 101 | 83 / 83 | 3.55x |
 | snakecase | complete | 12 / 13 | 12 / 12 | 23.56x |
-| SQUAREM | complete | 2 / 2 | 2 / 2 | 0.66x |
 | statmod | complete | 50 / 50 | 50 / 50 | 0.93x |
 | stringdist | complete | 19 / 19 | 19 / 19 | 0.81x |
 | stringi | complete | 256 / 256 | 256 / 256 | 0.22x |
@@ -223,7 +225,6 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | tools | replaced | 68 / 136 | 68 / 68 | 13.16x |
 | truncnorm | complete | 6 / 6 | 6 / 6 | 0.2x |
 | tseries | in progress | 43 / 44 | 43 / 43 | 2.72x |
-| TTR | complete | 68 / 68 | 67 / 67 | 0.47x |
 | tzdb | complete | 4 / 4 | 4 / 4 | 4.25x |
 | ucminf | complete | 1 / 1 | 1 / 1 | 0.37x |
 | urca | complete | 25 / 25 | 24 / 25 | 5.45x |
@@ -234,7 +235,6 @@ Snapshot from the registry, 2026-10-17 21:40 UTC. The interactive version is at 
 | viridisLite | complete | 10 / 10 | 10 / 10 | - |
 | warp | complete | 3 / 3 | 3 / 3 | 0.06x |
 | withr | complete | 57 / 79 | 57 / 57 | 6.2x |
-| XML | replaced | 71 / 173 | 71 / 71 | 10.34x |
 | xml2 | complete | 67 / 67 | 67 / 67 | 1.74x |
 | xmlparsedata | complete | 2 / 2 | 2 / 2 | 47.74x |
 | xtable | replaced | 22 / 29 | 22 / 22 | 30.99x |

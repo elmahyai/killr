@@ -1,6 +1,6 @@
 # quantmod stub reference
 
-The R library at `~/R/x86_64-pc-linux-gnu-library/4.5` holds a local stand-in for quantmod 0.4.29 ("A local stand-in. getSymbols is not implemented."). Its `getSymbols` stops with `quantmod is not translated`. No quantmod tarball is under `cran/contrib`.
+The R library at `~/R/x86_64-pc-linux-gnu-library/4.5` holds a local stand-in for quantmod 0.4.29 ("A local stand-in. getSymbols is not implemented."). Its `getSymbols` stops with `quantmod is not translated`. No quantmod tarball is under `rcran/contrib`.
 
 What this means for proofs:
 

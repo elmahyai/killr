@@ -11,7 +11,10 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 import numpy as np
-import polars as pl
+try:
+    import polars as pl
+except ImportError:
+    pl = None
 
 
 @dataclass
@@ -42,19 +45,28 @@ class HavenLabelled:
 
 
 def _is_labelled(x):
-    return isinstance(x, HavenLabelled)
+    return isinstance(x, HavenLabelled) or (
+        hasattr(x, "values") and hasattr(x, "labels") and hasattr(x, "copy")
+    )
 
 
 def _label(x):
-    return x.variable_label if _is_labelled(x) else getattr(x, "variable_label", None)
+    if not _is_labelled(x):
+        return None
+    return getattr(x, "variable_label", getattr(x, "label", None))
 
 
 def _labels(x):
-    return dict(x.labels) if _is_labelled(x) else {}
+    if not _is_labelled(x):
+        return {}
+    raw = x.labels
+    if isinstance(raw, dict):
+        return dict(raw)
+    return {value: name for value, name in raw}
 
 
 def _set_column(df, name, value):
-    if isinstance(df, pl.DataFrame):
+    if pl is not None and isinstance(df, pl.DataFrame):
         return df.with_columns(pl.Series(name, value))
     out = dict(df)
     out[name] = value
@@ -62,12 +74,74 @@ def _set_column(df, name, value):
 
 
 def _columns(df):
-    return df.columns if isinstance(df, pl.DataFrame) else list(df)
+    return df.columns if pl is not None and isinstance(df, pl.DataFrame) else list(df)
+
+
+def label_attribute(x):
+    return _label(x)
+
+
+def get_label_attribute(x):
+    return label_attribute(x)
+
+
+def set_label_attribute(x, value, _overwrite=True, **kwargs):
+    if not _overwrite and label_attribute(x) is not None:
+        return x
+    if value is not None and not isinstance(value, str):
+        raise TypeError("value must be a string or None")
+    if _is_labelled(x):
+        out = x.copy()
+        if hasattr(out, "variable_label"):
+            out.variable_label = value
+        else:
+            out.label = value
+        return out
+    if pl is not None and isinstance(x, (pl.Series, pl.DataFrame)):
+        return x
+    return HavenLabelled(np.asarray(x, copy=True), variable_label=value)
+
+
+def var_label(x, unlist=False, null_action="keep", recurse=False, **kwargs):
+    if pl is not None and isinstance(x, pl.DataFrame):
+        result = {name: getattr(x[name], "variable_label", None) for name in x.columns}
+        if null_action == "fill":
+            result = {k: (v if v is not None else k) for k, v in result.items()}
+        elif null_action == "skip":
+            result = {k: v for k, v in result.items() if v is not None}
+        elif null_action == "empty":
+            result = {k: (v if v is not None else "") for k, v in result.items()}
+        return list(result.values()) if unlist else result
+    return label_attribute(x)
+
+
+def set_variable_labels(data, *args, _labels=None, _strict=True,
+                        _overwrite=True, **labels):
+    if not (pl is not None and isinstance(data, pl.DataFrame)) and not isinstance(data, dict):
+        value = _labels if _labels is not None else (args[0] if args else None)
+        if value is None and labels:
+            value = next(iter(labels.values()))
+        return set_label_attribute(data, value, _overwrite)
+    requested = {}
+    if isinstance(_labels, Mapping):
+        requested.update(_labels)
+    requested.update(labels)
+    names = _columns(data)
+    missing = set(requested) - set(names)
+    if missing and _strict:
+        raise KeyError(f"Can't find variables {sorted(missing)}")
+    requested = {k: v for k, v in requested.items() if k in names}
+    if isinstance(data, dict):
+        out = dict(data)
+        for name, value in requested.items():
+            out[name] = set_label_attribute(out[name], value, _overwrite)
+        return out
+    return data
 
 
 def copy_labels(from_, to, strict: bool = True, **kwargs):
     """Copy variable/value labels and user-missing metadata."""
-    if isinstance(to, pl.DataFrame):
+    if pl is not None and isinstance(to, pl.DataFrame):
         if not isinstance(from_, pl.DataFrame):
             raise TypeError("from_ should also be a data frame")
         out = to
@@ -87,10 +161,14 @@ def copy_labels(from_, to, strict: bool = True, **kwargs):
             out = to.copy()
         else:
             out = HavenLabelled(np.asarray(to, copy=True))
-        out.variable_label = from_.variable_label
+        if hasattr(out, "variable_label"):
+            out.variable_label = _label(from_)
+        elif hasattr(out, "label"):
+            out.label = _label(from_)
         if np.asarray(from_.values).dtype.kind == np.asarray(out.values).dtype.kind:
-            out.labels = dict(from_.labels)
-            out.na_values, out.na_range = from_.na_values, from_.na_range
+            if isinstance(out, HavenLabelled):
+                out.labels = _labels(from_)
+                out.na_values, out.na_range = from_.na_values, from_.na_range
         return out
     if isinstance(to, HavenLabelled):
         out = to.copy()
@@ -105,12 +183,12 @@ def copy_labels_from(to, from_, strict: bool = True, **kwargs):
 
 def _col(dictionary, spec):
     if isinstance(spec, int):
-        return dictionary.columns[spec - 1] if isinstance(dictionary, pl.DataFrame) else list(dictionary)[spec - 1]
+        return dictionary.columns[spec - 1] if pl is not None and isinstance(dictionary, pl.DataFrame) else list(dictionary)[spec - 1]
     return spec
 
 
 def _rows(dictionary):
-    return dictionary.to_dicts() if isinstance(dictionary, pl.DataFrame) else dictionary
+    return dictionary.to_dicts() if pl is not None and isinstance(dictionary, pl.DataFrame) else dictionary
 
 
 def dictionary_to_variable_labels(dictionary, names_from=1, labels_from=2):
@@ -144,7 +222,7 @@ def dictionary_to_value_labels(
         names = _columns(data)
         for name, labels in result.items():
             if name in names:
-                dtype = data[name].dtype if isinstance(data, pl.DataFrame) else np.asarray(data[name]).dtype
+                dtype = data[name].dtype if pl is not None and isinstance(data, pl.DataFrame) else np.asarray(data[name]).dtype
                 converted = {}
                 for value, lab in labels.items():
                     try:
@@ -162,13 +240,13 @@ def drop_unused_value_labels(x):
         out = x.copy()
         out.labels = {k: v for k, v in x.labels.items() if k in present}
         return out
-    if isinstance(x, pl.DataFrame):
+    if pl is not None and isinstance(x, pl.DataFrame):
         return x
     return x
 
 
 def is_prefixed(x):
-    if not isinstance(x, (list, tuple, np.ndarray, pl.Series)):
+    if not isinstance(x, (list, tuple, np.ndarray)) and not (pl is not None and isinstance(x, pl.Series)):
         raise TypeError("is_prefixed should be used only with a factor")
     codes = []
     for value in x:
@@ -180,7 +258,7 @@ def is_prefixed(x):
 
 
 def convert_list_columns_to_character(x, sep_value_labels="[]", sep_other="; "):
-    if not isinstance(x, pl.DataFrame):
+    if pl is None or not isinstance(x, pl.DataFrame):
         return x
     out = x
     for name in x.columns:
@@ -204,7 +282,7 @@ def _search(value, pattern, ignore_case):
 
 def look_for(data, *keywords, labels=True, values=True, ignore_case=True,
              ignore_case_=None, details="basic", **kwargs):
-    if not isinstance(data, pl.DataFrame):
+    if pl is None or not isinstance(data, pl.DataFrame):
         raise TypeError("data must be a Polars DataFrame")
     if ignore_case_ is not None:
         ignore_case = ignore_case_
@@ -236,7 +314,7 @@ def look_for_and_select(data, *keywords, **kwargs):
 
 
 def lookfor_to_long_format(x, sep_value_labels="[]"):
-    if not isinstance(x, pl.DataFrame) or not {"levels", "value_labels"} <= set(x.columns):
+    if pl is None or not isinstance(x, pl.DataFrame) or not {"levels", "value_labels"} <= set(x.columns):
         return x
     return x.explode(["levels", "value_labels"])
 

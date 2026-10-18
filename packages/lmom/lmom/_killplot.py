@@ -1,6 +1,6 @@
 """Load a killplot function that is not in the killplot package's __init__.
 
-The repository root holds a folder named ``killplot`` that shadows the
+The workspace holds ``packages/killplot`` that shadows the
 installed package, so both import paths are tried.
 """
 

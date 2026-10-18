@@ -7,3 +7,6 @@
 pub mod linpack;
 pub mod lsdall;
 pub mod nlsd;
+
+#[cfg(feature = "python")]
+mod python;

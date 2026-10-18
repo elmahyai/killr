@@ -17,7 +17,7 @@ import numpy as np
 try:
     from killplot.parcoord import parcoord as _kp_parcoord
 except ImportError:  # the workspace killplot folder is not installed
-    _root = Path(__file__).resolve().parents[3] / "killplot"
+    _root = Path(__file__).resolve().parents[3] / "packages" / "killplot"
     if str(_root) not in sys.path:
         sys.path.insert(0, str(_root))
     from killplot.parcoord import parcoord as _kp_parcoord

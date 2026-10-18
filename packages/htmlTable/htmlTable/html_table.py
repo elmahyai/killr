@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import math
 import re
+import html as _html
+import warnings
 from dataclasses import dataclass
 from typing import Any, Iterable
 
@@ -156,7 +158,7 @@ def txtMergeLines(*lines: Any, html: int | bool = 5) -> str:
     if len(values) == 1:
         return values[0]
     if html is not False:
-        joiner = "<br>\n" if html == 5 else "<br />\n"
+        joiner = "<br>\n " if html == 5 else "<br />\n "
         return joiner.join(values)
     return r"\vbox{" + "".join(r"\hbox{\strut " + value + "}" for value in values) + "}"
 
@@ -181,8 +183,171 @@ def tidyHtmlTable(x: Any, value: Any = None, header: Any = None, **kwargs: Any) 
     return x
 
 
+_html_table_theme: dict[str, Any] | None = None
+_highlight_presets = {
+    "warning": "background-color: #fff3cd; color: #856404;",
+    "info": "background-color: #d1ecf1; color: #0c5460;",
+    "success": "background-color: #d4edda; color: #155724;",
+    "muted": "background-color: #f8f9fa; color: #6c757d;",
+}
+
+
+def getHtmlTableTheme() -> dict[str, Any]:
+    global _html_table_theme
+    if _html_table_theme is not None:
+        return dict(_html_table_theme)
+    return {
+        "align": "c", "align.header": "c", "col.rgroup": "none", "col.columns": "none",
+        "padding.rgroup": "&nbsp;&nbsp;", "padding.tspanner": "",
+        "spacer.celltype": "single_empty", "spacer.css.cgroup.bottom.border": "none",
+        "spacer.css": "", "spacer.content": "&nbsp;", "css.rgroup": "font-weight: 900;",
+        "css.rgroup.sep": "", "css.tspanner": "font-weight: 900; text-align: left;",
+        "css.tspanner.sep": "border-top: 1px solid #BEBEBE;",
+        "css.total": "border-top: 1px solid #BEBEBE; font-weight: 900;",
+        "css.cell": "", "css.cgroup": "", "css.header": "font-weight: 900",
+        "css.header.border_bottom": "border-bottom: 1px solid grey",
+        "css.class": "gmisc_table", "css.table": "margin-top: 1em; margin-bottom: 1em;",
+        "pos.rowlabel": "bottom", "pos.caption": "top",
+    }
+
+
+def setHtmlTableTheme(theme: Any = None, **styles: Any) -> dict[str, Any]:
+    global _html_table_theme
+    base = getHtmlTableTheme() if theme is None or isinstance(theme, str) else dict(theme)
+    base.update({k: v for k, v in styles.items() if v is not None})
+    _html_table_theme = base
+    return dict(base)
+
+
+def _style(*styles: Any) -> str:
+    values: dict[str, str] = {}
+    for style in styles:
+        if style is None or style in ("", "none"):
+            continue
+        if isinstance(style, dict):
+            for key, value in style.items():
+                if value not in (None, ""):
+                    values[str(key)] = str(value)
+        else:
+            for fragment in re.split(r";\s*", str(style).strip("; ")):
+                if ":" in fragment:
+                    key, value = fragment.split(":", 1)
+                    values[key.strip()] = value.strip()
+    return " ".join(f"{key}: {value};" for key, value in values.items())
+
+
+def addHtmlTableStyle(x: Any, **styles: Any) -> Any:
+    if not hasattr(x, "_htmlTable_style"):
+        return x
+    current = dict(getattr(x, "_htmlTable_style", {}) or {})
+    current.update({k: v for k, v in styles.items() if v is not None})
+    x._htmlTable_style = current
+    return x
+
+
+def getHtmlTableStyle(x: Any) -> Any:
+    return getattr(x, "_htmlTable_style", None)
+
+
+def hasHtmlTableStyle(x: Any, style_name: str) -> bool:
+    style = getHtmlTableStyle(x)
+    return bool(style is not None and style.get(style_name) is not None)
+
+
+def highlightRow(x: Any, condition: Any, style: str = "warning") -> Any:
+    style_list = getHtmlTableStyle(x) or {}
+    css = _highlight_presets.get(str(style).lower(), f"background-color: {style};")
+    style_list.setdefault("row.highlight", []).append((condition, css))
+    if hasattr(x, "_htmlTable_style"):
+        x._htmlTable_style = style_list
+    return x
+
+
+def _table_rows(x: Any) -> tuple[Any, list[list[Any]]]:
+    if isinstance(x, dict):
+        names = list(x)
+        return names, [list(row) for row in zip(*(x[name] for name in names))]
+    if hasattr(x, "columns") and hasattr(x, "to_numpy"):
+        return list(x.columns), x.to_numpy().tolist()
+    rows = x.tolist() if hasattr(x, "tolist") else list(x)
+    return None, [list(row) if isinstance(row, (list, tuple)) else [row] for row in rows]
+
+
+def htmlTable(x: Any, header: Any = None, rnames: Any = None, rowlabel: Any = None,
+              caption: Any = None, tfoot: Any = None, label: Any = None,
+              escape_html: bool = False, **kwargs: Any) -> str:
+    columns, rows = _table_rows(x)
+    if header is None:
+        header = columns
+    esc = (lambda value: _html.escape(str(value), quote=False)) if escape_html else str
+    theme = getHtmlTableTheme()
+    table_id = f" id='{label}'" if label else ""
+    result = [f"<table class='{theme['css.class']}' style='border-collapse: collapse; {theme['css.table']}'{table_id}>"]
+    if caption is not None:
+        result.append(f"<caption>{esc(caption)}</caption>")
+    if header is not None:
+        result.append("<thead><tr>")
+        if rnames is not False and rnames is not None:
+            result.append(f"<th style='{theme['css.header']}'>{esc(rowlabel or '')}</th>")
+        result.extend(f"<th style='{theme['css.header']}'>{esc(value)}</th>" for value in header)
+        result.append("</tr></thead>")
+    result.append("<tbody>")
+    for row_number, row in enumerate(rows):
+        result.append("<tr>")
+        if rnames is not False and rnames is not None:
+            result.append(f"<td>{esc(rnames[row_number])}</td>")
+        result.extend(f"<td>{esc(value)}</td>" for value in row)
+        result.append("</tr>")
+    result.append("</tbody>")
+    if tfoot is not None:
+        result.append(f"<tfoot><tr><td colspan='{len(header or [])}'>{txtMergeLines(tfoot)}</td></tr></tfoot>")
+    result.append("</table>")
+    return "\n".join(result)
+
+
+def concatHtmlTables(tables: list[str], headers: Any = None) -> str:
+    if headers is None:
+        headers = [f"<h1>Table no. {i + 1}</h1>" for i in range(len(tables))]
+    elif isinstance(headers, str):
+        headers = [headers] * len(tables)
+    else:
+        headers = list(headers) * len(tables)
+    return "".join(f"{headers[i]}{table}" for i, table in enumerate(tables))
+
+
+def outputInt(*args: Any, **kwargs: Any) -> Any:
+    warnings.warn("outputInt is deprecated, use txtInt() instead.", stacklevel=2)
+    return txtInt(*args, **kwargs)
+
+
+def pvalueFormatter(*args: Any, **kwargs: Any) -> Any:
+    warnings.warn("pvalueFormatter is deprecated, use txtPval() instead.", stacklevel=2)
+    return txtPval(*args, **kwargs)
+
+
+def splitLines4Table(*args: Any, **kwargs: Any) -> Any:
+    warnings.warn("splitLines4Table is deprecated, use txtMergeLines() instead.", stacklevel=2)
+    return txtMergeLines(*args, **kwargs)
+
+
+def htmlTableWidget(x: Any, number_of_entries: Any = (10, 25, 100), **kwargs: Any) -> dict[str, Any]:
+    return {"thetable": htmlTable(x, **kwargs), "options": {"number_of_entries": list(number_of_entries)}}
+
+
+def htmlTableWidgetOutput(outputId: str, width: str = "100%", height: str = "400px") -> dict[str, Any]:
+    return {"outputId": outputId, "name": "htmlTableWidget", "width": width, "height": height}
+
+
+def renderHtmlTableWidget(expr: Any, env: Any = None, quoted: bool = False) -> Any:
+    return expr if quoted else expr()
+
+
 __all__ = [
     "interactiveTable", "prepGroupCounts", "tblNoLast", "tblNoNext",
     "tidyHtmlTable", "txtInt", "txtMergeLines", "txtPval", "txtRound",
     "vector2string",
+    "addHtmlTableStyle", "concatHtmlTables", "getHtmlTableStyle",
+    "getHtmlTableTheme", "hasHtmlTableStyle", "highlightRow", "htmlTable",
+    "htmlTableWidget", "htmlTableWidgetOutput", "outputInt", "pvalueFormatter",
+    "renderHtmlTableWidget", "setHtmlTableTheme", "splitLines4Table",
 ]

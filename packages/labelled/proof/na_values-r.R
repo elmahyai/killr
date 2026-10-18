@@ -1,0 +1,1 @@
+library(labelled); x<-labelled_spss(1:2,na_values=2); f<-function()na_values(x); v<-f(); z<-numeric(20); for(i in 1:20){a<-Sys.time();f();z[i]<-as.numeric(Sys.time()-a)*1000}; cat(jsonlite::toJSON(list(value=v,median_ms=median(z)),auto_unbox=TRUE))

@@ -3,6 +3,8 @@
 //! Arrays are float64 numpy arrays (one dimension). Indices are int64.
 //! Errors raise `RuntimeError` with the message the Fortran `rexit` printed.
 
+use std::borrow::Cow;
+
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
@@ -10,12 +12,16 @@ use pyo3::prelude::*;
 
 use crate::triangulation as tri;
 
-fn to_vec(a: &PyReadonlyArray1<'_, f64>) -> Vec<f64> {
-    a.as_array().iter().copied().collect()
+/// Borrow a contiguous float64 array; copy only when it is strided.
+fn as_cow<'a>(a: &'a PyReadonlyArray1<'_, f64>) -> Cow<'a, [f64]> {
+    match a.as_slice() {
+        Ok(s) => Cow::Borrowed(s),
+        Err(_) => Cow::Owned(a.as_array().iter().copied().collect()),
+    }
 }
 
 fn rw4(rw: &PyReadonlyArray1<'_, f64>) -> PyResult<[f64; 4]> {
-    let v = to_vec(rw);
+    let v = as_cow(rw);
     if v.len() != 4 {
         return Err(PyValueError::new_err("rw must have four values"));
     }
@@ -46,7 +52,7 @@ fn binsrt<'py>(
     Bound<'py, PyArray1<i64>>,
     Bound<'py, PyArray1<i64>>,
 )> {
-    let out = tri::binsrt(&to_vec(&x), &to_vec(&y), rw4(&rw)?)
+    let out = tri::binsrt(&as_cow(&x), &as_cow(&y), rw4(&rw)?)
         .map_err(PyRuntimeError::new_err)?;
     Ok((
         out.tx.into_pyarray(py),
@@ -76,7 +82,7 @@ fn master<'py>(
     Bound<'py, PyArray2<f64>>,
     Bound<'py, PyArray2<f64>>,
 )> {
-    let out = tri::master(&to_vec(&x), &to_vec(&y), rw4(&rw)?, eps)
+    let out = tri::master(&as_cow(&x), &as_cow(&y), rw4(&rw)?, eps)
         .map_err(PyRuntimeError::new_err)?;
     Ok((
         rows_to_array2(py, out.delsgs)?,
@@ -95,16 +101,16 @@ fn intri(
     u: PyReadonlyArray1<'_, f64>,
     v: PyReadonlyArray1<'_, f64>,
 ) -> PyResult<i32> {
-    let xa = to_vec(&x3);
-    let ya = to_vec(&y3);
+    let xa = as_cow(&x3);
+    let ya = as_cow(&y3);
     if xa.len() != 3 || ya.len() != 3 {
         return Err(PyValueError::new_err("x3 and y3 must have three values"));
     }
     tri::intri(
         [xa[0], xa[1], xa[2]],
         [ya[0], ya[1], ya[2]],
-        &to_vec(&u),
-        &to_vec(&v),
+        &as_cow(&u),
+        &as_cow(&v),
     )
     .map_err(PyRuntimeError::new_err)
 }

@@ -36,7 +36,7 @@ def _draw(endog, chosen, bands, names):
     try:
         fan = importlib.import_module("killplot").fan
     except AttributeError:
-        # The repository root shadows the installed package with the project folder.
+        # packages/killplot shadows the installed package with the project folder.
         fan = importlib.import_module("killplot.killplot").fan
 
     colors = np.sqrt(np.linspace(0.05, 1.0, len(bands)))
