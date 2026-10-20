@@ -503,7 +503,9 @@
       </div>
       <div class="card">
         <h3>How a package moves</h3>
-        <p><b>Free</b> means nothing has to be translated or replaced first: either the package depends on nothing, or its dependencies are already done. <b>Needs first</b> names the packages that still have to be done. <b>In progress</b> means agents are on it. <b>Done</b> means every function matched R or is recorded as close.</p>
+        <p><b>Low-level</b> is the compiled Fortran, C and C++ side: <b>None</b> when the package has none, so there is nothing to port; <b>Not done</b> when none of it is ported; <b>In progress</b> when some crates are loaded or assigned; <b>Done</b> when every crate it needs is loaded.</p>
+        <p><b>Translated</b> is the R side, in three states only: <b>Done</b> when every function is translated, closed or covered; <b>In progress</b> when some are; <b>Not done</b> when none are.</p>
+        <p><b>Free</b> means nothing has to be translated or replaced first: either the package depends on nothing, or its dependencies are already done. <b>Needs first</b> names the packages that still have to be done.</p>
       </div>
       <div class="card">
         <h3>Compiled code</h3>
@@ -538,7 +540,8 @@
             <tr>
               <th data-hsort="package">Package<span class="arr"></span></th>
               <th data-hsort="files">Files<span class="arr"></span></th>
-              <th data-hsort="low">Translated<span class="arr"></span></th>
+              <th data-hsort="low">Low-level<span class="arr"></span></th>
+              <th data-hsort="translated">Translated<span class="arr"></span></th>
               <th data-hsort="depends">Needs first<span class="arr"></span></th>
               <th data-hsort="checks">Proof checks<span class="arr"></span></th>
               <th data-hsort="speed">Speedup<span class="arr"></span></th>
@@ -1132,6 +1135,48 @@
     if (showLow) addProgRow(wrap, 'low-level', (low != null && low > 0 && low < 1) ? low : null, lowLeft(r));
     return wrap.childNodes.length ? wrap : null;
   }
+  // Translated: exactly three states, from the record alone.
+  //   done        every function is translated, closed or covered
+  //   not_started none of them are
+  //   in_progress some are, some are not
+  function translatedState(p) {
+    if (!p || !p.total) return 'not_started';
+    if (p.translated >= p.total) return 'done';
+    if (!p.translated) return 'not_started';
+    return 'in_progress';
+  }
+  const TRANSLATED_LABEL = { done: 'Done', in_progress: 'In progress', not_started: 'Not done' };
+  const TRANSLATED_PILL = { done: 'complete', in_progress: 'in_progress', not_started: 'pending' };
+
+  // Low-level: whether the compiled Fortran/C/C++ has been ported.
+  //   none        the package has no compiled code, so there is nothing to do
+  //   done        every crate it needs is loaded
+  //   in_progress some crates are loaded or assigned, but not all
+  //   not_started no crate is loaded yet
+  // The line counts live in the low-level rows, not on the high-level row.
+  const lowByPkg = {};
+  (D.low_level || []).forEach((row) => { lowByPkg[row.package] = row; });
+
+  function lowState(r, status) {
+    const tot = lowTotal(lowByPkg[r.package] || {});
+    if (!tot.lines) return 'none';
+    if (status === 'complete') return 'done';
+    if (r.low_status === 'replaced') return 'done';
+    const crates = (D.crates || []).filter((c) => (c.loaded_by || []).includes(r.package));
+    if (crates.length) {
+      const done = crates.filter((c) => c.state === 'done').length;
+      if (done === crates.length) return 'done';
+      return 'in_progress';
+    }
+    if (r.low_status === 'done') return 'done';
+    if (r.low_status === 'underway') return 'in_progress';
+    return 'not_started';
+  }
+  const LOW_COL_LABEL = { none: 'None', done: 'Done', in_progress: 'In progress', not_started: 'Not done' };
+  const LOW_COL_PILL = { none: 'none', done: 'done', in_progress: 'underway', not_started: 'pending' };
+  const TR_ORDER = { not_started: 0, in_progress: 1, done: 2 };
+  const LOW_ORDER = { not_started: 0, in_progress: 1, done: 2, none: 3 };
+
   function blockersOf(r) {
     if (r.needs_first) return r.needs_first;
     // Fallback for an older payload: show only names that are real packages and
@@ -1158,7 +1203,10 @@
   const hsorters = {
     package: (a, b) => a.package.localeCompare(b.package),
     files: (a, b) => (a.lines || 0) - (b.lines || 0),
-    low: (a, b) => (a.low_status || '').localeCompare(b.low_status || ''),
+    // Sort by how far along: not done, then in progress, then done, then none.
+    low: (a, b) => LOW_ORDER[lowState(a, pkgStatus[a.package])] - LOW_ORDER[lowState(b, pkgStatus[b.package])],
+    translated: (a, b) =>
+      TR_ORDER[translatedState(pkgByName[a.package])] - TR_ORDER[translatedState(pkgByName[b.package])],
     depends: (a, b) => (a.depends || []).length - (b.depends || []).length,
     checks: (a, b) => ((a.checks || {}).passed || 0) - ((b.checks || {}).passed || 0),
     speed: (a, b) => (a.speed || 0) - (b.speed || 0),
@@ -1426,13 +1474,17 @@
       const tr = el('tr');
       tr.appendChild(el('td', 'name', r.package));
       tr.appendChild(langCell(r.files, r.lines));
-      const st = el('td');
-      if (r.low_status && r.low_status !== 'none') {
-        st.appendChild(el('span', 'pill ' + r.low_status, HIGH_LOW[r.low_status] || r.low_status));
-      } else {
-        st.textContent = '—';
-      }
-      tr.appendChild(st);
+      const status = pkgStatus[r.package] || '';
+      // Low-level first: None when there is no compiled code to port.
+      const low = lowState(r, status);
+      const lowCell = el('td');
+      lowCell.appendChild(el('span', 'pill ' + LOW_COL_PILL[low], LOW_COL_LABEL[low]));
+      tr.appendChild(lowCell);
+      // Then translation, in exactly three states.
+      const tr2 = translatedState(pkgByName[r.package]);
+      const trCell = el('td');
+      trCell.appendChild(el('span', 'pill ' + TRANSLATED_PILL[tr2], TRANSLATED_LABEL[tr2]));
+      tr.appendChild(trCell);
       const dep = el('td', 'deps');
       const lane = highLane(r);
       // "Needs first" names only the packages that must be translated or replaced
