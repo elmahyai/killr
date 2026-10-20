@@ -495,7 +495,7 @@
   <div class="wrap">
     <div class="kicker">Progress</div>
     <h2>Progress by package</h2>
-    <p class="sub">Each row is a CRAN package: its R files, its Depends, and whether it is free to translate. Compiled Fortran, C, and C++ live in How we handle low-level code.</p>
+    <p class="sub">Each row is a CRAN package: its R files, whether its functions are translated, and which packages must be translated or replaced before it can start. Free means nothing is outstanding, either because it depends on nothing or because its dependencies are already done. Compiled Fortran, C, and C++ live in How we handle low-level code.</p>
     <div class="tickets">
       <div class="card">
         <h3>What this list is</h3>
@@ -503,7 +503,7 @@
       </div>
       <div class="card">
         <h3>How a package moves</h3>
-        <p>Free means the Depends are done or replaced. Locked means a dependency is still open. In progress means agents are on it. Done means every function matched R.</p>
+        <p><b>Free</b> means nothing has to be translated or replaced first: either the package depends on nothing, or its dependencies are already done. <b>Needs first</b> names the packages that still have to be done. <b>In progress</b> means agents are on it. <b>Done</b> means every function matched R or is recorded as close.</p>
       </div>
       <div class="card">
         <h3>Compiled code</h3>
@@ -538,8 +538,8 @@
             <tr>
               <th data-hsort="package">Package<span class="arr"></span></th>
               <th data-hsort="files">Files<span class="arr"></span></th>
-              <th data-hsort="low">Compiled<span class="arr"></span></th>
-              <th data-hsort="depends">Depends<span class="arr"></span></th>
+              <th data-hsort="low">Translated<span class="arr"></span></th>
+              <th data-hsort="depends">Needs first<span class="arr"></span></th>
               <th data-hsort="checks">Proof checks<span class="arr"></span></th>
               <th data-hsort="speed">Speedup<span class="arr"></span></th>
             </tr>
@@ -1132,6 +1132,12 @@
     if (showLow) addProgRow(wrap, 'low-level', (low != null && low > 0 && low < 1) ? low : null, lowLeft(r));
     return wrap.childNodes.length ? wrap : null;
   }
+  function blockersOf(r) {
+    if (r.needs_first) return r.needs_first;
+    // Fallback for an older payload: show only names that are real packages and
+    // are not finished yet.
+    return (r.depends || []).filter((n) => pkgStatus[n] && pkgStatus[n] !== 'complete');
+  }
   function highLane(r) {
     const status = pkgStatus[r.package] || '';
     if (status === 'replaced') return 'replaced';
@@ -1429,20 +1435,19 @@
       tr.appendChild(st);
       const dep = el('td', 'deps');
       const lane = highLane(r);
-      if (lane === 'free') dep.appendChild(el('span', 'pill free', 'Free'));
-      else if (lane === 'wait') {
-        dep.appendChild(el('span', 'pill free', 'Free'));
-        dep.appendChild(document.createTextNode(' '));
-        dep.appendChild(el('span', 'pill wait', 'waiting for low-level'));
-      }
-      else if (lane === 'progress') {
-        dep.appendChild(el('span', 'pill free', 'Free'));
-        const bars = layerBars(r);
-        if (bars) dep.appendChild(bars);
-      }
+      // "Needs first" names only the packages that must be translated or replaced
+      // before this one can start. Nothing outstanding means Free, whatever else
+      // the lane says, because the dependencies are already settled.
+      const blocking = blockersOf(r);
+      if (lane === 'done') dep.appendChild(el('span', 'pill complete', 'Done'));
       else if (lane === 'replaced') dep.appendChild(el('span', 'pill replaced', 'Replaced'));
-      else if (lane === 'done') dep.appendChild(el('span', 'pill complete', 'Done'));
-      else dep.textContent = (r.depends || []).join(', ') || 'Locked';
+      else if (!blocking.length) dep.appendChild(el('span', 'pill free', 'Free'));
+      else {
+        blocking.forEach((name, i) => {
+          if (i) dep.appendChild(document.createTextNode(', '));
+          dep.appendChild(el('span', 'pill wait', name));
+        });
+      }
       tr.appendChild(dep);
       tr.appendChild(el('td', '', checksText(r.checks)));
       tr.appendChild(el('td', '', speedText(r.speed)));

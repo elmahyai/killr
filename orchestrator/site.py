@@ -311,6 +311,58 @@ def _approximate(check: dict) -> bool:
     return False
 
 
+# Words a DESCRIPTION dependency parser can pick up from a variable name rather
+# than a package. Anything in this set is a parse artifact, not something to wait on.
+_NOT_A_PACKAGE = {
+    ".", "...", "p", "x", "y", "z", "a", "b", "c", "d", "e", "m", "l", "s", "q",
+    "package", "packages", "pkg", "pkgs", "pkgname", "pkg.name", "pkgName", "pname",
+    "packageName", "package.name", "packagelist", "packagesToLoad", "packageToLoad",
+    "requiredPackage", "reqpackage", "want", "wait", "dep", "dep1", "dependency",
+    "src", "lib", "libs", "lib.loc", "libName", "libList", "namespace", "env", "opt",
+    "solver", "loader", "plugin", "backend", "engine", "type", "mode", "help", "path",
+    "file", "tmpl", "template", "input", "from", "row", "rowname", "names", "global",
+    "self", "std", "sig", "func", "fun", "fit", "data", "params", "parts", "splits",
+    "pos", "imp", "gen", "con", "db", "ns", "if", "else", "paste", "paste0", "sprintf",
+    "basename", "deparse", "format", "print", "eval", "force", "substitute", "names",
+    "extension", "entry", "secondary", "mandatory", "toload", "lname", "pck", "pckg",
+    "pkgi", "pdpkg", "pdPkgName", "cdfPkgName", "orgpkg", "orgdb", "organism",
+    "orgPkg", "lpPackage", "appPkg", "annotationPkg", "annotation", "polars",
+}
+
+
+def _catalog_names() -> set:
+    """Every package name CRAN actually ships, so a parse artifact can be told apart."""
+    path = ROOT / "rcran" / "catalog.json"
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    items = record.get("packages") if isinstance(record, dict) else record
+    names = set()
+    for item in items or ():
+        if isinstance(item, dict) and item.get("name"):
+            names.add(str(item["name"]))
+    return names
+
+
+def _needs_first(names, catalog: set) -> list[str]:
+    """The dependency names that are real packages and must be settled before this one.
+
+    Drops parse artifacts and names that are not CRAN packages at all, so the
+    column names only things that can actually be translated or replaced.
+    """
+    seen, out = set(), []
+    for name in names or ():
+        text = str(name).strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        if text in _NOT_A_PACKAGE or text not in catalog:
+            continue
+        out.append(text)
+    return out
+
+
 def _low_status(row: sqlite3.Row, opened: dict, done: dict) -> str:
     """Low-level status for the high-level table.
 
@@ -358,6 +410,7 @@ def _payload() -> dict:
         packages = []
         fn_by_pkg: dict[str, dict[str, dict]] = {}
         done_by_pkg: dict[str, bool] = {}
+        catalog_names = _catalog_names()
         for row in db.execute("SELECT * FROM translation_packages ORDER BY name"):
             fns = db.execute(
                 "SELECT * FROM translation_functions WHERE package = ? ORDER BY name",
@@ -562,6 +615,14 @@ def _payload() -> dict:
                     "low_status": _low_status(row, fn_by_pkg, done_by_pkg),
                     "free": bool(row["free"]),
                     "depends": json.loads(row["depends"] or "[]"),
+                    # Only what still has to be translated or replaced first.
+                    "needs_first": [
+                        name
+                        for name in _needs_first(
+                            json.loads(row["depends"] or "[]"), catalog_names
+                        )
+                        if not done_by_pkg.get(name)
+                    ],
                     # Per-file detail is only ever opened from a package that is in the
                     # catalog of opened packages. Keeping it for the 25k screened-only
                     # rows costs ~70 MB and pushes progress.js past GitHub's 100 MB limit.
