@@ -72,6 +72,8 @@ def ingest(db_path=None) -> dict[str, int]:
                         name,
                         item.get("name") or "",
                         1 if item.get("translated") else 0,
+                        # Exact on proven cases, one mode covered: done, counted as done.
+                        1 if item.get("covered") else 0,
                         item.get("python") or "",
                         json.dumps(item.get("loads") or [], ensure_ascii=False),
                         json.dumps(item.get("uses") or [], ensure_ascii=False),
@@ -85,9 +87,9 @@ def ingest(db_path=None) -> dict[str, int]:
                 )
             db.executemany(
                 """INSERT INTO translation_functions (
-                    package, name, translated, python, loads, uses, done, not_done,
+                    package, name, translated, covered, python, loads, uses, done, not_done,
                     blocked_by, assigned, check_json, doc_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 rows,
             )
             counts["translation_functions"] += len(rows)

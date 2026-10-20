@@ -264,7 +264,9 @@ def _fn_progress(fn: sqlite3.Row) -> dict:
     translation = _slim_doc(doc.get("translation"), fn["package"])
     return {
         "n": fn["name"],
-        "t": bool(fn["translated"]),
+        # Done means translated, or exact on the proven cases with one mode covered.
+        "t": bool(fn["translated"]) or bool(fn["covered"]),
+        "covered": bool(fn["covered"]),
         "nd": not_done,
         "ok": _exact(check) if check else None,
         # Close but not exact, with the difference recorded: counted apart from "ok".
@@ -353,6 +355,8 @@ def _payload() -> dict:
                     {
                         "n": item["n"],
                         "t": item["t"],
+                        # Covered: done on the proven cases, one mode left unproven.
+                        "covered": item["covered"],
                         "nd": item["nd"],
                         "b": bool(json.loads(fn["blocked_by"] or "[]")),
                     }

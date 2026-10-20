@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS translation_functions (
     package TEXT NOT NULL,
     name TEXT NOT NULL,
     translated INTEGER NOT NULL,
+    covered INTEGER NOT NULL DEFAULT 0,
     python TEXT NOT NULL,
     loads TEXT NOT NULL,
     uses TEXT NOT NULL,
@@ -205,6 +206,7 @@ def connect(path: Path = DB_PATH) -> sqlite3.Connection:
     db.executescript(SCHEMA)
     _ensure_column(db, "low_level", "notes", "TEXT NOT NULL DEFAULT ''")
     _ensure_column(db, "high_level_files", "functions", "TEXT NOT NULL DEFAULT '[]'")
+    _ensure_column(db, "translation_functions", "covered", "INTEGER NOT NULL DEFAULT 0")
     return db
 
 

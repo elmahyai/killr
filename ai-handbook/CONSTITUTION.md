@@ -14,19 +14,21 @@ Before opening a package, finish every package in its DESCRIPTION `Depends` and 
 
 The proof matches R within `1e-8`. One untimed call, then the median of 20. R uses `Sys.time()`. Python uses `time.perf_counter()`. `speedup` is the R time divided by the Python time. The two scripts live under `packages/<Name>/proof`. Save what the example prints or draws under `packages/<Name>/docs/output/`, and point `origin.output` and `translation.output` at those files. A `.txt` file is shown as text. An `.svg` file is shown as the figure. A function whose `not_done` begins with `Left` is not reserved.
 
-## Close, not exact
+## Close is done
 
-`1e-8` is the only tolerance that makes a function finished. A proof that lands above it is not finished, and is never recorded as a match.
+A proof that matches R within `1e-8` is **exact**. A proof whose best result is close, and where no better match was found, is **close**. Both are done. A package is finished when every function in it is exact, close, or `Left`.
 
-When a difference is real, small, and there is no better option, it may be kept as an **accepted difference**. That is a separate record, not a pass:
+Close is a decision, recorded, not a quiet pass:
 
-- `check.matches` means "matched at the tolerance recorded in `check.tolerance`". It is not a claim of `1e-8`.
-- `check.tolerance` is the tolerance the difference was actually judged at.
-- `check.max_abs_diff` is the measured difference.
+- `check.matches` and `check.max_abs_diff` stay as measured. Do not raise `matches` to make a package look finished.
+- `check.tolerance` is the tolerance the difference was judged at.
 - `check.approx_reason` says why the gap exists and why no better option is known. A reference-BLAS or floating-point cause is named in `experience/`, not repeated here.
-- `not_done` still states what does not match, and for which cases.
+- The function record carries `"close": true` and a `close_note`, and its `not_done` still names what does not match and for which cases.
+- Reopen it when a way to match R exactly is found. Close is a resting place, not a claim of equality.
 
-The dashboard reads the numbers, not the flag: any recorded proof whose `max_abs_diff` is above `1e-8` is shown as `close`, whatever `matches` says. That keeps accepted differences apart from `proof checks`; they are labelled `close` in the comparison table and `+N close` in the tables and badges, and they never enter the passed count. An accepted difference is a note that the work is visible and unfinished, not a quiet pass. A function with an accepted difference is not `translated` unless the rest of its cases do match.
+The dashboard shows both. Close proofs are labelled `close` in the comparison table, `+N close` in the tables and badges, and a `close` function row. They are counted as done, so the package can finish; they are still reported apart from `proof checks`, so the exact count is never inflated.
+
+Close is only for a difference no proof can remove. A function that is simply not written is not close. A case that was never run is not close.
 
 ## Routing
 

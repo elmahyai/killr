@@ -42,14 +42,14 @@ The `rcran/` folder is excluded from git. It holds the CRAN catalog, the downloa
 
 ## Progress
 
-Snapshot from the orchestrator, 2026-10-20 12:40 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
+Snapshot from the orchestrator, 2026-10-20 17:03 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
 
-![complete](https://img.shields.io/badge/complete-133-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-16-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6100%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6539%20of%206592-blue) ![close, not exact](https://img.shields.io/badge/close,%20not%20exact-7-orange) ![rust crates](https://img.shields.io/badge/rust%20crates-132-orange)
+![complete](https://img.shields.io/badge/complete-134-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-15-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6102%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6541%20of%206594-blue) ![close, not exact](https://img.shields.io/badge/close,%20not%20exact-7-orange) ![rust crates](https://img.shields.io/badge/rust%20crates-132-orange)
 
 | Status | Packages |
 | --- | ---: |
-| Complete | 133 |
-| In progress | 16 |
+| Complete | 134 |
+| In progress | 15 |
 | Replaced by a stand-in | 39 |
 
 <details>
@@ -166,7 +166,7 @@ Snapshot from the orchestrator, 2026-10-20 12:40 UTC. The interactive version is
 | modeltools | complete | 19 / 19 | 19 / 19 | 146.9x |
 | moments | complete | 12 / 12 | 12 / 12 | 0.94x |
 | mvtnorm | complete | 61 / 61 | 61 / 61 | 1.69x |
-| nlme | in progress | 107 / 109 | 106 / 107 (+1 close) | 4.81x |
+| nlme | complete | 109 / 109 | 108 / 109 (+1 close) | 4.74x |
 | nloptr | complete | 26 / 26 | 26 / 26 | 1.79x |
 | nnet | complete | 7 / 7 | 7 / 7 | 0.24x |
 | nortest | complete | 5 / 5 | 5 / 5 | 2.61x |

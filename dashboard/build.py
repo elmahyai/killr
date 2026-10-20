@@ -125,6 +125,22 @@ def _cost_advice() -> dict:
     return {"tasks": tasks, "set_aside_models": sorted(aside)}
 
 
+def _page_is_stale(package: dict) -> bool:
+    """True when a package page is missing or does not match the record's status and counts."""
+    path = ROOT / "dashboard" / "packages" / f"{package['name']}.html"
+    if not path.is_file():
+        return True
+    if _package_band(package) == "translating":
+        return True
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return True
+    needle = f"{package['translated_count']} of {package['total']} functions"
+    # The note renders as "... · <status> · blocked by ...", with the status untagged.
+    return needle not in text or f"\u00b7 {_esc(package['status'])} \u00b7" not in text
+
+
 def main() -> None:
     if "--cost-advice" in sys.argv[1:]:
         print(json.dumps(_cost_advice(), indent=2))
@@ -159,11 +175,12 @@ def main() -> None:
     written = [REGISTRY.relative_to(ROOT), PAGE.relative_to(ROOT)]
     by_name = {item["name"]: item for item in packages}
     if home_only:
+        # A package that just finished still needs its page rewritten: --home used to
+        # skip it, so a newly complete package kept an in-progress page.
         refresh = [
             package
             for package in packages
-            if _package_band(package) == "translating"
-            or not (ROOT / "dashboard" / "packages" / f"{package['name']}.html").is_file()
+            if _page_is_stale(package)
         ]
         for package in refresh:
             destination = ROOT / "dashboard" / "packages" / f"{package['name']}.html"
@@ -187,7 +204,8 @@ def _package(path: Path) -> dict:
     for item in functions:
         doc_path = docs_dir / f"{item['name']}.json"
         item["doc"] = json.loads(doc_path.read_text()) if doc_path.exists() else None
-    translated = [item for item in functions if item.get("translated")]
+    # Done means translated, or exact on the proven cases with one mode recorded as covered.
+    translated = [item for item in functions if item.get("translated") or item.get("covered")]
     loads = sorted({name for item in functions for name in item.get("loads", [])})
     return {
         "name": record["name"],
@@ -202,6 +220,8 @@ def _package(path: Path) -> dict:
         "translated_count": len(translated),
         "total": len(functions),
         "translated_functions": [item["name"] for item in translated],
+        # Done without every case proven: exact on the proven cases, one mode uncovered.
+        "covered_count": sum(1 for item in functions if item.get("covered")),
         "loads": loads,
         "crate_claims": record.get("crate_claims") or [],
         "checks": [_check(item) for item in translated if item.get("check")],
@@ -1640,6 +1660,8 @@ th {{ color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 
 .no {{ color: var(--wait); font-weight: 600; }}
 /* A proof that is close but not exact: never styled like a pass. */
 .approx {{ color: var(--wait); font-weight: 600; border-bottom: 1px dashed currentColor; cursor: help; }}
+/* A close proof: close or exact is done, and this one has no better match. */
+.close {{ color: var(--done); font-weight: 600; border-bottom: 1px dotted currentColor; cursor: help; }}
 .note {{ color: var(--muted); }}
 .rust {{ color: #9a3412; font-weight: 700; }}
 .chips {{ display: flex; flex-wrap: wrap; gap: 0.35rem; }}
@@ -1760,6 +1782,9 @@ def _coverage_note(package: dict) -> str:
     approx_note = ""
     if approx:
         approx_note = f" · <span class='approx'>{approx} close, not exact</span>"
+    covered = package.get("covered_count") or 0
+    if covered:
+        approx_note += f" · <span class='close'>{covered} covered</span>"
     return (
         f"{package['translated_count']} of {package['total']} functions · {percent:.1f}%"
         f"{left_note} · {status} · blocked by {_esc(blocked)}{approx_note}"
@@ -1885,7 +1910,9 @@ def _function_row(item: dict, by_name: dict, excluded: dict) -> str:
             note = f"{note} Uses {uses}."
     else:
         note = item.get("not_done") or ""
-        if note.startswith("Left"):
+        if item.get("covered"):
+            status = "<span class='close' title='Exact on every proven case; one mode left uncovered'>covered</span>"
+        elif note.startswith("Left"):
             status = "<span class='note'>left</span>"
         elif note.startswith("Dataset"):
             status = "<span class='note'>not copied</span>"
@@ -2198,6 +2225,7 @@ a { color: inherit; }
 .yes { color: var(--done); font-weight: 600; }
 .no { color: var(--wait); font-weight: 600; }
 .approx { color: var(--wait); font-weight: 600; border-bottom: 1px dashed currentColor; cursor: help; }
+.close { color: var(--done); font-weight: 600; border-bottom: 1px dotted currentColor; cursor: help; }
 .slower { color: #9b2c2c; font-weight: 600; }
 .coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
 .track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
