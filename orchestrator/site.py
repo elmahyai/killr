@@ -311,6 +311,24 @@ def _approximate(check: dict) -> bool:
     return False
 
 
+def _low_status(row: sqlite3.Row, opened: dict, done: dict) -> str:
+    """Low-level status for the high-level table.
+
+    The stored value answers "does a crate exist", so a package translated with
+    NumPy or SciPy reads ``pending`` and one routed to a system library reads
+    ``replaced``. Once the package itself is complete, its low-level question is
+    settled: report the work as done so a finished package never shows a
+    not-started or replaced low-level pill.
+    """
+    stored = row["low_status"] or "none"
+    package = row["package"]
+    if package not in opened:
+        return stored
+    if done.get(package):
+        return "done"
+    return stored
+
+
 def _checks_of(fns: list[dict]) -> dict:
     checks = [fn for fn in fns if fn.get("ok") is not None]
     speeds = [fn["s"] for fn in fns if fn.get("s") is not None]
@@ -339,6 +357,7 @@ def _payload() -> dict:
     try:
         packages = []
         fn_by_pkg: dict[str, dict[str, dict]] = {}
+        done_by_pkg: dict[str, bool] = {}
         for row in db.execute("SELECT * FROM translation_packages ORDER BY name"):
             fns = db.execute(
                 "SELECT * FROM translation_functions WHERE package = ? ORDER BY name",
@@ -375,6 +394,8 @@ def _payload() -> dict:
                         }
                     )
             fn_by_pkg[row["name"]] = packed
+            # A complete package has nowhere left to go: every function is done.
+            done_by_pkg[row["name"]] = (row["status"] or "") == "complete"
             screen = db.execute(
                 "SELECT * FROM packages WHERE name = ? ORDER BY version DESC",
                 (row["name"],),
@@ -450,7 +471,10 @@ def _payload() -> dict:
                 {
                     "package": row["package"],
                     "version": row["version"],
-                    "status": row["status"],
+                    # Same rule as the high-level table: a finished package's
+                    # low-level work is settled, so it reads done here too.
+                    "status": "done" if done_by_pkg.get(row["package"]) else row["status"],
+                    "stored_status": row["status"],
                     "thin": thin,
                     "fortran_files": row["fortran_files"],
                     "fortran_lines": row["fortran_lines"],
@@ -532,7 +556,10 @@ def _payload() -> dict:
                     "version": row["version"],
                     "files": row["files"],
                     "lines": row["lines"],
-                    "low_status": row["low_status"],
+                    # A finished package has its low-level work settled too. The stored
+                    # pending/replaced value only tracks whether a crate exists, which is
+                    # meaningless once every function is done, so report it as done.
+                    "low_status": _low_status(row, fn_by_pkg, done_by_pkg),
                     "free": bool(row["free"]),
                     "depends": json.loads(row["depends"] or "[]"),
                     # Per-file detail is only ever opened from a package that is in the

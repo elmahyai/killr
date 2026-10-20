@@ -42,7 +42,7 @@ The `rcran/` folder is excluded from git. It holds the CRAN catalog, the downloa
 
 ## Progress
 
-Snapshot from the orchestrator, 2026-10-20 17:03 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
+Snapshot from the orchestrator, 2026-10-20 18:40 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
 
 ![complete](https://img.shields.io/badge/complete-134-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-15-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6102%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6541%20of%206594-blue) ![close, not exact](https://img.shields.io/badge/close,%20not%20exact-7-orange) ![rust crates](https://img.shields.io/badge/rust%20crates-132-orange)
 
