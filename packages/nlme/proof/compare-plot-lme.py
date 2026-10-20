@@ -26,9 +26,8 @@ def run(command: list[str]) -> str:
     return done.stdout
 
 
-def last_json_line(text: str) -> dict:
-    lines = [line for line in text.splitlines() if line.startswith("{")]
-    return json.loads(lines[-1])
+def json_lines(text: str) -> list[dict]:
+    return [json.loads(line) for line in text.splitlines() if line.startswith("{")]
 
 
 def main() -> int:
@@ -37,8 +36,9 @@ def main() -> int:
     py_text = run([sys.executable, str(PROOF / "plot.lme-py.py")])
     (OUTPUT / "plot.lme-r.txt").write_text(r_text)
     (OUTPUT / "plot.lme-python.txt").write_text(py_text)
-    r_value = last_json_line(r_text)
-    py_value = last_json_line(py_text)
+    r_value, r_payload = json_lines(r_text)
+    py_value = json_lines(py_text)[-1]
+    py_payload = py_value  # one object carries both blocks
 
     r_vec = r_value["value"]
     py_vec = py_value["value"]
@@ -54,12 +54,20 @@ def main() -> int:
     id_equal = r_value["value_id"] == py_value["value_id"]
     labels_equal = r_value["id_labels"] == py_value["id_labels"]
     labels_match = r_value["labels"] == py_value["labels"]
+    # The vectors the object path reads from lme: fitted values and Pearson residuals.
+    payload_diff = {
+        key: max(abs(a - b) for a, b in zip(r_payload[key], py_payload[key]))
+        for key in ("fitted", "pearson")
+    }
+    payload_diff["group"] = 0.0 if r_payload["group"] == py_payload["group"] else float("inf")
+    payload_diff["length"] = 0.0 if len(r_payload["fitted"]) == len(py_payload["fitted"]) else float("inf")
+    max_diff = max(max_diff, *payload_diff.values())
     r_ms = r_value["median_ms"]
     py_ms = py_value["median_ms"]
     summary = {
         "matches": bool(max_diff <= TOLERANCE and id_equal and labels_equal and labels_match),
         "max_abs_diff": max_diff,
-        "max_abs_diff_by_quantity": by_part,
+        "max_abs_diff_by_quantity": {**by_part, **{f"lme_{k}": v for k, v in payload_diff.items()}},
         "tolerance": TOLERANCE,
         "length": len(r_vec),
         "panels_r": r_value["panels"],

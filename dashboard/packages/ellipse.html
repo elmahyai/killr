@@ -38,6 +38,7 @@ a { color: inherit; }
 .coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
 .track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
 .fill { height: 100%; background: var(--done); }
+.coverage .left { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 .views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
 .views button {
   font: inherit; cursor: pointer; border: 1px solid var(--line);
@@ -137,8 +138,9 @@ button.proof-toggle.active { text-decoration: underline; text-underline-offset: 
 <article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
 <article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
 </div>
+<div id="proof-out" class="outputs"></div>
 </div>
-<script type="application/json" id="proof-data">[{"name": "ellipse", "r": "suppressPackageStartupMessages(library(ellipse))\noptions(digits = 17)\n\ndir.create(\"packages/ellipse/docs/output\", recursive = TRUE, showWarnings = FALSE)\ncases \u003c- list(\n  list(x = 0.35, scale = c(2, 1.5), centre = c(0.2, -0.4),\n       level = 0.90, npoints = 17),\n  list(x = matrix(c(4, 1.2, 1.2, 9), 2, 2), scale = NULL,\n       center = c(-1.1, 2.3), level = 0.95, which = c(2, 1), npoints = 33),\n  list(x = -0.8, scale = c(0.7, 2.1), centre = c(3, 0),\n       t = 1.7, npoints = 64)\n)\n\nrun_case \u003c- function(z) {\n  args \u003c- z\n  if (is.null(args$scale)) args$scale \u003c- NULL\n  args \u003c- args[!vapply(args, is.null, logical(1))]\n  do.call(ellipse, args)\n}\n\ninvisible(run_case(cases[[1]]))\nelapsed \u003c- numeric(20)\nresult \u003c- vector(\"list\", length(cases))\nfor (i in seq_len(20)) {\n  t0 \u003c- Sys.time()\n  for (j in seq_along(cases)) result[[j]] \u003c- run_case(cases[[j]])\n  elapsed[i] \u003c- as.numeric(difftime(Sys.time(), t0, units = \"secs\"))\n}\nfor (j in seq_along(result)) {\n  write.table(result[[j]],\n              file = sprintf(\"packages/ellipse/docs/output/ellipse-r-case%d.txt\", j),\n              row.names = FALSE, col.names = FALSE, quote = FALSE,\n              sep = \" \")\n}\ncat(sprintf(\"r_ms %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ellipse.ellipse import ellipse\n\n\nROOT = Path(__file__).resolve().parents[1]\nOUTPUT = ROOT / \"docs\" / \"output\"\ncases = [\n    dict(x=0.35, scale=(2, 1.5), centre=(0.2, -0.4), level=0.90, npoints=17),\n    dict(\n        x=np.array([[4, 1.2], [1.2, 9]]),\n        center=(-1.1, 2.3),\n        level=0.95,\n        which=(2, 1),\n        npoints=33,\n    ),\n    dict(x=-0.8, scale=(0.7, 2.1), centre=(3, 0), t=1.7, npoints=64),\n]\n\n\ndef run_all():\n    return [ellipse(**case) for case in cases]\n\n\nrun_all()\nelapsed = []\nresult = None\nfor _ in range(20):\n    t0 = time.perf_counter()\n    result = run_all()\n    elapsed.append(time.perf_counter() - t0)\n\nmax_diff = 0.0\nfor i, values in enumerate(result, 1):\n    np.savetxt(OUTPUT / f\"ellipse-python-case{i}.txt\", values, fmt=\"%.17g\")\n    reference = np.loadtxt(OUTPUT / f\"ellipse-r-case{i}.txt\")\n    max_diff = max(max_diff, float(np.max(np.abs(values - reference))))\n\nr_ms = float((OUTPUT / \"ellipse-r.txt\").read_text().split()[1])\npython_ms = statistics.median(elapsed) * 1000\nspeedup = r_ms / python_ms\n(OUTPUT / \"ellipse-python.txt\").write_text(\n    f\"python_ms {python_ms:.17g}\\n\"\n    f\"max_abs_diff {max_diff:.17g}\\n\"\n    f\"speedup {speedup:.17g}\\n\"\n)\nprint(f\"matched {'yes' if max_diff \u003c= 1e-8 else 'no'}\")\nprint(f\"max_abs_diff {max_diff:.17g}\")\nprint(f\"r_ms {r_ms:.17g}\")\nprint(f\"python_ms {python_ms:.17g}\")\nprint(f\"speedup {speedup:.17g}\")\n"}]</script></div></section>
+<script type="application/json" id="proof-data">[{"name": "ellipse", "r": "suppressPackageStartupMessages(library(ellipse))\noptions(digits = 17)\n\ndir.create(\"packages/ellipse/docs/output\", recursive = TRUE, showWarnings = FALSE)\ncases \u003c- list(\n  list(x = 0.35, scale = c(2, 1.5), centre = c(0.2, -0.4),\n       level = 0.90, npoints = 17),\n  list(x = matrix(c(4, 1.2, 1.2, 9), 2, 2), scale = NULL,\n       center = c(-1.1, 2.3), level = 0.95, which = c(2, 1), npoints = 33),\n  list(x = -0.8, scale = c(0.7, 2.1), centre = c(3, 0),\n       t = 1.7, npoints = 64)\n)\n\nrun_case \u003c- function(z) {\n  args \u003c- z\n  if (is.null(args$scale)) args$scale \u003c- NULL\n  args \u003c- args[!vapply(args, is.null, logical(1))]\n  do.call(ellipse, args)\n}\n\ninvisible(run_case(cases[[1]]))\nelapsed \u003c- numeric(20)\nresult \u003c- vector(\"list\", length(cases))\nfor (i in seq_len(20)) {\n  t0 \u003c- Sys.time()\n  for (j in seq_along(cases)) result[[j]] \u003c- run_case(cases[[j]])\n  elapsed[i] \u003c- as.numeric(difftime(Sys.time(), t0, units = \"secs\"))\n}\nfor (j in seq_along(result)) {\n  write.table(result[[j]],\n              file = sprintf(\"packages/ellipse/docs/output/ellipse-r-case%d.txt\", j),\n              row.names = FALSE, col.names = FALSE, quote = FALSE,\n              sep = \" \")\n}\ncat(sprintf(\"r_ms %.17g\\n\", median(elapsed) * 1000))\n", "python": "import statistics\nimport time\nfrom pathlib import Path\n\nimport numpy as np\n\nfrom ellipse.ellipse import ellipse\n\n\nROOT = Path(__file__).resolve().parents[1]\nOUTPUT = ROOT / \"docs\" / \"output\"\ncases = [\n    dict(x=0.35, scale=(2, 1.5), centre=(0.2, -0.4), level=0.90, npoints=17),\n    dict(\n        x=np.array([[4, 1.2], [1.2, 9]]),\n        center=(-1.1, 2.3),\n        level=0.95,\n        which=(2, 1),\n        npoints=33,\n    ),\n    dict(x=-0.8, scale=(0.7, 2.1), centre=(3, 0), t=1.7, npoints=64),\n]\n\n\ndef run_all():\n    return [ellipse(**case) for case in cases]\n\n\nrun_all()\nelapsed = []\nresult = None\nfor _ in range(20):\n    t0 = time.perf_counter()\n    result = run_all()\n    elapsed.append(time.perf_counter() - t0)\n\nmax_diff = 0.0\nfor i, values in enumerate(result, 1):\n    np.savetxt(OUTPUT / f\"ellipse-python-case{i}.txt\", values, fmt=\"%.17g\")\n    reference = np.loadtxt(OUTPUT / f\"ellipse-r-case{i}.txt\")\n    max_diff = max(max_diff, float(np.max(np.abs(values - reference))))\n\nr_ms = float((OUTPUT / \"ellipse-r.txt\").read_text().split()[1])\npython_ms = statistics.median(elapsed) * 1000\nspeedup = r_ms / python_ms\n(OUTPUT / \"ellipse-python.txt\").write_text(\n    f\"python_ms {python_ms:.17g}\\n\"\n    f\"max_abs_diff {max_diff:.17g}\\n\"\n    f\"speedup {speedup:.17g}\\n\"\n)\nprint(f\"matched {'yes' if max_diff \u003c= 1e-8 else 'no'}\")\nprint(f\"max_abs_diff {max_diff:.17g}\")\nprint(f\"r_ms {r_ms:.17g}\")\nprint(f\"python_ms {python_ms:.17g}\")\nprint(f\"speedup {speedup:.17g}\")\n", "out": []}]</script></div></section>
 <section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><h3>Depends</h3><p>graphics</p><p>stats</p></article><article class="pane"><p class="kicker">Python and Rust</p><p class="note">There are none.</p></article></div></section>
 <section class="view" id="view-functions">
 <div id="function-list"></div>
@@ -154,7 +156,7 @@ button.proof-toggle.active { text-decoration: underline; text-underline-offset: 
 </section>
 </main>
 <script>
-const functions = [{"name": "ellipse", "translated": true, "not_done": "", "title": "Confidence ellipse coordinates", "origin": {"description": "Computes the outline of a confidence ellipse as numeric coordinates.", "usage": "ellipse(x, scale, centre, level, t, which, npoints, center)", "value": "A numeric matrix with npoints rows and two columns.", "output": "output/ellipse-r.txt", "output_blocks": [{"text": "r_ms 0.35274028778076172"}]}, "translation": {"description": "Computes the outline of a two-dimensional confidence ellipse.", "usage": "ellipse(x, scale=None, centre=(0, 0), level=0.95, t=None, which=(1, 2), npoints=100, center=None)", "value": "A NumPy array with npoints rows and two columns.", "example": "from ellipse.ellipse import ellipse\n\ncoordinates = ellipse(0.35, scale=(2, 1.5), npoints=100)", "output": "output/ellipse-python.txt", "output_blocks": [{"text": "python_ms 0.19480700029816944\nmax_abs_diff 5.3290705182007514e-15\nspeedup 1.810716695195046"}]}}, {"name": "plotcorr", "translated": true, "not_done": "", "title": "plotcorr", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.plotcorr", "output_blocks": []}}, {"name": "pairs_profile", "translated": true, "not_done": "", "title": "pairs_profile", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.pairs_profile", "output_blocks": []}}, {"name": "pairs", "translated": true, "not_done": "", "title": "pairs", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.pairs", "output_blocks": []}}];
+const functions = [{"name": "ellipse", "translated": true, "not_done": "", "title": "Confidence ellipse coordinates", "origin": {"description": "Computes the outline of a confidence ellipse as numeric coordinates.", "usage": "ellipse(x, scale, centre, level, t, which, npoints, center)", "value": "A numeric matrix with npoints rows and two columns.", "output": "output/ellipse-r.txt", "output_blocks": [{"label": "", "text": "r_ms 0.35274028778076172"}]}, "translation": {"description": "Computes the outline of a two-dimensional confidence ellipse.", "usage": "ellipse(x, scale=None, centre=(0, 0), level=0.95, t=None, which=(1, 2), npoints=100, center=None)", "value": "A NumPy array with npoints rows and two columns.", "example": "from ellipse.ellipse import ellipse\n\ncoordinates = ellipse(0.35, scale=(2, 1.5), npoints=100)", "output": "output/ellipse-python.txt", "output_blocks": [{"label": "", "text": "python_ms 0.19480700029816944\nmax_abs_diff 5.3290705182007514e-15\nspeedup 1.810716695195046"}]}, "pout": []}, {"name": "plotcorr", "translated": true, "not_done": "", "title": "plotcorr", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.plotcorr", "output_blocks": []}, "pout": []}, {"name": "pairs_profile", "translated": true, "not_done": "", "title": "pairs_profile", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.pairs_profile", "output_blocks": []}, "pout": []}, {"name": "pairs", "translated": true, "not_done": "", "title": "pairs", "origin": null, "translation": {"description": "Checked.", "usage": "ellipse.ellipse.pairs", "output_blocks": []}, "pout": []}];
 const index = document.getElementById("function-list");
 const pair = document.getElementById("pair");
 
@@ -184,16 +186,40 @@ function renderSide(side) {
   ].join("");
 }
 
-function outputBlock(side) {
+function outputBlock(side, label) {
   const blocks = side.output_blocks || [];
   if (!blocks.length) {
     return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
   }
-  const html = blocks.map((block) => {
-    if (block.svg) return `<div class="output">${block.svg}</div>`;
-    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  return `<h3>Output${label ? ` (${esc(label)})` : ""}</h3>` + blocksHtml(blocks);
+}
+
+function blocksHtml(blocks) {
+  return blocks.map((block) => {
+    const caption = block.label ? `<p class="kicker">${esc(block.label)}</p>` : "";
+    if (block.svg) return `<div class="output">${caption}${block.svg}</div>`;
+    return `<div class="output">${caption}<pre>${esc(block.text)}</pre></div>`;
   }).join("");
-  return `<h3>Output</h3>${html}`;
+}
+
+function exampleBlocks(fn) {
+  const blocks = [];
+  [["origin", "R example"], ["translation", "Python example"]].forEach(([side, label]) => {
+    for (const block of (fn && fn[side] && fn[side].output_blocks) || []) {
+      blocks.push({ ...block, label: block.label || label });
+    }
+  });
+  return blocks;
+}
+
+function proofBlocks(item) {
+  const blocks = item.out || [];
+  if (blocks.length) return `<h3>Proof output</h3>${blocksHtml(blocks)}`;
+  const example = exampleBlocks(functions.find((fn) => fn.name === item.name));
+  if (example.length) {
+    return `<h3>Proof output</h3><p class="note">The proof did not save its own output. These are the outputs from the documentation examples.</p>${blocksHtml(example)}`;
+  }
+  return `<h3>Proof output</h3><p class="note">Output has not been captured.</p>`;
 }
 
 function show(name) {
@@ -291,6 +317,8 @@ function showProof(name) {
   if (!item) return;
   document.getElementById("proof-r").textContent = item.r;
   document.getElementById("proof-py").textContent = item.python;
+  const out = document.getElementById("proof-out");
+  if (out) out.innerHTML = proofBlocks(item);
   proofNode.hidden = false;
   openProof = name;
   markProof(name);

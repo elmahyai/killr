@@ -14,6 +14,20 @@ Before opening a package, finish every package in its DESCRIPTION `Depends` and 
 
 The proof matches R within `1e-8`. One untimed call, then the median of 20. R uses `Sys.time()`. Python uses `time.perf_counter()`. `speedup` is the R time divided by the Python time. The two scripts live under `packages/<Name>/proof`. Save what the example prints or draws under `packages/<Name>/docs/output/`, and point `origin.output` and `translation.output` at those files. A `.txt` file is shown as text. An `.svg` file is shown as the figure. A function whose `not_done` begins with `Left` is not reserved.
 
+## Close, not exact
+
+`1e-8` is the only tolerance that makes a function finished. A proof that lands above it is not finished, and is never recorded as a match.
+
+When a difference is real, small, and there is no better option, it may be kept as an **accepted difference**. That is a separate record, not a pass:
+
+- `check.matches` means "matched at the tolerance recorded in `check.tolerance`". It is not a claim of `1e-8`.
+- `check.tolerance` is the tolerance the difference was actually judged at.
+- `check.max_abs_diff` is the measured difference.
+- `check.approx_reason` says why the gap exists and why no better option is known. A reference-BLAS or floating-point cause is named in `experience/`, not repeated here.
+- `not_done` still states what does not match, and for which cases.
+
+The dashboard reads the numbers, not the flag: any recorded proof whose `max_abs_diff` is above `1e-8` is shown as `close`, whatever `matches` says. That keeps accepted differences apart from `proof checks`; they are labelled `close` in the comparison table and `+N close` in the tables and badges, and they never enter the passed count. An accepted difference is a note that the work is visible and unfinished, not a quiet pass. A function with an accepted difference is not `translated` unless the rest of its cases do match.
+
 ## Routing
 
 A package listed in `cran/replaced.json` is not translated. The reason names the stand-in. These choices are already made and are not checks at `1e-8`:

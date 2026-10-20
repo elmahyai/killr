@@ -130,6 +130,8 @@ def _totals(packages: list[dict], crates: list[dict]) -> dict:
     functions_done = sum(p["translated"] for p in graded)
     checks_total = sum(p["checks"]["total"] for p in packages)
     checks_passed = sum(p["checks"]["passed"] for p in packages)
+    # Proofs that are close but not exact: shown, but never counted as passes.
+    checks_approximate = sum(p["checks"].get("approximate", 0) for p in packages)
     speeds = [
         c["s"]
         for p in packages
@@ -146,6 +148,7 @@ def _totals(packages: list[dict], crates: list[dict]) -> dict:
         "functions_done": functions_done,
         "checks_total": checks_total,
         "checks_passed": checks_passed,
+        "checks_approximate": checks_approximate,
         "median_speedup": round(statistics.median(speeds), 2) if speeds else None,
         "crates": len(crates),
         "crates_assigned": sum(1 for c in crates if c["state"] == "assigned"),
@@ -194,6 +197,17 @@ def _readme_block(totals: dict, packages: list[dict], generated: str) -> str:
                     f"{totals['checks_passed']} of {totals['checks_total']}",
                     "blue",
                 ),
+                *(
+                    [
+                        _badge(
+                            "close, not exact",
+                            f"{totals['checks_approximate']}",
+                            "orange",
+                        )
+                    ]
+                    if totals.get("checks_approximate")
+                    else []
+                ),
                 _badge("rust crates", f"{totals['crates']}", "orange"),
             ]
         ),
@@ -236,13 +250,13 @@ def _copy_dashboard() -> None:
     if not DASH_SRC.is_dir():
         return
     DASH_DST.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(DASH_SRC / "index.html", DASH_DST / "index.html")
+    shutil.copyfile(DASH_SRC / "index.html", DASH_DST / "index.html")
     src_pkgs = DASH_SRC / "packages"
     dst_pkgs = DASH_DST / "packages"
     if src_pkgs.is_dir():
         if dst_pkgs.exists():
             shutil.rmtree(dst_pkgs)
-        shutil.copytree(src_pkgs, dst_pkgs)
+        shutil.copytree(src_pkgs, dst_pkgs, copy_function=shutil.copyfile)
 
 
 def main() -> None:

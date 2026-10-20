@@ -1,0 +1,1 @@
+R's `^` on doubles is libm `pow`, not `powl`. `numpy.longdouble` power and `numpy.power` both differ from it by one ulp on some inputs, and one ulp in a varFunc weight is enough to move a PORT step: the varPower fitted(.) loop then ends 1e-4 away from R. Match `math.pow` element by element, as `_r_pow` and `varPower`'s `_r_weights` do.

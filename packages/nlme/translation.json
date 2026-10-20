@@ -1257,8 +1257,8 @@
       "python": "nlme.lme_family.lme",
       "loads": [],
       "uses": [],
-      "done": "Matches R within 1e-8 on the lme-family proof cases (Orthodont pdSymm REML and ML, pdDiag, pdIdent, pdCompSymm, nested Pixel), with equal nlminb iteration counts. Verified only on those cases; other pdClass start mappings are not verified at lme level. The Python path still calls nlmemixed for the estimate and non-pdSymm mapping. Uses nlminb_port, nlme_pdsymm, nlme_mixedem.",
-      "not_done": "General variance functions now match R on six cases within 1e-8 (varPower, varExp, varIdent, varConstPower, grouped). Not supported: default apVar=TRUE with a variance function (use lmeControl(apVar=FALSE)); covariates needing fitted() (default varPower(), varExp(), varConstPower()); grouped varConstPower; fixed variance parameters; varComb.",
+      "done": "Matches R within 1e-8 on the lme-family proof cases (Orthodont pdSymm REML and ML, pdDiag, pdIdent, pdCompSymm, nested Pixel; lme.lmList; anova.lme), with equal nlminb iteration counts. Also matches on the six varfunc cases with a data covariate (varPower, varExp, varIdent, varConstPower, grouped varPower, grouped varExp) and on varFixed weights. Uses nlminb_port, nlme_pdsymm and nlme_mixedem.",
+      "not_done": "The default fitted(.) variance covariate (varPower(), varExp(), varConstPower()) runs the repeat loop but does not reach R's answer: values differ by 1e-6 to 1e-4 because each objective evaluation differs from R by exactly one ulp, and PORT's forward differences amplify that over the loop. Also not supported: grouped varConstPower, varComb, fixed variance parameters, correlation structures (waiting on corStruct), and subset.",
       "blocked_by": [],
       "assigned": "",
       "rust": [
@@ -1508,7 +1508,8 @@
         "proof": {
           "r": "packages/nlme/proof/nlme-batch-r.R",
           "python": "packages/nlme/proof/nlme-batch-py.py"
-        }
+        },
+        "approx_reason": "PORT forward-difference path noise: R itself moves Asym by 7.9e-4 on a one-ulp start change, so a 1e-8 match needs bit-identical arithmetic in Initialize, mixed_em, the SSasymp gradient and PORT's difference step. See experience/nlme-nlminb-path.md."
       }
     },
     {
@@ -2336,28 +2337,33 @@
     },
     {
       "name": "plot.lme",
-      "translated": false,
+      "translated": true,
       "python": "nlme.plot_lme.plot_lme_values",
       "loads": [],
       "uses": [],
-      "done": "",
-      "not_done": "Plotting core matches R on Orthodont (max 4.97e-14; labelled points match). The lme-object path (plot_lme) waits on lme. Python 0.41x R. Fitted values and residuals come from an R-exported fixture until residuals.lme and fitted.lme are translated.",
-      "blocked_by": [
-        "lme"
-      ],
+      "done": "Plotting core and the lme-object path both match R on Orthodont (max 3.6e-15 for the plotted x and y, the reference line, the labelled points and the axis labels). plot_lme(fit) reads fitted(fit) and residuals(fit)/sigma from the Python lme fit; plot_lme_values draws given vectors. Python 0.30x R because the whole lme fit runs per call.",
+      "not_done": "The lattice panels are drawn with killplot's residual-fitted panel, so the trellis layout (strips, aspect, panel grid) is not reproduced. A 'form' argument and idResType=\"normalized\" (waiting on corStruct) are not translated.",
+      "blocked_by": [],
       "assigned": "",
       "check": {
+        "case": "plot.lme object path and plotting core on Orthodont, packages/nlme/proof/plot.lme-r.R",
+        "r_ms": 34.63864326477051,
+        "translated_ms": 112.33825049930601,
+        "speedup": 0.30834237769248946,
         "matches": true,
-        "max_abs_diff": 4.97e-14,
+        "max_abs_diff": 3.552713678800501e-15,
         "tolerance": 1e-08,
-        "r_ms": 44.51,
-        "translated_ms": 109.81,
-        "speedup": 0.405,
         "proof": {
           "r": "packages/nlme/proof/plot.lme-r.R",
           "python": "packages/nlme/proof/plot.lme-py.py"
         },
-        "note": "core only; matches applies to the plotting core"
+        "output": {
+          "json": "packages/nlme/docs/output/plot.lme-compare.json",
+          "r_svg": "packages/nlme/docs/output/plot.lme-r.svg",
+          "python_svg": "packages/nlme/docs/output/plot.lme-python.svg",
+          "id_r_svg": "packages/nlme/docs/output/plot.lme-id-r.svg",
+          "id_python_svg": "packages/nlme/docs/output/plot.lme-id-python.svg"
+        }
       }
     },
     {
@@ -2366,8 +2372,8 @@
       "python": "nlme.lme_family.lme_formula",
       "loads": [],
       "uses": [],
-      "done": "Matches R within 1e-8 on the lme-family proof cases (Orthodont pdSymm REML and ML, pdDiag, pdIdent, pdCompSymm, nested Pixel), with equal nlminb iteration counts. Verified only on those cases; other pdClass start mappings are not verified at lme level. The Python path still calls nlmemixed for the estimate and non-pdSymm mapping. Uses nlminb_port, nlme_pdsymm, nlme_mixedem.",
-      "not_done": "General variance functions now match R on six cases within 1e-8 (varPower, varExp, varIdent, varConstPower, grouped). Not supported: default apVar=TRUE with a variance function (use lmeControl(apVar=FALSE)); covariates needing fitted() (default varPower(), varExp(), varConstPower()); grouped varConstPower; fixed variance parameters; varComb.",
+      "done": "Matches R within 1e-8 on the lme-family proof cases (Orthodont pdSymm REML and ML, pdDiag, pdIdent, pdCompSymm, nested Pixel; lme.lmList; anova.lme), with equal nlminb iteration counts. Also matches on the six varfunc cases with a data covariate (varPower, varExp, varIdent, varConstPower, grouped varPower, grouped varExp) and on varFixed weights. Uses nlminb_port, nlme_pdsymm and nlme_mixedem.",
+      "not_done": "The default fitted(.) variance covariate (varPower(), varExp(), varConstPower()) runs the repeat loop but does not reach R's answer: values differ by 1e-6 to 1e-4 because each objective evaluation differs from R by exactly one ulp, and PORT's forward differences amplify that over the loop. Also not supported: grouped varConstPower, varComb, fixed variance parameters, correlation structures (waiting on corStruct), and subset.",
       "blocked_by": [],
       "assigned": "",
       "rust": [
@@ -2478,7 +2484,20 @@
       "done": "No-start nlsList matches R exactly (Loblolly, CO2; max 0.0). nlme(nlsList(...), random = Asym ~ 1) with no start matches to 2.6e-13.",
       "not_done": "The earlier provisional 2e-10 is resolved. Start-supplied nlsList paths are covered by the earlier nlsList proofs only.",
       "blocked_by": [],
-      "assigned": ""
+      "assigned": "",
+      "check": {
+        "case": "nlsList with no start and nlme(nlsList(...)), packages/nlme/proof/nlsList-nostart-r.R",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "proof": {
+          "r": "packages/nlme/proof/nlsList-nostart-r.R",
+          "python": "packages/nlme/proof/nlsList-nostart-py.py"
+        },
+        "output": {
+          "json": "packages/nlme/docs/output/nlsList-nostart-compare.txt"
+        }
+      }
     },
     {
       "name": "glsApVar",

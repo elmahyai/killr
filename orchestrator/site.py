@@ -11,6 +11,7 @@ import statistics
 import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 from screenlib import ROOT, connect
 
@@ -23,6 +24,8 @@ PLOTTING = ROOT / "packages" / "killplot" / "library.json"
 START = "<!-- progress:start -->"
 END = "<!-- progress:end -->"
 NOT_DONE_LIMIT = 220
+OUTPUT_LIMIT = 6000
+SVG_LIMIT = 400_000
 SITE_INNER = "KILLR_SITE_INNER"
 
 
@@ -128,10 +131,10 @@ def _write_registry() -> None:
     )
 
 
-def _slim_doc(side: dict | None) -> dict | None:
+def _slim_doc(side: dict | None, package: str) -> dict | None:
     if not side:
         return None
-    return {
+    slim = {
         "description": side.get("description") or "",
         "usage": side.get("usage") or "",
         "arguments": side.get("arguments") or [],
@@ -139,6 +142,111 @@ def _slim_doc(side: dict | None) -> dict | None:
         "value": side.get("value") or "",
         "example": side.get("example") or "",
     }
+    blocks = _output_blocks(_doc_refs(side, package))
+    if blocks:
+        slim["out"] = blocks
+    return slim
+
+
+def _doc_refs(side: dict, package: str) -> list[tuple[str, Path]]:
+    relative = side.get("output")
+    paths = relative if isinstance(relative, list) else ([relative] if relative else [])
+    docs = ROOT / "packages" / package / "docs"
+    refs = []
+    for item in paths:
+        if not isinstance(item, str) or not item:
+            continue
+        refs.append(("", _with_fallback(_output_path(item, docs))))
+    return refs
+
+
+_PROOF_LABELS = {"r": "R", "python": "Python", "py": "Python", "compare": "Comparison"}
+
+
+def _output_path(reference: str, docs: Path) -> Path:
+    path = Path(reference)
+    if path.is_absolute():
+        return path
+    if reference.startswith("packages/"):
+        return ROOT / reference
+    if reference.startswith("docs/"):
+        under_package = docs.parent / reference
+        if under_package.exists():
+            return under_package
+        return docs / reference[len("docs/"):]
+    return docs / reference
+
+
+def _with_fallback(path: Path) -> Path:
+    if path.exists():
+        return path
+    for short, long in (("-py.", "-python."), ("-python.", "-py.")):
+        if short in path.name:
+            other = path.with_name(path.name.replace(short, long, 1))
+            if other.is_file():
+                return other
+    return path
+
+
+def _dir_refs(reference: str, docs: Path, name: str) -> list[tuple[str, Path]]:
+    base = _output_path(reference, docs)
+    if not base.is_dir():
+        return []
+    refs = []
+    for suffix, label in (("-r", "R"), ("-python", "Python"), ("-py", "Python")):
+        path = _with_fallback(base / f"{name}{suffix}.txt")
+        if path.is_file():
+            refs.append((label, path))
+    for path in sorted(base.glob(f"{name}-*.svg")):
+        refs.append(("", path))
+    return refs
+
+
+def _proof_refs(value, docs: Path, name: str) -> list[tuple[str, Path]]:
+    refs: list[tuple[str, Path]] = []
+
+    def walk(node, label: str = ""):
+        if isinstance(node, dict):
+            for key, child in node.items():
+                if key == "dir" and isinstance(child, str):
+                    refs.extend(_dir_refs(child, docs, name))
+                else:
+                    walk(child, _PROOF_LABELS.get(key, key))
+        elif isinstance(node, list):
+            for index, child in enumerate(node):
+                walk(child, label or ("R" if index == 0 else "Python"))
+        elif isinstance(node, str) and node:
+            refs.append((label, _with_fallback(_output_path(node, docs))))
+
+    walk(value)
+    return refs
+
+
+def _output_blocks(refs: list[tuple[str, Path]]) -> list[dict]:
+    blocks = []
+    seen = set()
+    for label, path in refs:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        try:
+            if not path.is_file():
+                continue
+            if path.suffix == ".svg":
+                text = path.read_text(errors="replace")
+                if len(text) > SVG_LIMIT:
+                    blocks.append({"label": label, "text": "(plot omitted: larger than 400 KB)"})
+                    continue
+                start = text.find("<svg")
+                blocks.append({"label": label, "svg": text[start:] if start >= 0 else text})
+                continue
+            text = path.read_text(errors="replace").rstrip("\n")
+            if len(text) > OUTPUT_LIMIT:
+                text = text[:OUTPUT_LIMIT].rstrip() + "\n… (truncated)"
+            blocks.append({"label": label, "text": text})
+        except OSError:
+            continue
+    return blocks
 
 
 def _fn_progress(fn: sqlite3.Row) -> dict:
@@ -149,21 +257,56 @@ def _fn_progress(fn: sqlite3.Row) -> dict:
     doc = json.loads(fn["doc_json"] or "{}")
     proof = check.get("proof") or {}
     spd = check.get("speedup")
+    proof_out = _output_blocks(
+        _proof_refs(check.get("output"), ROOT / "packages" / fn["package"] / "docs", fn["name"])
+    )
+    origin = _slim_doc(doc.get("origin"), fn["package"])
+    translation = _slim_doc(doc.get("translation"), fn["package"])
     return {
         "n": fn["name"],
         "t": bool(fn["translated"]),
         "nd": not_done,
-        "ok": bool(check.get("matches")) if check else None,
+        "ok": _exact(check) if check else None,
+        # Close but not exact, with the difference recorded: counted apart from "ok".
+        "appr": _approximate(check) if check else False,
         "s": round(spd, 2) if spd else None,
         "title": doc.get("title") or fn["name"],
-        "origin": _slim_doc(doc.get("origin")),
-        "translation": _slim_doc(doc.get("translation")),
+        "origin": origin,
+        "translation": translation,
         "proof": (
             {"r": proof.get("r") or "", "python": proof.get("python") or ""}
             if proof.get("r") or proof.get("python")
             else None
         ),
+        "pout": proof_out or None,
     }
+
+
+# The constitution's proof law: a function is finished when its proof matches R within 1e-8.
+LAW_TOLERANCE = 1e-8
+
+
+def _exact(check: dict) -> bool:
+    """A proof counted as a pass: it matched R, and within the law's tolerance."""
+    if not check.get("matches"):
+        return False
+    diff = check.get("max_abs_diff")
+    return diff is None or diff <= LAW_TOLERANCE
+
+
+def _approximate(check: dict) -> bool:
+    """A recorded proof that is close but not exact, so it is never counted as a pass.
+
+    A check that was never compared (``matches`` is null) is not approximate: it is
+    simply unproven, and is reported as such.
+    """
+    if _exact(check):
+        return False
+    if check.get("matches") is True:
+        return True
+    if check.get("matches") is False:
+        return bool(check.get("approximate"))
+    return False
 
 
 def _checks_of(fns: list[dict]) -> dict:
@@ -171,6 +314,8 @@ def _checks_of(fns: list[dict]) -> dict:
     speeds = [fn["s"] for fn in fns if fn.get("s") is not None]
     return {
         "passed": sum(1 for fn in checks if fn["ok"]),
+        "approximate": sum(1 for fn in checks if fn.get("appr") and not fn["ok"]),
+        "not_exact": sum(1 for fn in checks if not fn["ok"]),
         "total": len(checks),
         "speed": round(statistics.median(speeds), 2) if speeds else None,
     }
@@ -212,11 +357,18 @@ def _payload() -> dict:
                         "b": bool(json.loads(fn["blocked_by"] or "[]")),
                     }
                 )
-                if item["ok"] is not None:
+                # Only a translated function has a proof to count. An untranslated
+                # function keeps its recorded check for display, never as a pass.
+                if item["ok"] is not None and item["t"]:
                     if item["s"]:
                         speedups.append(item["s"])
                     checks_detail.append(
-                        {"n": item["n"], "ok": item["ok"], "s": item["s"]}
+                        {
+                            "n": item["n"],
+                            "ok": item["ok"],
+                            "appr": item.get("appr", False),
+                            "s": item["s"],
+                        }
                     )
             fn_by_pkg[row["name"]] = packed
             screen = db.execute(
@@ -234,6 +386,9 @@ def _payload() -> dict:
                     "translated": sum(1 for f in functions if f["t"]),
                     "checks": {
                         "passed": sum(1 for c in checks_detail if c["ok"]),
+                        "approximate": sum(
+                            1 for c in checks_detail if c.get("appr") and not c["ok"]
+                        ),
                         "total": len(checks_detail),
                         "median_speedup": round(statistics.median(speedups), 2) if speedups else None,
                     },
@@ -321,7 +476,11 @@ def _payload() -> dict:
                     "packages": json.loads(row["packages"] or "[]"),
                     "needs_low": bool(row["needs_low"]),
                     "fns": fns,
-                    "checks": {"passed": stats["passed"], "total": stats["total"]},
+                    "checks": {
+                        "passed": stats["passed"],
+                        "approximate": stats.get("approximate", 0),
+                        "total": stats["total"],
+                    },
                     "speed": stats["speed"],
                 }
             )
@@ -335,7 +494,11 @@ def _payload() -> dict:
                 if name not in assigned
             ]
             file_fns = [fn for item in rfiles for fn in item.get("fns") or []]
-            extra = _checks_of(leftover) if leftover else {"passed": 0, "total": 0, "speed": None}
+            extra = (
+                _checks_of(leftover)
+                if leftover
+                else {"passed": 0, "approximate": 0, "total": 0, "speed": None}
+            )
             if leftover and not file_fns:
                 stats = extra
             elif leftover:
@@ -348,7 +511,11 @@ def _payload() -> dict:
                         "packages": [],
                         "needs_low": False,
                         "fns": leftover,
-                        "checks": {"passed": extra["passed"], "total": extra["total"]},
+                        "checks": {
+                            "passed": extra["passed"],
+                            "approximate": extra.get("approximate", 0),
+                            "total": extra["total"],
+                        },
                         "speed": extra["speed"],
                     }
                 )
@@ -364,9 +531,16 @@ def _payload() -> dict:
                     "low_status": row["low_status"],
                     "free": bool(row["free"]),
                     "depends": json.loads(row["depends"] or "[]"),
-                    "rfiles": rfiles,
+                    # Per-file detail is only ever opened from a package that is in the
+                    # catalog of opened packages. Keeping it for the 25k screened-only
+                    # rows costs ~70 MB and pushes progress.js past GitHub's 100 MB limit.
+                    "rfiles": rfiles if row["package"] in fn_by_pkg else [],
                     "fns": leftover if leftover and not file_fns else [],
-                    "checks": {"passed": stats["passed"], "total": stats["total"]},
+                    "checks": {
+                        "passed": stats["passed"],
+                        "approximate": stats.get("approximate", 0),
+                        "total": stats["total"],
+                    },
                     "speed": stats["speed"],
                 }
             )
@@ -416,6 +590,8 @@ def _totals(
         "functions_done": sum(p["translated"] for p in graded),
         "checks_total": sum(p["checks"]["total"] for p in packages),
         "checks_passed": sum(p["checks"]["passed"] for p in packages),
+        # Proofs that are close but not exact, kept out of checks_passed on purpose.
+        "checks_approximate": sum(p["checks"].get("approximate", 0) for p in packages),
         "median_speedup": round(statistics.median(speeds), 2) if speeds else None,
         "crates": len(crates),
         "crates_assigned": sum(1 for c in crates if c["state"] == "assigned"),
@@ -487,6 +663,18 @@ def _update_readme(payload: dict) -> None:
                     f"{totals['checks_passed']} of {totals['checks_total']}",
                     "blue",
                 ),
+                # Only appears when some proof is close but not exact.
+                *(
+                    [
+                        badge(
+                            "close, not exact",
+                            f"{totals['checks_approximate']}",
+                            "orange",
+                        )
+                    ]
+                    if totals.get("checks_approximate")
+                    else []
+                ),
                 badge("rust crates", f"{totals['crates']}", "orange"),
             ]
         ),
@@ -509,10 +697,15 @@ def _update_readme(payload: dict) -> None:
             if package["checks"]["median_speedup"]
             else "-"
         )
+        appr = package["checks"].get("approximate", 0)
+        # Name the accepted differences in the same cell, so they never read as passes.
+        check_cell = f"{package['checks']['passed']} / {package['checks']['total']}"
+        if appr:
+            check_cell += f" (+{appr} close)"
         lines.append(
             f"| {package['name']} | {package['status'].replace('_', ' ')} | "
             f"{package['translated']} / {package['total']} | "
-            f"{package['checks']['passed']} / {package['checks']['total']} | {speed} |"
+            f"{check_cell} | {speed} |"
         )
     lines += ["", "</details>", "", END]
     block = "\n".join(lines)
@@ -531,13 +724,13 @@ def _copy_dashboard() -> None:
     dest.mkdir(parents=True, exist_ok=True)
     src_index = DASH / "index.html"
     if src_index.is_file():
-        shutil.copy2(src_index, dest / "index.html")
+        shutil.copyfile(src_index, dest / "index.html")
     src_pkgs = DASH / "packages"
     dst_pkgs = dest / "packages"
     if src_pkgs.is_dir():
         dst_pkgs.mkdir(parents=True, exist_ok=True)
         for path in src_pkgs.glob("*.html"):
-            shutil.copy2(path, dst_pkgs / path.name)
+            shutil.copyfile(path, dst_pkgs / path.name)
 
 
 def _enhance_screened_pages() -> None:

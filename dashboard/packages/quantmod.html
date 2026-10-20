@@ -34,10 +34,12 @@ a { color: inherit; }
 .note { color: var(--muted); }
 .yes { color: var(--done); font-weight: 600; }
 .no { color: var(--wait); font-weight: 600; }
+.approx { color: var(--wait); font-weight: 600; border-bottom: 1px dashed currentColor; cursor: help; }
 .slower { color: #9b2c2c; font-weight: 600; }
 .coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
 .track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
 .fill { height: 100%; background: var(--done); }
+.coverage .left { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 .views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
 .views button {
   font: inherit; cursor: pointer; border: 1px solid var(--line);
@@ -102,8 +104,8 @@ button.proof-toggle.active { text-decoration: underline; text-underline-offset: 
 <h1>quantmod</h1>
 <p class="note">CRAN </p>
 <p>Added to the registry on user approval, as a reference for tseries get.hist.quote (its only use). Only getSymbols is inventoried. The Python port of get.hist.quote uses urllib directly (routing: HTTP requests), so getSymbols itself is not translated. The rest of quantmod is not opened. The installed R quantmod is a local stub (0.4.29, getSymbols not implemented). The real quantmod_0.4.29 tarball needs xts, TTR and curl, which are not in registry.json, so it is not installed.</p>
-<p class="note">0 of 1 functions · 0.0% · in_progress · blocked by none</p>
-<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong></div>
+<p class="note">0 of 1 functions · 0.0% · 1 function left · in_progress · blocked by none</p>
+<div class="coverage"><div class="track"><div class="fill" style="width:0.0%"></div></div><strong>0.0%</strong><span class="left">1 function left</span></div>
 <div class="views" id="views">
   <button type="button" data-view="index">Index</button>
   <button type="button" data-view="comparison">Comparison</button>
@@ -131,6 +133,7 @@ button.proof-toggle.active { text-decoration: underline; text-underline-offset: 
 <article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
 <article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
 </div>
+<div id="proof-out" class="outputs"></div>
 </div>
 <script type="application/json" id="proof-data">[]</script></div></section>
 <section class="view" id="view-dependencies"><div class="pair"><article class="pane"><p class="kicker">R</p><p class="note">The R dependencies could not be loaded.</p></article><article class="pane"><p class="kicker">Python and Rust</p><h3>Native</h3><p>urllib</p></article></div></section>
@@ -148,7 +151,7 @@ button.proof-toggle.active { text-decoration: underline; text-underline-offset: 
 </section>
 </main>
 <script>
-const functions = [{"name": "getSymbols", "translated": false, "not_done": "Left: not translated. The Python port of tseries get.hist.quote uses urllib directly; getSymbols is only the R reference.", "title": "getSymbols", "origin": null, "translation": null}];
+const functions = [{"name": "getSymbols", "translated": false, "not_done": "Left: not translated. The Python port of tseries get.hist.quote uses urllib directly; getSymbols is only the R reference.", "title": "getSymbols", "origin": null, "translation": null, "pout": []}];
 const index = document.getElementById("function-list");
 const pair = document.getElementById("pair");
 
@@ -178,16 +181,40 @@ function renderSide(side) {
   ].join("");
 }
 
-function outputBlock(side) {
+function outputBlock(side, label) {
   const blocks = side.output_blocks || [];
   if (!blocks.length) {
     return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
   }
-  const html = blocks.map((block) => {
-    if (block.svg) return `<div class="output">${block.svg}</div>`;
-    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  return `<h3>Output${label ? ` (${esc(label)})` : ""}</h3>` + blocksHtml(blocks);
+}
+
+function blocksHtml(blocks) {
+  return blocks.map((block) => {
+    const caption = block.label ? `<p class="kicker">${esc(block.label)}</p>` : "";
+    if (block.svg) return `<div class="output">${caption}${block.svg}</div>`;
+    return `<div class="output">${caption}<pre>${esc(block.text)}</pre></div>`;
   }).join("");
-  return `<h3>Output</h3>${html}`;
+}
+
+function exampleBlocks(fn) {
+  const blocks = [];
+  [["origin", "R example"], ["translation", "Python example"]].forEach(([side, label]) => {
+    for (const block of (fn && fn[side] && fn[side].output_blocks) || []) {
+      blocks.push({ ...block, label: block.label || label });
+    }
+  });
+  return blocks;
+}
+
+function proofBlocks(item) {
+  const blocks = item.out || [];
+  if (blocks.length) return `<h3>Proof output</h3>${blocksHtml(blocks)}`;
+  const example = exampleBlocks(functions.find((fn) => fn.name === item.name));
+  if (example.length) {
+    return `<h3>Proof output</h3><p class="note">The proof did not save its own output. These are the outputs from the documentation examples.</p>${blocksHtml(example)}`;
+  }
+  return `<h3>Proof output</h3><p class="note">Output has not been captured.</p>`;
 }
 
 function show(name) {
@@ -285,6 +312,8 @@ function showProof(name) {
   if (!item) return;
   document.getElementById("proof-r").textContent = item.r;
   document.getElementById("proof-py").textContent = item.python;
+  const out = document.getElementById("proof-out");
+  if (out) out.innerHTML = proofBlocks(item);
   proofNode.hidden = false;
   openProof = name;
   markProof(name);

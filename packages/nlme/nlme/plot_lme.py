@@ -5,11 +5,10 @@ the fitted values, optionally with a reference line and labels on the points
 whose residuals are large. The R code reads the residuals and fitted values
 from the ``lme`` object with ``resid(., type = "pearson")`` and ``fitted(.)``.
 
-``lme`` is not translated yet, so the object path ``plot_lme`` waits on it.
-The part that does not need the object is translated here as
-``plot_lme_values``: the choice of labelled points (R's ``id`` rule), the
-labels, the reference line, and the drawing. The caller supplies the fitted
-values, the Pearson residuals, and the group labels.
+``plot_lme`` takes the fitted ``lme`` object (``nlme.lme_family.LmeResult``) and
+reads those two vectors itself. ``plot_lme_values`` is the same drawing for a
+caller that already has the fitted values and Pearson residuals, such as a
+fixture read from R.
 """
 
 from __future__ import annotations
@@ -34,17 +33,52 @@ _DEFAULT_YLAB = 'resid(., type = "pearson")'
 
 
 def plot_lme(object, *args, **kwargs):
-    """R ``plot.lme(object, ...)`` for an ``lme`` object.
+    """R ``plot.lme(object, ...)`` for a fitted ``LmeResult``.
 
-    Waiting on ``lme``: this needs ``fitted(object)`` and
-    ``residuals(object, type = "pearson")``, and ``lme`` is not translated.
-    Use ``plot_lme_values`` with those vectors in the meantime.
+    Reads ``fitted(object)`` (the innermost level) and
+    ``residuals(object, type = "pearson")`` (the innermost residual divided by the
+    stored standard deviation), then draws them. ``id``, ``idLabels``,
+    ``idResType``, ``xlab``, ``ylab``, and ``abline`` follow ``plot.nls``.
+    R's lattice panels are drawn here with killplot's residual-fitted panel.
     """
-    del object, args, kwargs
-    raise NotImplementedError(
-        "Waiting on lme: plot.lme needs fitted(lme) and residuals(lme, type = 'pearson'), "
-        "and lme is not translated yet. Use plot_lme_values with those vectors."
+    level = kwargs.pop("level", -1)
+    id_res_type = kwargs.pop("idResType", "pearson")
+    if id_res_type != "pearson":
+        raise NotImplementedError("normalized residuals are waiting on corStruct")
+    form = kwargs.pop("form", None)
+    if form is not None:
+        raise NotImplementedError("a 'form' argument to plot.lme is not translated")
+    kwargs.pop("grid", None)
+
+    fitted = np.asarray(object.fitted, dtype=np.float64)[:, level]
+    pearson = np.asarray(object.residuals, dtype=np.float64)[:, level] / float(object.sigma)
+
+    group_name = object.coefficients_random_names[-1]
+    groups = [str(value) for value in object.groups[group_name]]
+    labels = _axis_labels(object)
+    abline = kwargs.pop("abline", (0.0, 0.0))
+    return plot_lme_values(
+        fitted,
+        pearson,
+        xlab=kwargs.pop("xlab", labels["xlab"]),
+        ylab=kwargs.pop("ylab", labels["ylab"]),
+        groups=groups,
+        id=kwargs.pop("id", None),
+        id_labels=kwargs.pop("idLabels", None),
+        abline=abline,
+        **kwargs,
     )
+
+
+def _axis_labels(object) -> dict[str, str]:
+    """R's axis labels: ``"Fitted values"`` with the response unit, and the residual label."""
+    units = getattr(object, "units", None) or {}
+    label = "Fitted values"
+    unit = units.get("y") if isinstance(units, dict) else None
+    if unit:
+        label = f"{label} {unit}"
+    return {"xlab": label, "ylab": "Standardized residuals"}
+
 
 
 def _id_threshold(id_value: float) -> float:

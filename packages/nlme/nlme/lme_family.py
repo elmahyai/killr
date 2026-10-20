@@ -106,6 +106,9 @@ class LmeResult:
     # Variance-function parameters and final weights (R coef(modelStruct$varStruct)); None unless
     # weights is a varPower, varExp, varIdent, or varConstPower object.
     variance: dict[str, Any] | None = None
+    # groupedData units and labels (R attr(data, "units") and attr(data, "labels")).
+    units: dict[str, str] | None = None
+    labels: dict[str, str] | None = None
 
     @property
     def coefficients(self) -> dict[str, Any]:
@@ -337,7 +340,22 @@ def lme_formula(
         pd_class=pd_class,
         optimizer=optimizer,
         variance=variance,
+        units=_grouped_attribute(data, "units"),
+        labels=_grouped_attribute(data, "labels"),
     )
+
+
+def _grouped_attribute(data: Any, name: str) -> dict[str, str] | None:
+    """``attr(data, name)`` of a groupedData stand-in, when it carries one."""
+    attributes = getattr(data, "attributes", None)
+    if isinstance(attributes, dict):
+        value = attributes.get(name)
+        if isinstance(value, dict):
+            return {str(key): str(item) for key, item in value.items()}
+    value = getattr(data, name, None)
+    if isinstance(value, dict):
+        return {str(key): str(item) for key, item in value.items()}
+    return None
 
 
 def lme_lmList(
@@ -945,13 +963,21 @@ def _const_power_state(var: Any, frame: dict[str, Any], rows: int) -> _VarStruct
 def _r_pow(base: np.ndarray, exponent: np.ndarray) -> np.ndarray:
     """R ``abs(base)^exponent`` as R computes it on x86-64.
 
-    R's ``^`` calls ``powl`` (extended precision) and rounds to double, which differs
-    from the double ``pow`` by one ulp in some cases. ``numpy.longdouble`` power is
-    the same ``powl`` call, so the weights match R bit for bit.
+    R's ``R_pow`` calls libm ``pow`` (double), so the weights are bit for bit
+    libm's. ``numpy.power`` uses its own SIMD loop and differs by one ulp on
+    some inputs, and that ulp reaches the PORT path.
     """
-    magnitude = np.abs(np.asarray(base, dtype=np.float64)).astype(np.longdouble)
-    expo = np.broadcast_to(np.asarray(exponent, dtype=np.float64), magnitude.shape).astype(np.longdouble)
-    return np.power(magnitude, expo).astype(np.float64)
+    magnitude = np.abs(np.asarray(base, dtype=np.float64)).reshape(-1)
+    expo = np.broadcast_to(np.asarray(exponent, dtype=np.float64), magnitude.shape)
+    try:
+        return np.abs(
+            np.array(
+                [math.pow(float(a), float(b)) for a, b in zip(magnitude, expo)],
+                dtype=np.float64,
+            )
+        )
+    except (ValueError, OverflowError):
+        return np.abs(np.power(magnitude, expo))
 
 
 def _var_struct_weights(state: _VarStruct, params: np.ndarray) -> tuple[np.ndarray, float]:

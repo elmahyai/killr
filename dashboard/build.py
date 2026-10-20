@@ -25,6 +25,8 @@ CRAN_CATALOG = ROOT / "rcran" / "catalog.json"
 CRAN_IMPORTANCE = ROOT / "rcran" / "importance.json"
 CRAN_REPLACED = ROOT / "rcran" / "replaced.json"
 HUGE_EXPORTS = 200
+# The constitution's proof law: a function is finished when its proof matches R within 1e-8.
+LAW_TOLERANCE = 1e-8
 RUST_STAND_INS = {"Rayon", "Polars and calamine", "cryptography"}
 CRAN_NEXT = 20
 R_DEPS_CACHE = Path(__file__).resolve().parent / "r-deps-cache.json"
@@ -244,7 +246,12 @@ def _check(item: dict) -> dict:
         "speedup": check.get("speedup"),
         "matches": check.get("matches"),
         "max_abs_diff": check.get("max_abs_diff"),
+        # The tolerance the record was checked against, and any note on an accepted gap.
+        "tolerance": check.get("tolerance"),
+        "approximate": check.get("approximate"),
+        "approx_reason": check.get("approx_reason"),
         "proof": check.get("proof") or {},
+        "output": check.get("output"),
     }
 
 
@@ -292,6 +299,41 @@ def _merge_crates(crates: list, packages: list) -> list:
             if claim.get("origin") and not existing.get("origin"):
                 existing["origin"] = claim["origin"]
     return [by_name[name] for name in sorted(by_name)]
+
+
+def _check_state(check: dict) -> str:
+    """``exact``, ``approximate``, ``differs``, or ``unknown`` for one recorded check.
+
+    ``exact`` is the only state the constitution counts as a proof: the largest
+    difference against R is within ``LAW_TOLERANCE``. A record whose ``matches`` is
+    true but whose difference sits above that law was accepted at a looser, recorded
+    tolerance; it is reported as ``approximate`` and never as a pass.
+    """
+    matches = check.get("matches")
+    if matches is True:
+        diff = check.get("max_abs_diff")
+        if diff is not None and diff > LAW_TOLERANCE:
+            return "approximate"
+        return "exact"
+    if matches is False and check.get("approximate"):
+        return "approximate"
+    if matches is False:
+        return "differs"
+    return "unknown"
+
+
+def _approx_reason(check: dict) -> str:
+    """Why an approximate check is not an exact one, in the record's own numbers."""
+    diff = check.get("max_abs_diff")
+    tol = check.get("tolerance")
+    text = check.get("approx_reason")
+    if text:
+        return text
+    if diff is not None and tol is not None:
+        return f"largest difference {diff:.3g} against an accepted tolerance of {tol:.3g}"
+    if diff is not None:
+        return f"largest difference {diff:.3g}, above the {LAW_TOLERANCE:g} law"
+    return "accepted difference"
 
 
 def _package_band(package: dict) -> str:
@@ -1590,11 +1632,14 @@ section.card {{
   flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden;
 }}
 .fill {{ height: 100%; background: var(--bar); }}
+.coverage .left {{ color: var(--muted); font-size: 0.85rem; white-space: nowrap; }}
 table {{ width: 100%; border-collapse: collapse; font-size: 0.95rem; }}
 th, td {{ text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }}
 th {{ color: var(--muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }}
 .yes {{ color: var(--done); font-weight: 600; }}
 .no {{ color: var(--wait); font-weight: 600; }}
+/* A proof that is close but not exact: never styled like a pass. */
+.approx {{ color: var(--wait); font-weight: 600; border-bottom: 1px dashed currentColor; cursor: help; }}
 .note {{ color: var(--muted); }}
 .rust {{ color: #9a3412; font-weight: 700; }}
 .chips {{ display: flex; flex-wrap: wrap; gap: 0.35rem; }}
@@ -1691,13 +1736,33 @@ fromHash();
 """
 
 
+def _left_label(package: dict) -> str:
+    if package["status"] != "in_progress":
+        return ""
+    left = package["total"] - package["translated_count"]
+    if left <= 0:
+        return ""
+    return f"{left} function{'' if left == 1 else 's'} left"
+
+
+def _approx_count(package: dict) -> int:
+    """How many recorded proofs are an accepted difference rather than an exact match."""
+    return sum(1 for check in package.get("checks") or [] if _check_state(check) == "approximate")
+
+
 def _coverage_note(package: dict) -> str:
     blocked = ", ".join(package["blocked_by"]) or "none"
     status = _esc(package["status"])
     percent = package["coverage"] * 100.0
+    left = _left_label(package)
+    left_note = f" · {left}" if left else ""
+    approx = _approx_count(package)
+    approx_note = ""
+    if approx:
+        approx_note = f" · <span class='approx'>{approx} close, not exact</span>"
     return (
         f"{package['translated_count']} of {package['total']} functions · {percent:.1f}%"
-        f" · {status} · blocked by {_esc(blocked)}"
+        f"{left_note} · {status} · blocked by {_esc(blocked)}{approx_note}"
     )
 
 
@@ -1705,9 +1770,11 @@ def _coverage_bar(package: dict) -> str:
     if not package["total"]:
         return ""
     percent = package["coverage"] * 100.0
+    left = _left_label(package)
+    left_span = f'<span class="left">{left}</span>' if left else ""
     return (
         f'<div class="coverage"><div class="track"><div class="fill" style="width:{percent:.1f}%"></div></div>'
-        f"<strong>{percent:.1f}%</strong></div>"
+        f"<strong>{percent:.1f}%</strong>{left_span}</div>"
     )
 
 
@@ -1770,18 +1837,25 @@ def _crate_table(package: dict, crates: list) -> str:
 
 
 def _comparison_table(package: dict) -> str:
+    docs_dir = (ROOT / package["translation"]).parent / "docs"
+    by_name = {item["name"]: item for item in package["functions"]}
     rows = "\n".join(_check_row(check) for check in package["checks"])
     if not rows:
         rows = "<tr><td colspan='8'>None have been compared yet.</td></tr>"
-    proofs = [
-        {
-            "name": check["name"],
-            "r": (check.get("proof") or {}).get("r") or "",
-            "python": (check.get("proof") or {}).get("python") or "",
-        }
-        for check in package["checks"]
-        if (check.get("proof") or {}).get("r")
-    ]
+    proofs = []
+    for check in package["checks"]:
+        if not ((check.get("proof") or {}).get("r") or check.get("output")):
+            continue
+        proofs.append(
+            {
+                "name": check["name"],
+                "r": (check.get("proof") or {}).get("r") or "",
+                "python": (check.get("proof") or {}).get("python") or "",
+                "out": _proof_output_blocks(
+                    by_name.get(check["name"], {"name": check["name"]}), docs_dir
+                ),
+            }
+        )
     payload = json.dumps(proofs, ensure_ascii=False).replace("<", "\\u003c")
     return f"""<p class="legend"><i class="r"></i> R &nbsp; <i class="py"></i> translated</p>
 <table>
@@ -1796,6 +1870,7 @@ def _comparison_table(package: dict) -> str:
 <article class="pane"><p class="kicker">R</p><pre id="proof-r"></pre></article>
 <article class="pane"><p class="kicker">Python</p><pre id="proof-py"></pre></article>
 </div>
+<div id="proof-out" class="outputs"></div>
 </div>
 <script type="application/json" id="proof-data">{payload}</script>"""
 
@@ -1857,16 +1932,21 @@ def _check_row(check: dict) -> str:
         bars.append(
             f"<span class='py' style='width:{100.0 * check['translated_ms'] / slower:.1f}%'></span>"
         )
-    if check["matches"] is True:
+    state = _check_state(check)
+    if state == "exact":
         result = "<span class='yes'>matches</span>"
-    elif check["matches"] is False:
+    elif state == "approximate":
+        result = f"<span class='approx' title='{_esc(_approx_reason(check))}'>close</span>"
+    elif state == "differs":
         result = "<span class='no'>differs</span>"
     else:
         result = "<span class='note'>not compared</span>"
     diff = "—" if check["max_abs_diff"] is None else f"{check['max_abs_diff']:.3g}"
+    if state == "approximate" and check.get("max_abs_diff") is not None:
+        diff = f"{diff} <span class='note'>(accepted)</span>"
     pace = _pace(check)
     proof = check.get("proof") or {}
-    if proof.get("r") and proof.get("python"):
+    if (proof.get("r") and proof.get("python")) or check.get("output"):
         pace = (
             f'<button type="button" class="proof-toggle" data-name="{_esc(check["name"])}">'
             f"{pace}</button>"
@@ -1920,23 +2000,106 @@ def _side_with_output(side, docs_dir: Path):
     side = dict(side)
     relative = side.get("output")
     paths = relative if isinstance(relative, list) else ([relative] if relative else [])
-    blocks = []
-    for item in paths:
-        path = docs_dir / item
-        if not path.exists():
-            continue
-        text = path.read_text()
-        if path.suffix == ".svg":
-            start = text.find("<svg")
-            blocks.append({"svg": text[start:] if start >= 0 else text})
-        else:
-            blocks.append({"text": text.rstrip("\n")})
-    side["output_blocks"] = blocks
+    refs = [("", _with_fallback(_output_path(item, docs_dir)))
+            for item in paths if isinstance(item, str) and item]
+    side["output_blocks"] = _output_blocks(refs)
     return side
 
 
 def _esc(value: str) -> str:
     return html.escape(str(value))
+
+
+def _output_path(reference: str, docs: Path) -> Path:
+    path = Path(reference)
+    if path.is_absolute():
+        return path
+    if reference.startswith("packages/"):
+        return ROOT / reference
+    if reference.startswith("docs/"):
+        under_package = docs.parent / reference
+        if under_package.exists():
+            return under_package
+        return docs / reference[len("docs/"):]
+    return docs / reference
+
+
+def _with_fallback(path: Path) -> Path:
+    if path.exists():
+        return path
+    for short, long in (("-py.", "-python."), ("-python.", "-py.")):
+        if short in path.name:
+            other = path.with_name(path.name.replace(short, long, 1))
+            if other.is_file():
+                return other
+    return path
+
+
+def _dir_refs(reference: str, docs: Path, name: str) -> list[tuple[str, Path]]:
+    base = _output_path(reference, docs)
+    if not base.is_dir():
+        return []
+    refs = []
+    for suffix, label in (("-r", "R"), ("-python", "Python"), ("-py", "Python")):
+        path = _with_fallback(base / f"{name}{suffix}.txt")
+        if path.is_file():
+            refs.append((label, path))
+    for path in sorted(base.glob(f"{name}-*.svg")):
+        refs.append(("", path))
+    return refs
+
+
+def _proof_refs(value, docs: Path, name: str) -> list[tuple[str, Path]]:
+    labels = {"r": "R", "python": "Python", "py": "Python", "compare": "Comparison"}
+    refs: list[tuple[str, Path]] = []
+
+    def walk(node, label: str = ""):
+        if isinstance(node, dict):
+            for key, child in node.items():
+                if key == "dir" and isinstance(child, str):
+                    refs.extend(_dir_refs(child, docs, name))
+                else:
+                    walk(child, labels.get(key, key))
+        elif isinstance(node, list):
+            for index, child in enumerate(node):
+                walk(child, label or ("R" if index == 0 else "Python"))
+        elif isinstance(node, str) and node:
+            refs.append((label, _with_fallback(_output_path(node, docs))))
+
+    walk(value)
+    return refs
+
+
+def _proof_output_blocks(item: dict, docs_dir: Path) -> list[dict]:
+    check = item.get("check") or {}
+    return _output_blocks(_proof_refs(check.get("output"), docs_dir, item["name"]))
+
+
+def _output_blocks(refs: list[tuple[str, Path]]) -> list[dict]:
+    blocks = []
+    seen = set()
+    for label, path in refs:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        try:
+            if not path.is_file():
+                continue
+            text = path.read_text(errors="replace")
+        except OSError:
+            continue
+        if path.suffix == ".svg":
+            if len(text) > 400_000:
+                blocks.append({"label": label, "text": "(plot omitted: larger than 400 KB)"})
+                continue
+            start = text.find("<svg")
+            blocks.append({"label": label, "svg": text[start:] if start >= 0 else text})
+            continue
+        text = text.rstrip("\n")
+        if len(text) > 6000:
+            text = text[:6000].rstrip() + "\n… (truncated)"
+        blocks.append({"label": label, "text": text})
+    return blocks
 
 
 def _recorded_side(item: dict, key: str, docs_dir: Path, description: str, usage: str):
@@ -1969,6 +2132,7 @@ def _package_page(package: dict, crates: list, by_name: dict) -> str:
                 )
             if not origin:
                 origin = _recorded_side(item, "origin", docs_dir, "", "")
+        proof_out = _proof_output_blocks(item, docs_dir)
         entries.append(
             {
                 "name": item["name"],
@@ -1977,6 +2141,7 @@ def _package_page(package: dict, crates: list, by_name: dict) -> str:
                 "title": doc.get("title") or item["name"],
                 "origin": origin,
                 "translation": translation,
+                "pout": proof_out,
             }
         )
     data = json.dumps(entries, ensure_ascii=False).replace("<", "\\u003c")
@@ -2032,10 +2197,12 @@ a { color: inherit; }
 .note { color: var(--muted); }
 .yes { color: var(--done); font-weight: 600; }
 .no { color: var(--wait); font-weight: 600; }
+.approx { color: var(--wait); font-weight: 600; border-bottom: 1px dashed currentColor; cursor: help; }
 .slower { color: #9b2c2c; font-weight: 600; }
 .coverage { display: flex; align-items: center; gap: 0.75rem; margin: 0.6rem 0 1rem; }
 .track { flex: 1; height: 10px; background: #efe8dc; border-radius: 99px; overflow: hidden; }
 .fill { height: 100%; background: var(--done); }
+.coverage .left { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 .views { display: flex; gap: 0.5rem; margin: 0.2rem 0 1rem; }
 .views button {
   font: inherit; cursor: pointer; border: 1px solid var(--line);
@@ -2154,16 +2321,40 @@ function renderSide(side) {
   ].join("");
 }
 
-function outputBlock(side) {
+function outputBlock(side, label) {
   const blocks = side.output_blocks || [];
   if (!blocks.length) {
     return `<h3>Output</h3><p class="note">Output has not been captured.</p>`;
   }
-  const html = blocks.map((block) => {
-    if (block.svg) return `<div class="output">${block.svg}</div>`;
-    return `<div class="output"><pre>${esc(block.text)}</pre></div>`;
+  return `<h3>Output${label ? ` (${esc(label)})` : ""}</h3>` + blocksHtml(blocks);
+}
+
+function blocksHtml(blocks) {
+  return blocks.map((block) => {
+    const caption = block.label ? `<p class="kicker">${esc(block.label)}</p>` : "";
+    if (block.svg) return `<div class="output">${caption}${block.svg}</div>`;
+    return `<div class="output">${caption}<pre>${esc(block.text)}</pre></div>`;
   }).join("");
-  return `<h3>Output</h3>${html}`;
+}
+
+function exampleBlocks(fn) {
+  const blocks = [];
+  [["origin", "R example"], ["translation", "Python example"]].forEach(([side, label]) => {
+    for (const block of (fn && fn[side] && fn[side].output_blocks) || []) {
+      blocks.push({ ...block, label: block.label || label });
+    }
+  });
+  return blocks;
+}
+
+function proofBlocks(item) {
+  const blocks = item.out || [];
+  if (blocks.length) return `<h3>Proof output</h3>${blocksHtml(blocks)}`;
+  const example = exampleBlocks(functions.find((fn) => fn.name === item.name));
+  if (example.length) {
+    return `<h3>Proof output</h3><p class="note">The proof did not save its own output. These are the outputs from the documentation examples.</p>${blocksHtml(example)}`;
+  }
+  return `<h3>Proof output</h3><p class="note">Output has not been captured.</p>`;
 }
 
 function show(name) {
@@ -2261,6 +2452,8 @@ function showProof(name) {
   if (!item) return;
   document.getElementById("proof-r").textContent = item.r;
   document.getElementById("proof-py").textContent = item.python;
+  const out = document.getElementById("proof-out");
+  if (out) out.innerHTML = proofBlocks(item);
   proofNode.hidden = false;
   openProof = name;
   markProof(name);

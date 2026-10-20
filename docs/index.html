@@ -152,6 +152,11 @@
   .docs-side h3 { margin: 16px 0 6px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #5c564e; }
   .docs-side p, .docs-side dd { margin: 0 0 8px; white-space: normal; }
   .docs-side pre { white-space: pre-wrap; overflow: auto; background: #fff; border: 1px solid #e9e2d6; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  .output { margin: 6px 0 0; border: 1px solid #e9e2d6; border-radius: 10px; background: #fff; overflow: auto; }
+  .output + .output { margin-top: 10px; }
+  .output pre { margin: 0; border: 0; border-radius: 0; }
+  .output svg { display: block; width: 100%; height: auto; }
+  .output .kicker { margin: 8px 10px 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #5c564e; }
   .docs-side dt { font-weight: 700; }
   .docs-side dl { margin: 0; }
   .proof-btn { margin: 0 0 14px; padding: 8px 14px; border-radius: 10px; border: 1px solid #cfc6b8; background: #fff; cursor: pointer; font-weight: 650; }
@@ -159,6 +164,10 @@
   .proof-box { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
   .proof-box pre { white-space: pre-wrap; overflow: auto; max-height: 360px; background: #1c1915; color: #f4efe6; border-radius: 10px; padding: 12px 14px; font-size: 12.5px; }
   .proof-box .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #5c564e; margin: 0 0 6px; }
+  .proof-box .proof-out { grid-column: 1 / -1; }
+  .proof-box .output pre { background: #fff; color: #1c1915; max-height: 360px; }
+  .proof-box .note { grid-column: 1 / -1; color: #5c564e; font-size: 13px; margin: 0 0 6px; }
+  .proof-only { margin: 0 0 16px; }
   @media (max-width: 800px) { .docs-pair, .proof-box { grid-template-columns: 1fr; } }
   .dlg-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 24px 28px; border-bottom: 2px solid #1c1915; }
   .dlg-head h3 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
@@ -203,6 +212,7 @@
   .prog-row .lbl { font-size: 12px; color: #5c564e; min-width: 68px; font-weight: 650; }
   .prog-row .bar { width: 92px; margin-right: 0; }
   .prog-row .n { font-size: 12px; font-variant-numeric: tabular-nums; color: #3e4560; }
+  .prog-row .left { font-size: 11.5px; color: #5c564e; white-space: nowrap; }
   .pill.none { background: #e5e7ef; color: #3e4560; }
   .pill.free { background: #daf5e8; color: #17603f; }
   .pill.wait { background: #ffecc9; color: #7a4a00; }
@@ -794,7 +804,9 @@
     if (!p) return;
     $('#d-title').textContent = p.name + (p.version ? '  ' + p.version : '');
     const meta = LABEL[p.status] || p.status;
-    $('#d-meta').textContent = meta + ' · ' + p.translated + ' of ' + p.total + ' functions · ' + p.checks.passed + ' of ' + p.checks.total + ' proof checks';
+    $('#d-meta').textContent = meta + ' · ' + p.translated + ' of ' + p.total + ' functions · '
+      + p.checks.passed + ' of ' + p.checks.total + ' proof checks'
+      + (p.checks.approximate ? ' · ' + p.checks.approximate + ' close, not exact' : '');
     const body = $('#d-body');
     body.textContent = '';
 
@@ -1071,6 +1083,23 @@
     if (!fns.length) return null;
     return fns.filter((fn) => fn.t).length / fns.length;
   }
+  function highLeft(r) {
+    const p = pkgByName[r.package];
+    if (!p || !p.total) return null;
+    const left = p.total - p.translated;
+    if (!left) return null;
+    return left + (left === 1 ? ' function left' : ' functions left');
+  }
+  function lowLeft(r) {
+    const crates = (D.crates || []).filter((c) => (c.loaded_by || []).includes(r.package));
+    if (crates.length) {
+      const left = crates.filter((c) => c.state !== 'done').length;
+      if (!left) return null;
+      return left + (left === 1 ? ' crate left' : ' crates left');
+    }
+    if (r.low_status === 'pending') return 'not started';
+    return null;
+  }
   function lowShare(r) {
     if (!r.low_status || r.low_status === 'none') return null;
     const crates = (D.crates || []).filter((c) => (c.loaded_by || []).includes(r.package));
@@ -1079,7 +1108,7 @@
     if (r.low_status === 'pending') return 0;
     return null;
   }
-  function addProgRow(wrap, label, share) {
+  function addProgRow(wrap, label, share, left) {
     const row = el('div', 'prog-row');
     row.appendChild(el('span', 'lbl', label));
     const bar = el('span', 'bar');
@@ -1089,6 +1118,7 @@
     bar.appendChild(fill);
     row.appendChild(bar);
     if (share != null) row.appendChild(el('span', 'n', Math.round(share * 100) + '%'));
+    if (left) row.appendChild(el('span', 'left', left));
     wrap.appendChild(row);
   }
   function layerBars(r) {
@@ -1098,8 +1128,8 @@
     const low = lowShare(r);
     const showHigh = status === 'in_progress' && high != null;
     const showLow = r.low_status === 'underway';
-    if (showHigh) addProgRow(wrap, 'package', high);
-    if (showLow) addProgRow(wrap, 'low-level', (low != null && low > 0 && low < 1) ? low : null);
+    if (showHigh) addProgRow(wrap, 'package', high, highLeft(r));
+    if (showLow) addProgRow(wrap, 'low-level', (low != null && low > 0 && low < 1) ? low : null, lowLeft(r));
     return wrap.childNodes.length ? wrap : null;
   }
   function highLane(r) {
@@ -1135,7 +1165,9 @@
   }
   function checksText(c) {
     if (!c || !c.total) return '—';
-    return c.passed + ' / ' + c.total;
+    // An accepted difference is counted apart from the passes, never inside them.
+    var extra = c.approximate ? ' (+' + c.approximate + ' close)' : '';
+    return c.passed + ' / ' + c.total + extra;
   }
   function speedText(s) {
     return s ? s + 'x' : '—';
@@ -1162,6 +1194,13 @@
     if (!text) return '';
     return '<h3>' + esc(title) + '</h3><p>' + esc(text) + '</p>';
   }
+  function blocksHtml(blocks) {
+    return (blocks || []).map((block) => {
+      const caption = block.label ? '<p class="kicker">' + esc(block.label) + '</p>' : '';
+      if (block.svg) return '<div class="output">' + caption + block.svg + '</div>';
+      return '<div class="output">' + caption + '<pre>' + esc(block.text) + '</pre></div>';
+    }).join('');
+  }
   function renderSide(side) {
     if (!side) return '<p>No help recorded.</p>';
     const args = (side.arguments || []).map((item) =>
@@ -1174,6 +1213,7 @@
       docBlock('Details', side.details),
       docBlock('Value', side.value),
       '<h3>Example</h3><pre>' + esc(side.example || '') + '</pre>',
+      side.out && side.out.length ? '<h3>Output</h3>' + blocksHtml(side.out) : '',
     ].join('');
   }
   function openDlg() {
@@ -1264,6 +1304,26 @@
     openDlg();
   }
 
+  function exampleBlocks(fn) {
+    const blocks = [];
+    [['origin', 'R example'], ['translation', 'Python example']].forEach(([side, label]) => {
+      ((fn && fn[side] && fn[side].out) || []).forEach((block) => {
+        blocks.push(Object.assign({}, block, { label: block.label || label }));
+      });
+    });
+    return blocks;
+  }
+  function proofBlocks(fn) {
+    const blocks = fn.pout || [];
+    if (blocks.length) return '<h3>Proof output</h3>' + blocksHtml(blocks);
+    const example = exampleBlocks(fn);
+    if (example.length) {
+      return '<h3>Proof output</h3>' +
+        '<p class="note">The proof did not save its own output. These are the outputs from the documentation examples.</p>' +
+        blocksHtml(example);
+    }
+    return '<h3>Proof output</h3><p class="note">Output has not been captured.</p>';
+  }
   function openFn(r, f, fn) {
     dlg.classList.add('wide');
     $('#d-title').textContent = fn.n;
@@ -1293,6 +1353,9 @@
       right.appendChild(prePy);
       box.appendChild(left);
       box.appendChild(right);
+      const out = el('div', 'proof-out');
+      out.innerHTML = proofBlocks(fn);
+      box.appendChild(out);
       btn.addEventListener('click', () => {
         const open = box.hidden;
         box.hidden = !open;
@@ -1301,6 +1364,10 @@
       });
       body.appendChild(btn);
       body.appendChild(box);
+    } else if ((fn.pout && fn.pout.length) || exampleBlocks(fn).length) {
+      const out = el('div', 'proof-only');
+      out.innerHTML = proofBlocks(fn);
+      body.appendChild(out);
     }
     const pair = el('div', 'docs-pair');
     const origin = el('div', 'docs-side');
