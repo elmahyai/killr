@@ -264,8 +264,10 @@ def _fn_progress(fn: sqlite3.Row) -> dict:
     translation = _slim_doc(doc.get("translation"), fn["package"])
     return {
         "n": fn["name"],
-        # Done means translated, or exact on the proven cases with one mode covered.
-        "t": bool(fn["translated"]) or bool(fn["covered"]),
+        # Done means translated, exact on the proven cases with one mode covered,
+        # or reserved with Left (the constitution: such a function does not count).
+        "t": bool(fn["translated"]) or bool(fn["covered"]) or _reserved(fn["not_done"]),
+        "reserved": _reserved(fn["not_done"]),
         "covered": bool(fn["covered"]),
         "nd": not_done,
         "ok": _exact(check) if check else None,
@@ -328,6 +330,16 @@ _NOT_A_PACKAGE = {
     "pkgi", "pdpkg", "pdPkgName", "cdfPkgName", "orgpkg", "orgdb", "organism",
     "orgPkg", "lpPackage", "appPkg", "annotationPkg", "annotation", "polars",
 }
+
+
+def _reserved(not_done: str | None) -> bool:
+    """True when the record reserves the function rather than leaving work to do.
+
+    The constitution: "A function counts when it is not translated and ``not_done``
+    does not begin with ``Left``." So a Left function is not outstanding work, and
+    it must not hold a package back from reading Done.
+    """
+    return (not_done or "").lstrip().startswith("Left")
 
 
 def _catalog_names() -> set:

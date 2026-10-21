@@ -42,14 +42,14 @@ The `rcran/` folder is excluded from git. It holds the CRAN catalog, the downloa
 
 ## Progress
 
-Snapshot from the orchestrator, 2026-10-20 20:34 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
+Snapshot from the orchestrator, 2026-10-21 06:27 UTC. The interactive version is at [https://elmahyai.github.io/killr/](https://elmahyai.github.io/killr/).
 
-![complete](https://img.shields.io/badge/complete-134-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-15-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6102%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6541%20of%206594-blue) ![close, not exact](https://img.shields.io/badge/close,%20not%20exact-7-orange) ![rust crates](https://img.shields.io/badge/rust%20crates-133-orange)
+![complete](https://img.shields.io/badge/complete-135-brightgreen) ![in progress](https://img.shields.io/badge/in%20progress-14-yellow) ![replaced](https://img.shields.io/badge/replaced-39-lightgrey) ![functions](https://img.shields.io/badge/functions-6123%20of%206607-blue) ![proof checks](https://img.shields.io/badge/proof%20checks-6562%20of%206615-blue) ![close, not exact](https://img.shields.io/badge/close,%20not%20exact-7-orange) ![rust crates](https://img.shields.io/badge/rust%20crates-133-orange)
 
 | Status | Packages |
 | --- | ---: |
-| Complete | 134 |
-| In progress | 15 |
+| Complete | 135 |
+| In progress | 14 |
 | Replaced by a stand-in | 39 |
 
 <details>
@@ -172,7 +172,7 @@ Snapshot from the orchestrator, 2026-10-20 20:34 UTC. The interactive version is
 | nortest | complete | 5 / 5 | 5 / 5 | 2.61x |
 | numDeriv | complete | 4 / 4 | 4 / 4 | 0.74x |
 | openssl | replaced | 46 / 79 | 40 / 46 | 16.53x |
-| ordinal | in progress | 23 / 28 | 23 / 23 | 1.93x |
+| ordinal | in progress | 26 / 28 | 26 / 26 | 1.69x |
 | otel | complete | 39 / 39 | 39 / 39 | - |
 | pan | complete | 5 / 5 | 5 / 5 | 0.79x |
 | pbapply | replaced | 17 / 26 | 17 / 17 | 12.78x |
@@ -213,7 +213,7 @@ Snapshot from the orchestrator, 2026-10-20 20:34 UTC. The interactive version is
 | shiny | replaced | 5 / 284 | 5 / 5 | 12.46x |
 | simpleboot | complete | 18 / 18 | 15 / 18 | 2.79x |
 | slam | complete | 33 / 33 | 33 / 33 | 0.42x |
-| slider | in progress | 83 / 101 | 83 / 83 | 3.55x |
+| slider | complete | 101 / 101 | 101 / 101 | 3.22x |
 | snakecase | complete | 12 / 13 | 12 / 12 | 23.56x |
 | statmod | complete | 50 / 50 | 50 / 50 | 0.94x |
 | stringdist | complete | 19 / 19 | 19 / 19 | 0.81x |
