@@ -353,9 +353,12 @@ def block(x, i, period, every=1, origin=None):
     return _block(x, i, period, every=every, origin=origin)
 
 
-def slide_period(x, i, period, f, *args, before=0, after=0, complete=False):
+def slide_period(x, i, period, f, *args, every=1, origin=None, before=0, after=0, complete=False):
     from slider.slide_period import slide_period as _slide_period
-    return _slide_period(x, i, period, f, *args, before=before, after=after, complete=complete)
+    return _slide_period(
+        x, i, period, f, *args,
+        every=every, origin=origin, before=before, after=after, complete=complete,
+    )
 
 
 def pslide_period(items, i, period, f, *args, every=1, origin=None, before=0, after=0, complete=False):
@@ -388,3 +391,45 @@ def pslide_period_chr(items, i, period, f, *args, every=1, origin=None, before=0
 def slide_period2_dbl(x, y, i, period, f, *args, every=1, origin=None, before=0, after=0, complete=False):
     from slider.slide_period2_dbl import slide_period2_dbl as _fn
     return _fn(x, y, i, period, f, *args, every=every, origin=origin, before=before, after=after, complete=complete)
+
+from slider.binders import (  # noqa: E402
+    pslide_dfc,
+    pslide_dfr,
+    pslide_index_dfc,
+    pslide_index_dfr,
+    pslide_period_dfc,
+    pslide_period_dfr,
+    slide2_dfc,
+    slide2_dfr,
+    slide_dfc,
+    slide_dfr,
+    slide_index2_dfc,
+    slide_index2_dfr,
+    slide_index_dfc,
+    slide_index_dfr,
+    slide_period2_dfc,
+    slide_period2_dfr,
+    slide_period_dfc,
+    slide_period_dfr,
+)
+
+__all__ += [
+    "pslide_dfc",
+    "pslide_dfr",
+    "pslide_index_dfc",
+    "pslide_index_dfr",
+    "pslide_period_dfc",
+    "pslide_period_dfr",
+    "slide2_dfc",
+    "slide2_dfr",
+    "slide_dfc",
+    "slide_dfr",
+    "slide_index2_dfc",
+    "slide_index2_dfr",
+    "slide_index_dfc",
+    "slide_index_dfr",
+    "slide_period2_dfc",
+    "slide_period2_dfr",
+    "slide_period_dfc",
+    "slide_period_dfr",
+]

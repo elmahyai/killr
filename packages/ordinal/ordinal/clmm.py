@@ -490,6 +490,23 @@ def clmm(
         "beta": coefficients[nalpha:],
         "ST": tau,
         "ST.name": group,
+        # clmm() keeps ST as a named list of matrices, one per random-effect
+        # term; the sd list is what ranef/VarCorr/print read.
+        "ST.matrices": {group: np.array([[tau]])},
+        "ST.colnames": [["(Intercept)"]],
+        "gfList": {group: list(group_levels)},
+        "assign": np.array([1]),
+        "dims": {
+            "n": int(len(w)),
+            "nlev.re": np.array([q]),
+            "nlev.gf": np.array([q]),
+            "qi": np.array([1]),
+            "nretrms": 1,
+            "ngf": 1,
+            "nbeta": int(nbeta),
+            "nalpha": int(nalpha),
+            "nfepar": int(nfepar),
+        },
         "logLik": -value,
         "AIC": -2 * (-value) + 2 * (nfepar + 1),
         "edf": nfepar + 1,

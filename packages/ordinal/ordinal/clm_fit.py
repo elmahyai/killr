@@ -15,6 +15,8 @@ import warnings
 from typing import Any, Sequence
 
 import numpy as np
+from scipy.linalg.blas import dtrsm
+from scipy.linalg.lapack import dpotrf, dpotri
 
 from ordinal._clm_nll import clm_grad, clm_hess, clm_nll
 from ordinal._clm_rho import ClmRho, rho_from_arrays
@@ -207,17 +209,26 @@ def clm_newrho(
 # ---------------------------------------------------------------- fitting
 
 
-def _solve_chol(L: np.ndarray, g: np.ndarray) -> np.ndarray:
-    """Solve H step = g where H = L L' (L lower Cholesky factor)."""
-    y = np.linalg.solve(L, g)
-    return np.linalg.solve(L.T, y)
+def _solve_chol(U: np.ndarray, g: np.ndarray) -> np.ndarray:
+    """R's solve: backsolve(U, backsolve(U, g, transpose=TRUE)).
+
+    R takes chol(hessian) = U'U (upper) and solves through BLAS dtrsm twice, so
+    keeping the upper factor and dtrsm reproduces the last bit; numpy's lower
+    cholesky plus linalg.solve does not.
+    """
+    y = dtrsm(1.0, np.asfortranarray(U), np.asarray(g, dtype=float), trans_a=1, lower=0)
+    return dtrsm(1.0, np.asfortranarray(U), y, trans_a=0, lower=0)
 
 
 def _try_chol(H: np.ndarray):
+    """chol(H) as R returns it: LAPACK dpotrf with uplo='U'."""
     try:
-        return np.linalg.cholesky(H)
-    except np.linalg.LinAlgError:
+        c, info = dpotrf(np.asfortranarray(np.asarray(H, dtype=float)), lower=0, clean=0, overwrite_a=1)
+    except (ValueError, np.linalg.LinAlgError):
         return None
+    if info != 0:
+        return None
+    return np.triu(c)[: H.shape[0], : H.shape[0]]
 
 
 def clm_fit_nr(rho: ClmRho, control: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -554,8 +565,14 @@ def conv_check(
 
 
 def _chol2inv(ch: np.ndarray) -> np.ndarray:
-    H = ch @ ch.T
-    return np.linalg.inv(H)
+    """chol2inv: (U'U)^-1 from chol's upper factor, via LAPACK dpotri."""
+    c, info = dpotri(np.asfortranarray(ch), lower=0)
+    if info != 0:
+        H = ch.T @ ch
+        return np.linalg.inv(H)
+    n = ch.shape[0]
+    upper = np.triu(c)[:n, :n]
+    return upper + np.triu(upper, 1).T
 
 
 def print_conv_check(conv: dict[str, Any], action: str = "warn") -> None:

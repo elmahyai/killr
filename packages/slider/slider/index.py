@@ -222,6 +222,22 @@ def _endpoints(keys: list, bound, name: str, *, subtract: bool):
     return values, False
 
 
+def dense_ranks(*lists) -> list[list[int]]:
+    """Dense ranks across several vectors, as `vec_rank(ties = "dense")` on
+    their concatenation. `None` stands for `NULL`, and its result is `None`.
+
+    Ranks start at 1 and skip no values, so the result is comparable as an
+    integer key: `f(1, 3)` and `f(1, 4)` share the rank of `1`.
+    """
+    combined = []
+    for values in lists:
+        if values is not None:
+            combined.extend(values)
+    ordered = sorted(set(combined))
+    lookup = {value: rank for rank, value in enumerate(ordered, start=1)}
+    return [None if values is None else [lookup[value] for value in values] for values in lists]
+
+
 def _starts_not_past_stops(starts: list, stops: list, detail: str) -> None:
     locations = [i + 1 for i, (start, stop) in enumerate(zip(starts, stops)) if start > stop]
     if locations:

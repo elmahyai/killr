@@ -23,6 +23,13 @@ class IterOpts:
     stop: int
     stop_step: int
     size: int
+    # The validated `.before`/`.after` the C `struct slide_opts` carries, kept
+    # so the Rust kernel can rebuild the same iteration without revalidating.
+    before: int = 0
+    before_unbounded: bool = False
+    after: int = 0
+    after_unbounded: bool = False
+    complete: bool = False
 
 
 def _missing(value) -> bool:
@@ -125,7 +132,21 @@ def iter_opts(before, after, step, complete, size: int, *, dot: bool) -> IterOpt
     else:
         stop = offset + after
         stop_step = step
-    return IterOpts(iter_min, iter_max, step, start, start_step, stop, stop_step, size)
+    return IterOpts(
+        iter_min,
+        iter_max,
+        step,
+        start,
+        start_step,
+        stop,
+        stop_step,
+        size,
+        before,
+        before_unbounded,
+        after,
+        after_unbounded,
+        complete,
+    )
 
 
 def windows(opts: IterOpts):

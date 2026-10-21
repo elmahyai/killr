@@ -23,18 +23,18 @@
       "python": "ordinal.clm.clm",
       "loads": [],
       "uses": [],
-      "done": "Matches R (max 2.1e-12) for location, scale, and nominal (~contact). Fixed shared bugs: _fitted.py probit/cauchit lower_tail, _clm_nll.py loglog/cloglog Gumbel gradient and scale Hessian, links.py Gumbel overflow.",
-      "not_done": "nominal = ~temp drifts to infinity at the top threshold (R singular Hessian), cannot be matched to 1e-8. offset(), Aranda-Ordaz and log-gamma links, optim methods, numeric nominal variables. Speed 0.59 to 0.81x (noisy). Not exported from __init__.py yet.",
+      "done": "Matches R for location, scale and nominal (contact) models: 184 of 235 packed values are bit-exact and the worst gap is 4.0e-12. Fixed shared bugs in _fitted.py (probit/cauchit lower_tail), _clm_nll.py (loglog/cloglog Gumbel gradient and scale Hessian), links.py (Gumbel overflow), plus R_pow_di repeated squaring and math.fsum for R's extended-precision sum.",
+      "not_done": "The nominal = ~temp model still differs by up to 4e-12, concentrated in vcov; coefficients and cond.H match exactly. offset(), Aranda-Ordaz and log-gamma links, optim methods, numeric nominal variables. Speed 0.46x (Python 70.6 ms vs R 32.6 ms).",
       "blocked_by": [],
       "assigned": "",
       "check": {
         "case": "clm location, scale, nominal (contact)",
         "matches": true,
-        "max_abs_diff": 2.1e-12,
+        "max_abs_diff": 4.036e-12,
         "tolerance": 1e-08,
-        "r_ms": 33.43,
-        "translated_ms": 56.89,
-        "speedup": 0.59,
+        "r_ms": 32.59,
+        "translated_ms": 70.62,
+        "speedup": 0.46,
         "proof": {
           "r": "packages/ordinal/proof/clm-r.R",
           "python": "packages/ordinal/proof/clm-py.py"
@@ -50,18 +50,18 @@
       "python": "ordinal.clm_fit.clm_fit",
       "loads": [],
       "uses": [],
-      "done": "Matches R (max 4.3e-14) for the wine data: location, scale, and the link family (probit, cloglog, loglog, cauchit, symmetric, equidistant thresholds all match at 1.4e-14).",
-      "not_done": "Start vector differs from R by about one ulp, which moves the clmm default-start gap to 1e-7. offset() terms, Aranda-Ordaz and log-gamma links (need nlminb), ucminf, nlminb, and optim methods, numeric nominal variables, non-treatment contrasts such as contr.poly.",
+      "done": "Bit-exact on the wine data (60 of 60 packed values, maxdiff 0.0): location, scale, and the link family (probit, cloglog, loglog, cauchit, symmetric and equidistant thresholds).",
+      "not_done": "offset() terms, Aranda-Ordaz and log-gamma links (these need nlminb), ucminf, nlminb and optim methods, numeric nominal variables, non-treatment contrasts such as contr.poly.",
       "blocked_by": [],
       "assigned": "",
       "check": {
         "case": "clm.fit wine data",
         "matches": true,
-        "max_abs_diff": 4.3e-14,
+        "max_abs_diff": 0.0,
         "tolerance": 1e-08,
-        "r_ms": 5.62,
-        "translated_ms": 4.31,
-        "speedup": 1.3,
+        "r_ms": 6.86,
+        "translated_ms": 7.28,
+        "speedup": 0.94,
         "proof": {
           "r": "packages/ordinal/proof/clm.fit-r.R",
           "python": "packages/ordinal/proof/clm.fit-py.py"
@@ -73,22 +73,23 @@
     },
     {
       "name": "clmm",
-      "translated": false,
+      "translated": true,
       "python": "ordinal.clmm.clmm",
       "loads": [],
       "uses": [],
-      "done": "",
-      "not_done": "Default start: the clm.fit starting vector differs from R by about one ulp, and nlminb amplifies it to about 1e-7 in the coefficients. Given R's exact start, the objective matches bit for bit at nAGQ=1 and nAGQ=10. To close, clm.fit's start needs R's chol and backsolve arithmetic. Multiple terms, slopes, nested or crossed groups need the Matrix kernels (scipy.sparse). ucminf, useMatrix and clmm2 not ported.",
+      "done": "Bit-exact on the wine data at nAGQ=1 and nAGQ=10, including the adaptive Gauss-Hermite path: 82 of 82 packed values match exactly for both the default and the fixed start.",
+      "not_done": "Multiple terms, slopes, and nested or crossed groups need the Matrix kernels (scipy.sparse); useMatrix = TRUE raises. ucminf method and clmm2 not ported.",
       "blocked_by": [],
       "assigned": "",
       "check": {
-        "matches": false,
-        "max_abs_diff": 2.27e-05,
+        "case": "clmm wine data, nAGQ=1 and nAGQ=10",
+        "matches": true,
+        "max_abs_diff": 0.0,
         "tolerance": 1e-08,
-        "r_ms": 78.2,
-        "translated_ms": 76.7,
-        "speedup": 1.02,
-        "note": "Default start, nAGQ=1: Hessian max 2.27e-5, coefficients 3.3e-7. nAGQ=10: Hessian 2.8e-6, coefficients 7.4e-10 (speedup 1.18). Fixed start matches bit for bit.",
+        "r_ms": 63.09,
+        "translated_ms": 73.04,
+        "speedup": 0.86,
+        "note": "Both the default start and R's fixed start are bit-exact. nAGQ=10: R 88.6 ms, Python 97.8 ms (0.91x).",
         "proof": {
           "r": "packages/ordinal/proof/clmm-r.R",
           "python": "packages/ordinal/proof/clmm-py.py"
@@ -293,29 +294,51 @@
     },
     {
       "name": "ranef",
-      "translated": false,
-      "python": "",
+      "translated": true,
+      "python": "ordinal.ranef.ranef",
       "loads": [],
       "uses": [],
-      "done": "",
-      "not_done": "Waiting on nlme.",
-      "blocked_by": [
-        "nlme"
-      ],
-      "assigned": ""
+      "done": "Bit-exact against R on the clmm wine fit: 9 of 9 packed values, maxdiff 0.0.",
+      "not_done": "Multiple terms and nested or crossed groups await the Matrix kernels.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "ranef on a clmm wine fit",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 68.22,
+        "translated_ms": 77.57,
+        "speedup": 0.88,
+        "proof": {
+          "r": "packages/ordinal/proof/ranef-r.R",
+          "python": "packages/ordinal/proof/ranef-py.py"
+        }
+      }
     },
     {
       "name": "VarCorr",
-      "translated": false,
-      "python": "",
+      "translated": true,
+      "python": "ordinal.ranef.var_corr",
       "loads": [],
       "uses": [],
-      "done": "",
-      "not_done": "Waiting on nlme.",
-      "blocked_by": [
-        "nlme"
-      ],
-      "assigned": ""
+      "done": "Bit-exact against R on the clmm wine fit: 2 of 2 packed values, maxdiff 0.0.",
+      "not_done": "Multiple terms and print formatting await the Matrix kernels.",
+      "blocked_by": [],
+      "assigned": "",
+      "check": {
+        "case": "VarCorr on a clmm wine fit",
+        "matches": true,
+        "max_abs_diff": 0.0,
+        "tolerance": 1e-08,
+        "r_ms": 67.42,
+        "translated_ms": 75.8,
+        "speedup": 0.89,
+        "proof": {
+          "r": "packages/ordinal/proof/VarCorr-r.R",
+          "python": "packages/ordinal/proof/VarCorr-py.py"
+        }
+      }
     },
     {
       "name": "gnorm",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from ordinal._clm_nll import clm_grad, clm_hess, clm_nll
+from ordinal.clm_fit import _solve_chol, _try_chol
 from ordinal.control import clm_control
 
 
@@ -32,9 +33,8 @@ def clm_fit_nr(rho, control=None):
         if abs_conv:
             abs_iter += 1
         hessian = np.asarray(clm_hess(rho), dtype=float)
-        try:
-            ch = np.linalg.cholesky(hessian)
-        except np.linalg.LinAlgError:
+        ch = _try_chol(hessian)
+        if ch is None:
             if abs_conv:
                 conv = 1
                 break
@@ -42,16 +42,15 @@ def clm_fit_nr(rho, control=None):
             inflate = abs(min_ev) + 1.0
             hessian = hessian + np.diag(inflate, k=0)
             modif_iter += 1
-            try:
-                ch = np.linalg.cholesky(hessian)
-            except np.linalg.LinAlgError as exc:
-                raise ValueError(f"Cannot compute Newton step at iteration {outer_i - 1}") from exc
+            ch = _try_chol(hessian)
+            if ch is None:
+                raise ValueError(f"Cannot compute Newton step at iteration {outer_i - 1}")
         else:
             modif_iter = 0
         if modif_iter >= max_mod_iter:
             conv = 4
             break
-        step = np.linalg.solve(ch.T, np.linalg.solve(ch, gradient))
+        step = _solve_chol(ch, gradient)
         rel_conv = float(np.max(np.abs(step))) < rel_tol
         if abs_conv and rel_conv:
             conv = 0

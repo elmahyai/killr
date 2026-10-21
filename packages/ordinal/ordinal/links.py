@@ -9,6 +9,19 @@ from scipy.stats import gamma, norm
 _SQRT_2PI = math.sqrt(2.0 * math.pi)
 
 
+def _pow_di(x, n):
+    """R_pow_di: integer powers by repeated squaring, not libm pow."""
+    if n == 0:
+        return 1.0
+    if n < 0:
+        return 1.0 / _pow_di(x, -n)
+    if n == 1:
+        return x
+    if n % 2 == 0:
+        return _pow_di(x * x, n // 2)
+    return x * _pow_di(x * x, (n - 1) // 2)
+
+
 def _dnorm(x, give_log=False):
     log_d = -0.5 * x * x - math.log(_SQRT_2PI)
     return log_d if give_log else math.exp(log_d)
@@ -29,7 +42,7 @@ def glogis(x):
             continue
         sign = value > 0.0
         z = math.exp(-abs(value))
-        z = 2.0 * z * z * (1.0 + z) ** -3 - z * (1.0 + z) ** -2
+        z = 2.0 * z * z * _pow_di(1.0 + z, -3) - z * _pow_di(1.0 + z, -2)
         out[i] = z if sign else -z
     return out
 
@@ -54,7 +67,7 @@ def gcauchy(x):
         if not math.isfinite(value):
             out[i] = 0.0 if math.isinf(value) else value
             continue
-        out[i] = -2.0 * value / math.pi * (1.0 + value * value) ** -2
+        out[i] = -2.0 * value / math.pi * _pow_di(1.0 + value * value, -2)
     return out
 
 
@@ -148,7 +161,7 @@ def _plgamma_one(eta, lambda_):
         return 1.0 if eta > 0 else 0.0
     if abs(lambda_) <= 1.0e-6:
         return float(norm.cdf(eta))
-    shape = lambda_ ** -2
+    shape = _pow_di(lambda_, -2)
     v = shape * math.exp(lambda_ * eta)
     if lambda_ < 1.0e-6:
         v = 1.0 - float(gamma.cdf(v, a=shape, scale=1.0))
@@ -176,7 +189,7 @@ def _dlgamma_one(x, lambda_, give_log):
         return 0.0
     if abs(lambda_) < 1.0e-5:
         return _dnorm(x, give_log)
-    q2 = lambda_ ** -2
+    q2 = _pow_di(lambda_, -2)
     z = x * lambda_
     log_d = math.log(abs(lambda_)) + q2 * math.log(q2) - gammaln(q2) + q2 * (z - math.exp(z))
     return log_d if give_log else math.exp(log_d)

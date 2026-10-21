@@ -49,6 +49,15 @@ A package listed in `cran/replaced.json` is not translated. The reason names the
 - The R session is Python, for rlang, generics, tools, utils, and rstudioapi.
 - Vectors are NumPy, for vctrs.
 - A Stan model stays a Stan program. Python sends it to the Stan program already on the machine through cmdstanpy, which runs CmdStan, for rstan. StanHeaders is the C++ headers and has no stand-in. cmdstanpy is not a check against rstan.
+- A Prolog program stays a Prolog program. Python sends goals to the installed SWI-Prolog through janus-swi, which embeds the same libswipl that rswipl loads, for rswipl. The engine is not translated.
+- Sparse direct solves are MUMPS through pymumps, for rmumps. The factorization is the same library, not a rearrangement of it.
+- Arrow database access is adbc-driver-manager and adbc-driver-sqlite, for adbcsqlite. These are Apache's own bindings to the vendored project.
+- Technical indicators are the TA-Lib Python package, for talib, over the same C library.
+- HDF5 files are h5py, for hdf5r. h5py is a direct binding to libhdf5, so a file written either way comes from the same library.
+- MongoDB documents are pymongo, for mongolite. The wire protocol and BSON are defined by the server.
+- Community detection is python-igraph and leidenalg, for leidenAlg and leidenbase. leidenalg is by the algorithm's authors and wraps the same C++ core both packages vendor.
+- A package that resolves or installs R packages is pip and uv, for pkgdepends, for pak, and for renv. R's packaging system does not exist on the Python side.
+- ALTREP classes are not ported. R's internal character-vector representation has no Python counterpart to match, so ICU string semantics come from PyICU and the rest of charr is covered by the finished stringr port.
 
 A package that compiles or links C++ into R, or a data bundle with no functions to call, is recorded in `cran/replaced.json` and is not translated. A resembling Python or Rust library is not a reason to call the package done.
 
@@ -60,6 +69,14 @@ Each R package is either a wrapper or original R code. The role decides the rout
 
 - When R is only wrapping a C++ system, the C++ system is wrapped from Python or Rust. The R glue is not translated. The wrapper calls the C++ code through a Rust crate or a Python binding, and the library is listed in `native.json` before use. A whole C++ system is still asked about first, as Routing says. An example is `sass`, which wraps libsass.
 - When the R code is original to R, the algorithm is remade in Rust or Python. This is the normal route for a statistical or algorithmic routine that the R package implements itself, including one whose kernel is written in C++ or Fortran. Such a kernel goes in `crates/<name>` under Kernels.
+
+Which of the two applies is decided from the tarball, not from the package description. Read `src/` and ask how many lines sit outside the package's own directory:
+
+- A package that is mostly vendored is a wrapper. When 95% or more of its compiled lines are an upstream library copied into `src/`, the package is not opened as a port. Its R layer is glue, and the library is wrapped from Python if a binding to that same library exists. Do not rewrite the library in Rust to make the wrapper unnecessary: a rewrite is a different program, so its numbers are only nearby, while a binding to the same library returns the same numbers. `rswipl`, `adbcsqlite`, `rmumps`, `hdf5r`, and `mongolite` are this shape.
+- Fewer vendored lines means the algorithm is R's own, and it is remade. A package whose compiled code lives in its own `src/` root rather than in a vendored subdirectory is this shape; `frailtypack` and `rbibutils` are entirely their own code. The vendored fraction is a hint, not the decision: read what the top-level `src/` files compute before choosing.
+- A vendored fork is still a wrapper even when the R package's own layer is large. `talib` is 31,141 lines of R over a vendored TA-Lib; the R is wrappers and chart themes, and every number comes from the C. Size of the R layer does not make the library R's.
+- A Python binding has to be to the same library, not to a library with the same purpose. `pymumps` is MUMPS and `h5py` is libhdf5, so those stand in. A different sparse solver is not a stand-in for MUMPS even when it solves the same equation, because the ordering and the pivoting differ.
+- Lines that implement R itself are excluded before the fraction is taken. C that only serves the evaluator, environments, or vector types is not a kernel under Kernels, so it is not code to remake whether or not it is vendored. `charr` is 82% vendored ICU and 18% R's ALTREP character representation: ICU is replaced by PyICU, and the ALTREP part is dropped rather than ported.
 
 ## Objects
 
