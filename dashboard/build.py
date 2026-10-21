@@ -1912,7 +1912,7 @@ def _function_row(item: dict, by_name: dict, excluded: dict) -> str:
         note = item.get("not_done") or ""
         if item.get("covered"):
             status = "<span class='close' title='Exact on every proven case; one mode left uncovered'>covered</span>"
-        elif note.startswith("Left"):
+        elif note.lstrip().startswith("Left"):
             status = "<span class='note'>left</span>"
         elif note.startswith("Dataset"):
             status = "<span class='note'>not copied</span>"

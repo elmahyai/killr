@@ -504,7 +504,7 @@
       <div class="card">
         <h3>How a package moves</h3>
         <p><b>Low-level</b> is the compiled Fortran, C and C++ side: <b>None</b> when the package has none, so there is nothing to port; <b>Not done</b> when none of it is ported; <b>In progress</b> when some crates are loaded or assigned; <b>Done</b> when every crate it needs is loaded.</p>
-        <p><b>Translated</b> is the R side, in three states only: <b>Done</b> when every function is translated, closed or covered; <b>In progress</b> when some are; <b>Not done</b> when none are.</p>
+        <p><b>Translated</b> is the R side, in three states only: <b>Done</b> when nothing is left to do, meaning every function is translated, carries a close proof, or is reserved with <code>Left</code> and recorded as out of scope; <b>In progress</b> when some functions are still to translate; <b>Not done</b> when none are settled. A function that is neither translated nor reserved keeps its package in progress.</p>
         <p><b>Free</b> means nothing has to be translated or replaced first: either the package depends on nothing, or its dependencies are already done. <b>Needs first</b> names the packages that still have to be done.</p>
       </div>
       <div class="card">
@@ -1139,10 +1139,19 @@
   //   done        every function is translated, closed or covered
   //   not_started none of them are
   //   in_progress some are, some are not
+  // A package is Done when nothing is left to do: every function is translated,
+  // covered by a close proof, or reserved with Left. It is Not done when nothing
+  // is settled yet, and In progress in between.
+  function settledCount(p) {
+    if (!p) return 0;
+    if (typeof p.settled === 'number') return p.settled;
+    return p.translated || 0;
+  }
   function translatedState(p) {
     if (!p || !p.total) return 'not_started';
-    if (p.translated >= p.total) return 'done';
-    if (!p.translated) return 'not_started';
+    const settled = settledCount(p);
+    if (settled >= p.total) return 'done';
+    if (!settled) return 'not_started';
     return 'in_progress';
   }
   const TRANSLATED_LABEL = { done: 'Done', in_progress: 'In progress', not_started: 'Not done' };
@@ -1382,7 +1391,9 @@
     dlg.classList.add('wide');
     $('#d-title').textContent = fn.n;
     // Covered counts as done: exact on the proven cases, one mode left unproven.
-    const bits = [fn.covered ? 'covered' : (fn.t ? 'translated' : 'not translated')];
+    // Reserved functions are settled but not translated, so never call them translated.
+    const bits = [fn.reserved ? 'reserved'
+      : (fn.covered ? 'covered' : (fn.t ? 'translated' : 'not translated'))];
     if (fn.ok === true) bits.push('matches R');
     if (fn.ok === false) bits.push('differs from R');
     if (fn.s) bits.push(speedText(fn.s));

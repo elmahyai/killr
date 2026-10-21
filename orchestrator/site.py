@@ -441,6 +441,8 @@ def _payload() -> dict:
                         "t": item["t"],
                         # Covered: done on the proven cases, one mode left unproven.
                         "covered": item["covered"],
+                        # Reserved with Left: settled, but not translated by an agent.
+                        "reserved": item["reserved"],
                         "nd": item["nd"],
                         "b": bool(json.loads(fn["blocked_by"] or "[]")),
                     }
@@ -471,9 +473,18 @@ def _payload() -> dict:
                     "name": row["name"],
                     "version": row["cran_version"],
                     "status": row["status"],
+                    # Coverage counts settled work (translated, covered, reserved), so a
+                    # finished package reads 100%. translated stays the literal count of
+                    # functions with a translation, so the headline never claims a data
+                    # set was translated.
                     "coverage": round((sum(1 for f in functions if f["t"]) / len(functions)) if functions else 0, 4),
                     "total": len(functions),
-                    "translated": sum(1 for f in functions if f["t"]),
+                    "settled": sum(1 for f in functions if f["t"]),
+                    # Slim rows: t is settled work, so drop the reserved ones here.
+                    "translated": sum(
+                        1 for f in functions if f["t"] and not f["reserved"]
+                    ),
+                    "reserved": sum(1 for f in functions if f["reserved"]),
                     "checks": {
                         "passed": sum(1 for c in checks_detail if c["ok"]),
                         "approximate": sum(
